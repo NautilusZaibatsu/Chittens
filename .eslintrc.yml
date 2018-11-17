@@ -1,0 +1,7 @@
+env:
+  es6: true
+extends: google
+rules:
+  max-len: 0
+  linebreak-style: ["error", "windows"]
+  fixOnSave: true
