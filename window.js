@@ -138,6 +138,7 @@ function startGame() {
   // elders++;
   myGuys[1].secretColour = randomColour();
   myGuys[0].secretColour = randomColour();
+
   for (let j = 0; j < 50; j++) {
     ranX = Math.floor(Math.random()*(canvasWidth));
     ranY = Math.floor(Math.random()*(trueBottom));
@@ -180,6 +181,10 @@ let myGameArea = {
 * function to redraw and recalculate everything each fram
 **/
 function updateGameArea() {
+
+
+
+
   if (started) {
     myGameArea.clear();
     ctx = myGameArea.context;
