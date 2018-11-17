@@ -8,7 +8,7 @@ const globalFont = 'Lucida Console';
 const gravity = 0.02;
 const elasticity = 0.2;
 const speedLimit = 100;
-let started = false;
+let started = true;
 let superThreshold = 99;
 //  canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
@@ -21,7 +21,6 @@ idealX = 1920 - 20;
 const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
-
 
 // set the environment start time
 const d = new Date();
@@ -98,6 +97,11 @@ elders = 0;
 obelisks = 0;
 guyID = 0;
 selection = '0000';
+
+platforms = [];
+platWidth = canvasWidth/3;
+platforms.push(new Platform(0, canvasHeight/2, platWidth, 10));
+platforms.push(new Platform(canvasWidth-platWidth, canvasHeight/2, platWidth, 10));
 
 // UI and messaging
 basicInfo = new TextElement('15px', 'Consolas', trueWhite, 10, canvasHeight - 10);
@@ -181,10 +185,6 @@ let myGameArea = {
 * function to redraw and recalculate everything each fram
 **/
 function updateGameArea() {
-
-
-
-
   if (started) {
     myGameArea.clear();
     ctx = myGameArea.context;
@@ -311,6 +311,11 @@ function updateGameArea() {
     horizon.addColorStop(1, trueBlack);
     ctx.fillStyle = horizon;
     ctx.fillRect(0, canvasHeight-muckLevel-5, canvasWidth, 5+muckLevel);
+
+    // draw the platforms
+    for (let i = 0; i < platforms.length; i++) {
+      platforms[i].update();
+    }
 
     // draw the message history
     let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
@@ -478,6 +483,23 @@ function everyinterval(n) {
     return true;
   }
   return false;
+}
+/**
+* function to describe a platform
+* @param {int} x - the x coordinate
+* @param {int} y - the y coordinate
+* @param {int} width - the width
+* @param {int} height - the height
+*/
+function Platform(x, y, width, height) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+  this.update = function() {
+    ctx.fillStyle = trueBlack;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  };
 }
 
 /**
@@ -698,6 +720,7 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
   this.limbLength = (this.size*1.5);
   this.maxSize = maxSize;
   this.hitBottom = false;
+  this.sitting = false;
   this.health = 100;
   this.love = 0;
   this.energy = 100;
@@ -756,19 +779,26 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     } else {
       this.focus = fireflies[this.findClosestFireFly()];
     }
-    this.speedY = -this.size;
-    let jumpImpetus = Math.random();
-    if (jumpImpetus <= 0.05) {
-      let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-      this.speedX += 50*Math.cos(targetangle);
-      this.speedY += 70*Math.sin(targetangle);
-      this.y--;
-      this.energy -= 7;
-      return true;
-    }
-    return false;
-  };
 
+    if (this.focus.y <= this.y) {
+      let jumpImpetus = Math.random();
+      if (jumpImpetus <= 0.05 && this.focus.y <= this.y) {
+        this.speedY = -this.size;
+        let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
+        this.speedX += 50*Math.cos(targetangle);
+        this.speedY += 70*Math.sin(targetangle);
+        this.y--;
+        this.energy -= 7;
+        this.sitting = false;
+        return true;
+      }
+    } else {
+      if (!this.supersaiyan && this.y < trueBottom-(this.size)-(this.limbLength/2.5)) {
+        this.sitting = true;
+      }
+      return false;
+    }
+  };
   this.findClosestFireFly = function() {
     let tmp = maxDistance;
     let target = 'X';
@@ -803,7 +833,7 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
       }
     }
     if (target == 'X') {
-       console.log('no viable target found');
+      console.log('no viable target found');
       return 0;
     }
     return target;
@@ -833,6 +863,15 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
   // check for bounce on walls
   this.physicsCheck = function() {
     this.hitBottom = false;
+    let hitPlatform = false;
+    for (let i = 0; i < platforms.length && !hitPlatform; i++) {
+      if (this.x >= platforms[i].x && this.x <= platforms[i].x + platforms[i].width && this.y >= platforms[i].y-(this.size)-(this.limbLength/2.5) && this.y <= platforms[i].y+ platforms[i].height && this.speedY >= 0) {
+        this.y = platforms[i].y-(this.size)-(this.limbLength/2.5);
+        hitPlatform = true;
+        this.hitAFloor();
+      }
+    }
+
     if (this.x < this.size || this.x >= canvasWidth-this.size) {
       this.speedX *= -0.9;
       let targetangle = Math.atan2(this.y, 0);
@@ -850,23 +889,27 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
       let targetangle = Math.atan2(0, this.x);
       this.spin += elasticity*targetangle/10;
     }
-    if (this.y >= trueBottom-(this.size)-(this.limbLength/2.5)) {
-      this.hitBottom = true;
+    if (!this.hitBottom && this.y >= trueBottom-(this.size)-(this.limbLength/2.5)) {
       this.y = trueBottom-(this.size)-(this.limbLength/2.5);
-      // apply floor friction
-      this.speedX *= 0.9;
-      this.resetRotation(false);
-      // jump occasionally
-      if (this.rotation == 0 && this.phase == 0 && this.hitBottom && this.jump()) {
-        this.health -= 1;
-      } else if (this.energy <= 0) {
-        // fall asleep when tired
-        this.phase = 1;
-        this.speedX = 0;
-        this.speedY = 0;
-        this.rotation = 0;
-        this.spin = 0;
-      }
+      this.hitAFloor();
+    }
+  };
+  this.hitAFloor = function() {
+    this.hitBottom = true;
+    this.sitting = false;
+    // apply floor forces
+    this.speedY = 0;
+    this.speedX *= 0.9;
+    this.resetRotation(false);
+    // jump occasionally
+    if (this.rotation == 0 && this.phase == 0 && this.hitBottom && this.jump()) {
+      this.health -= 1;
+    } else if (this.energy <= 0) {
+      // fall asleep when tired
+      this.phase = 1;
+      this.speedX = 0;
+      this.rotation = 0;
+      this.spin = 0;
     }
   };
   this.update = function() {
@@ -958,6 +1001,11 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     // drawing
     ctx = myGameArea.context;
     ctx.globalAlpha = 1;
+    let sleepshift = 0;
+    if (this.phase == 1) {
+      sleepshift = this.limbLength+(this.size/4);
+    }
+
 
     if (this.phase == 0 && this.energy > 0) {
       ctx.lineWidth = this.size/2.5;
@@ -1020,55 +1068,6 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     ctx.fillStyle = this.colour;
     ctx.save(); // 0 open - rotated
     ctx.translate(this.x, this.y);
-    // aura and trail on supersaiyans
-    if (this.supersaiyan > 0) {
-      // flame aura
-      ctx.globalAlpha = (this.supersaiyan-50)/50;
-      ctx.drawImage(flame, -this.size*1.5, -(this.size*2), this.size*3, this.size*3);
-      if (this.speedY < 0) {
-        trails.push(new Particle(this.size/4, this.colour, this.x-(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
-        trails.push(new Particle(this.size/4, this.colour, this.x+(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
-        trails.push(new Particle(this.size/3, this.colour, this.x, this.y, this.speedX, this.speedY));
-      }
-      let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.supersaiyan);
-      glow.addColorStop(0, glowColour);
-      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = glow;
-      ctx.globalAlpha = 0.1;
-      ctx.beginPath();
-      ctx.arc(0, 0, this.supersaiyan, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.fillStyle = this.colour;
-      ctx.globalAlpha = 1;
-    }
-    ctx.rotate(this.rotation);
-
-    let sleepshift = 0;
-    if (this.phase == 1) {
-      sleepshift = this.limbLength+(this.size/4);
-    }
-
-
-    // ears
-    ctx.save();
-    if (this.phase == 0) {
-      ctx.translate(-this.size, -this.size/2);
-    } else {
-      ctx.translate(-this.size, sleepshift);
-    }
-    oneq = this.size/2;
-    ctx.beginPath();
-    ctx.moveTo(0, +this.size/2);
-    ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/2));
-    ctx.lineTo(oneq*2, -(this.size*this.ears)/4);
-    ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/2));
-    ctx.lineTo(oneq*4, +this.size/2);
-    let earGradient=ctx.createLinearGradient(0, -this.size, 0, this.limbLength/2);
-    earGradient.addColorStop(0, this.colour);
-    earGradient.addColorStop(1, trueBlack);
-    ctx.fillStyle = earGradient;
-    ctx.fill();
-    ctx.restore();
 
     // tail
     ctx.save();
@@ -1100,6 +1099,56 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
       ctx.rotate(-Math.atan2(-this.speedY, -this.speedX));
     }
     ctx.restore();
+
+    // aura and trail on supersaiyans
+    if (this.supersaiyan > 0) {
+      // flame aura
+      ctx.globalAlpha = (this.supersaiyan-50)/50;
+      ctx.drawImage(flame, -this.size*1.5, -(this.size*2), this.size*3, this.size*3);
+      if (this.speedY < 0) {
+        trails.push(new Particle(this.size/4, this.colour, this.x-(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
+        trails.push(new Particle(this.size/4, this.colour, this.x+(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
+        trails.push(new Particle(this.size/3, this.colour, this.x, this.y, this.speedX, this.speedY));
+      }
+      let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.supersaiyan);
+      glow.addColorStop(0, glowColour);
+      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = glow;
+      ctx.globalAlpha = 0.1;
+      ctx.beginPath();
+      ctx.arc(0, 0, this.supersaiyan, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = this.colour;
+      ctx.globalAlpha = 1;
+    }
+    ctx.rotate(this.rotation);
+
+
+    if (this.sitting) {
+      ctx.translate(0, (this.limbLength+(this.size/4))/2);
+    }
+
+    // ears
+    ctx.save();
+    if (this.phase == 0) {
+      ctx.translate(-this.size, -this.size/2);
+    } else {
+      ctx.translate(-this.size, sleepshift);
+    }
+    oneq = this.size/2;
+    ctx.beginPath();
+    ctx.moveTo(0, +this.size/2);
+    ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/2));
+    ctx.lineTo(oneq*2, -(this.size*this.ears)/4);
+    ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/2));
+    ctx.lineTo(oneq*4, +this.size/2);
+    let earGradient=ctx.createLinearGradient(0, -this.size, 0, this.limbLength/2);
+    earGradient.addColorStop(0, this.colour);
+    earGradient.addColorStop(1, trueBlack);
+    ctx.fillStyle = earGradient;
+    ctx.fill();
+    ctx.restore();
+
 
     // head
     if (this.phase == 0) {
@@ -1220,79 +1269,80 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     // shadow.addColorStop(1, this.colour);
     // ctx.strokeStyle = shadow;
 
-// sit down if you are on the floor and healthy
-    if (this.phase == 0 && this.hitBottom && this.health > 50) {
+    // put your front legs down if you are on the floor and healthy
+    if (this.phase == 0 && this.hitBottom) {
       ctx.save(); // 0 open
       ctx.translate(this.x, this.y);
-      ctx.beginPath();
-      ctx.moveTo(-this.size+(this.size/1.6), this.size*0.8);
-      ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
-      ctx.stroke();
+      if (!this.sitting) {
+        ctx.beginPath();
+        ctx.moveTo(-this.size+(this.size/1.6), this.size*0.8);
+        ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(this.size-(this.size/1.6), this.size*0.8);
+        ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
+        ctx.stroke();
+      }
       ctx.beginPath();
       ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
       ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(this.size-(this.size/1.6), this.size*0.8);
-      ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
-      ctx.stroke();
       ctx.beginPath();
       ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
       ctx.fill();
       ctx.restore();
     } else {
-    // if we are holding something
-    if (this.phase == 0 && detectCollision(this, this.focus)) {
-      ctx.save(); // 0 open
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      ctx.beginPath();
-      ctx.moveTo(-this.size+(this.size/7), (this.size/2));
-      ctx.restore(); // 0 closed
-      ctx.lineTo(this.focus.x, this.focus.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(this.focus.x, this.focus.y, this.size/3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.save(); // 0 open
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      ctx.beginPath();
-      ctx.moveTo(this.size-(this.size/7), (this.size/2));
-      ctx.restore(); // 0 closed
-      ctx.lineTo(this.focus.x, this.focus.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(this.focus.x, this.focus.y, this.size/3.5, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // if we are not holding anything
-    } else if (this.phase == 0 && this.energy > 0) {
-      // left arm
-      ctx.save(); // 0 open
-      ctx.translate(this.x-this.size+(this.size/7), this.y+(this.size/2));
-      ctx.rotate(this.rotation);
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.rotate(-this.rotation);
-      ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-      ctx.stroke();
-      ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore(); // closed
-      // right arm
-      ctx.save(); // 0 open
-      ctx.translate(this.x+this.size-(this.size/7), this.y+(this.size/2));
-      ctx.rotate(this.rotation);
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.rotate(-this.rotation);
-      ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-      ctx.stroke();
-      ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore(); // closed
+      // if we are holding something
+      if (this.phase == 0 && detectCollision(this, this.focus)) {
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(-this.size+(this.size/7), (this.size/2));
+        ctx.restore(); // 0 closed
+        ctx.lineTo(this.focus.x, this.focus.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.focus.x, this.focus.y, this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(this.size-(this.size/7), (this.size/2));
+        ctx.restore(); // 0 closed
+        ctx.lineTo(this.focus.x, this.focus.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.focus.x, this.focus.y, this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        // if we are not holding anything
+      } else if (this.phase == 0 && this.energy > 0) {
+        // left arm
+        ctx.save(); // 0 open
+        ctx.translate(this.x-this.size+(this.size/7), this.y+(this.size/2));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.rotate(-this.rotation);
+        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+        ctx.stroke();
+        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore(); // closed
+        // right arm
+        ctx.save(); // 0 open
+        ctx.translate(this.x+this.size-(this.size/7), this.y+(this.size/2));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.rotate(-this.rotation);
+        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+        ctx.stroke();
+        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore(); // closed
+      }
     }
-  }
     ctx.globalAlpha = 1;
   };
 }
@@ -1834,40 +1884,18 @@ function collide(obj1, obj2) {
   }
   // calculate transfer of energy
   // energy = mass X velocity
-  let smod1 = 1;
-  let smod2 = 1;
   let myEnergy = obj1.speedX*obj1.size;
   let theirEnergy = obj2.speedX*obj2.size;
   let energyTransfer = elasticity*(myEnergy-theirEnergy)/(obj1.size+obj2.size);
-  if (obj1.supersaiyan > 30) {
-    smod1 = 2;
-  }
-  if (obj2.supersaiyan > 30) {
-    smod2 = 2;
-  }
-  obj1.speedX += smod2*energyTransfer;
-  obj2.speedX += smod1*energyTransfer;
-  smod1 = 1;
-  smod2 = 1;
+  obj1.speedX += energyTransfer;
+  obj2.speedX += energyTransfer;
   myEnergy = obj1.speedY*obj1.size;
   theirEnergy = obj2.speedY*obj2.size;
   energyTransfer = elasticity*(myEnergy-theirEnergy)/(obj1.size+obj2.size);
-  if (obj1.supersaiyan > 30) {
-    smod1 = 2;
-  }
-  if (obj2.supersaiyan > 30) {
-    smod2 = 2;
-  }
-  obj1.speedY += smod2*energyTransfer;
-  obj2.speedY += smod1*energyTransfer;
+  obj1.speedY += energyTransfer;
+  obj2.speedY += energyTransfer;
   // calculate rotation on collision
   let targetangle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
-  if (obj1.supersaiyan > 30) {
-    obj2.spin *= 2;
-  }
-  if (obj2.supersaiyan > 30) {
-    obj1.spin *= 2;
-  }
   obj1.spin += targetangle/10;
   obj2.spin -= targetangle/10;
 }
