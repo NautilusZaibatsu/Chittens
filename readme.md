@@ -1,6 +1,11 @@
 #mates
 
 changelog
+17/11/2018 = 0.45
+features
+~ added trees, mates will plant them whilst in a nirvana
+~ added Chinese names for mates
+~ added non binary gender
 
 16/11/2018 = 0.44
 features
@@ -27,7 +32,7 @@ features
 ~ implemented binary gender for breeding
 ~ added rotation of mates on collisions
 ~ added handling multiple fireflies, the main fly always respawns
-~ ghosts now have chance of becoming fireflies when they exit the top of the screen
+~ ghosts now become fireflies when they exit the top of the screen
 ~ added clock, timestamps to messages and archiving of last 10 messages
 bugfixes / etc.
 ~ fixed bug causing obelisks to never expire

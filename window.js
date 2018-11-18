@@ -4,12 +4,11 @@
 
 let debugString = 'nothing';
 const globalFont = 'Lucida Console';
-
+// universal physics constants
 const gravity = 0.02;
 const elasticity = 0.2;
 const speedLimit = 100;
-let started = true;
-let superThreshold = 99;
+let superThreshold = 50;
 //  canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
 const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
@@ -21,7 +20,6 @@ idealX = 1920 - 20;
 const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
-
 // set the environment start time
 const d = new Date();
 const startTime = d.getHours();
@@ -31,6 +29,7 @@ let daytimeCounter = hourOfCreation;
 let timeMod = daytimeCounter;
 let anniversary = true;
 let day = 0;
+let paused = false;
 
 // Images
 // for my guys
@@ -42,6 +41,8 @@ flame.src = 'flame.png';
 const newtree = new Image();
 newtree.src = 'newtree.png';
 let ph = newtree.height;
+const acacia = new Image();
+acacia.src = 'acacia.png';
 // graves
 const tombstone = new Image();
 tombstone.src = 'grave.png';
@@ -92,16 +93,15 @@ starfield = [];
 comets = [];
 trails = [];
 fireflies = [];
-fireflies.push(new FireFly(pointerPos.x, pointerPos.y, pointerPos, 1, glowColour));
+fireflies.push(new FireFly(Math.random()*canvasWidth, Math.random()*canvasHeight, pointerPos, 1, glowColour));
 elders = 0;
 obelisks = 0;
 guyID = 0;
 selection = '0000';
 
-platforms = [];
-platWidth = canvasWidth/3;
-platforms.push(new Platform(0, canvasHeight/2, platWidth, 10));
-platforms.push(new Platform(canvasWidth-platWidth, canvasHeight/2, platWidth, 10));
+trees = [];
+
+
 
 // UI and messaging
 basicInfo = new TextElement('15px', 'Consolas', trueWhite, 10, canvasHeight - 10);
@@ -130,28 +130,39 @@ function startGame() {
   myGameArea.start();
   myGuys.push(new Agent(canvasWidth*0.75, trueBottom-20, 6, 10, 'girl', 0));
   myGuys.push(new Agent(canvasWidth-(canvasWidth*0.75), trueBottom-20, 6, 10, 'boy', 1));
+  // myGuys.push(new Agent(canvasWidth-(canvasWidth*0.5), trueBottom-20, 6, 10, 'non binary', 1));
   sendMessage('Once upon a time...');
   let nameSeed = Math.round(Math.random()*totalMaleNames);
   myGuys[0].name = getRandomFemaleName(nameSeed);
   myGuys[1].name = getRandomMaleName(nameSeed);
+  // myGuys[2].name = getRandomName(nameSeed);
+
   sendMessage('It was just the two of us; '+myGuys[1].name+' and '+myGuys[0].name);
   // init console data
   console.log('Scale to base is '+proportion);
   console.log(reportNames());
-  // myGuys[0].elder = true;
-  // elders++;
-  myGuys[1].secretColour = randomColour();
-  myGuys[0].secretColour = randomColour();
+   // myGuys[0].elder = true;
+   // elders++;
+  myGuys[0].secretColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#e294f7');
+  myGuys[1].secretColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#dd7612');
+  // myGuys[2].secretColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#12d4ee');
 
-  for (let j = 0; j < 50; j++) {
+  for (let j = 0; j < 20; j++) {
     ranX = Math.floor(Math.random()*(canvasWidth));
     ranY = Math.floor(Math.random()*(trueBottom));
     ranSize = Math.random()*3;
     starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, ranY, false));
+
     // myGuys.push(new Agent(ranX, ranY, 8, 10, 'girl', Math.random()));
-    // myGuys[j+2].name = getRandomFemaleName();
-    // graveStones.push(new Grave(ranX, trueBottom, 10*Math.random(), 0, 0, false, '#0000ff'));
-    // graveStones[graveStones.length-1].timer *= Math.random()*10;
+    // myGuys[(j*2)+2].name = getRandomFemaleName();
+    // myGuys[(j*2)+2].secretColour = randomColour();
+    // myGuys[(j*2)+2].elder = true;
+    // myGuys.push(new Agent(ranX, ranY, 8, 10, 'boy', Math.random()));
+    // myGuys[(j*2)+3].name = getRandomMaleName();
+    // myGuys[(j*2)+3].secretColour = randomColour();
+
+    // graveStones.push(new Grave(ranX, trueBottom, 5+(Math.random()*6), 0, 0, false, '#0000ff'));
+    // graveStones[graveStones.length-1].timer = Math.random()*100;
     // fireflies.push(new FireFly(ranX, ranY, pointerPos, 1, '#00ff00'));
     // fireflies[fireflies.length-1].touches = 200;
   }
@@ -170,7 +181,6 @@ let myGameArea = {
     this.canvas.addEventListener('mousemove', function(event) {
       pointerPos = trackMouse(event);
       fireflies[0].focus = pointerPos;
-      started = true;
     });
     this.canvas.addEventListener('mousedown', function(event) {
       clickMouse(event);
@@ -185,7 +195,7 @@ let myGameArea = {
 * function to redraw and recalculate everything each fram
 **/
 function updateGameArea() {
-  if (started) {
+  if (!paused) {
     myGameArea.clear();
     ctx = myGameArea.context;
     myGameArea.frameNo += 1;
@@ -304,18 +314,26 @@ function updateGameArea() {
       let scan = 0.3 * Math.sin((y + ph)/100);
       ctx.drawImage(newtree, 0, y, iw, 1, scan, y, iw, 1);
     }
-    ctx.globalAlpha = 1;
     ctx.restore();
+
+    // draw the trees
+    for (let i = 0; i < trees.length; i++) {
+      trees[i].update();
+      if (trees[i].reachedMaxHeight && trees[i].y > trueBottom) {
+        trees.splice(i, 1);
+        i--;
+        sendMessage('A tree died');
+      }
+    }
+
+    ctx.globalAlpha = 1;
+    // draw the floor
     let horizon = ctx.createLinearGradient(0, canvasHeight-muckLevel-5, 0, canvasHeight-muckLevel);
     horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
     horizon.addColorStop(1, trueBlack);
     ctx.fillStyle = horizon;
     ctx.fillRect(0, canvasHeight-muckLevel-5, canvasWidth, 5+muckLevel);
 
-    // draw the platforms
-    for (let i = 0; i < platforms.length; i++) {
-      platforms[i].update();
-    }
 
     // draw the message history
     let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
@@ -335,7 +353,7 @@ function updateGameArea() {
       // combine adjacent gravestones
       for (let e = 0; e < graveStones.length; e++) {
         if (!graveStones[e].elder && d !== e && graveStones[d].x == graveStones[e].x && graveStones[d].y == graveStones[e].y) {
-          graveStones[d].timer += graveStones[e].timer;
+          graveStones[d].timer = graveStones[e].timer;
           graveStones.splice(e, 1);
           e--;
         }
@@ -358,15 +376,13 @@ function updateGameArea() {
     // draw the Ghosts
     for (let i = 0; i < myGhosts.length; i++) {
       if (myGhosts[i].y < 0 - myGhosts[i].size*20) {
-        if (Math.random() < 1/2) {
-          let fireFlySize = myGhosts[i].size/3;
-          if (fireFlySize < 0.5) {
-            fireFlySize = 0.4;
-          }
-          sendMessage('A Ghost became a FireFly');
-          fireflies.push(new FireFly(myGhosts[i].x, myGhosts[i].y, fireflies[fireflies.length-1], fireFlySize, myGhosts[i].secretColour));
-          fireflies[fireflies.length-1].touches = 200;
+        let fireFlySize = myGhosts[i].size/8;
+        if (fireFlySize < 0.4) {
+          fireFlySize = 0.4;
         }
+        sendMessage('A Ghost became a FireFly');
+        fireflies.push(new FireFly(myGhosts[i].x, myGhosts[i].y, fireflies[fireflies.length-1], fireFlySize, myGhosts[i].secretColour));
+        fireflies[fireflies.length-1].touches = 200;
         myGhosts.splice(i, 1);
         i--;
       } else {
@@ -403,6 +419,7 @@ function updateGameArea() {
         myGuys.push(new Agent(ranX, ranY, 5, randSize, 'girl', Math.random()));
         myGuys[myGuys.length-1].name = getRandomFemaleName(nameSeed);
       }
+      myGuys[myGuys.length-1].secretColour = randomColour();
       sendMessage('A stranger called '+myGuys[myGuys.length-1].name+' appeared');
     }
 
@@ -461,7 +478,7 @@ function updateGameArea() {
       }
       fireflies[f].update();
     }
-    basicInfo.text = tickerToTime() +' Day '+day+' Mates '+ myGuys.length+ ' Elders '+elders+' Fireflies '+fireflies.length;
+    basicInfo.text = tickerToTime() +' Day '+day+' Mates '+ myGuys.length+ ' Elders '+elders+' Fireflies '+fireflies.length+' Trees '+trees.length;
     basicInfo.update();
     newestMessage.text = currentMessage;
     newestMessage.update();
@@ -485,20 +502,80 @@ function everyinterval(n) {
   return false;
 }
 /**
-* function to describe a platform
+* function to describe a Tree
 * @param {int} x - the x coordinate
 * @param {int} y - the y coordinate
 * @param {int} width - the width
-* @param {int} height - the height
+* @param {int} height - the height of the Tree base
+* @param {int} maxHeight - the maximum height the Tree can reach;
 */
-function Platform(x, y, width, height) {
+function Tree(x, y, width, height, maxHeight) {
+  this.reachedMaxHeight = false;
+  this.loadthisframe = 0;
+  this.circleCenterX = x;
+  this.circleCenterY = y;
   this.x = x;
   this.y = y;
   this.width = width;
   this.height = height;
+  this.maxHeight = maxHeight;
+  // this.angle = 0;
+  // this.speedX = 0;
+  // this.clockwise = clockwise;
   this.update = function() {
     ctx.fillStyle = trueBlack;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    // COMMENTED OUT CODE FOR CIRCULAR MOTION
+    // the radius and angle of the circle, we start at angle 0
+    // let radius = trueBottom*0.4;
+    // Math.PI/180 is for transforming angle into radiant
+    // Math.cos(angle) is the ratio of adjacent to hypothenuse
+    // Math.sin(angle) is the ratio of opposite to hypothenuse
+    // the hypothenuse is the radius
+    // let newX = radius * Math.cos(this.angle * (Math.PI/180));
+    // let newY = radius * Math.sin(this.angle * (Math.PI/180));
+    // w x and y values to the circle center
+    // let newxpos = newX + this.circleCenterX;
+    // let newypos = newY + this.circleCenterY;
+    // this.speedX = newxpos - this.x;
+    // this.x = newxpos;
+    // this.y = newypos;
+
+    if (this.y > canvasHeight) {
+      this.y = canvasHeight;
+    }
+    if (this.y < trueBottom-this.maxHeight) {
+      this.y = trueBottom-this.maxHeight;
+      this.reachedMaxHeight = true;
+    }
+
+    if (this.y <= canvasHeight && this.y >= trueBottom-(this.maxHeight)) {
+      if (this.y > fireflies[0].y) {
+        this.y += (this.loadthisframe/60) - (0.025*(75/this.width));
+      } else {
+        this.y += (this.loadthisframe/60);
+      }
+    }
+    // ctx.fillRect(this.x-(this.width/2), this.y, this.width, this.height);
+    ctx.globalAlpha = 0.9;
+    // ctx.fillRect(this.x-(this.width/6), this.y+this.height, this.width/3, trueBottom - this.y - this.height);
+    // ctx.globalAlpha = 1;
+    ctx.drawImage(acacia, this.x-(this.width*0.5), this.y-10, this.width, 200/(300/this.width));
+    ctx.fillRect(this.x-(this.width/30), this.y+(this.width/4.5), this.width/12.5, trueBottom - this.y - this.height);
+    // label
+    // ctx.fillStyle = glowColour;
+    // ctx.font = '10px' + ' ' + globalFont;
+    // ctx.fillText(this.reachedMaxHeight, this.x, this.y);
+
+
+    // increase the angle so that it moves in circular way
+    // it is not necessary to limit/reset the angle to 360°
+    // because sinus and cosinus work for angles bigger than 360°
+    //   if (this.clockwise) {
+    //   this.angle ++;
+    // } else {
+    //   this.angle --;
+    // }
+    this.loadthisframe = 0;
   };
 }
 
@@ -651,7 +728,7 @@ function Grave(x, y, size, speedX, speedY, elder, secretColour) {
       this.image = tombstone3;
     }
   }
-  this.update = function(d) {
+  this.update = function() {
     if (!this.elder) {
       this.timer -= 0.075;
     }
@@ -733,6 +810,7 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
   guyID++;
   this.elder = false;
   this.supersaiyan = 0;
+  this.reachedNirvana = false;
   this.focus = fireflies[0];
   // reset rotation
   this.resetRotation = function(fastest) {
@@ -764,25 +842,29 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
   };
   // jump semi-randomly
   this.jump = function() {
-    // decide what to aim for
-    if (this.elder && graveStones.length > 0) {// }&& this.anniversary) {
-      if (!anniversary || obelisks == 0 ) {
-        // if it's a regular time of day, or there are no obelsisks, just go for the shittiest gravestone to maintain it
-        this.focus = graveStones[this.findClosestGrave()];
-        if (this.focus == 0) {
-          this.focus = fireflies[this.findClosestFireFly()];
+    //decide whether to jump or not
+    let jumpImpetus = Math.random();
+    if (jumpImpetus <= 0.05 && this.focus.y <= this.y) {
+
+      // decide what to aim for
+      if (this.elder && graveStones.length > 0) {// }&& this.anniversary) {
+        if (!anniversary || obelisks == 0 ) {
+          // if it's a regular time of day, or there are no obelsisks, just go for the shittiest gravestone to maintain it
+          let target = this.findClosestGrave();
+          if (target == 'X') {
+            this.focus = fireflies[this.findClosestFireFly()];
+          } else {
+            this.focus = graveStones[target];
+          }
+        } else {
+          // if it's a special time of day and there are obelisks, go for the best gravestone and make babies out of it
+          this.focus = graveStones[this.findClosestObelisk()];
         }
       } else {
-        // if it's a special time of day and there are obelisks, go for the best gravestone and make babies out of it
-        this.focus = graveStones[this.findClosestObelisk()];
+        this.focus = fireflies[this.findClosestFireFly()];
       }
-    } else {
-      this.focus = fireflies[this.findClosestFireFly()];
-    }
 
-    if (this.focus.y <= this.y) {
-      let jumpImpetus = Math.random();
-      if (jumpImpetus <= 0.05 && this.focus.y <= this.y) {
+      if (this.focus.y <= this.y) {
         this.speedY = -this.size;
         let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
         this.speedX += 50*Math.cos(targetangle);
@@ -792,17 +874,15 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
         this.sitting = false;
         return true;
       }
-    } else {
-      if (!this.supersaiyan && this.y < trueBottom-(this.size)-(this.limbLength/2.5)) {
+    } else if (!this.supersaiyan && this.y < trueBottom-(this.size)-(this.limbLength/2.5)) {
         this.sitting = true;
       }
       return false;
-    }
   };
   this.findClosestFireFly = function() {
     let tmp = maxDistance;
     let target = 'X';
-    for (let i=0; i < fireflies.length; i++) {
+    for (let i = 0; i < fireflies.length; i++) {
       let tmpX = this.x-fireflies[i].x;
       let tmpY = this.y-fireflies[i].y;
       let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
@@ -820,21 +900,21 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
 
   this.findClosestGrave = function() {
     let tmp = maxDistance;
+    let tmp2 = 100;
     let target = 'X';
-    for (let i=0; i < graveStones.length; i++) {
-      if (graveStones[i].timer < 100) {
+    for (let i = 0; i < graveStones.length; i++) {
+      if (graveStones[i].timer < tmp2) {
         let tmpX = this.x-graveStones[i].x;
         let tmpY = this.y-graveStones[i].y;
         let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
         if (distance < tmp) {
           tmp = distance;
+          tmp2 = graveStones[i].timer;
           target = i;
         }
       }
     }
     if (target == 'X') {
-      console.log('no viable target found');
-      return 0;
     }
     return target;
   };
@@ -860,15 +940,21 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     return target;
   };
 
-  // check for bounce on walls
+  // check for bounces on walls and landing on trees
   this.physicsCheck = function() {
     this.hitBottom = false;
-    let hitPlatform = false;
-    for (let i = 0; i < platforms.length && !hitPlatform; i++) {
-      if (this.x >= platforms[i].x && this.x <= platforms[i].x + platforms[i].width && this.y >= platforms[i].y-(this.size)-(this.limbLength/2.5) && this.y <= platforms[i].y+ platforms[i].height && this.speedY >= 0) {
-        this.y = platforms[i].y-(this.size)-(this.limbLength/2.5);
-        hitPlatform = true;
+    // check if mate hit a Tree
+    let hitTree = false;
+    for (let i = 0; i < trees.length && !hitTree; i++) {
+      if (this.x >= trees[i].x + (this.size/2) - (trees[i].width/2) && this.x <= trees[i].x - (this.size/2) + (trees[i].width/2) && this.y >= trees[i].y - (this.size) - (this.limbLength/2.5) - (this.size/2) && this.y <= trees[i].y+ trees[i].height && this.speedY >= 0) {
+        this.y = trees[i].y-(this.size)-(this.limbLength/2.5);
+        trees[i].loadthisframe += this.size;
+        hitTree = true;
         this.hitAFloor();
+        this.energy -= 0.01;
+        if (this.y > trueBottom-(this.size)-(this.limbLength/2.5)) {
+          this.y = trueBottom-(this.size)-(this.limbLength/2.5);
+        }
       }
     }
 
@@ -889,27 +975,36 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
       let targetangle = Math.atan2(0, this.x);
       this.spin += elasticity*targetangle/10;
     }
+    // check if mate hit the floor
     if (!this.hitBottom && this.y >= trueBottom-(this.size)-(this.limbLength/2.5)) {
       this.y = trueBottom-(this.size)-(this.limbLength/2.5);
+      this.speedY = 0;
       this.hitAFloor();
+      if (this.supersaiyan > 0 && tryToPlantaTree(this.x)) {
+        sendMessage(this.name+' planted a tree');
+      }
     }
   };
   this.hitAFloor = function() {
-    this.hitBottom = true;
-    this.sitting = false;
-    // apply floor forces
-    this.speedY = 0;
-    this.speedX *= 0.9;
-    this.resetRotation(false);
-    // jump occasionally
-    if (this.rotation == 0 && this.phase == 0 && this.hitBottom && this.jump()) {
-      this.health -= 1;
-    } else if (this.energy <= 0) {
+    if (this.energy <= 0) {
       // fall asleep when tired
       this.phase = 1;
       this.speedX = 0;
+      this.speedY = 0;
       this.rotation = 0;
       this.spin = 0;
+    } else {
+      this.hitBottom = true;
+      this.sitting = false;
+      // apply floor forces
+      this.speedX *= 0.9;
+      this.resetRotation(false);
+      // jump occasionally
+      if (this.rotation == 0 && this.phase == 0 && this.hitBottom) {
+        if (this.jump()) {
+          this.health -= 1;
+        }
+      }
     }
   };
   this.update = function() {
@@ -921,22 +1016,12 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     let sameDirection = false;
     let offsetX = Math.abs(this.focus.x - this.x);
     let legAngle = Math.atan2(this.speedY, this.speedX);
-
-    // calculate colour
-    this.colour = colourIndicator(this);
-    let ri = hexToRgb(this.secretColour).r;
-    let gi = hexToRgb(this.secretColour).g;
-    let bi = hexToRgb(this.secretColour).b;
-    let rj = hexToRgb(this.colour).r;
-    let gj = hexToRgb(this.colour).g;
-    let bj = hexToRgb(this.colour).b;
-    combr = Math.round((ri+ri+rj)/3);
-    combg = Math.round((gi+gi+gj)/3);
-    combb = Math.round((bi+bi+bj)/3);
-    this.colour = rgbToHex(combr, combg, combb);
+    // set body colour
+    this.colour = mixTwoColours(this.secretColour, colourIndicator(this));
+    if (this.elder) {
+      this.colour = decreaseSaturationHEX(this.colour);
+    }
     ctx.fillStyle= this.colour;
-
-
     for (let f = 0; f < fireflies.length; f++) {
       if (!fireflies[f].touchedThisFrame && this.phase == 0 && this.energy > 0 && detectCollision(this, fireflies[f])) {
         fireflies[f].touchedThisFrame = true;
@@ -944,7 +1029,16 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
         this.resetRotation(true);
         fireflies[f].speedX += (this.speedX*this.size)/2000;
         fireflies[f].speedY += (this.speedY*this.size)/2000;// + (0.002 * this.size);
-        if (this.health >= 95 && this.love >= 95 && this.energy >= 95 && this.size >= 10) {
+        if (this.energy < 100) {
+          this.energy += 0.6;
+        }
+        if (this.love < 100) {
+          this.love += 2;
+        }
+        if (this.health < 100) {
+          this.health += 4;
+        }
+        if (this.health >= superThreshold && this.love >= superThreshold && this.energy >= superThreshold) {
           // let go of the FireFly
           this.speedY = -20;
         } else {
@@ -977,16 +1071,6 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
           }
           this.speedY -= 1;
           this.limbLength = (this.size*1.5);
-          this.size = this.size;
-          if (this.energy <= 99.4) {
-            this.energy += 0.6;
-          }
-          if (this.love <= 98) {
-            this.love += 2;
-          }
-          if (this.health <= 96) {
-            this.health += 4;
-          }
           if (this.speedX < 10 && this.speedX > -10 && this.speedY < 10 & this.speedY > -10) {
             // legAngle = -1.6;
           }
@@ -1078,12 +1162,12 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     }
     tmp = Math.abs(tmp-15); // 0 to 15 to 0 to 15
 
-    if (!this.hitBottom) {
+    if (!this.hitBottom && this.phase == 0) {
       tmp = 0;
       ctx.rotate(90 * Math.PI / 180);
       ctx.rotate(Math.atan2(-this.speedY, -this.speedX));
     }
-    if (this.phase == 1) {
+    if (this.hitBottom || this.phase == 1) {
       ctx.translate(0, sleepshift);
     }
     ctx.beginPath();
@@ -1095,7 +1179,7 @@ function Agent(x, y, bodySize, maxSize, gender, ears) {
     tailGradient.addColorStop(1, this.colour);
     ctx.fillStyle = tailGradient;
     ctx.fill();
-    if (!this.hitBottom) {
+    if (!this.hitBottom && this.phase == 0) {
       ctx.rotate(-Math.atan2(-this.speedY, -this.speedX));
     }
     ctx.restore();
@@ -1504,8 +1588,12 @@ function colourIndicator(creature) {
   }
   if (creature.gender == 'girl') {
     return rgbToHex(love, quirk, health);
-  }
+  } else if (creature.gender == 'boy') {
+    return rgbToHex(health, love, quirk);
+} else {
   return rgbToHex(quirk, love, health);
+
+}
 }
 
 /**
@@ -1514,9 +1602,11 @@ function colourIndicator(creature) {
 function recalculateMyGuys() {
   // block for all my guys
   for (let i = 0; i < myGuys.length; i++) {
-    if (myGuys[i].size >= myGuys[i].maxSize && myGuys[i].supersaiyan == 0 && myGuys[i].health >= superThreshold && myGuys[i].energy >= superThreshold && myGuys[i].love >= superThreshold) {
+    // check nirvana status
+    if (!myGuys[i].reachedNirvana && myGuys[i].children > 0 && myGuys[i].size >= myGuys[i].maxSize && myGuys[i].supersaiyan == 0 && myGuys[i].health >= superThreshold && myGuys[i].energy >= superThreshold && myGuys[i].love >= superThreshold) {
       explosions.push(new Explosion(myGuys[i].x, myGuys[i].y, myGuys[i].secretColour, glowColour));
       produceExplosion(myGuys[i].x, myGuys[i].y);
+      myGuys[i].reachedNirvana = true;
       myGuys[i].supersaiyan = 100;
       myGuys[i].speedX = 0;
       myGuys[i].speedY = 0;
@@ -1548,7 +1638,7 @@ function recalculateMyGuys() {
         myGuys[i].supersaiyan -= 0.05;
         myGuys[i].energy = 100;
       }
-      if (myGuys[i].love > 0.2 && myGuys[i].love < 100) {
+      if (myGuys[i].love > 0.25) {
         myGuys[i].love -= 0.25;
       } else if (myGuys[i].love > 100) {
         myGuys[i].love = 100;
@@ -1580,28 +1670,22 @@ function recalculateMyGuys() {
             myGuys[i].speedY *=0.5;
             if ((!myGuys[i].focus.elder || !anniversary)) {
               myGuys[i].focus.tended = 50;
-              myGuys[i].focus.timer += 30;
-              let ri = hexToRgb(myGuys[i].secretColour).r;
-              let gi = hexToRgb(myGuys[i].secretColour).g;
-              let bi = hexToRgb(myGuys[i].secretColour).b;
-              let rj = hexToRgb(glowColour).r;
-              let gj = hexToRgb(glowColour).g;
-              let bj = hexToRgb(glowColour).b;
-              combr = Math.round((ri+rj)/2);
-              combg = Math.round((gi+gj)/2);
-              combb = Math.round((bi+bj)/2);
-              let newC = rgbToHex(combr, combg, combb);
+              myGuys[i].focus.timer += 5;
+              let newC = mixTwoColours(myGuys[i].secretColour, glowColour);
               starfield.push(new Inert(3, 3, newC, myGuys[i].focus.x, myGuys[i].focus.y+(5*myGuys[i].focus.size), true));
               myGuys[i].health += 0.5;
             } else {
-              myGuys[i].focus.timer -= 20;
+              myGuys[i].focus.timer -= 30;
               myGuys[i].love += 10;
               let msgString = (generateBaby(myGuys[i], myGuys[i]))+' called ';
               let nameSeed = Math.round(Math.random()*totalMaleNames);
               if (myGuys[myGuys.length-1].gender == 'boy') {
                 myGuys[myGuys.length-1].name = getRandomMaleName(nameSeed);
-              } else {
+              } else if (myGuys[myGuys.length-1].gender == 'girl') {
                 myGuys[myGuys.length-1].name = getRandomFemaleName(nameSeed);
+              } else {
+                let nameSeed2 = Math.round(Math.random()*totalFemaleNames);
+                myGuys[myGuys.length-1].name = getRandomName(nameSeed+nameSeed2);
               }
               sendMessage('A baby '+msgString+myGuys[myGuys.length-1].name+' was sprouted at an obelisk');
             }
@@ -1621,8 +1705,10 @@ function recalculateMyGuys() {
         if (i !== j && myGuys[i].phase == 0 && myGuys[j].phase == 0 && detectCollision(myGuys[i], myGuys[j])) {
           collide(myGuys[i], myGuys[j]);
           // having a baby
-          if (myGuys.length <= 100 && !(myGuys[i].gender == myGuys[j].gender) && myGuys[i].supersaiyan == 0 && myGuys[j].supersaiyan == 0 && !myGuys[i].elder && !myGuys[j].elder && (myGuys[i].love + myGuys[j].love) >= 90
-          && myGuys[i].health >= 50 && myGuys[j].health >= 50 && myGuys[i].energy >= 50 && myGuys[j].energy >= 50 && myGuys[i].size >= myGuys[i].maxSize && myGuys[j].size >= myGuys[j].maxSize) {
+          if ((((myGuys[i].id !== '0000' && myGuys[j].id !== '0001') || (myGuys[i].id !== '0001' && myGuys[j].id !== '0000')) || (myGuys[i].age > 0 && myGuys[j].age > 0))
+          && myGuys.length <= 100 && myGuys[i].gender !== 'non binary' && myGuys[j].gender !== 'non binary' && !(myGuys[i].gender == myGuys[j].gender) && myGuys[i].supersaiyan == 0 && myGuys[j].supersaiyan == 0
+          && !myGuys[i].elder && !myGuys[j].elder && (myGuys[i].love + myGuys[j].love) >= 90 && myGuys[i].health >= 50 && myGuys[j].health >= 50 && myGuys[i].energy >= 50 && myGuys[j].energy >= 50
+          && myGuys[i].size >= myGuys[i].maxSize && myGuys[j].size >= myGuys[j].maxSize) {
             // generate a baby
             let msgString = 'error';
             if (myGuys[i].gender == 'boy') {
@@ -1649,7 +1735,7 @@ function recalculateMyGuys() {
         }
       }
       // set elder status
-      if (!myGuys[i].elder && elders+1 <= myGuys.length/8 && myGuys[i].children >= 6) {
+      if (myGuys[i].reachedNirvana && !myGuys[i].elder && elders+1 <= myGuys.length/8 && myGuys[i].children >= 4) {
         myGuys[i].elder = true;
         myGuys[i].size*=0.8;
         sendMessage(myGuys[i].name+' became an Elder');
@@ -1701,6 +1787,26 @@ function recalculateMyGuys() {
     }
   }
 }
+/**
+* function to attempt to plant a tree
+* @param {int} x - the x coordinate where the mate is trying to place a tree
+*/
+function tryToPlantaTree(x) {
+    let allow = true;
+    let maxHeight = trueBottom*0.60+(Math.random()*(trueBottom*0.30));
+    let treeWidth = 35 + (Math.random()*45);
+    for (let j = 0; j < trees.length; j++) {
+      if (x - (treeWidth/3) < trees[j].x + (trees[j].width/3) && trees[j].x - (trees[j].width/3) < x + (treeWidth/3)) {
+        allow = false;
+      }
+    }
+    if (allow) {
+      trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight));
+      return true;
+    }
+  return false;
+}
+
 
 /**
 * function to handle comets
@@ -1871,16 +1977,6 @@ function collide(obj1, obj2) {
   if (!obj1.hitBottom && !obj2.hitBottom) {
     obj1.y += (obj1.y - obj2.y)*newprop/obj1.size;
     obj2.y -= (obj1.y - obj2.y)*newprop/obj2.size;
-  } else {
-    if (obj1.hitBottom && !obj2.hitBottom) {
-      // let thisX = (obj1.x - obj2.x)*newprop/obj2.size;
-      // let thisY = Math.sqrt(Math.abs((targeth*targeth)-(thisX*thisX)));
-      // obj2.y -= thisY;
-    } else if (obj2.hitBottom && !obj1.hitBottom) {
-      // let thisX = (obj1.x - obj2.x)*newprop/obj1.size;
-      // let thisY = Math.sqrt(Math.abs((targeth*targeth)-(thisX*thisX)));
-      // obj1.y -= thisY;
-    }
   }
   // calculate transfer of energy
   // energy = mass X velocity
@@ -1896,8 +1992,12 @@ function collide(obj1, obj2) {
   obj2.speedY += energyTransfer;
   // calculate rotation on collision
   let targetangle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
-  obj1.spin += targetangle/10;
-  obj2.spin -= targetangle/10;
+  if (!obj1.hitBottom) {
+    obj1.spin += targetangle/10;
+  }
+  if (!obj2.hitBottom) {
+    obj2.spin -= targetangle/10;
+  }
 }
 
 /**
@@ -1905,11 +2005,15 @@ function collide(obj1, obj2) {
 * @return {string} the gender
 */
 function randomGender() {
+  if (Math.random() < 0.004) {
+    return 'non binary';
+  } else {
   let base = Math.round(Math.random());
   if (base == 0) {
     return 'boy';
   }
   return 'girl';
+}
 }
 
 /**
@@ -1938,12 +2042,37 @@ function generateBaby(parent1, parent2) {
   myGuys.push(new Agent(parent1.x, parent1.y-parent1.size, 5, randSize, babyGender, babyEars));
   // set the baby's ears
   // set the baby's secret colour
-  let ri = hexToRgb(parent1.secretColour).r;
-  let gi = hexToRgb(parent1.secretColour).g;
-  let bi = hexToRgb(parent1.secretColour).b;
-  let rj = hexToRgb(parent2.secretColour).r;
-  let gj = hexToRgb(parent2.secretColour).g;
-  let bj = hexToRgb(parent2.secretColour).b;
+  let ri = 0;
+  let gi = 0;
+  let bi = 0;
+  let rj = 0;
+  let gj = 0;
+  let bj = 0;
+  // decide which method of colour logic to use
+  let seed = Math.round(Math.random()*2);
+  if (seed == 0) {
+    ri = hexToRgb(parent1.secretColour).r;
+    gi = hexToRgb(parent1.secretColour).g;
+    bi = hexToRgb(parent1.secretColour).b;
+    rj = hexToRgb(parent1.secretColour).r;
+    gj = hexToRgb(parent1.secretColour).g;
+    bj = hexToRgb(parent1.secretColour).b;
+  } else if (seed == 1) {
+    ri = hexToRgb(parent2.secretColour).r;
+    gi = hexToRgb(parent2.secretColour).g;
+    bi = hexToRgb(parent2.secretColour).b;
+    rj = hexToRgb(parent2.secretColour).r;
+    gj = hexToRgb(parent2.secretColour).g;
+    bj = hexToRgb(parent2.secretColour).b;
+  } else {
+    ri = hexToRgb(parent1.secretColour).r;
+    gi = hexToRgb(parent1.secretColour).g;
+    bi = hexToRgb(parent1.secretColour).b;
+    rj = hexToRgb(parent2.secretColour).r;
+    gj = hexToRgb(parent2.secretColour).g;
+    bj = hexToRgb(parent2.secretColour).b;
+  }
+  // mix in a little random
   let seedR = Math.floor(Math.random()*255);
   let seedG = Math.floor(Math.random()*255);
   let seedB = Math.floor(Math.random()*255);

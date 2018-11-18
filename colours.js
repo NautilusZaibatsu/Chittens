@@ -48,3 +48,85 @@ function hexToRgb(hex) {
     b: parseInt(result[3], 16),
   } : null;
 }
+
+/**
+* Converts an RGB color value to HSL
+* @param   Number  r       The red color value
+* @param   Number  g       The green color value
+* @param   Number  b       The blue color value
+* @return  Array           The HSL representation
+*/
+function rgbToHsl(r, g, b) {
+  r /= 255, g /= 255, b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+  if (max == min) {
+    h = s = 0; // achromatic
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return [ h, s, l ];
+}
+
+/**
+* Converts an HSL color value to RGB
+* @param   Number  h       The hue
+* @param   Number  s       The saturation
+* @param   Number  l       The lightness
+* @return  Array           The RGB representation
+*/
+function hslToRgb(h, s, l) {
+  let r, g, b;
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    let p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [ r * 255, g * 255, b * 255 ];
+}
+
+function increaseSaturationHEX(hex) {
+  let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
+  let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
+  // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
+  return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
+}
+
+function decreaseSaturationHEX(hex) {
+  let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
+  let hslrgb = hslToRgb(rgbhsl[0], 0, rgbhsl[2]);
+  // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
+  return rgbToHex(Math.round(hslrgb[0]), 0, Math.round(hslrgb[2]));
+}
+
+function mixTwoColours(hex1, hex2) {
+  ri = hexToRgb(hex1).r;
+  gi = hexToRgb(hex1).g;
+  bi = hexToRgb(hex1).b;
+  rj = hexToRgb(hex2).r;
+  gj = hexToRgb(hex2).g;
+  bj = hexToRgb(hex2).b;
+  combr = Math.round((ri+rj)/2);
+  combg = Math.round((gi+gj)/2);
+  combb = Math.round((bi+bj)/2);
+  return rgbToHex(combr, combg, combb);
+}
