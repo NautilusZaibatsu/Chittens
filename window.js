@@ -922,7 +922,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
                 if (a.name < b.name) return -1;
                 return 0;
               });
-              sendMessage(nameArray[0].name+' and '+nameArray[1].name+' tried to snuggle');
+              sendMessage(nameArray[0].name+' and '+nameArray[1].name+' wanted to snuggle');
             }
           }
 

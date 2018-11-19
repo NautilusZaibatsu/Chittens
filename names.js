@@ -197,7 +197,7 @@ function generateBabyName(maleName, femaleName, gender) {
       }
       while (result == maleName || result == femaleName) {
         generateBabyName(maleName, femaleName, gender);
-        console.log('prevented from picking identical name '+target);
+        console.log('prevented from picking identical name '+result);
       }
       return result;
     console.log('Stop is '+stop+' Ethnic was '+ethnic+' namelogic was '+nameLogic+' Parents were '+maleName+' & '+femaleName+' gender was '+gender+' seed was '+thisSeed);
