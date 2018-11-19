@@ -957,6 +957,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             this.sitting = false;
             this.health -= 1;
           }
+        } else if (this.focus.y > this.y) {
+          this.sitting = true;
         }
       }
     }
