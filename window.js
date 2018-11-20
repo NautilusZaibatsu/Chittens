@@ -4,13 +4,14 @@
 
 // font
 let debugString = 'nothing'; // for debugging
-const globalFont = 'Lucida Console';
+const globalFont = 'Consolas';
+const fontWidth = 8.4;
 // universal physics constants
 const gravity = 0.02;
 const elasticity = 0.2;
 const speedLimit = 100;
 const superThreshold = 99;
-//  canvas
+// canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
 const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
 const maxDistance = canvasWidth*canvasHeight;
@@ -22,16 +23,44 @@ const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
-// set the environment start time
+// set the environment start time and start values
 const d = new Date();
 const startTime = d.getHours();
 const hourOfCreation = Math.floor(startTime * (1000/23));
 const hocLength = 1000/12;
-let daytimeCounter = hourOfCreation;
-let timeMod = daytimeCounter;
-let anniversary = true;
-let day = 0;
-let paused = false;
+daytimeCounter = hourOfCreation;
+timeMod = daytimeCounter;
+anniversary = true;
+day = 0;
+paused = false;
+chosenChibiF = false;
+chosenChibiM = false;
+elders = 0;
+obelisks = 0;
+guyID = 0;
+selection = null;
+
+// set global colours / limits
+glowColour = '#FFFF88';
+trueWhite = '#FFFFFF';
+trueBlack = '#000000';
+superColour = 255;
+
+// init stuff
+chibis = [];
+graveStones = [];
+myGhosts = [];
+starfield = [];
+comets = [];
+trails = [];
+glyphs = [];
+fireflies = [];
+trees = [];
+pointerPos = new MousePosition(canvasWidth/2, canvasHeight/2);
+fireflies.push(new FireFly(canvasWidth/2, trueBottom, pointerPos, 1, glowColour));
+boxes = [];
+buttons = [];
+labels = [];
 
 // Images
 // for my guys
@@ -81,105 +110,80 @@ midnightcolour[0] = '#020421';
 midnightcolour[1] = '#020423';
 midnightcolour[2] = '#020e2b';
 midnightcolour[3] = '#010005';
-// set global colours / limits
-glowColour = '#FFFF88';
-trueWhite = '#FFFFFF';
-trueBlack = '#000000';
-superColour = 255;
-
-pointerPos = new MousePosition(canvasWidth/2, canvasHeight/2);
-chibis = [];
-graveStones = [];
-myGhosts = [];
-starfield = [];
-comets = [];
-trails = [];
-glyphs = [];
-fireflies = [];
-fireflies.push(new FireFly(Math.random()*canvasWidth, Math.random()*canvasHeight, pointerPos, 1, glowColour));
-elders = 0;
-obelisks = 0;
-guyID = 0;
-selection = '0000';
-trees = [];
 
 
 // UI and messaging
-basicInfo = new TextElement('15px', 'Consolas', trueWhite, 10, canvasHeight - 10);
-newestMessage = new TextElement('15px', 'Consolas', trueWhite, 10, canvasHeight - 30);
+basicInfo = new TextElement('15px', trueWhite, 10, canvasHeight - 10);
+newestMessage = new TextElement('15px', trueWhite, 10, canvasHeight - 30);
 let messagesToSave = canvasHeight/20;
 
 /**
 * function to start the simulation
 */
 function startGame() {
+  // chibis.push(new Chibi(canvasWidth*0.75, trueBottom-20, 6, 11.5, 'girl', 0));
+  // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.75), trueBottom-20, 6, 12, 'boy', 1));
+  // let ethnicitySeed = Math.round(Math.random()*(numlibs-1));
+  // while (chibis[0].name == null) {
+  //   chibis[0].name = getRandomFemaleEthnicName(ethnicitySeed);
+  // }
+  // while (chibis[1].name == null) {
+  //   chibis[1].name = getRandomMaleEthnicName(ethnicitySeed);
+  // }
+  // chibis[0].age = 1;
+  // chibis[1].age = 1;
+  // chibis[0].coatMod[0] = Math.random();
+  // chibis[1].coatMod[0] = Math.random();
+  // chibis[0].coatMod[1] = Math.random();
+  // chibis[1].coatMod[1] = Math.random();
+  // chibis[0].firstColour = randomColour();
+  // chibis[1].firstColour = randomColour();
+
   // init console data
   console.log('Scale to base is '+proportion);
   console.log('Maximum population is '+maxPop);
   console.log(reportNames(100000));
 
   myGameArea.start();
+  initButtons();
 
-  chibis.push(new Chibi(canvasWidth*0.75, trueBottom-20, 6, 11.5, 'girl', 0));
-  chibis.push(new Chibi(canvasWidth-(canvasWidth*0.75), trueBottom-20, 6, 12, 'boy', 1));
-  // createGlyphs(chibis[0].x + ((chibis[1].x - chibis[0].x)/2), trueBottom, '#e94db5', '\u2764');
-  // createGlyphs(chibis[0].x + ((chibis[1].x - chibis[0].x)/2), 0, '#92ecf5', '\u274b');
-  // createGlyphs(chibis[0].x + ((chibis[1].x - chibis[0].x)/2), 0+10, '#e94db5', '\u2764');
-  // createGlyphs(chibis[0].x + ((chibis[1].x - chibis[0].x)/2), trueBottom-10, '#92ecf5', '\u274b');
+  // make your choice of starters
+  initFemaleCattery();
+  if (!paused) {
 
+    // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.5), trueBottom-20, 6, 10, 'non binary', 1));
+    // chibis[2].name = getRandomName(nameSeed);
+    // chibis[2].firstColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#12d4ee');
 
-  let ethnicitySeed = Math.round(Math.random()*(numlibs-1));
-  while (chibis[0].name == null) {
-    chibis[0].name = getRandomFemaleEthnicName(ethnicitySeed);
-  }
-  while (chibis[1].name == null) {
+    for (let j = 0; j < 20; j++) {
+      ranX = Math.floor(Math.random()*(canvasWidth));
+      ranY = Math.floor(Math.random()*(trueBottom));
+      // ranSize = Math.random()*3;
+      // starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, ranY, false));
 
-    chibis[1].name = getRandomMaleEthnicName(ethnicitySeed);
-  }
-  chibis[0].age = 1;
-  chibis[1].age = 1;
-  chibis[0].facemod[0] = Math.random();
-  chibis[1].facemod[0] = Math.random();
-  chibis[0].facemod[1] = Math.random();
-  chibis[1].facemod[1] = Math.random();
-  chibis[0].geneticColour = randomColour();
-  chibis[1].geneticColour = randomColour();
-  // chibis[0].elder = true;
-  // elders++;
+      // chibis.push(new Chibi(ranX, ranY, 8, 10, 'girl', Math.random()));
+      // chibis[(j*2)+2].name = getFemaleName(Math.round(Math.random()*namesinlib*numlibs));
+      // chibis[(j*2)+2].firstColour = randomColour();
+      // chibis[(j*2)+2].age = 1;
+      // chibis[(j*2)+2].coatMod[0] = Math.random();
+      // chibis[(j*2)+2].coatMod[1] = Math.random();
+      // chibis[(j*2)+2].elder = true;
 
-  // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.5), trueBottom-20, 6, 10, 'non binary', 1));
-  // chibis[2].name = getRandomName(nameSeed);
-  // chibis[2].geneticColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#12d4ee');
-
-  sendMessage('\u2764 Once upon a time...');
-  sendMessage('It was just the two of us; '+chibis[1].name+' and '+chibis[0].name);
-
-  for (let j = 0; j < 20; j++) {
-    ranX = Math.floor(Math.random()*(canvasWidth));
-    ranY = Math.floor(Math.random()*(trueBottom));
-    // ranSize = Math.random()*3;
-    // starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, ranY, false));
-
-    // chibis.push(new Chibi(ranX, ranY, 8, 10, 'girl', Math.random()));
-    // chibis[(j*2)+2].name = getFemaleName(Math.round(Math.random()*namesinlib*numlibs));
-    // chibis[(j*2)+2].geneticColour = randomColour();
-    // chibis[(j*2)+2].age = 1;
-    // chibis[(j*2)+2].facemod[0] = Math.random();
-    // chibis[(j*2)+2].facemod[1] = Math.random();
-    // chibis[(j*2)+2].elder = true;
-
-    // chibis.push(new Chibi(ranX, ranY, 8, 10, 'boy', Math.random()));
-    // chibis[(j*2)+3].name = getMaleName(Math.round(Math.random()*namesinlib*numlibs));
-    // chibis[(j*2)+3].geneticColour = randomColour();
-    // chibis[(j*2)+3].age = 1;
-    // chibis[(j*2)+2].facemod[0] = Math.random();
-    // chibis[(j*2)+3].facemod[1] = Math.random();
+      // chibis.push(new Chibi(ranX, ranY, 8, 10, 'boy', Math.random()));
+      // chibis[(j*2)+3].name = getMaleName(Math.round(Math.random()*namesinlib*numlibs));
+      // chibis[(j*2)+3].firstColour = randomColour();
+      // chibis[(j*2)+3].age = 1;
+      // chibis[(j*2)+2].coatMod[0] = Math.random();
+      // chibis[(j*2)+3].coatMod[1] = Math.random();
 
 
-    // graveStones.push(new Grave(ranX, trueBottom, 5+(Math.random()*6), 0, 0, false, '#0000ff'));
-    // graveStones[graveStones.length-1].timer = Math.random()*100;
-    // fireflies.push(new FireFly(ranX, ranY, pointerPos, 1, '#00ff00'));
-    // fireflies[fireflies.length-1].touches = 200;
+      // graveStones.push(new Grave(ranX, trueBottom, 5+(Math.random()*6), 0, 0, false, '#0000ff'));
+      // graveStones[graveStones.length-1].timer = Math.random()*100;
+      // fireflies.push(new FireFly(ranX, ranY, pointerPos, 1, '#00ff00'));
+      // fireflies[fireflies.length-1].touches = 200;
+    }
+  } else {
+    // draw boxes
   }
 }
 
@@ -210,87 +214,173 @@ let myGameArea = {
 * function to redraw and recalculate everything each fram
 **/
 function updateGameArea() {
+  myGameArea.clear();
+  ctx = myGameArea.context;
+  myGameArea.frameNo += 1;
+  if (myGameArea.frameNo == 1 || everyinterval(3)) {
+    // fire a comet
+    if (Math.random() < 0.005) {
+      ranX = Math.floor(Math.random()*(canvasWidth));
+      ranY = Math.floor(Math.random()*(trueBottom/2));
+      comets.push(new Inert(2, 2, glowColour, ranX, ranY, false));
+      comets[comets.length-1].speedX = (Math.random()*2)-1;
+      comets[comets.length-1].speedY = -(Math.random()+0.1);
+    }
+  }
+  // change the colour by time of day
+  outputArray = [];
+  for (let tick = 0; tick < nightcolour.length; tick++) {
+    let ri = 0;
+    let gi = 0;
+    let bi = 0;
+    let rj = 0;
+    let gj = 0;
+    let bj = 0;
+    if (daytimeCounter < 250) {
+      timeMod = daytimeCounter;
+      ri = hexToRgb(midnightcolour[tick]).r;
+      gi = hexToRgb(midnightcolour[tick]).g;
+      bi = hexToRgb(midnightcolour[tick]).b;
+      rj = hexToRgb(morningcolour[tick]).r;
+      gj = hexToRgb(morningcolour[tick]).g;
+      bj = hexToRgb(morningcolour[tick]).b;
+    } else if (daytimeCounter < 500) {
+      timeMod = daytimeCounter - 250;
+      ri = hexToRgb(morningcolour[tick]).r;
+      gi = hexToRgb(morningcolour[tick]).g;
+      bi = hexToRgb(morningcolour[tick]).b;
+      rj = hexToRgb(middaycolour[tick]).r;
+      gj = hexToRgb(middaycolour[tick]).g;
+      bj = hexToRgb(middaycolour[tick]).b;
+    } else if (daytimeCounter < 750) {
+      timeMod = daytimeCounter - 500;
+      ri = hexToRgb(middaycolour[tick]).r;
+      gi = hexToRgb(middaycolour[tick]).g;
+      bi = hexToRgb(middaycolour[tick]).b;
+      rj = hexToRgb(nightcolour[tick]).r;
+      gj = hexToRgb(nightcolour[tick]).g;
+      bj = hexToRgb(nightcolour[tick]).b;
+    } else {
+      timeMod = daytimeCounter - 750;
+      ri = hexToRgb(nightcolour[tick]).r;
+      gi = hexToRgb(nightcolour[tick]).g;
+      bi = hexToRgb(nightcolour[tick]).b;
+      rj = hexToRgb(midnightcolour[tick]).r;
+      gj = hexToRgb(midnightcolour[tick]).g;
+      bj = hexToRgb(midnightcolour[tick]).b;
+    }
+    let combr = Math.floor(ri - ((((ri - rj)/250))*timeMod));
+    let combg = Math.floor(gi - ((((gi - gj)/250))*timeMod));
+    let combb = Math.floor(bi - ((((bi - bj)/250))*timeMod));
+    outputArray[tick] = rgbToHex(combr, combg, combb);
+  }
+  let tankGradient=ctx.createLinearGradient(0, 0, 0, canvasHeight);
+  tankGradient.addColorStop(0, outputArray[0]);
+  tankGradient.addColorStop(0.4, outputArray[1]);
+  tankGradient.addColorStop(0.75, outputArray[2]);
+  tankGradient.addColorStop(1, outputArray[3]);
+  ctx.fillStyle=tankGradient;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  // change the value of trueWhite
+  // trueWhite = mixTwoColours('#FFFFFF', outputArray[2]);
+  hover();
+  // fix the starfield
+  recalculateStarfield();
+  recalculateComets();
+  for (i = starfield.length-1; i >= 0; i--) {
+    starfield[i].update();
+  }
+  // trails
+  for (i = trails.length-1; i >= 0; i--) {
+    trails[i].update();
+    trails[i].timer --;
+    if (trails[i].timer < 0) {
+      trails.splice(i, 1);
+      i --;
+    }
+  }
+  // draw the ground and the background
+  // draw the tree
+  ctx.globalAlpha = 0.8;
+  let iw = newtree.width;
+  if (ph <= 0) {
+    ph = iw;
+  } else {
+    ph -= 100;
+  }
+  // center the image
+  ctx.save();
+  ctx.translate((canvasWidth-idealX)/2, (canvasHeight-idealY)/2);
+  // scale it to the canvas width
+  // ctx.scale(1/(idealY/canvasHeight), 1/(idealY/canvasHeight));
+  for (let y = 0; y < iw; y++) {
+    let scan = 0.3 * Math.sin((y + ph)/100);
+    ctx.drawImage(newtree, 0, y, iw, 1, scan, y, iw, 1);
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  // draw the floor
+  let horizon = ctx.createLinearGradient(0, canvasHeight-muckLevel-5, 0, canvasHeight-muckLevel);
+  horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  horizon.addColorStop(1, trueBlack);
+  ctx.fillStyle = horizon;
+  ctx.fillRect(0, canvasHeight-muckLevel-5, canvasWidth, 5+muckLevel);
+
+  // draw the trees
+  for (let i = 0; i < trees.length; i++) {
+    trees[i].update();
+    if (trees[i].reachedMaxHeight && trees[i].y > trueBottom) {
+      trees.splice(i, 1);
+      i--;
+      sendMessage('A tree died');
+    }
+  }
+
+  // draw the message history
+  let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
+  let ri = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
+  let gi = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
+  let bi = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
+  fade.addColorStop(0, 'rgba('+ri+', '+gi+', '+bi+', 0.05)');
+  fade.addColorStop(1, 'rgba('+ri+', '+gi+', '+bi+', 0.3)');
+  // Fill with gradient
+  ctx.fillStyle = fade;
+  ctx.font = '15px' + ' ' + globalFont;
+  for (let i = messageBuffer.length-2; i >= 0; i--) {
+    ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
+  }
+
+  // update the text
+  basicInfo.text = tickerToTime() +' Day '+day+' Chibis '+ chibis.length+ ' Elders '+elders+' Fireflies '+fireflies.length+' Trees '+trees.length;
+  basicInfo.update();
+  newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
+  newestMessage.update();
+
+  for (let i = 0; i < boxes.length; i++) {
+    boxes[i].update();
+  }
+
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].update();
+  }
+  for (let i = 0; i < labels.length; i++) {
+    labels[i].update();
+  }
+
+
+
   if (!paused) {
-    myGameArea.clear();
-    ctx = myGameArea.context;
-    myGameArea.frameNo += 1;
-    if (myGameArea.frameNo == 1 || everyinterval(3)) {
-      // fire a comet
-      if (Math.random() < 0.005) {
-        ranX = Math.floor(Math.random()*(canvasWidth));
-        ranY = Math.floor(Math.random()*(trueBottom/2));
-        comets.push(new Inert(2, 2, glowColour, ranX, ranY, false));
-        comets[comets.length-1].speedX = (Math.random()*2)-1;
-        comets[comets.length-1].speedY = -(Math.random()+0.1);
-      }
-    }
-    // change the colour by time of day
-    outputArray = [];
-    for (let tick = 0; tick < nightcolour.length; tick++) {
-      let ri = 0;
-      let gi = 0;
-      let bi = 0;
-      let rj = 0;
-      let gj = 0;
-      let bj = 0;
-      if (daytimeCounter < 250) {
-        timeMod = daytimeCounter;
-        ri = hexToRgb(midnightcolour[tick]).r;
-        gi = hexToRgb(midnightcolour[tick]).g;
-        bi = hexToRgb(midnightcolour[tick]).b;
-        rj = hexToRgb(morningcolour[tick]).r;
-        gj = hexToRgb(morningcolour[tick]).g;
-        bj = hexToRgb(morningcolour[tick]).b;
-      } else if (daytimeCounter < 500) {
-        timeMod = daytimeCounter - 250;
-        ri = hexToRgb(morningcolour[tick]).r;
-        gi = hexToRgb(morningcolour[tick]).g;
-        bi = hexToRgb(morningcolour[tick]).b;
-        rj = hexToRgb(middaycolour[tick]).r;
-        gj = hexToRgb(middaycolour[tick]).g;
-        bj = hexToRgb(middaycolour[tick]).b;
-      } else if (daytimeCounter < 750) {
-        timeMod = daytimeCounter - 500;
-        ri = hexToRgb(middaycolour[tick]).r;
-        gi = hexToRgb(middaycolour[tick]).g;
-        bi = hexToRgb(middaycolour[tick]).b;
-        rj = hexToRgb(nightcolour[tick]).r;
-        gj = hexToRgb(nightcolour[tick]).g;
-        bj = hexToRgb(nightcolour[tick]).b;
-      } else {
-        timeMod = daytimeCounter - 750;
-        ri = hexToRgb(nightcolour[tick]).r;
-        gi = hexToRgb(nightcolour[tick]).g;
-        bi = hexToRgb(nightcolour[tick]).b;
-        rj = hexToRgb(midnightcolour[tick]).r;
-        gj = hexToRgb(midnightcolour[tick]).g;
-        bj = hexToRgb(midnightcolour[tick]).b;
-      }
-      let combr = Math.floor(ri - ((((ri - rj)/250))*timeMod));
-      let combg = Math.floor(gi - ((((gi - gj)/250))*timeMod));
-      let combb = Math.floor(bi - ((((bi - bj)/250))*timeMod));
-      outputArray[tick] = rgbToHex(combr, combg, combb);
-    }
-    let tankGradient=ctx.createLinearGradient(0, 0, 0, canvasHeight);
-    tankGradient.addColorStop(0, outputArray[0]);
-    tankGradient.addColorStop(0.4, outputArray[1]);
-    tankGradient.addColorStop(0.75, outputArray[2]);
-    tankGradient.addColorStop(1, outputArray[3]);
-    ctx.fillStyle=tankGradient;
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     if (daytimeCounter < 1000) {
       daytimeCounter += 0.25;
       // establish if it is the age of creation or not
-      if (!anniversary && (daytimeCounter <= Math.abs(1000-(hourOfCreation + hocLength) || daytimeCounter >= hourOfCreation) && daytimeCounter <= (hourOfCreation + hocLength))) {
+      if (chosenChibiF && chosenChibiM && !anniversary && (daytimeCounter <= Math.abs(1000-(hourOfCreation + hocLength) || daytimeCounter >= hourOfCreation) && daytimeCounter <= (hourOfCreation + hocLength))) {
         anniversary = true;
         if (elders > 0) {
           sendMessage('The Hour of Creation began');
         }
-        if (day == 1) {
-          sendMessage('We survived the first day');
-        }
         day ++;
-      } else if (anniversary && (daytimeCounter >= Math.abs(1000-(hourOfCreation + hocLength)) || daytimeCounter >= (hourOfCreation+ hocLength))) {
+      } else if (chosenChibiF && chosenChibiM && anniversary && (daytimeCounter >= Math.abs(1000-(hourOfCreation + hocLength)) || daytimeCounter >= (hourOfCreation+ hocLength))) {
         anniversary = false;
         if (elders > 0) {
           sendMessage('The Hour of Creation ended');
@@ -298,21 +388,6 @@ function updateGameArea() {
       }
     } else {
       daytimeCounter = 1;
-    }
-    // fix the starfield
-    recalculateStarfield();
-    recalculateComets();
-    for (i = starfield.length-1; i >= 0; i--) {
-      starfield[i].update();
-    }
-    // trails
-    for (i = trails.length-1; i >= 0; i--) {
-      trails[i].update();
-      trails[i].timer --;
-      if (trails[i].timer < 0) {
-        trails.splice(i, 1);
-        i --;
-      }
     }
 
     // glyphs
@@ -324,58 +399,7 @@ function updateGameArea() {
       }
     }
 
-
-    // draw the ground and the background
-    // draw the tree
-    ctx.globalAlpha = 0.8;
-    let iw = newtree.width;
-    if (ph <= 0) {
-      ph = iw;
-    } else {
-      ph -= 100;
-    }
-    // center the image
-    ctx.save();
-    ctx.translate((canvasWidth-idealX)/2, (canvasHeight-idealY)/2);
-    // scale it to the canvas width
-    // ctx.scale(1/(idealY/canvasHeight), 1/(idealY/canvasHeight));
-    for (let y = 0; y < iw; y++) {
-      let scan = 0.3 * Math.sin((y + ph)/100);
-      ctx.drawImage(newtree, 0, y, iw, 1, scan, y, iw, 1);
-    }
-    ctx.restore();
-
-    // draw the trees
-    for (let i = 0; i < trees.length; i++) {
-      trees[i].update();
-      if (trees[i].reachedMaxHeight && trees[i].y > trueBottom) {
-        trees.splice(i, 1);
-        i--;
-        sendMessage('A tree died');
-      }
-    }
-
     ctx.globalAlpha = 1;
-    // draw the floor
-    let horizon = ctx.createLinearGradient(0, canvasHeight-muckLevel-5, 0, canvasHeight-muckLevel);
-    horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    horizon.addColorStop(1, trueBlack);
-    ctx.fillStyle = horizon;
-    ctx.fillRect(0, canvasHeight-muckLevel-5, canvasWidth, 5+muckLevel);
-
-
-    // draw the message history
-    let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
-    let ri = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
-    let gi = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
-    let bi = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
-    fade.addColorStop(0, 'rgba('+ri+', '+gi+', '+bi+', 0.05)');
-    fade.addColorStop(1, 'rgba('+ri+', '+gi+', '+bi+', 0.3)');
-    // Fill with gradient
-    ctx.fillStyle = fade;
-    for (let i = messageBuffer.length-2; i >= 0; i--) {
-      ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
-    }
 
     // for graveStones
     for (let d = 0; d < graveStones.length; d++) {
@@ -393,7 +417,7 @@ function updateGameArea() {
           obelisks --;
           ghostSize /= 3;
         }
-        myGhosts.push(new Ghost(graveStones[d].x, graveStones[d].y, ghostSize*0.8, graveStones[d].geneticColour));
+        myGhosts.push(new Ghost(graveStones[d].x, graveStones[d].y, ghostSize*0.8, graveStones[d].firstColour));
         sendMessage('A ghost emerged from a grave');
         graveStones.splice(d, 1);
         d--;
@@ -410,7 +434,7 @@ function updateGameArea() {
           fireFlySize = 0.4;
         }
         sendMessage('A Ghost became a FireFly');
-        fireflies.push(new FireFly(myGhosts[i].x, myGhosts[i].y, fireflies[fireflies.length-1], fireFlySize, myGhosts[i].geneticColour));
+        fireflies.push(new FireFly(myGhosts[i].x, myGhosts[i].y, fireflies[fireflies.length-1], fireFlySize, myGhosts[i].firstColour));
         fireflies[fireflies.length-1].touches = 200;
         myGhosts.splice(i, 1);
         i--;
@@ -418,44 +442,41 @@ function updateGameArea() {
         myGhosts[i].update();
       }
     }
-    // sort the guys
-    chibis.sort(function(obj1, obj2) {
-      return (obj1.health) - (obj2.health);
-    });
-
-    chibis.sort(function twoVars(a, b) {
-      if (a.health + a.energy + a.love> b.health+ b.energy + b.love) return 1;
-      if (a.health + a.energy + a.love< b.health+ b.energy + b.love) return -1;
-      return 0;
-    });
 
 
     // for my guys
     // global and prep first
     // check for both sexes
-    let malePresent = false;
-    let femalePresent = false;
-    for (let i = 0; (!malePresent || !femalePresent) && i < chibis.length; i++) {
-      if (!chibis[i].elder && chibis[i].gender == 'girl') {
-        femalePresent = true;
-      } else if (!chibis[i].elder) {
-        malePresent = true;
+    if (chosenChibiF && chosenChibiM) {
+      chibis.sort(function twoVars(a, b) {
+        if (a.health + a.energy + a.love> b.health+ b.energy + b.love) return 1;
+        if (a.health + a.energy + a.love< b.health+ b.energy + b.love) return -1;
+        return 0;
+      });
+      let malePresent = false;
+      let femalePresent = false;
+      for (let i = 0; (!malePresent || !femalePresent) && i < chibis.length; i++) {
+        if (!chibis[i].elder && chibis[i].gender == 'girl') {
+          femalePresent = true;
+        } else if (!chibis[i].elder) {
+          malePresent = true;
+        }
       }
-    }
-    if (!malePresent || !femalePresent) {
-      ranX = Math.floor(Math.random()*(canvasWidth));
-      ranY = Math.floor(Math.random()*(trueBottom));
-      randSize = 5 + (Math.random()*10);
-      let nameSeed = Math.round(Math.random()*totalMaleNames);
-      if (!malePresent) {
-        chibis.push(new Chibi(ranX, ranY, 5, randSize, 'boy', Math.random()));
-        chibis[chibis.length-1].name = getMaleName(nameSeed);
-      } else {
-        chibis.push(new Chibi(ranX, ranY, 5, randSize, 'girl', Math.random()));
-        chibis[chibis.length-1].name = getFemaleName(nameSeed);
+      if (!malePresent || !femalePresent) {
+        ranX = Math.floor(Math.random()*(canvasWidth));
+        ranY = Math.floor(Math.random()*(trueBottom));
+        randSize = 5 + (Math.random()*10);
+        let nameSeed = Math.round(Math.random()*totalMaleNames);
+        if (!malePresent) {
+          chibis.push(new Chibi(ranX, ranY, 5, randSize, 'boy', Math.random()));
+          chibis[chibis.length-1].name = getMaleName(nameSeed);
+        } else {
+          chibis.push(new Chibi(ranX, ranY, 5, randSize, 'girl', Math.random()));
+          chibis[chibis.length-1].name = getFemaleName(nameSeed);
+        }
+        chibis[chibis.length-1].firstColour = randomColour();
+        sendMessage('A stranger called '+chibis[chibis.length-1].name+' appeared');
       }
-      chibis[chibis.length-1].geneticColour = randomColour();
-      sendMessage('A stranger called '+chibis[chibis.length-1].name+' appeared');
     }
 
     // firefly logic
@@ -513,15 +534,11 @@ function updateGameArea() {
       }
       fireflies[f].update();
     }
-    basicInfo.text = tickerToTime() +' Day '+day+' Mates '+ chibis.length+ ' Elders '+elders+' Fireflies '+fireflies.length+' Trees '+trees.length;
-    basicInfo.update();
-    newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
-    newestMessage.update();
     // filter
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = outputArray[2];
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    ctx.globalAlpha = 1;
+    // ctx.globalAlpha = 0.25;
+    // ctx.fillStyle = outputArray[2];
+    // ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // ctx.globalAlpha = 1;
   }
 }
 
@@ -617,20 +634,18 @@ function Tree(x, y, width, height, maxHeight) {
 /**
 * function for a piece of plain text
 * @param {int} width - the width
-* @param {int} height - the height
+* @param {int} font - the font
 * @param {string} colour - the colour
 * @param {int} x - the x pos
 * @param {int} y - the y pos
 */
-function TextElement(width, height, colour, x, y) {
-  this.width = width;
-  this.height = height;
+function TextElement(size, colour, x, y) {
+  this.size = size;
   this.x = x;
   this.y = y;
   this.colour = colour;
   this.update = function() {
-    ctx.globalAlpha = 0.7;
-    ctx.font = this.width + ' ' + this.height;
+    ctx.font = this.size + ' ' + globalFont;
     ctx.fillStyle = this.colour;
     ctx.fillText(this.text, this.x, this.y);
     ctx.globalAlpha = 1;
@@ -643,9 +658,9 @@ function TextElement(width, height, colour, x, y) {
 * @param {int} y - the y pos
 * @param {object} focus - the firefly's focus
 * @param {int} size - the size
-* @param {string} geneticColour - the colour
+* @param {string} firstColour - the colour
 */
-function FireFly(x, y, focus, size, geneticColour) {
+function FireFly(x, y, focus, size, firstColour) {
   this.x = x;
   this.y = y;
   this.focus = focus;
@@ -654,7 +669,7 @@ function FireFly(x, y, focus, size, geneticColour) {
   this.size = size*20;
   this.touches = 0;
   this.touchedThisFrame = false;
-  this.geneticColour = geneticColour;
+  this.firstColour = firstColour;
   this.update = function() {
     if (this.x < 0 || this.x > canvasWidth) {
       this.speedX *= -0.99;
@@ -696,9 +711,9 @@ function FireFly(x, y, focus, size, geneticColour) {
     this.y += this.speedY;
 
     let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, 100);
-    let ri = hexToRgb(this.geneticColour).r;
-    let gi = hexToRgb(this.geneticColour).g;
-    let bi = hexToRgb(this.geneticColour).b;
+    let ri = hexToRgb(this.firstColour).r;
+    let gi = hexToRgb(this.firstColour).g;
+    let bi = hexToRgb(this.firstColour).b;
     let rj = hexToRgb('#FF2288').r;
     let gj = hexToRgb('#FF2288').g;
     let bj = hexToRgb('#FF2288').b;
@@ -734,9 +749,9 @@ function FireFly(x, y, focus, size, geneticColour) {
 * @param {int} speedX - the x speed
 * @param {int} speedY - the y speed
 * @param {boolean} elder - elder status
-* @param {string} geneticColour - the colour
+* @param {string} firstColour - the colour
 */
-function Grave(x, y, size, speedX, speedY, elder, geneticColour) {
+function Grave(x, y, size, speedX, speedY, elder, firstColour) {
   this.x = x;
   this.y = y + 10;
   this.speedX = speedX/2;
@@ -745,7 +760,7 @@ function Grave(x, y, size, speedX, speedY, elder, geneticColour) {
   this.hitBottom = false;
   this.elder = elder;
   this.tended = 0;
-  this.geneticColour = geneticColour;
+  this.firstColour = firstColour;
   // elders spawn obelisks
   if (this.elder) {
     this.image = obelisk;
@@ -767,24 +782,19 @@ function Grave(x, y, size, speedX, speedY, elder, geneticColour) {
       this.timer -= 0.075;
     }
     if (!this.hitBottom && this.y < trueBottom-(this.size*5)) {
+      checkBounceSides(this);
+      checkBounceTop(this);
       let mass = gravity*this.size*this.size;
       this.speedX *= 0.99;
       this.speedY += mass*gravity;
       applySpeedLimit(this);
       this.y += this.speedY/2;
       this.x += this.speedX/2;
-      if (this.x < this.size || this.x > canvasWidth-this.size) {
-        this.speedX *= -0.99;
-        if (this.x < this.size) {
-          this.x = this.size;
-        } else {
-          this.x = canvasWidth-this.size;
-        }
-      }
     } else {
+      // come to a rest at the bottom
       this.hitBottom = true;
       this.y = trueBottom - (this.size*5);
-      this.speedY = -1;
+      this.speedY = 0;
       this.speedX *= 0.9;
     }
 
@@ -815,6 +825,7 @@ function Grave(x, y, size, speedX, speedY, elder, geneticColour) {
 * @param {int} ears - the ear modifier (cat -> fox);
 */
 function Chibi(x, y, bodySize, maxSize, gender, ears) {
+  this.inCatBox = null;
   this.i = ''; // temp for debug
   this.x = x;
   this.y = y;
@@ -823,9 +834,9 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.rotation = 0;
   this.spin = 0;
   this.gender = gender;
-  this.colour = trueBlack;
-  this.geneticColour = this.colour;
-  this.facemod = [1, 1];
+  this.secondColour = trueBlack;
+  this.firstColour = trueWhite;
+  this.coatMod = [1, 1];
   this.ears = ears;
   this.angleToFocus = 0;
   this.size = bodySize;
@@ -836,7 +847,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.health = 100;
   this.love = 50;
   this.energy = 100;
-  this.snuggling = 0;
+  this.snuggling = -1; // start at -1 so they dont try to give birth when they are not truly snuggling
   this.awake = 0;
   this.children = 0;
   this.id = ('0000' + guyID).slice(-4);
@@ -889,9 +900,13 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   // act
   // @return {boolean} - whether the action has a cost
   this.act = function() {
-    if (this.snuggling > 0) {
+    if (this.snuggling == 0 && this.gender == 'girl') {
+      giveBirth(this, this.focus);
+      // take snuggling to -1 so that it doesn't give birth forever
+      this.snuggling --;
+    } else if (this.snuggling > 0) {
       this.sitting = true;
-      this.snuggling -= 1;
+      this.snuggling --;
     } else {
       // decide whether to act or not
       // if you've already reached nirvana, and you max out one of your meters, just sit down
@@ -905,7 +920,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           if (this.focusIsFirefly() && !this.elder && this.gender !== 'non binary' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 70
           && this.energy >= 70 && this.size >= this.maxSize) {
             for (let j = 0; j < chibis.length && mate == null; j++) {
-              if (chibis[j].awake && chibis[j].focusIsFirefly() && this!== chibis[j] && this.gender !== chibis[j].gender && this.love + chibis[j].love >= 90 && !chibis[j].elder && chibis[j].gender !== 'non binary'
+              if (this !== chibis[j] && chibis[j].awake && chibis[j].focusIsFirefly() && this.gender !== chibis[j].gender && this.love + chibis[j].love >= 90 && !chibis[j].elder && chibis[j].gender !== 'non binary'
               && chibis[j].age > 0 && chibis[j].supersaiyan == 0 && chibis[j].health >= 70
               && chibis[j].energy >= 70 && chibis[j].size >= chibis[j].maxSize) {
                 mate = chibis[j];
@@ -922,7 +937,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
                 if (a.name < b.name) return -1;
                 return 0;
               });
-              sendMessage(nameArray[0].name+' and '+nameArray[1].name+' wanted to snuggle');
+              sendMessage(nameArray[0].name+' and '+nameArray[1].name+' felt like snuggling');
             }
           }
 
@@ -1044,28 +1059,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         }
       }
     }
-
-    if (this.x < this.size || this.x >= canvasWidth-this.size) {
-      this.speedX *= -0.9;
-      let targetangle = Math.atan2(this.y, 0);
-      this.spin += elasticity*targetangle/10;
-      if (this.x < this.size) {
-        this.x = this.size;
-      } else {
-        this.x = canvasWidth-this.size;
-      }
+    checkBounceSides(this);
+    checkBounceTop(this);
+    for (let i = 0; i < boxes.length; i++) {
+      boxes[i].checkBounce(this);
     }
-    if (this.y < this.size) {
-      this.speedY *= -0.9;
-      this.y = this.size;
-      // calculate rotation on collision with roof
-      let targetangle = Math.atan2(0, this.x);
-      this.spin += elasticity*targetangle/10;
-    }
-    // check if mate hit the floor
+    // check if chibi hit the floor, come to a rest if so
     if (!this.hitBottom && this.y >= trueBottom-(this.size)-(this.limbLength/2.5)) {
       this.y = trueBottom-(this.size)-(this.limbLength/2.5);
-      this.speedY = 0;
       this.hitAFloor();
       if (this.supersaiyan > 0 && tryToPlantaTree(this.x)) {
         sendMessage(this.name+' planted some seeds');
@@ -1073,23 +1074,23 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     }
   };
   this.hitAFloor = function() {
+    this.speedY = 0;
     if (this.energy <= 0) {
       // fall asleep when tired
+      this.sitting = false;
       this.awake = false;
       this.speedX = 0;
-      this.speedY = 0;
       this.rotation = 0;
       this.spin = 0;
-      this.erergy = 0;
     } else {
       this.hitBottom = true;
-      // this.sitting = false;
       // apply floor forces
       this.speedX *= 0.9;
       this.resetRotation(false);
       // jump occasionally
-      if (this.rotation == 0 && this.awake && this.hitBottom) {
+      if (this.rotation == 0 && this.awake) {
         this.act();
+        // this.hitBottom = false;
       }
     }
   };
@@ -1103,11 +1104,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     let offsetX = Math.abs(this.focus.x - this.x);
     let legAngle = Math.atan2(this.speedY, this.speedX);
     // set body colour
-    this.colour = mixTwoColours(this.geneticColour, colourIndicator(this));
-    if (this.elder) {
-      this.colour = decreaseSaturationHEX(this.colour);
-    }
-    ctx.fillStyle= this.geneticColour;
+    ctx.fillStyle= this.firstColour;
     for (let f = 0; f < fireflies.length; f++) {
       if (!this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && detectCollision(this, fireflies[f])) {
         fireflies[f].touchedThisFrame = true;
@@ -1179,13 +1176,13 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 
     if (this.awake && this.energy > 0) {
       ctx.lineWidth = this.size/2.5;
-      ctx.strokeStyle = this.geneticColour;
+      ctx.strokeStyle = this.firstColour;
 
       // legs
       let legGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size*0.8);
       legGradient.addColorStop(0, trueBlack);
-      legGradient.addColorStop(0.7, this.geneticColour);
-      legGradient.addColorStop(1, this.colour);
+      legGradient.addColorStop(0.7, this.firstColour);
+      legGradient.addColorStop(1, this.secondColour);
       ctx.strokeStyle = legGradient;
       ctx.save(); // 0 open - rotated
       ctx.translate(this.x, this.y);
@@ -1226,23 +1223,23 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.stroke();
       ctx.restore(); // 1 close
       ctx.restore(); // 0 close
-      ctx.strokeStyle = this.geneticColour;
+      ctx.strokeStyle = this.firstColour;
     }
     // label
-    if (selection == this.id || this.id == '0000' || this.id == '0001') {
-      ctx.fillStyle = glowColour;
+    if (selection == this || this.id == '0000' || this.id == '0001' || this.inCatBox !== null) {
+      ctx.fillStyle = colourIndicator(this);
       ctx.font = '10px' + ' ' + globalFont;
       let shift = this.name.length*5.6/2;
       ctx.fillText(this.name, this.x-shift, this.y-(this.size*2));
     }
     // translate before drawing again
-    ctx.fillStyle = this.geneticColour;
+    ctx.fillStyle = this.firstColour;
     ctx.save(); // 0 open - rotated
     ctx.translate(this.x, this.y);
 
     // tail
     ctx.save();
-    // make it flap
+    // make it wag
     let tmp = Math.abs(daytimeCounter-this.birthday);
     while (tmp > 30 && tmp > 0) {
       tmp -= 30; // 0 to 30
@@ -1263,14 +1260,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     ctx.lineTo(0, this.size/3);
     let tailGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size*2);
     tailGradient.addColorStop(0, trueBlack);
-    tailGradient.addColorStop(1*this.facemod[0], this.geneticColour);
-    tailGradient.addColorStop(1, this.colour);
+    tailGradient.addColorStop(1*this.coatMod[0], this.firstColour);
+    tailGradient.addColorStop(1, this.secondColour);
     ctx.fillStyle = tailGradient;
     ctx.fill();
     if (!this.hitBottom && this.awake) {
       ctx.rotate(-Math.atan2(-this.speedY, -this.speedX));
     }
-    ctx.restore();
+    ctx.restore(); // 0 - rotated
 
     // aura and trail on supersaiyans
     if (this.supersaiyan > 0) {
@@ -1278,9 +1275,9 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.globalAlpha = (this.supersaiyan-50)/50;
       ctx.drawImage(flame, -this.size*1.5, -(this.size*2), this.size*3, this.size*3);
       if (this.speedY < 0) {
-        trails.push(new Particle(this.size/4, this.colour, this.x-(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
-        trails.push(new Particle(this.size/4, this.colour, this.x+(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
-        trails.push(new Particle(this.size/3, this.colour, this.x, this.y, this.speedX, this.speedY));
+        trails.push(new Particle(this.size/4, glowColour, this.x-(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
+        trails.push(new Particle(this.size/4, glowColour, this.x+(this.size/2), this.y, this.speedX*0.5, this.speedY*0.5));
+        trails.push(new Particle(this.size/3, glowColour, this.x, this.y, this.speedX, this.speedY));
       }
       let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.supersaiyan);
       glow.addColorStop(0, glowColour);
@@ -1290,16 +1287,32 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc(0, 0, this.supersaiyan, 0, 2 * Math.PI);
       ctx.fill();
-      ctx.fillStyle = this.colour;
+      ctx.fillStyle = this.secondColour;
       ctx.globalAlpha = 1;
     }
-    ctx.rotate(this.rotation);
+
     if (this.sitting) {
       ctx.translate(0, (this.limbLength+(this.size/4))/2);
     }
 
+    // bum sticking in the air
+    if (this.sitting) {
+      // make it wag
+      let tmp = Math.abs(daytimeCounter-this.birthday);
+      while (tmp > 7.5 && tmp > 0) {
+        tmp -= 7.5; // 0 to 30
+      }
+      tmp = Math.abs(tmp-3.75); // 0 to 15 to 0 to 15
+      //  ctx.arc(this.size*(-tmp+7.5)/8, -this.size*1.5, this.size/3, 0, Math.PI, true);// Mouth (clockwise)
+      ctx.fillStyle = tailGradient;
+      ctx.beginPath();
+      ctx.arc(-this.size*(-tmp+3.75)/32, -(this.limbLength+(this.size/4))/2, this.size*0.8, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    // rotate around axis before drawing head parts
+    ctx.rotate(this.rotation);
     // ears
-    ctx.save();
+    ctx.save(); // 0
     if (this.awake) {
       ctx.translate(-this.size, -this.size/2);
     } else {
@@ -1314,26 +1327,26 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     ctx.lineTo(oneq*4, +this.size/2);
 
     let earGradient=ctx.createLinearGradient(0, -this.size+(this.size*this.ears/2), 0, this.limbLength/4);
-    earGradient.addColorStop(0, this.colour);
-    earGradient.addColorStop(1-(this.facemod[0]), this.geneticColour);
+    earGradient.addColorStop(0, this.secondColour);
+    earGradient.addColorStop(1-(this.coatMod[0]), this.firstColour);
+    earGradient.addColorStop(1, trueBlack);
     ctx.fillStyle = earGradient;
     ctx.fill();
-    ctx.restore();
-
+    ctx.restore(); // 0
 
     // head
     if (this.awake) {
       let bodyGradient=ctx.createLinearGradient(0, -this.size, 0, this.size);
-      bodyGradient.addColorStop(0, this.geneticColour);
-      bodyGradient.addColorStop(1*this.facemod[0], this.geneticColour);
-      bodyGradient.addColorStop(1, this.colour);
+      bodyGradient.addColorStop(0, this.firstColour);
+      bodyGradient.addColorStop(1*this.coatMod[0], this.firstColour);
+      bodyGradient.addColorStop(1, this.secondColour);
       ctx.fillStyle = bodyGradient;
-      ctx.rotate(360 * this.facemod[1] * Math.PI / 180);
+      ctx.rotate(360 * this.coatMod[1] * Math.PI / 180);
       // awake mode
       ctx.beginPath();
       ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
       ctx.fill();
-      ctx.rotate(-360 * this.facemod[1] * Math.PI / 180);
+      ctx.rotate(-360 * this.coatMod[1] * Math.PI / 180);
       // smile
       if (this.health >= 50 && !this.elder && this.energy > 0) {
         ctx.globalAlpha = this.love/100;
@@ -1377,7 +1390,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       // left eye
       ctx.beginPath();
       ctx.fillStyle = trueBlack;
-      ctx.save(); // 1 open
+      ctx.save(); // 0 open
       ctx.translate(-this.size/2, -(this.size/4));
       ctx.arc(0, 0, this.size/2.25, 0, 2 * Math.PI);
       ctx.fill();
@@ -1391,11 +1404,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.fill();
         ctx.rotate(this.rotation);
       }
-      ctx.restore(); // 1 closed
+      ctx.restore(); // 0 closed
       // right eye
       ctx.beginPath();
       ctx.fillStyle = trueBlack;
-      ctx.save(); // 1 open
+      ctx.save(); // 0 open
       ctx.translate(this.size/2, -(this.size/4));
       ctx.arc(0, 0, this.size/2.25, 0, 2 * Math.PI);
       ctx.fill();
@@ -1409,12 +1422,12 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.fill();
         ctx.rotate(this.rotation);
       }
-      ctx.restore(); // 1 closed
+      ctx.restore(); // 0 closed
       // eyelids
       if (this.energy < 0) {
         ctx.globalAlpha = 1;
         ctx.beginPath();
-        ctx.fillStyle = this.geneticColour;
+        ctx.fillStyle = this.firstColour;
         ctx.arc(-(this.size/2), -(this.size/8), this.size/1.7, 3.15, 2 * Math.PI);
         ctx.fill();
         ctx.beginPath();
@@ -1423,9 +1436,9 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       }
       ctx.globalAlpha = 1;
     }
-    ctx.restore(); // close 0
+    ctx.restore(); // close
     // draw status icons
-    ctx.save();
+    ctx.save(); // 0
     ctx.translate(this.x, this.y);
     // zzzzs
     if (!this.awake) {
@@ -1446,16 +1459,35 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.font = '3px' + ' ' + globalFont;
       ctx.fillText('z', 12, this.size-14-amntToMove);
     }
+
+    // hearts
+     if (this.snuggling > 0) {
+      ctx.fillStyle = '#e94db5';
+      ctx.font = '20px' + ' ' + globalFont;
+      let amntToMove = this.snuggling; // 0 to 250
+      while (amntToMove > 40) {
+        amntToMove -= 40;
+      }
+      while (amntToMove < 0) {
+        amntToMove += 40;
+      }
+      ctx.globalAlpha = (1 - (amntToMove/40))/2;
+      amntToMove *= 1;
+      ctx.fillText('\u2764', -10, -(this.size*4)+amntToMove);
+     }
+
+
     ctx.globalAlpha = 1;
-    ctx.restore();
+    ctx.restore(); // 0
 
 
     // hands
     ctx.lineWidth = this.size/3.33;
-    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.limbLength);
-    handGradient.addColorStop(0, this.geneticColour);
-    handGradient.addColorStop(1*this.facemod[0], this.geneticColour);
-    handGradient.addColorStop(1, this.colour);
+    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
+    handGradient.addColorStop(0, this.firstColour);
+    handGradient.addColorStop(this.coatMod[0], this.firstColour);
+    handGradient.addColorStop(1, this.secondColour);
+
     ctx.fillStyle = handGradient;
     ctx.strokeStyle = handGradient;
 
@@ -1472,23 +1504,24 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.moveTo(this.size-(this.size/1.6), this.size*0.8);
         ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5, 0, 2 * Math.PI);
+        ctx.fill();
       }
-      ctx.beginPath();
-      ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore();
+      ctx.restore(); // 0
     } else {
       // if we are holding something
       if (this.awake && detectCollision(this, this.focus)) {
-        handGradient = ctx.createLinearGradient(0, 0, 1, this.focus.x - this.x, this.focus.y - this.y, this.limbLength);
-        handGradient.addColorStop(0, this.geneticColour);
-        handGradient.addColorStop(1*this.facemod[0], this.geneticColour);
-        handGradient.addColorStop(1, this.colour);
-        ctx.fillStyle = handGradient;
-        ctx.strokeStyle = handGradient;
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
@@ -1547,15 +1580,15 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 * @param {int} x - the x pos
 * @param {int} y - the y pos
 * @param {int} size - the size
-* @param {string} geneticColour - the colour
+* @param {string} firstColour - the colour
 */
-function Ghost(x, y, size, geneticColour) {
+function Ghost(x, y, size, firstColour) {
   this.x = x;
   this.y = y;
   this.size = size;
   this.speedX = 0;
   this.speedY = 0;
-  this.geneticColour = geneticColour;
+  this.firstColour = firstColour;
   this.update = function() {
     // start floating up if the main FireFly is below you
     if (this.y > fireflies[0].y) {
@@ -1625,28 +1658,6 @@ function trackMouse(e) {
   return mouse;
 }
 
-/**
-* function to detect a collision between two objects
-* @param {Lifeform} thisobj - the first object
-* @param {lifeform} otherobj - the second object
-* @return {boolean} whether they collided or not
-*/
-function detectCollision(thisobj, otherobj) {
-  let myleft = thisobj.x-5;
-  let myright = thisobj.x + (thisobj.size)+5;
-  let mytop = thisobj.y-5;
-  let mybottom = thisobj.y + (thisobj.size)+5;
-  let otherleft = otherobj.x;
-  let otherright = otherobj.x + (otherobj.size);
-  let othertop = otherobj.y;
-  let otherbottom = otherobj.y + (otherobj.size);
-  let crash = true;
-  if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
-    crash = false;
-  }
-  return crash;
-}
-
 
 /**
 * function to return health number / 100 as colour
@@ -1661,28 +1672,17 @@ function colourIndicator(creature) {
   } else {
     love = 0;
   }
-  let quirk = 122;
-  if (!creature.elder) {
-    quirk = -creature.speedY - Math.abs(creature.speedX);// ((creature.speedX*creature.speedX) + (creature.speedY*creature.speedY))/2;
-    if (quirk < 0) {
-      quirk = 0;
-    } else if (quirk > 100) {
-      quirk = 100;
-    }
-    quirk *= 2.55/5;
+  if (creature.energy > 0) {
+    energy = Math.round((255*creature.energy)/100);
+  } else {
+    energy = 0;
   }
   // handle super saiyan colours
   if (creature.supersaiyan > 0) {
     love += creature.supersaiyan*((superColour - love)/100); // 0 to 255
     health += creature.supersaiyan*((superColour - health)/100); // 0 to 255
-    quirk += creature.supersaiyan*((superColour - quirk)/100); // 0 to 255
+    energy += creature.supersaiyan*((superColour - energy)/100); // 0 to 255
   }
-  // make brightness of colour relative to health
-  let modifier = Math.floor(creature.health)/100; // modifier range 0 to 1
-  // console.log(modifier+' x '+love+' = '+modifier*love);
-  love = Math.round(modifier*love);
-  quirk = Math.round(modifier*quirk);
-  health = Math.round(modifier*health);
   if (love < 0) {
     love = 0;
   } else if (love > 255) {
@@ -1693,18 +1693,13 @@ function colourIndicator(creature) {
   } else if (health < 0) {
     health = 0;
   }
-  if (quirk > 255) {
-    quirk = 255;
-  } else if (quirk < 0) {
-    quirk = 0;
+  if (energy > 255) {
+    energy = 255;
+  } else if (energy < 0) {
+    energy = 0;
   }
-  if (creature.gender == 'girl') {
-    return rgbToHex(love, quirk, health);
-  } else if (creature.gender == 'boy') {
-    return rgbToHex(health, quirk, love);
-  } else {
-    return rgbToHex(quirk, love, health);
-  }
+    return rgbToHex(love, energy, health);
+
 }
 
 /**
@@ -1714,8 +1709,8 @@ function recalculateMyGuys() {
   // block for all my guys
   for (let i = 0; i < chibis.length; i++) {
     // check nirvana status
-    if (!chibis[i].reachedNirvana && chibis[i].children > 0 && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
-      explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].geneticColour, glowColour));
+    if (chosenChibiF && chosenChibiM && !chibis[i].reachedNirvana && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
+      explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].firstColour, glowColour));
       produceExplosion(chibis[i].x, chibis[i].y);
       chibis[i].reachedNirvana = true;
       chibis[i].supersaiyan = 100;
@@ -1727,14 +1722,30 @@ function recalculateMyGuys() {
     // attrition, aging etc.
     if (chibis[i].birthday == daytimeCounter+1) {
       chibis[i].age ++;
+      // set elder status
+      if (chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].children >= 2) {
+        chibis[i].elder = true;
+        chibis[i].size*=0.8;
+        chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
+        chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour);
+
+        sendMessage(chibis[i].name+' became an Elder');
+        createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secretColour, '\u274b');
+
+        elders++;
+      } else if (elders > 1 && elders > chibis.length/4 && chibis[i].elder) {
+        chibis[i].elder = false;
+        elders --;
+        sendMessage(chibis[i].name+' is no longer an elder');
+      }
     }
     if (chibis[i].health <= 0) {
-      createGlyphs(chibis[i].x, chibis[i].y, trueBlack, '\u274C')
+      createGlyphs(chibis[i].x, chibis[i].y, trueBlack, '\u271A')
       if (chibis[i].elder) {
         sendMessage('Elder '+chibis[i].name+' died');
         elders--;
       }
-      graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].geneticColour));
+      graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
       sendMessage(chibis[i].name+' died');
       chibis.splice(i, 1);
       i--;
@@ -1763,8 +1774,8 @@ function recalculateMyGuys() {
       }
       // if asleep, gain energy and a little health
       if (!chibis[i].awake) {
-        chibis[i].energy += 0.25;
-        chibis[i].health += 0.1;
+        chibis[i].energy += 0.125;
+        chibis[i].health += 0.05;
       }
       // if energy goes above 100, wake up
       if (!chibis[i].awake && chibis[i].energy > 90) {
@@ -1786,7 +1797,7 @@ function recalculateMyGuys() {
             if ((!chibis[i].focus.elder || !anniversary)) {
               chibis[i].focus.tended = 50;
               chibis[i].focus.timer += 5;
-              let newC = mixTwoColours(chibis[i].geneticColour, glowColour);
+              let newC = mixTwoColours(chibis[i].firstColour, glowColour);
               starfield.push(new Inert(3, 3, newC, chibis[i].focus.x, chibis[i].focus.y+(5*chibis[i].focus.size), true));
               chibis[i].health += 0.5;
             } else {
@@ -1824,22 +1835,8 @@ function recalculateMyGuys() {
           && chibis[i].gender !== chibis[j].gender && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
           && (chibis[i].love + chibis[j].love) >= 90 && chibis[i].health >= 50 && chibis[j].health >= 50 && chibis[i].energy >= 50 && chibis[j].energy >= 50
           && chibis[i].size >= chibis[i].maxSize && chibis[j].size >= chibis[j].maxSize) {
-            // generate a baby
-            let msgString = 'error';
-            if (chibis[i].gender == 'boy') {
-              msgString = (generateBaby(chibis[i], chibis[j]))+' called ';
-              chibis[chibis.length-1].name = generateBabyName(chibis[i].name, chibis[j].name, chibis[chibis.length-1].gender);
-            } else {
-              msgString = (generateBaby(chibis[j], chibis[i]))+' called ';
-              chibis[chibis.length-1].name = generateBabyName(chibis[j].name, chibis[i].name, chibis[chibis.length-1].gender);
-            }
-            if (chibis[chibis.length-1].name == null) {
-              console.log('null name, parents were '+chibis[i].name+' and '+chibis[j].name);
-            }
-            sendMessage('A '+msgString+chibis[chibis.length-1].name+' was born to '+chibis[i].name+' and '+chibis[j].name);
+            // snuggle
             // pay the costs
-            chibis[i].children ++;
-            chibis[j].children ++;
             chibis[i].health -= 20;
             chibis[j].health -= 20;
             chibis[i].energy -= 35;
@@ -1851,23 +1848,10 @@ function recalculateMyGuys() {
             chibis[i].speedY = 0;
             chibis[j].speedY = 0;
             chibis[i].snuggling = 250;
-            chibis[j].snuggling = 250;
-            createGlyphs(chibis[i].x + ((chibis[j].x - chibis[i].x)/2), chibis[i].y + ((chibis[j].y - chibis[i].y)/2), '#e94db5', '\u2764');
+            chibis[j].snuggling = 270;
+            sendMessage(chibis[i].name+ ' and '+chibis[j].name+' had a snuggle');
           }
         }
-      }
-      // set elder status
-      if (chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].children >= 2) {
-        chibis[i].elder = true;
-        chibis[i].size*=0.8;
-        sendMessage(chibis[i].name+' became an Elder');
-        createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secretColour, '\u274b');
-
-        elders++;
-      } else if (elders > 1 && elders > chibis.length/8 && chibis[i].elder) {
-        // chibis[i].elder = false;
-        // elders --;
-        // sendMessage('An elder gave up their position');
       }
 
       // calculate angle to focus
@@ -1900,7 +1884,6 @@ function recalculateMyGuys() {
         chibis[i].rotation += 6;
       }
 
-      // bounce off walls if necessary
       if (!chibis[i].hitBottom) {
         let mass = gravity*chibis[i].size*chibis[i].size;
         chibis[i].speedY += mass;
@@ -1965,10 +1948,8 @@ function recalculateStarfield() {
     }
   }
   // moving stars
-  let defaultMovement = 0.5;
   for (let i = 0; i < starfield.length; i++) {
-    defaultMovement = 0.5 * (1/trueBottom)*starfield[i].y;
-    starfield[i].y -= Math.abs(defaultMovement*(4-starfield[i].size));
+    starfield[i].y -= Math.abs(0.5*(4-starfield[i].size));
     // starfield wrapping
     if (starfield[i].y <= 1) {
       starfield[i].y = trueBottom;
@@ -2100,11 +2081,13 @@ function createGlyphs(x, y, colour, symbol) {
 function Glyph(x, y, speedX, speedY, colour, symbol) {
   this.speedX = speedX;
   this.speedY = speedY;
-  this.size = 8;
+  this.size = fontWidth;
   this.timer = 100;
   this.x = x;
-  this.step = 0.2;
   this.y = y;
+  this.spin = 0;
+  this.rotation = 0;
+  this.step = 0.2;
   this.colour = colour;
   this.symbol = symbol;
   this.update = function() {
@@ -2114,24 +2097,20 @@ function Glyph(x, y, speedX, speedY, colour, symbol) {
         collide(this, glyphs[i]);
       }
     }
-    if (this.x < this.size || this.x > canvasWidth-this.size) {
-      this.speedX *= -0.99;
-      if (this.x < this.size) {
-        this.x = this.size;
-      } else {
-        this.x = canvasWidth-this.size;
-      }
-    }
-    if (this.y < this.size || this.y > trueBottom-this.size) {
-      this.speedY *= -0.99;
-      if (this.y < this.size) {
-        this.y = this.size;
-      } else {
-        this.y = trueBottom-this.size;
-      }
-    }
+    checkBounceSides(this);
+    checkBounceTop(this);
+    checkBounceBottom(this);
+    applySpeedLimit(this);
     this.x += this.speedX;
     this.y += this.speedY;
+    this.rotation += this.spin;
+    this.spin *= 0.9;
+    while (this.rotation > 6) {
+      this.rotation -= 6;
+    }
+    while (this.rotation < -6) {
+      this.rotation += 6;
+    }
     this.timer -= this.step;
     // draw glyph
     ctx.globalAlpha = (this.timer/100)+0.000001;
@@ -2139,55 +2118,10 @@ function Glyph(x, y, speedX, speedY, colour, symbol) {
     ctx.font = '14px' + ' ' + globalFont;
     ctx.save();
     ctx.translate(this.x-(this.size/2), this.y+(this.size/2));
+    ctx.rotate(this.rotation);
     ctx.fillText(this.symbol, 0, 0);
     ctx.restore();
   };
-}
-
-/**
-* function to collide two objects using physics
-* @param {object} obj1 - the first object
-* @param {object} obj2 - the second object
-*/
-function collide(obj1, obj2) {
-  // fix the distance between the objects
-  let diffx = Math.abs(obj1.x - obj2.x);
-  let diffy = Math.abs(obj1.y - obj2.y);
-  let currenth = Math.sqrt((diffx*diffx)+(diffy*diffy));
-  let targeth = obj1.size + obj2.size;
-  let newprop = targeth/currenth;
-  if (diffx == 0 && diffy == 0) {
-    newprop = 1;
-  }
-  obj1.x += (obj1.x - obj2.x)*newprop/obj1.size;
-  obj2.x -= (obj1.x - obj2.x)*newprop/obj2.size;
-  // detect if one of the guys is touching the floor
-  if (!obj1.hitBottom && !obj2.hitBottom) {
-    obj1.y += (obj1.y - obj2.y)*newprop/obj1.size;
-    obj2.y -= (obj1.y - obj2.y)*newprop/obj2.size;
-  }
-  // calculate transfer of energy
-  // energy = mass X velocity
-  let myEnergy = obj1.speedX*obj1.size;
-  let theirEnergy = obj2.speedX*obj2.size;
-  let energyTransfer = elasticity*(myEnergy-theirEnergy)/(obj1.size+obj2.size);
-  obj1.speedX += energyTransfer;
-  obj2.speedX += energyTransfer;
-  myEnergy = obj1.speedY*obj1.size;
-  theirEnergy = obj2.speedY*obj2.size;
-  energyTransfer = elasticity*(myEnergy-theirEnergy)/(obj1.size+obj2.size);
-  obj1.speedY += energyTransfer;
-  obj2.speedY += energyTransfer;
-  // calculate rotation on collision
-  let targetangle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
-  if (!obj1.hitBottom) {
-    obj1.spin += targetangle/10;
-  }
-  if (!obj2.hitBottom) {
-    obj2.spin -= targetangle/10;
-  }
-  applySpeedLimit(obj1);
-  applySpeedLimit(obj2);
 }
 
 /**
@@ -2231,36 +2165,36 @@ function generateBaby(parent1, parent2) {
   }
   chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), 5, randSize, babyGender, babyEars));
   // set the baby's ears
-  // set the baby's secret colour
+  // set the baby's genetic colour
   let ri = 0;
   let gi = 0;
   let bi = 0;
   let rj = 0;
   let gj = 0;
   let bj = 0;
-  // decide which method of colour logic to use
+  // decide which method of colour logic to use for the genetic colour
   let seed = Math.round(Math.random()*2);
   if (seed == 0) {
-    ri = hexToRgb(parent1.geneticColour).r;
-    gi = hexToRgb(parent1.geneticColour).g;
-    bi = hexToRgb(parent1.geneticColour).b;
-    rj = hexToRgb(parent1.geneticColour).r;
-    gj = hexToRgb(parent1.geneticColour).g;
-    bj = hexToRgb(parent1.geneticColour).b;
+    ri = hexToRgb(parent1.firstColour).r;
+    gi = hexToRgb(parent1.firstColour).g;
+    bi = hexToRgb(parent1.firstColour).b;
+    rj = hexToRgb(parent1.firstColour).r;
+    gj = hexToRgb(parent1.firstColour).g;
+    bj = hexToRgb(parent1.firstColour).b;
   } else if (seed == 1) {
-    ri = hexToRgb(parent2.geneticColour).r;
-    gi = hexToRgb(parent2.geneticColour).g;
-    bi = hexToRgb(parent2.geneticColour).b;
-    rj = hexToRgb(parent2.geneticColour).r;
-    gj = hexToRgb(parent2.geneticColour).g;
-    bj = hexToRgb(parent2.geneticColour).b;
+    ri = hexToRgb(parent2.firstColour).r;
+    gi = hexToRgb(parent2.firstColour).g;
+    bi = hexToRgb(parent2.firstColour).b;
+    rj = hexToRgb(parent2.firstColour).r;
+    gj = hexToRgb(parent2.firstColour).g;
+    bj = hexToRgb(parent2.firstColour).b;
   } else {
-    ri = hexToRgb(parent1.geneticColour).r;
-    gi = hexToRgb(parent1.geneticColour).g;
-    bi = hexToRgb(parent1.geneticColour).b;
-    rj = hexToRgb(parent2.geneticColour).r;
-    gj = hexToRgb(parent2.geneticColour).g;
-    bj = hexToRgb(parent2.geneticColour).b;
+    ri = hexToRgb(parent1.firstColour).r;
+    gi = hexToRgb(parent1.firstColour).g;
+    bi = hexToRgb(parent1.firstColour).b;
+    rj = hexToRgb(parent2.firstColour).r;
+    gj = hexToRgb(parent2.firstColour).g;
+    bj = hexToRgb(parent2.firstColour).b;
   }
   // mix in a little random
   let seedR = Math.floor(Math.random()*255);
@@ -2269,43 +2203,46 @@ function generateBaby(parent1, parent2) {
   combr = Math.round((ri+rj+seedR)/3);
   combg = Math.round((gi+gj+seedG)/3);
   combb = Math.round((bi+bj+seedB)/3);
-  // spawn the baby
-  chibis[chibis.length-1].geneticColour = rgbToHex(combr, combg, combb);
+  chibis[chibis.length-1].firstColour = rgbToHex(combr, combg, combb);
+  // decide which method of colour logic to use for the second colour
+  seed = Math.round(Math.random()*2);
+  if (seed == 0) {
+    ri = hexToRgb(parent1.secondColour).r;
+    gi = hexToRgb(parent1.secondColour).g;
+    bi = hexToRgb(parent1.secondColour).b;
+    rj = hexToRgb(parent1.secondColour).r;
+    gj = hexToRgb(parent1.secondColour).g;
+    bj = hexToRgb(parent1.secondColour).b;
+  } else if (seed == 1) {
+    ri = hexToRgb(parent2.secondColour).r;
+    gi = hexToRgb(parent2.secondColour).g;
+    bi = hexToRgb(parent2.secondColour).b;
+    rj = hexToRgb(parent2.secondColour).r;
+    gj = hexToRgb(parent2.secondColour).g;
+    bj = hexToRgb(parent2.secondColour).b;
+  } else {
+    ri = hexToRgb(parent1.secondColour).r;
+    gi = hexToRgb(parent1.secondColour).g;
+    bi = hexToRgb(parent1.secondColour).b;
+    rj = hexToRgb(parent2.secondColour).r;
+    gj = hexToRgb(parent2.secondColour).g;
+    bj = hexToRgb(parent2.secondColour).b;
+  }
+  // mix in a little random
+  seedR = Math.floor(Math.random()*255);
+  seedG = Math.floor(Math.random()*255);
+  seedB = Math.floor(Math.random()*255);
+  combr = Math.round((ri+rj+seedR)/3);
+  combg = Math.round((gi+gj+seedG)/3);
+  combb = Math.round((bi+bj+seedB)/3);
+  chibis[chibis.length-1].secondColour = rgbToHex(combr, combg, combb);
   chibis[chibis.length-1].speedY = -25;
-  // set the baby's face gradient
-  chibis[chibis.length-1].facemod[0] = (parent1.facemod[0] + parent2.facemod[0] + Math.random())/3;
-  chibis[chibis.length-1].facemod[1] = (parent1.facemod[1] + parent2.facemod[1] + Math.random())/3;
+  // set the baby's coat modifiers
+  chibis[chibis.length-1].coatMod[0] = (parent1.coatMod[0] + parent2.coatMod[0] + Math.random())/3;
+  chibis[chibis.length-1].coatMod[1] = (parent1.coatMod[1] + parent2.coatMod[1] + Math.random())/3;
   return babyGender;
 }
 
-/**
-* function to be called when user clicks on the game area
-* @param {event} e - the clicking event
-*/
-function clickMouse(e) {
-  let stop = false;
-  for (let i = 0; !stop && i < chibis.length; i++) {
-    if (detectCollision(pointerPos, chibis[i])) {
-      selection = chibis[i].id;
-      stop = true;
-      sendMessage('Name '+chibis[i].name+' gender '+chibis[i].gender+' age '+chibis[i].age);
-    }
-  }
-
-  // let diffx = pointerPos.x - fireflies[0].x;
-  // let diffy = pointerPos.y - fireflies[0].y;
-  // // let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-  // if ((diffx > 0 && fireflies[0].speedX > 0) || (diffx < 0 && fireflies[0].speedX < 0)) {
-  //   fireflies[0].speedX *= 2;
-  // } else {
-  //   fireflies[0].speedX *= -0.9;
-  // }
-  // if ((diffy > 0 && fireflies[0].speedY > 0) || (diffy < 0 && fireflies[0].speedY < 0)) {
-  //   fireflies[0].speedY *= 2;
-  // } else {
-  //   fireflies[0].speedY *= -0.9;
-  // }
-}
 
 /**
 * function to turn the current ticker (0 to 1000) in the form of a 24 hour clock
@@ -2322,118 +2259,22 @@ function tickerToTime() {
   // seconds = ('0' + seconds).slice(-2);
   return (hours+':'+minutes/* +':'+seconds*/);
 }
-/**
-* function to produce an explosion's physics
-* @param {int} ex - the x coordinate
-* @param {int} ey - the y coordinate
-*/
-function produceExplosion(ex, ey) {
-  // blast all the guys
-  for (let i = 0; i < chibis.length; i++) {
-    if (chibis[i].awake) {
-      let diffx = ex - chibis[i].x;
-      let diffy = ey - chibis[i].y;
-      // as long as it's not the guy that triggered it
-      if (!diffx == 0 && !diffy == 0) {
-        // if the guy is within range;
-        let range = 200;
-        if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-          chibis[i].love += 25;
-          chibis[i].energy -= 50;
-          chibis[i].health -= 10;
-          diffx /= 5;
-          diffy /= 5;
-          if (diffx >= 0) {
-            chibis[i].speedX -= (100-diffx)/2;
-          } else if (diffx < 0) {
-            chibis[i].speedX += (100-diffx)/2;
-          }
-          if (diffy >= 0) {
-            chibis[i].speedY -= (100-diffy)/2;
-          } else if (diffy <= 0) {
-            chibis[i].speedY += (100-diffy)/2;
-          }
-        }
-      }
-    }
-  }
-  // now blast the Ghosts
-  for (let i = 0; i < myGhosts.length; i++) {
-    let diffx = ex - myGhosts[i].x;
-    let diffy = ey - myGhosts[i].y;
-    // if the Ghost is within range;
-    let range = 300;
-    if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-      diffx /= range;
-      diffy /= range;
-      if (diffx >= 0) {
-        myGhosts[i].speedX -= (1-diffx);
-      } else if (diffx < 0) {
-        myGhosts[i].speedX += (1-diffx);
-      }
-      if (diffy >= 0) {
-        myGhosts[i].speedY -= (1-diffy);
-      } else if (diffy < 0) {
-        myGhosts[i].speedY += (1-diffy);
-      }
-    }
-  }
-  // blast the other fireflies
-  for (let i = 0; i < fireflies.length; i++) {
-    let diffx = ex - fireflies[i].x;
-    let diffy = ey - fireflies[i].y;
-    // as long as it's not the fly that triggered it
-    if (!diffx == 0 && !diffy == 0) {
-      // if the firefly is within range;
-      let range = 200;
-      if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-        diffx /= range;
-        diffy /= range;
-        if (diffx >= 0) {
-          fireflies[i].speedX -= (diffx)*10;
-        } else if (diffx < 0) {
-          fireflies[i].speedX += (diffx)*10;
-        }
-        if (diffy >= 0) {
-          fireflies[i].speedY -= (diffy)*10;
-        } else if (diffy < 0) {
-          fireflies[i].speedY += (diffy)*10;
-        }
-      }
-    }
-  }
-  // destroy the  graves
-  for (let i = 0; i < graveStones.length; i++) {
-    if (!graveStones[i].elder) {
-      let diffx = ex - graveStones[i].x;
-      let diffy = ey - graveStones[i].y;
-      // if the firefly is within range;
-      let range = 200;
-      if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-        graveStones.splice(i, 1);
-        i--;
-      }
-    }
-  }
-}
 
-/**
-* function to limit the speed of an object
-* @param {object} what - the object
-*/
-function applySpeedLimit(what) {
-  if (isNaN(what.speedX) || isNaN(what.speedY) || isNaN(what.x) || isNaN(what.y)) {
-    console.log('2080 error - speed or coordinate is not a number');
-    console.log('x '+what.x+' y '+what.y+' speedX '+what.speedX+' speedY '+what.speedY);
+function giveBirth(who) {
+  let msgString = 'error';
+  if (who.gender == 'boy') {
+    msgString = (generateBaby(who, who.focus))+' called ';
+    chibis[chibis.length-1].name = generateBabyName(chibis[i].name, who.focus.name, chibis[chibis.length-1].gender);
+  } else {
+    msgString = (generateBaby(who.focus, who))+' called ';
+    chibis[chibis.length-1].name = generateBabyName(who.focus.name, who.name, chibis[chibis.length-1].gender);
   }
-  if (what.speedX > speedLimit) {
-    what.speedX = speedLimit;
-  } else if (what.speedX < -speedLimit) {
-    what.speedX = -speedLimit;
+  if (chibis[chibis.length-1].name == null) {
+    console.log('null name, parents were '+who.name+' and '+who.focus.name);
   }
-  if (what.speedY > speedLimit) {
-    what.speedY = speedLimit;
-  } else if (what.speedY < -speedLimit) {
-    what.speedY = -speedLimit;
-  }
+  sendMessage('A '+msgString+chibis[chibis.length-1].name+' was born to '+who.name+' and '+who.focus.name);
+  who.children ++;
+  who.focus.children ++;
+  createGlyphs(chibis[chibis.length-1].x, chibis[chibis.length-1].y,  chibis[chibis.length-1].firstColour, '\u2764');
+
 }

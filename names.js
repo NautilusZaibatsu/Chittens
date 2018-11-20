@@ -75,13 +75,12 @@ function generateBabyName(maleName, femaleName, gender) {
           ethnic = 'chinese';
         }
       }
-      if (ethnic == null){
+      if (ethnic == null) {
         console.log('Error: M '+maleName+' not found in library '+ethnic);
       }
     } else {
       // now female
       stop = false;
-      let result = null;
       for (let i = 0; !stop && i < namesinlib; i++) {
         // find the name first to determine which pool to draw from
         if (femaleName == femaleCeltic[i]) {
@@ -141,62 +140,62 @@ function generateBabyName(maleName, femaleName, gender) {
       if (ethnic == 'celtic') {
         if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleCeltic[thisSeed];
+          result = maleCeltic[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleCeltic[thisSeed];
+          result = femaleCeltic[thisSeed];
         }
       } else if (ethnic == 'scandinavian') {
     if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleScandinavian[thisSeed];
+          result = maleScandinavian[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleScandinavian[thisSeed];
+          result = femaleScandinavian[thisSeed];
         }
       } else if (ethnic == 'japanese') {
     if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleJapanese[thisSeed];
+          result = maleJapanese[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleJapanese[thisSeed];
+          result = femaleJapanese[thisSeed];
         }
       } else if (ethnic == 'american') {
     if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleAmerican[thisSeed];
+          result = maleAmerican[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleAmerican[thisSeed];
+          result = femaleAmerican[thisSeed];
         }
       } else if (ethnic == 'islander') {
     if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleIslander[thisSeed];
+          result = maleIslander[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleIslander[thisSeed];
+          result = femaleIslander[thisSeed];
         }
       } else if (ethnic == 'african') {
     if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleAfrican[thisSeed];
+          result = maleAfrican[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleAfrican[thisSeed];
+          result = femaleAfrican[thisSeed];
         }
       } else if (ethnic == 'chinese') {
     if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  maleChinese[thisSeed];
+          result = maleChinese[thisSeed];
         } else {
           thisSeed = Math.floor(Math.random()*namesinlib);
-          result =  femaleChinese[thisSeed];
+          result = femaleChinese[thisSeed];
         }
       }
       while (result == maleName || result == femaleName) {
-        generateBabyName(maleName, femaleName, gender);
+        result = generateBabyName(maleName, femaleName, gender);
         console.log('prevented from picking identical name '+result);
       }
       return result;
@@ -377,7 +376,7 @@ function generateBabyName(maleName, femaleName, gender) {
     //   }
     // }
     // console.log('passed test '+t+' times');
-    return totalMaleNames +' male / '+totalFemaleNames+' female names found in database.\n'
+    return totalMaleNames +' male / '+totalFemaleNames+' female names found\n'
     +maleAfrican.length+' '+femaleAfrican.length+' african\n'
     +maleAmerican.length+' '+femaleAmerican.length+' american\n'
     +maleCeltic.length+' '+femaleCeltic.length+' celtic\n'

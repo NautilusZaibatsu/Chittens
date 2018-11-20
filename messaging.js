@@ -16,9 +16,9 @@ function sendMessage(text) {
     }
     if (!duplicate) {
       messageBuffer.push(new Message(text, tickerToTime()));
-      if (messageBuffer.length > messagesToSave) {
-        messageBuffer.splice(0, 1);
-      }
+    }
+    if (messageBuffer.length > messagesToSave) {
+      messageBuffer.splice(0, 1);
     }
   }
   currentMessage.text = text;

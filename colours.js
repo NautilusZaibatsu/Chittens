@@ -13,6 +13,37 @@ function randomColour() {
 }
 
 /**
+* function to return a random colour as hex
+* @return {string} the hexcode for a random colour
+*/
+function randomColourRealistic() {
+  let seedR = 0;
+  let seedG = 0;
+  let seedB = 0;
+  if (Math.random() <= 0.025) {
+  return '#1a1a1f';
+} else if (Math.random() <= 0.025) {
+  return trueWhite;
+} else {
+  // if (type == 0) {
+    // orange through peach
+    seedR = Math.floor(Math.random()*255);
+    seedG = Math.floor(Math.random()*(seedR/1.7));
+    seedB = Math.floor(Math.random()*(seedG/1.25));
+    colour1 = rgbToHex(seedR, seedG, seedB);
+  // } else {
+  // russian blue
+   seedB = Math.floor(Math.random()*192);
+   seedG = Math.floor(Math.random()*(seedB/1.08));
+   seedR = Math.floor(Math.random()*(seedB/1.04));
+   colour2 = rgbToHex(seedR, seedG, seedB);
+// }
+  let randC = mixTwoColours(colour1, colour2);
+  return randC;
+}
+}
+
+/**
 * function to turn rgb values into hexadecimal
 * @param {int} r -  red
 * @param {int} g -  green
