@@ -1,6 +1,13 @@
 #chibis
 
 changelog
+10/11/2018 = 0.48
+~ added litter mechanic
+~ added German and Indian names
+~ added thickness and legginess attributes to Chibis
+~ incorporated ntc by Chirag Mehta - http://chir.ag/projects/ntc
+~ fixed some scaling problems on mobile
+
 19/11/2018 = 0.47
 features
 ~ chibis now wiggle their bums in the air while waiting to pounce

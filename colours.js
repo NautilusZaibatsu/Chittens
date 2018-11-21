@@ -8,6 +8,7 @@ function randomColour() {
   let seedR = Math.floor(Math.random()*256);
   let seedG = Math.floor(Math.random()*256);
   let seedB = Math.floor(Math.random()*256);
+  debugString = 'randomColour';
   let randC = rgbToHex(seedR, seedG, seedB);
   return randC;
 }
@@ -20,26 +21,30 @@ function randomColourRealistic() {
   let seedR = 0;
   let seedG = 0;
   let seedB = 0;
-  if (Math.random() <= 0.025) {
-  return '#1a1a1f';
-} else if (Math.random() <= 0.025) {
-  return trueWhite;
-} else {
-  // if (type == 0) {
+  let colour = 'red'; // for debug
+  let randSeed = Math.random();
+  if (randSeed <= 1/3) {
     // orange through peach
+    debugString = 'peach';
     seedR = Math.floor(Math.random()*255);
     seedG = Math.floor(Math.random()*(seedR/1.7));
     seedB = Math.floor(Math.random()*(seedG/1.25));
-    colour1 = rgbToHex(seedR, seedG, seedB);
-  // } else {
+    colour = rgbToHex(seedR, seedG, seedB);
+    return colour;
+} else if (randSeed <= 2/3) {
   // russian blue
+  debugString = 'blue';
    seedB = Math.floor(Math.random()*192);
    seedG = Math.floor(Math.random()*(seedB/1.08));
    seedR = Math.floor(Math.random()*(seedB/1.04));
-   colour2 = rgbToHex(seedR, seedG, seedB);
-// }
-  let randC = mixTwoColours(colour1, colour2);
-  return randC;
+   colour = rgbToHex(seedR, seedG, seedB);
+  return colour;
+} else {
+   // greys
+   debugString = 'greys';
+    let seed = Math.floor(Math.random()*255);
+    colour = rgbToHex(seed, seed, seed);
+  return colour;
 }
 }
 
@@ -57,10 +62,6 @@ function rgbToHex(r, g, b) {
   }
   if (r < 0 || g < 0 || b < 0) {
     console.log('error 2 '+debugString);
-    console.log('rgb: '+r+' '+g+' '+b);
-  }
-  if ( isNaN(r) || isNaN(g) || isNaN(b)) {
-    console.log('error 3 '+debugString);
     console.log('rgb: '+r+' '+g+' '+b);
   }
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
@@ -82,19 +83,19 @@ function hexToRgb(hex) {
 
 /**
 * Converts an RGB color value to HSL
-* @param   Number  r       The red color value
-* @param   Number  g       The green color value
-* @param   Number  b       The blue color value
+* @param  {int}  r - The red color value
+* @param  {int}  g - The green color value
+* @param  {int}  b - The blue color value
 * @return  Array           The HSL representation
 */
 function rgbToHsl(r, g, b) {
   r /= 255, g /= 255, b /= 255;
-  var max = Math.max(r, g, b), min = Math.min(r, g, b);
-  var h, s, l = (max + min) / 2;
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
   if (max == min) {
     h = s = 0; // achromatic
   } else {
-    var d = max - min;
+    let d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -138,6 +139,7 @@ function hslToRgb(h, s, l) {
 function increaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
+  debugString = 'increase sat';
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
@@ -145,19 +147,23 @@ function increaseSaturationHEX(hex) {
 function decreaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 0, rgbhsl[2]);
+  debugString = 'decrease sat';
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   return rgbToHex(Math.round(hslrgb[0]), 0, Math.round(hslrgb[2]));
 }
-
-function mixTwoColours(hex1, hex2) {
+/**
+* @param {int} prop - the proportion of hex1 to hex2 (0 to 1);
+*/
+function mixTwoColours(hex1, hex2, prop) {
   ri = hexToRgb(hex1).r;
   gi = hexToRgb(hex1).g;
   bi = hexToRgb(hex1).b;
   rj = hexToRgb(hex2).r;
   gj = hexToRgb(hex2).g;
   bj = hexToRgb(hex2).b;
-  combr = Math.round((ri+rj)/2);
-  combg = Math.round((gi+gj)/2);
-  combb = Math.round((bi+bj)/2);
+  combr = Math.round((ri*prop)+(rj*(1-prop)));
+  combg = Math.round((gi*prop)+(gj*(1-prop)));
+  combb = Math.round((bi*prop)+(bj*(1-prop)));
+  debuString = 'mixTwoColours';
   return rgbToHex(combr, combg, combb);
 }

@@ -1,5 +1,5 @@
-// Version 0.02
-const numlibs = 7;
+// Version 0.03
+const numlibs = 9;
 const namesinlib = 50;
 /**
 * function generate a baby name from two parents
@@ -75,6 +75,20 @@ function generateBabyName(maleName, femaleName, gender) {
           ethnic = 'chinese';
         }
       }
+      for (let i = 0; !stop && i < namesinlib; i++) {
+        // find the name first to determine which pool to draw from
+        if (maleName == maleGermanic[i]) {
+          stop = true;
+          ethnic = 'germanic';
+        }
+      }
+      for (let i = 0; !stop && i < namesinlib; i++) {
+        // find the name first to determine which pool to draw from
+        if (maleName == maleIndian[i]) {
+          stop = true;
+          ethnic = 'indian';
+        }
+      }
       if (ethnic == null) {
         console.log('Error: M '+maleName+' not found in library '+ethnic);
       }
@@ -128,6 +142,20 @@ function generateBabyName(maleName, femaleName, gender) {
         if (femaleName == femaleChinese[i]) {
           stop = true;
           ethnic = 'chinese';
+        }
+      }
+      for (let i = 0; !stop && i < namesinlib; i++) {
+        // find the name first to determine which pool to draw from
+        if (femaleName == femaleGermanic[i]) {
+          stop = true;
+          ethnic = 'germanic';
+        }
+      }
+      for (let i = 0; !stop && i < namesinlib; i++) {
+        // find the name first to determine which pool to draw from
+        if (femaleName == femaleIndian[i]) {
+          stop = true;
+          ethnic = 'indian';
         }
       }
       if (ethnic == null) {
@@ -193,6 +221,22 @@ function generateBabyName(maleName, femaleName, gender) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = femaleChinese[thisSeed];
         }
+      } else if (ethnic == 'germanic') {
+    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+          thisSeed = Math.floor(Math.random()*namesinlib);
+          result = maleGermanic[thisSeed];
+        } else {
+          thisSeed = Math.floor(Math.random()*namesinlib);
+          result = femaleGermanic[thisSeed];
+        }
+      } else if (ethnic == 'indian') {
+    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+          thisSeed = Math.floor(Math.random()*namesinlib);
+          result = maleIndian[thisSeed];
+        } else {
+          thisSeed = Math.floor(Math.random()*namesinlib);
+          result = femaleIndian[thisSeed];
+        }
       }
       while (result == maleName || result == femaleName) {
         result = generateBabyName(maleName, femaleName, gender);
@@ -244,6 +288,18 @@ function generateBabyName(maleName, femaleName, gender) {
     } else if (seed < (14 * namesinlib)) {
       seedTrans = (seed - (13 * namesinlib));
       return femaleChinese[seedTrans];
+    } else if (seed < (15 * namesinlib)) {
+      seedTrans = (seed - (14 * namesinlib));
+      return maleGermanic[seedTrans];
+    } else if (seed < (16 * namesinlib)) {
+      seedTrans = (seed - (15 * namesinlib));
+      return femaleGermanic[seedTrans];
+    } else if (seed < (17 * namesinlib)) {
+      seedTrans = (seed - (16 * namesinlib));
+      return maleIndian[seedTrans];
+    } else if (seed < (18 * namesinlib)) {
+      seedTrans = (seed - (17 * namesinlib));
+      return femaleIndian[seedTrans];
     }
     console.log('error m');
   };
@@ -264,6 +320,10 @@ function generateBabyName(maleName, femaleName, gender) {
       return maleAfrican[Math.round(Math.random()*namesinlib)];
     } else if (ethnicity < 7) {
       return maleChinese[Math.round(Math.random()*namesinlib)];
+    } else if (ethnicity < 8) {
+      return maleGermanic[Math.round(Math.random()*namesinlib)];
+    } else if (ethnicity < 9) {
+      return maleIndian[Math.round(Math.random()*namesinlib)];
     }
     sendMessage('oops M '+ethinicity);
 }
@@ -284,6 +344,10 @@ function generateBabyName(maleName, femaleName, gender) {
       return femaleAfrican[Math.round(Math.random()*namesinlib)];
     } else if (ethnicity < 7) {
       return femaleChinese[Math.round(Math.random()*namesinlib)];
+    } else if (ethnicity < 8) {
+      return femaleGermanic[Math.round(Math.random()*namesinlib)];
+    }  else if (ethnicity < 9) {
+      return femaleIndian[Math.round(Math.random()*namesinlib)];
     }
     sendMessage('oops F '+ethinicity);
   }
@@ -310,6 +374,12 @@ function generateBabyName(maleName, femaleName, gender) {
     } else if (index < (7 * namesinlib)) {
       seedTrans = (index - (6 * namesinlib));
       return maleChinese[seedTrans];
+    } else if (index < (8 * namesinlib)) {
+      seedTrans = (index - (7 * namesinlib));
+      return maleGermanic[seedTrans];
+    }  else if (index < (9 * namesinlib)) {
+      seedTrans = (index - (8 * namesinlib));
+      return maleIndian[seedTrans];
     }
     console.log('error m');
   };
@@ -335,6 +405,12 @@ function generateBabyName(maleName, femaleName, gender) {
     } else if (index < (7 * namesinlib)) {
       seedTrans = (index - (6 * namesinlib));
       return femaleChinese[seedTrans];
+    } else if (index < (8 * namesinlib)) {
+      seedTrans = (index - (7 * namesinlib));
+      return femaleGermanic[seedTrans];
+    } else if (index < (9 * namesinlib)) {
+      seedTrans = (index - (8 * namesinlib));
+      return femaleIndian[seedTrans];
     }
     console.log('error m');
   };
@@ -382,7 +458,9 @@ function generateBabyName(maleName, femaleName, gender) {
     +maleCeltic.length+' '+femaleCeltic.length+' celtic\n'
     +maleChinese.length+' '+femaleChinese.length+' chinese\n'
     +maleIslander.length+' '+femaleIslander.length+' islander\n'
-    +maleJapanese.length+' '+femaleJapanese.length+' japanese';
+    +maleJapanese.length+' '+femaleJapanese.length+' japanese\n'
+    +maleIndian.length+' '+femaleIndian.length+' indian\n'
+    +maleGermanic.length+' '+femaleGermanic.length+' germanic';
   };
 
 
@@ -1140,6 +1218,217 @@ const femaleChinese = [
   'Ziyi',
 ];
 
+const maleGermanic = [
+  'Benedikt',
+  'Dominik',
+  'Elias',
+  'Felix',
+  'Fritz',
+  'Hannes',
+  'Jakob',
+  'Jan',
+  'Jannik',
+  'Jannis',
+  'Johann',
+  'Johannes',
+  'Jonas',
+  'Joris',
+  'Justus',
+  'Karl',
+  'Kilian',
+  'Konstantin',
+  'Lasse',
+  'Lennart',
+  'Lenni',
+  'Lennox',
+  'Levi',
+  'Levin',
+  'Lias',
+  'Linus',
+  'Lio',
+  'Luc',
+  'Luca',
+  'Lukas',
+  'Mads',
+  'Malte',
+  'Matteo',
+  'Mattis',
+  'Max',
+  'Maxim',
+  'Mika',
+  'Milan',
+  'Milo',
+  'Moritz',
+  'Niels',
+  'Niklas',
+  'Niko',
+  'Ole',
+  'Oskar',
+  'Theodor',
+  'Till',
+  'Timo',
+  'Tobias',
+  'Valentin',
+];
+
+const femaleGermanic = [
+  'Anni',
+  'Annika',
+  'Elli',
+  'Eva',
+  'Finja',
+  'Franziska',
+  'Frieda',
+  'Hanna',
+  'Ida',
+  'Isabell',
+  'Jana',
+  'Jasmin',
+  'Johanna',
+  'Josefine',
+  'Jule',
+  'Juli',
+  'Juna',
+  'Karla',
+  'Karlotta',
+  'Katharina',
+  'Klara',
+  'Lea',
+  'Lena',
+  'Leni',
+  'Leonie',
+  'Lina',
+  'Lotta',
+  'Lucie',
+  'Luisa',
+  'Luna',
+  'Lya',
+  'Magda',
+  'Maila',
+  'Mara',
+  'Martha',
+  'Matilda',
+  'Merle',
+  'Mila',
+  'Mira',
+  'Neele',
+  'Nora',
+  'Paula',
+  'Ronja',
+  'Sara',
+  'Sofia',
+  'Sofie',
+  'Teresa',
+  'Tilda',
+  'Viktoria',
+  'Zoe',
+];
+
+const maleIndian = [
+  'Aaditya',
+  'Abhi',
+  'Abhinav',
+  'Abhishek',
+  'Aditya',
+  'Ajith',
+  'Akash',
+  'Amit',
+  'Anil',
+  'Anish',
+  'Ankit',
+  'Ankur',
+  'Arjun',
+  'Aryan',
+  'Ashish',
+  'Deepak',
+  'Karan',
+  'Krish',
+  'Krishna',
+  'Kumar',
+  'Kunal',
+  'Mahesh',
+  'Manish',
+  'Manoj',
+  'Mayank',
+  'Naveen',
+  'Neeraj',
+  'Nishant',
+  'Nitin',
+  'Parth',
+  'Pranav',
+  'Prateek',
+  'Raghav',
+  'Rahul',
+  'Raj',
+  'Raju',
+  'Rakesh',
+  'Rishabh',
+  'Rohan',
+  'Rohit',
+  'Sanjay',
+  'Shivam',
+  'Shyam',
+  'Soham',
+  'Vaibhav',
+  'Vikas',
+  'Vinay',
+  'Vishal',
+  'Vivek',
+  'Yash',
+]
+
+const femaleIndian = [
+  'Aastha',
+  'Aishwarya',
+  'Akansha',
+  'Ananya',
+  'Anisha',
+  'Anjali',
+  'Anusha',
+  'Anushri',
+  'Arti',
+  'Aswini',
+  'Ayushi',
+  'Divya',
+  'Diya',
+  'Gayatri',
+  'Indhumathi',
+  'Isha',
+  'Ishita',
+  'Kalyani',
+  'Krithika',
+  'Mahima',
+  'Manisha',
+  'Neha',
+  'Niharika',
+  'Nikita',
+  'Nishi',
+  'Nishita',
+  'Pavithra',
+  'Prachi',
+  'Priya',
+  'Priyanka',
+  'Radhika',
+  'Ramya',
+  'Rishita',
+  'Riya',
+  'Rutuja',
+  'Sakshi',
+  'Sanjana',
+  'Seema',
+  'Shivangi',
+  'Shivani',
+  'Shreya',
+  'Shrinidhi',
+  'Simran',
+  'Siya',
+  'Sneha',
+  'Suhani',
+  'Tanu',
+  'Tanvi',
+  'Vani',
+  'Varsha',
+];
 
 const totalMaleNames = (numlibs * namesinlib);
 const totalFemaleNames = (numlibs * namesinlib);

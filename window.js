@@ -2,10 +2,6 @@
 * mate 0.44
 **/
 
-// font
-let debugString = 'nothing'; // for debugging
-const globalFont = 'Consolas';
-const fontWidth = 8.4;
 // universal physics constants
 const gravity = 0.02;
 const elasticity = 0.2;
@@ -35,6 +31,7 @@ day = 0;
 paused = false;
 chosenChibiF = false;
 chosenChibiM = false;
+chosenKitten = true;
 elders = 0;
 obelisks = 0;
 guyID = 0;
@@ -61,6 +58,32 @@ fireflies.push(new FireFly(canvasWidth/2, trueBottom, pointerPos, 1, glowColour)
 boxes = [];
 buttons = [];
 labels = [];
+
+// font
+let debugString = 'nothing'; // for debugging
+const globalFont = 'Consolas';
+// scaling for rotation
+boxSize = 0;
+fontSize = 15;
+fontWidth = 8.4;
+// if it is in landscape
+if (canvasWidth > canvasHeight) {
+boxSize = 250*proportion;
+} else {
+  // if it is in portrait (like a phone)
+  boxSize = canvasWidth/3.1;
+  fontSize = 80*proportion;
+  fontWidth = fontWidth*5.15*proportion;
+}
+const boxPadding = 20*proportion;
+const boxColumns = 3;
+const boxRows = 3;
+const boxThickness = 10*proportion;
+currentChibis = 0;
+maleParent = null;
+femaleParent = null;
+choosingChibi = true;
+
 
 // Images
 // for my guys
@@ -110,19 +133,20 @@ midnightcolour[0] = '#020421';
 midnightcolour[1] = '#020423';
 midnightcolour[2] = '#020e2b';
 midnightcolour[3] = '#010005';
+outputArray = [];
 
 
 // UI and messaging
-basicInfo = new TextElement('15px', trueWhite, 10, canvasHeight - 10);
-newestMessage = new TextElement('15px', trueWhite, 10, canvasHeight - 30);
+basicInfo = new TextElement(fontSize+'px', trueWhite, 10, canvasHeight - 10);
+newestMessage = new TextElement(fontSize+'px', trueWhite, 10, canvasHeight - 30);
 let messagesToSave = canvasHeight/20;
 
 /**
 * function to start the simulation
 */
 function startGame() {
-  // chibis.push(new Chibi(canvasWidth*0.75, trueBottom-20, 6, 11.5, 'girl', 0));
-  // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.75), trueBottom-20, 6, 12, 'boy', 1));
+  // chibis.push(new Chibi(canvasWidth*0.75, trueBottom-20, 6, 11.5, 'Female', 0));
+  // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.75), trueBottom-20, 6, 12, 'Male', 1));
   // let ethnicitySeed = Math.round(Math.random()*(numlibs-1));
   // while (chibis[0].name == null) {
   //   chibis[0].name = getRandomFemaleEthnicName(ethnicitySeed);
@@ -153,7 +177,7 @@ function startGame() {
 
     // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.5), trueBottom-20, 6, 10, 'non binary', 1));
     // chibis[2].name = getRandomName(nameSeed);
-    // chibis[2].firstColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#12d4ee');
+    // chibis[2].firstColour = mixTwoColours(increaseSaturationHEX(randomColour()), '#12d4ee', 0.5);
 
     for (let j = 0; j < 20; j++) {
       ranX = Math.floor(Math.random()*(canvasWidth));
@@ -161,7 +185,7 @@ function startGame() {
       // ranSize = Math.random()*3;
       // starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, ranY, false));
 
-      // chibis.push(new Chibi(ranX, ranY, 8, 10, 'girl', Math.random()));
+      // chibis.push(new Chibi(ranX, ranY, 8, 10, 'Female', Math.random()));
       // chibis[(j*2)+2].name = getFemaleName(Math.round(Math.random()*namesinlib*numlibs));
       // chibis[(j*2)+2].firstColour = randomColour();
       // chibis[(j*2)+2].age = 1;
@@ -169,7 +193,7 @@ function startGame() {
       // chibis[(j*2)+2].coatMod[1] = Math.random();
       // chibis[(j*2)+2].elder = true;
 
-      // chibis.push(new Chibi(ranX, ranY, 8, 10, 'boy', Math.random()));
+      // chibis.push(new Chibi(ranX, ranY, 8, 10, 'Male', Math.random()));
       // chibis[(j*2)+3].name = getMaleName(Math.round(Math.random()*namesinlib*numlibs));
       // chibis[(j*2)+3].firstColour = randomColour();
       // chibis[(j*2)+3].age = 1;
@@ -228,7 +252,6 @@ function updateGameArea() {
     }
   }
   // change the colour by time of day
-  outputArray = [];
   for (let tick = 0; tick < nightcolour.length; tick++) {
     let ri = 0;
     let gi = 0;
@@ -269,10 +292,11 @@ function updateGameArea() {
       gj = hexToRgb(midnightcolour[tick]).g;
       bj = hexToRgb(midnightcolour[tick]).b;
     }
-    let combr = Math.floor(ri - ((((ri - rj)/250))*timeMod));
-    let combg = Math.floor(gi - ((((gi - gj)/250))*timeMod));
-    let combb = Math.floor(bi - ((((bi - bj)/250))*timeMod));
-    outputArray[tick] = rgbToHex(combr, combg, combb);
+    let dayR = Math.floor(ri - ((((ri - rj)/250))*timeMod));
+    let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
+    let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
+    debugString ='outputarray '+dayR+' '+dayG+' '+dayB;
+    outputArray[tick] = rgbToHex(dayR, dayG, dayB);
   }
   let tankGradient=ctx.createLinearGradient(0, 0, 0, canvasHeight);
   tankGradient.addColorStop(0, outputArray[0]);
@@ -282,7 +306,7 @@ function updateGameArea() {
   ctx.fillStyle=tankGradient;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   // change the value of trueWhite
-  // trueWhite = mixTwoColours('#FFFFFF', outputArray[2]);
+  // trueWhite = mixTwoColours('#FFFFFF', outputArray[2], 0.5);
   hover();
   // fix the starfield
   recalculateStarfield();
@@ -339,20 +363,20 @@ function updateGameArea() {
 
   // draw the message history
   let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
-  let ri = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
-  let gi = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
-  let bi = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
-  fade.addColorStop(0, 'rgba('+ri+', '+gi+', '+bi+', 0.05)');
-  fade.addColorStop(1, 'rgba('+ri+', '+gi+', '+bi+', 0.3)');
+  let rMessage = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
+  let gMessage = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
+  let bMessage = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
+  fade.addColorStop(0, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.05)');
+  fade.addColorStop(1, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.3)');
   // Fill with gradient
   ctx.fillStyle = fade;
-  ctx.font = '15px' + ' ' + globalFont;
+  ctx.font = fontSize+'px' + ' ' + globalFont;
   for (let i = messageBuffer.length-2; i >= 0; i--) {
     ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
   }
 
   // update the text
-  basicInfo.text = tickerToTime() +' Day '+day+' Chibis '+ chibis.length+ ' Elders '+elders+' Fireflies '+fireflies.length+' Trees '+trees.length;
+  basicInfo.text = tickerToTime() +' Day '+day;
   basicInfo.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
@@ -367,8 +391,6 @@ function updateGameArea() {
   for (let i = 0; i < labels.length; i++) {
     labels[i].update();
   }
-
-
 
   if (!paused) {
     if (daytimeCounter < 1000) {
@@ -447,37 +469,43 @@ function updateGameArea() {
     // for my guys
     // global and prep first
     // check for both sexes
-    if (chosenChibiF && chosenChibiM) {
-      chibis.sort(function twoVars(a, b) {
-        if (a.health + a.energy + a.love> b.health+ b.energy + b.love) return 1;
-        if (a.health + a.energy + a.love< b.health+ b.energy + b.love) return -1;
-        return 0;
-      });
+    if (!choosingChibi && chosenChibiF && chosenChibiM) {
+
       let malePresent = false;
       let femalePresent = false;
-      for (let i = 0; (!malePresent || !femalePresent) && i < chibis.length; i++) {
-        if (!chibis[i].elder && chibis[i].gender == 'girl') {
+      for (let i = 0; i < chibis.length; i++) {
+        if (!chibis[i].elder && chibis[i].gender == 'Female') {
           femalePresent = true;
-        } else if (!chibis[i].elder) {
+        } else if (!chibis[i].elder && chibis[i].gender == 'Male') {
           malePresent = true;
         }
       }
       if (!malePresent || !femalePresent) {
         ranX = Math.floor(Math.random()*(canvasWidth));
         ranY = Math.floor(Math.random()*(trueBottom));
-        randSize = 5 + (Math.random()*10);
+        let specSize = 5 + (Math.random()*10);
         let nameSeed = Math.round(Math.random()*totalMaleNames);
         if (!malePresent) {
-          chibis.push(new Chibi(ranX, ranY, 5, randSize, 'boy', Math.random()));
+          chibis.push(new Chibi(ranX, ranY, 5, specSize, 'Male', Math.random()));
           chibis[chibis.length-1].name = getMaleName(nameSeed);
         } else {
-          chibis.push(new Chibi(ranX, ranY, 5, randSize, 'girl', Math.random()));
+          chibis.push(new Chibi(ranX, ranY, 5, specSize, 'Female', Math.random()));
           chibis[chibis.length-1].name = getFemaleName(nameSeed);
         }
-        chibis[chibis.length-1].firstColour = randomColour();
+        chibis[chibis.length-1].firstColour = randomColourRealistic();
         sendMessage('A stranger called '+chibis[chibis.length-1].name+' appeared');
       }
+
+      chibis.sort(function twoVars(a, b) {
+        if (a.health + a.energy + a.love> b.health+ b.energy + b.love) return 1;
+        if (a.health + a.energy + a.love< b.health+ b.energy + b.love) return -1;
+        return 0;
+      });
+
+
     }
+
+
 
     // firefly logic
     for (let f = 0; f < fireflies.length; f++) {
@@ -539,6 +567,20 @@ function updateGameArea() {
     // ctx.fillStyle = outputArray[2];
     // ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     // ctx.globalAlpha = 1;
+
+    // rain
+    // for (let i = 0; i < 500*proportion; i++) {
+    //   ctx.lineWidth = 0.5 +(Math.random()*0.5);
+    //   ctx.strokeStyle = trueWhite;
+    //   ctx.globalAlpha = 0.1 + (Math.random()*0.5);
+    //   ctx.beginPath();
+    //   let dropX = Math.random()*canvasWidth;
+    //   let dropY = (Math.random()*trueBottom) - 110;
+    //   ctx.moveTo(dropX, dropY);
+    //   ctx.lineTo(dropX+dropY, dropY+10+(Math.random()*100));
+    //   ctx.stroke();
+    //   ctx.globalAlpha = 1
+    // }
   }
 }
 
@@ -672,7 +714,7 @@ function FireFly(x, y, focus, size, firstColour) {
   this.firstColour = firstColour;
   this.update = function() {
     if (this.x < 0 || this.x > canvasWidth) {
-      this.speedX *= -0.99;
+      this.speedX *= -0.98;
       if (this.x < 0) {
         this.x = ((2.5*this.size)/20);
       } else {
@@ -711,15 +753,16 @@ function FireFly(x, y, focus, size, firstColour) {
     this.y += this.speedY;
 
     let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, 100);
-    let ri = hexToRgb(this.firstColour).r;
-    let gi = hexToRgb(this.firstColour).g;
-    let bi = hexToRgb(this.firstColour).b;
-    let rj = hexToRgb('#FF2288').r;
-    let gj = hexToRgb('#FF2288').g;
-    let bj = hexToRgb('#FF2288').b;
-    let combr = Math.floor(ri - ((((ri - rj)/400)))*this.touches);
-    let combg = Math.floor(gi - ((((gi - gj)/400)))*this.touches);
-    let combb = Math.floor(bi - ((((bi - bj)/400)))*this.touches);
+    let riGlow = hexToRgb(this.firstColour).r;
+    let giGlow = hexToRgb(this.firstColour).g;
+    let biGlow = hexToRgb(this.firstColour).b;
+    let rjGlow = hexToRgb('#FF2288').r;
+    let gjGlow = hexToRgb('#FF2288').g;
+    let bjGlow = hexToRgb('#FF2288').b;
+    let combr = Math.floor(riGlow - ((((riGlow - rjGlow)/400)))*this.touches);
+    let combg = Math.floor(giGlow - ((((giGlow - gjGlow)/400)))*this.touches);
+    let combb = Math.floor(biGlow - ((((biGlow - bjGlow)/400)))*this.touches);
+    debugString = 'firefly';
     let newC = rgbToHex(combr, combg, combb);
     glow.addColorStop(0, newC);
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -837,10 +880,12 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.secondColour = trueBlack;
   this.firstColour = trueWhite;
   this.coatMod = [1, 1];
-  this.ears = ears;
+  this.ears = ears; // 0.5 is average
+  this.thickness = 0.5; // 0.5 is average
+  this.legginess = 0.5;
   this.angleToFocus = 0;
   this.size = bodySize;
-  this.limbLength = (this.size*1.5);
+  this.limbLength = (this.size*1.5)*2*this.legginess;
   this.maxSize = maxSize;
   this.hitBottom = false;
   this.sitting = false;
@@ -900,8 +945,10 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   // act
   // @return {boolean} - whether the action has a cost
   this.act = function() {
-    if (this.snuggling == 0 && this.gender == 'girl') {
-      giveBirth(this, this.focus);
+    if (this.snuggling == 0 && this.gender == 'Female') {
+      // giveBirth(this, this.focus);
+      createGlyphs((this.x - (this.x - this.focus.x)/2), (this.y - (this.y - this.focus.y)/2), mixTwoColours(this.firstColour, this.focus.firstColour, 0.5), '\u2764');
+      initLitter(this.focus, this);
       // take snuggling to -1 so that it doesn't give birth forever
       this.snuggling --;
     } else if (this.snuggling > 0) {
@@ -913,11 +960,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       if (this.supersaiyan == 0 && (this.health > superThreshold && this.love > superThreshold)) {
         this.sitting = true;
       } else {
-        if (Math.random() <= 0.05 && this.focus.y <= this.y) {
+        if (Math.random() <= 0.025 && this.focus.y <= this.y) {
           // decide what to do
           // are we gonna pick a mate?
           let mate = null;
-          if (this.focusIsFirefly() && !this.elder && this.gender !== 'non binary' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 70
+          if (!choosingChibi && this.focusIsFirefly() && !this.elder && this.gender !== 'non binary' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 70
           && this.energy >= 70 && this.size >= this.maxSize) {
             for (let j = 0; j < chibis.length && mate == null; j++) {
               if (this !== chibis[j] && chibis[j].awake && chibis[j].focusIsFirefly() && this.gender !== chibis[j].gender && this.love + chibis[j].love >= 90 && !chibis[j].elder && chibis[j].gender !== 'non binary'
@@ -937,7 +984,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
                 if (a.name < b.name) return -1;
                 return 0;
               });
-              sendMessage(nameArray[0].name+' and '+nameArray[1].name+' felt like snuggling');
+              // sendMessage(nameArray[0].name+' and '+nameArray[1].name+' felt like snuggling');
             }
           }
 
@@ -1175,7 +1222,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 
 
     if (this.awake && this.energy > 0) {
-      ctx.lineWidth = this.size/2.5;
+      ctx.lineWidth = (this.size/2.5)*this.thickness*2;
       ctx.strokeStyle = this.firstColour;
 
       // legs
@@ -1252,11 +1299,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.rotate(Math.atan2(-this.speedY, -this.speedX));
     }
     if (this.hitBottom || !this.awake) {
-      ctx.translate(0, sleepshift);
+      ctx.translate(0, sleepshift - (this.size/4));
     }
     ctx.beginPath();
     ctx.moveTo(0, this.size/1.5);
-    ctx.arc(this.size*(-tmp+7.5)/8, -this.size*1.5, this.size/3, 0, Math.PI, true);// Mouth (clockwise)
+    ctx.arc((this.size*(-tmp+7.5)/8)*this.thickness, -(this.size*1.5), (this.size/3)*this.thickness*2, 0, Math.PI, true);// Mouth (clockwise)
     ctx.lineTo(0, this.size/3);
     let tailGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size*2);
     tailGradient.addColorStop(0, trueBlack);
@@ -1296,6 +1343,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     }
 
     // bum sticking in the air
+    ctx.fillStyle = tailGradient;
+    ctx.beginPath();
     if (this.sitting) {
       // make it wag
       let tmp = Math.abs(daytimeCounter-this.birthday);
@@ -1303,12 +1352,39 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         tmp -= 7.5; // 0 to 30
       }
       tmp = Math.abs(tmp-3.75); // 0 to 15 to 0 to 15
-      //  ctx.arc(this.size*(-tmp+7.5)/8, -this.size*1.5, this.size/3, 0, Math.PI, true);// Mouth (clockwise)
-      ctx.fillStyle = tailGradient;
-      ctx.beginPath();
-      ctx.arc(-this.size*(-tmp+3.75)/32, -(this.limbLength+(this.size/4))/2, this.size*0.8, 0, 2 * Math.PI);
-      ctx.fill();
+      ctx.arc(-(this.size*(-tmp+3.75)/32), -this.size/2, (this.thickness*this.size*1.6), 0, 2 * Math.PI);
+    } else if (this.awake) {
+      ctx.arc(-(this.size/32), 0, (this.thickness*this.size*1.3), 0, 2 * Math.PI);
     }
+    ctx.fill();
+
+    // put your front legs down if you are on the floor and healthy
+    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
+    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
+    handGradient.addColorStop(0, this.firstColour);
+    handGradient.addColorStop(this.coatMod[0], this.firstColour);
+    handGradient.addColorStop(1, this.secondColour);
+    ctx.fillStyle = handGradient;
+    ctx.strokeStyle = handGradient;
+    if (this.awake && this.hitBottom) {
+      if (!this.sitting) {
+        ctx.beginPath();
+        ctx.moveTo(-this.size+(this.size/1.6), this.size*0.8);
+        ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(this.size-(this.size/1.6), this.size*0.8);
+        ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
     // rotate around axis before drawing head parts
     ctx.rotate(this.rotation);
     // ears
@@ -1334,17 +1410,29 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     ctx.fill();
     ctx.restore(); // 0
 
+
+
     // head
+    if (this.sitting && this.awake) {
+      ctx.translate(0, (this.limbLength+(this.size/4))/2);
+    } else if (!this.awake) {
+      ctx.translate(0, sleepshift);
+    }
+    let bodyGradient=ctx.createLinearGradient(0, -this.size, 0, this.size);
+    bodyGradient.addColorStop(0, this.firstColour);
+    bodyGradient.addColorStop(1*this.coatMod[0], this.firstColour);
+    bodyGradient.addColorStop(1, this.secondColour);
+    ctx.fillStyle = bodyGradient;
+    if (this.sitting && this.awake) {
+      ctx.translate(0, -(this.limbLength+(this.size/4))/2);
+    } else if (!this.awake) {
+      ctx.translate(0, -sleepshift);
+    }
     if (this.awake) {
-      let bodyGradient=ctx.createLinearGradient(0, -this.size, 0, this.size);
-      bodyGradient.addColorStop(0, this.firstColour);
-      bodyGradient.addColorStop(1*this.coatMod[0], this.firstColour);
-      bodyGradient.addColorStop(1, this.secondColour);
-      ctx.fillStyle = bodyGradient;
       ctx.rotate(360 * this.coatMod[1] * Math.PI / 180);
       // awake mode
       ctx.beginPath();
-      ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
+      ctx.arc(0, 0, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
       ctx.fill();
       ctx.rotate(-360 * this.coatMod[1] * Math.PI / 180);
       // smile
@@ -1482,67 +1570,53 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 
 
     // hands
-    ctx.lineWidth = this.size/3.33;
-    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
-    handGradient.addColorStop(0, this.firstColour);
-    handGradient.addColorStop(this.coatMod[0], this.firstColour);
-    handGradient.addColorStop(1, this.secondColour);
-
+    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
     ctx.fillStyle = handGradient;
     ctx.strokeStyle = handGradient;
-
-    // put your front legs down if you are on the floor and healthy
-    if (this.awake && this.hitBottom) {
-      ctx.save(); // 0 open
-      ctx.translate(this.x, this.y);
-      if (!this.sitting) {
+    if (this.awake && this.hitBottom && this.sitting) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
         ctx.beginPath();
-        ctx.moveTo(-this.size+(this.size/1.6), this.size*0.8);
-        ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(this.size-(this.size/1.6), this.size*0.8);
-        ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
+        ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5, 0, 2 * Math.PI);
+        ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      ctx.restore(); // 0
-    } else {
+        ctx.restore();
+    }
+    if (!this.awake || !this.hitBottom) {
       // if we are holding something
       if (this.awake && detectCollision(this, this.focus)) {
+        handGradient = ctx.createRadialGradient(this.focus.x, this.focus.y, 1, this.focus.x, this.focus.y,  this.size);
+        handGradient.addColorStop(0, this.secondColour);
+        handGradient.addColorStop((1-this.coatMod[0])/2, this.secondColour);
+        handGradient.addColorStop(1, this.firstColour);
+        ctx.fillStyle = handGradient;
+        ctx.strokeStyle = handGradient;
         ctx.save(); // 0 open
-        ctx.translate(this.x, this.y);
+        ctx.translate(this.x-this.size+(this.size/7), this.y+(this.size/2));
         ctx.rotate(this.rotation);
         ctx.beginPath();
-        ctx.moveTo(-this.size+(this.size/7), (this.size/2));
-        ctx.restore(); // 0 closed
+        ctx.moveTo(0, 0);
+        ctx.rotate(-this.rotation);
+        ctx.restore();
         ctx.lineTo(this.focus.x, this.focus.y);
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(this.focus.x, this.focus.y, this.size/3.5, 0, 2 * Math.PI);
+        ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
+
         ctx.save(); // 0 open
-        ctx.translate(this.x, this.y);
+        ctx.translate(this.x+this.size+(this.size/7), this.y+(this.size/2));
         ctx.rotate(this.rotation);
         ctx.beginPath();
-        ctx.moveTo(this.size-(this.size/7), (this.size/2));
-        ctx.restore(); // 0 closed
+        ctx.moveTo(0, 0);
+        ctx.rotate(-this.rotation);
+        ctx.restore();
         ctx.lineTo(this.focus.x, this.focus.y);
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(this.focus.x, this.focus.y, this.size/3.5, 0, 2 * Math.PI);
+        ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
         // if we are not holding anything
       } else if (this.awake && this.energy > 0) {
@@ -1555,6 +1629,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.rotate(-this.rotation);
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
+        ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore(); // closed
@@ -1567,6 +1642,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.rotate(-this.rotation);
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
+        ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore(); // closed
@@ -1698,8 +1774,8 @@ function colourIndicator(creature) {
   } else if (energy < 0) {
     energy = 0;
   }
+  debugString = 'colour indicator';
     return rgbToHex(love, energy, health);
-
 }
 
 /**
@@ -1708,22 +1784,24 @@ function colourIndicator(creature) {
 function recalculateMyGuys() {
   // block for all my guys
   for (let i = 0; i < chibis.length; i++) {
-    // check nirvana status
-    if (chosenChibiF && chosenChibiM && !chibis[i].reachedNirvana && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
-      explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].firstColour, glowColour));
-      produceExplosion(chibis[i].x, chibis[i].y);
-      chibis[i].reachedNirvana = true;
-      chibis[i].supersaiyan = 100;
-      chibis[i].speedX = 0;
-      chibis[i].speedY = 0;
-      sendMessage(chibis[i].name+' reached nirvana');
-    }
     // check to see if it's time to die
     // attrition, aging etc.
     if (chibis[i].birthday == daytimeCounter+1) {
       chibis[i].age ++;
+
+      // check nirvana status
+      if (!choosingChibi && !chibis[i].reachedNirvana && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
+        explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].firstColour, glowColour));
+        produceExplosion(chibis[i].x, chibis[i].y);
+        chibis[i].reachedNirvana = true;
+        chibis[i].supersaiyan = 100;
+        chibis[i].speedX = 0;
+        chibis[i].speedY = 0;
+        sendMessage(chibis[i].name+' reached nirvana');
+      }
+
       // set elder status
-      if (chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].children >= 2) {
+      if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].children >= 2) {
         chibis[i].elder = true;
         chibis[i].size*=0.8;
         chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
@@ -1739,7 +1817,7 @@ function recalculateMyGuys() {
         sendMessage(chibis[i].name+' is no longer an elder');
       }
     }
-    if (chibis[i].health <= 0) {
+    if (!choosingChibi && chibis[i].health <= 0) {
       createGlyphs(chibis[i].x, chibis[i].y, trueBlack, '\u271A')
       if (chibis[i].elder) {
         sendMessage('Elder '+chibis[i].name+' died');
@@ -1797,23 +1875,23 @@ function recalculateMyGuys() {
             if ((!chibis[i].focus.elder || !anniversary)) {
               chibis[i].focus.tended = 50;
               chibis[i].focus.timer += 5;
-              let newC = mixTwoColours(chibis[i].firstColour, glowColour);
+              let newC = mixTwoColours(chibis[i].firstColour, glowColour, 0.5);
               starfield.push(new Inert(3, 3, newC, chibis[i].focus.x, chibis[i].focus.y+(5*chibis[i].focus.size), true));
               chibis[i].health += 0.5;
             } else {
               chibis[i].focus.timer -= 30;
               chibis[i].love += 10;
-              let msgString = (generateBaby(chibis[i], chibis[i]))+' called ';
+              generateBaby(chibis[i], chibis[i]);
               let nameSeed = Math.round(Math.random()*totalMaleNames);
-              if (chibis[chibis.length-1].gender == 'boy') {
+              if (chibis[chibis.length-1].gender == 'Male') {
                 chibis[chibis.length-1].name = getMaleName(nameSeed);
-              } else if (chibis[chibis.length-1].gender == 'girl') {
+              } else if (chibis[chibis.length-1].gender == 'Female') {
                 chibis[chibis.length-1].name = getFemaleName(nameSeed);
               } else {
-                let nameSeed2 = Math.round(Math.random()*totalFemaleNames);
+                let nameSeed2 = Math.round(Math.random()*numlibs*namesinlib);
                 chibis[chibis.length-1].name = getRandomName(nameSeed+nameSeed2);
               }
-              sendMessage('A '+msgString+chibis[chibis.length-1].name+' was sprouted at an obelisk');
+              sendMessage(chibis[chibis.length-1].name+' was sprouted at an obelisk');
             }
           }
         }
@@ -1828,7 +1906,7 @@ function recalculateMyGuys() {
           // chibis[j].love = (loveDiff/2)+(chibis[j].love/2);
         }
 
-        if (i !== j && chibis[i].awake && chibis[j].awake && detectCollision(chibis[i], chibis[j])) {
+        if (!choosingChibi && i !== j && chibis[i].awake && chibis[j].awake && detectCollision(chibis[i], chibis[j])) {
           collide(chibis[i], chibis[j]);
           // having a baby
           if (chibis[i].focus == chibis[j] && chibis[j].focus == chibis[i] && chibis[i].age > 0 && chibis[j].age > 0 && chibis.length <= maxPop && chibis[i].gender !== 'non binary' && chibis[j].gender !== 'non binary'
@@ -1886,7 +1964,7 @@ function recalculateMyGuys() {
 
       if (!chibis[i].hitBottom) {
         let mass = gravity*chibis[i].size*chibis[i].size;
-        chibis[i].speedY += mass;
+        chibis[i].speedY += mass/2;
         chibis[i].y += chibis[i].speedY/4;
       }
       chibis[i].physicsCheck();
@@ -2134,9 +2212,9 @@ function randomGender() {
   } else {
     let base = Math.round(Math.random());
     if (base == 0) {
-      return 'boy';
+      return 'Male';
     }
-    return 'girl';
+    return 'Female';
   }
 }
 
@@ -2151,8 +2229,17 @@ function generateBaby(parent1, parent2) {
   // female is parent2
   // set the baby's max size
   let babyGender = randomGender();
-  let randSize = 5 + (Math.random()*10);
-  randSize = (parent1.maxSize + parent2.maxSize + randSize)/3;
+  let specSize = 7 + (Math.random()*9);
+  specSize = (parent1.maxSize + parent2.maxSize + specSize)/3;
+  if (chibis[chibis.length-1].gender == 'Male') {
+    specSize *= 1.1;
+  } else if (chibis[chibis.length-1].gender == 'Female') {
+    specSize /= 1.1;
+  }
+  let specthickness = (Math.random()*0.6)+0.4;
+  specthickness = (parent1.thickness + parent2.thickness + specthickness)/3;
+  let speclegginess = (Math.random()*0.9)+0.1;
+  speclegginess = (parent1.legginess + parent2.legginess + speclegginess)/3;
   // sort out the ear logic
   let babyEars = 1;
   let randSeed = Math.random();
@@ -2163,83 +2250,38 @@ function generateBaby(parent1, parent2) {
   } else {
     babyEars = (parent1.ears + parent2.ears + Math.random())/3;
   }
-  chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), 5, randSize, babyGender, babyEars));
+  chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), 10, specSize, babyGender, babyEars));
   // set the baby's ears
   // set the baby's genetic colour
-  let ri = 0;
-  let gi = 0;
-  let bi = 0;
-  let rj = 0;
-  let gj = 0;
-  let bj = 0;
+  let colour = 'red'; // for debug
   // decide which method of colour logic to use for the genetic colour
   let seed = Math.round(Math.random()*2);
   if (seed == 0) {
-    ri = hexToRgb(parent1.firstColour).r;
-    gi = hexToRgb(parent1.firstColour).g;
-    bi = hexToRgb(parent1.firstColour).b;
-    rj = hexToRgb(parent1.firstColour).r;
-    gj = hexToRgb(parent1.firstColour).g;
-    bj = hexToRgb(parent1.firstColour).b;
+    colour = parent1.firstColour;
   } else if (seed == 1) {
-    ri = hexToRgb(parent2.firstColour).r;
-    gi = hexToRgb(parent2.firstColour).g;
-    bi = hexToRgb(parent2.firstColour).b;
-    rj = hexToRgb(parent2.firstColour).r;
-    gj = hexToRgb(parent2.firstColour).g;
-    bj = hexToRgb(parent2.firstColour).b;
+    colour = parent2.firstColour;
   } else {
-    ri = hexToRgb(parent1.firstColour).r;
-    gi = hexToRgb(parent1.firstColour).g;
-    bi = hexToRgb(parent1.firstColour).b;
-    rj = hexToRgb(parent2.firstColour).r;
-    gj = hexToRgb(parent2.firstColour).g;
-    bj = hexToRgb(parent2.firstColour).b;
-  }
+    colour = mixTwoColours(parent1.firstColour, parent2.firstColour, 0.5);
+    }
   // mix in a little random
-  let seedR = Math.floor(Math.random()*255);
-  let seedG = Math.floor(Math.random()*255);
-  let seedB = Math.floor(Math.random()*255);
-  combr = Math.round((ri+rj+seedR)/3);
-  combg = Math.round((gi+gj+seedG)/3);
-  combb = Math.round((bi+bj+seedB)/3);
-  chibis[chibis.length-1].firstColour = rgbToHex(combr, combg, combb);
+  chibis[chibis.length-1].firstColour = mixTwoColours(colour, randomColourRealistic(), Math.random());
   // decide which method of colour logic to use for the second colour
   seed = Math.round(Math.random()*2);
   if (seed == 0) {
-    ri = hexToRgb(parent1.secondColour).r;
-    gi = hexToRgb(parent1.secondColour).g;
-    bi = hexToRgb(parent1.secondColour).b;
-    rj = hexToRgb(parent1.secondColour).r;
-    gj = hexToRgb(parent1.secondColour).g;
-    bj = hexToRgb(parent1.secondColour).b;
+    colour = parent1.secondColour;
   } else if (seed == 1) {
-    ri = hexToRgb(parent2.secondColour).r;
-    gi = hexToRgb(parent2.secondColour).g;
-    bi = hexToRgb(parent2.secondColour).b;
-    rj = hexToRgb(parent2.secondColour).r;
-    gj = hexToRgb(parent2.secondColour).g;
-    bj = hexToRgb(parent2.secondColour).b;
+    colour = parent2.secondColour;
   } else {
-    ri = hexToRgb(parent1.secondColour).r;
-    gi = hexToRgb(parent1.secondColour).g;
-    bi = hexToRgb(parent1.secondColour).b;
-    rj = hexToRgb(parent2.secondColour).r;
-    gj = hexToRgb(parent2.secondColour).g;
-    bj = hexToRgb(parent2.secondColour).b;
+    colour = mixTwoColours(parent1.secondColour, parent2.secondColour, 0.5);
   }
   // mix in a little random
-  seedR = Math.floor(Math.random()*255);
-  seedG = Math.floor(Math.random()*255);
-  seedB = Math.floor(Math.random()*255);
-  combr = Math.round((ri+rj+seedR)/3);
-  combg = Math.round((gi+gj+seedG)/3);
-  combb = Math.round((bi+bj+seedB)/3);
-  chibis[chibis.length-1].secondColour = rgbToHex(combr, combg, combb);
+  chibis[chibis.length-1].secondColour = mixTwoColours(colour, randomColourRealistic(), Math.random());
   chibis[chibis.length-1].speedY = -25;
-  // set the baby's coat modifiers
+  // set the baby's coat and appearance modifiers
   chibis[chibis.length-1].coatMod[0] = (parent1.coatMod[0] + parent2.coatMod[0] + Math.random())/3;
   chibis[chibis.length-1].coatMod[1] = (parent1.coatMod[1] + parent2.coatMod[1] + Math.random())/3;
+  chibis[chibis.length-1].thickness = specthickness;
+  chibis[chibis.length-1].legginess = speclegginess;
   return babyGender;
 }
 
@@ -2262,19 +2304,16 @@ function tickerToTime() {
 
 function giveBirth(who) {
   let msgString = 'error';
-  if (who.gender == 'boy') {
-    msgString = (generateBaby(who, who.focus))+' called ';
+  if (who.gender == 'Male') {
     chibis[chibis.length-1].name = generateBabyName(chibis[i].name, who.focus.name, chibis[chibis.length-1].gender);
   } else {
-    msgString = (generateBaby(who.focus, who))+' called ';
     chibis[chibis.length-1].name = generateBabyName(who.focus.name, who.name, chibis[chibis.length-1].gender);
   }
   if (chibis[chibis.length-1].name == null) {
     console.log('null name, parents were '+who.name+' and '+who.focus.name);
   }
-  sendMessage('A '+msgString+chibis[chibis.length-1].name+' was born to '+who.name+' and '+who.focus.name);
+  sendMessage(chibis[chibis.length-1].name+' was born to '+who.name+' and '+who.focus.name);
   who.children ++;
   who.focus.children ++;
   createGlyphs(chibis[chibis.length-1].x, chibis[chibis.length-1].y,  chibis[chibis.length-1].firstColour, '\u2764');
-
 }
