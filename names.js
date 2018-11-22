@@ -20,7 +20,7 @@ function generateBabyName(maleName, femaleName, gender) {
       nameLogic = 'femaleParent';
     }
     if (nameLogic == 'random') {
-  if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+  if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
         return getMaleName(Math.floor(Math.random()*((numlibs * namesinlib))));
       } else {
         return getFemaleName(Math.floor(Math.random()*((numlibs * namesinlib))));
@@ -167,7 +167,7 @@ function generateBabyName(maleName, femaleName, gender) {
       // now process it
       let result = null;
       if (ethnic == 'celtic') {
-        if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+        if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleCeltic[thisSeed];
         } else {
@@ -175,7 +175,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleCeltic[thisSeed];
         }
       } else if (ethnic == 'scandinavian') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleScandinavian[thisSeed];
         } else {
@@ -183,7 +183,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleScandinavian[thisSeed];
         }
       } else if (ethnic == 'japanese') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleJapanese[thisSeed];
         } else {
@@ -191,7 +191,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleJapanese[thisSeed];
         }
       } else if (ethnic == 'american') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleAmerican[thisSeed];
         } else {
@@ -199,7 +199,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleAmerican[thisSeed];
         }
       } else if (ethnic == 'islander') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleIslander[thisSeed];
         } else {
@@ -207,7 +207,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleIslander[thisSeed];
         }
       } else if (ethnic == 'african') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleAfrican[thisSeed];
         } else {
@@ -215,7 +215,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleAfrican[thisSeed];
         }
       } else if (ethnic == 'chinese') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleChinese[thisSeed];
         } else {
@@ -223,7 +223,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleChinese[thisSeed];
         }
       } else if (ethnic == 'germanic') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleGermanic[thisSeed];
         } else {
@@ -231,7 +231,7 @@ function generateBabyName(maleName, femaleName, gender) {
           result = femaleGermanic[thisSeed];
         }
       } else if (ethnic == 'indian') {
-    if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
+    if (gender == 'Male' || (gender == 'non binary' && Math.random() < 0.5)) {
           thisSeed = Math.floor(Math.random()*namesinlib);
           result = maleIndian[thisSeed];
         } else {
@@ -272,7 +272,8 @@ function generateBabyName(maleName, femaleName, gender) {
       return maleChinese[seedTrans];
     } else if (seed < (8 * namesinlib)) {
       seedTrans = (seed - (7 * namesinlib));
-      return femaleCeltic[seed];
+      debugString = ' '+seed+' celtic female '+femaleCeltic[seedTrans];
+      return femaleCeltic[seedTrans];
     } else if (seed < (9 * namesinlib)) {
       seedTrans = (seed - (8 * namesinlib));
       return femaleScandinavian[seedTrans];
@@ -380,7 +381,7 @@ function generateBabyName(maleName, femaleName, gender) {
     } else if (index < (8 * namesinlib)) {
       seedTrans = (index - (7 * namesinlib));
       return maleGermanic[seedTrans];
-    }  else if (index < (9 * namesinlib)) {
+    } else if (index < (9 * namesinlib)) {
       seedTrans = (index - (8 * namesinlib));
       return maleIndian[seedTrans];
     }
@@ -421,16 +422,23 @@ function generateBabyName(maleName, femaleName, gender) {
   function reportNames(runtimes) {
     // STRESS TESTING
     console.log('Checking integrity of names database');
-    // for (let i = 0; i < namesinlib*numlibs; i++) {
-    //   sendMessage(getRandomName(i));
-    // }
+    for (let i = 0; i < namesinlib*numlibs; i++) {
+      if (getRandomName(i) == undefined) {
+        console.log('undefined name found '+i+debugString);
+     }
+      for (let j = 0; j < namesinlib*numlibs; j++) {
+        if (i !== j && getRandomName(i) == getRandomName(j)) {
+          console.log('duplicate name found '+i+debugString);
+       }
+      }
+    }
     // let stop = false;
     // let t = 0;
     // let gname = getFemaleName(Math.round(Math.random()*totalFemaleNames));
     // let bname = getMaleName(Math.round(Math.random()*totalMaleNames));
     // for (t = 0; t < runtimes && !stop; t++) {
-    //   gname = generateBabyName(bname, gname, 'girl');
-    //   bname = generateBabyName(bname, gname, 'boy');
+    //   gname = generateBabyName(bname, gname, 'Female');
+    //   bname = generateBabyName(bname, gname, 'Male');
     //   if (gname == null) {
     //     console.log('null name after '+t+' parents were '+myGuys[1].name+' and '+gname);
     //     stop = true;
@@ -443,8 +451,8 @@ function generateBabyName(maleName, femaleName, gender) {
     // gname = getRandomFemaleEthnicName(Math.round(Math.random()*(numlibs-1)));
     // bname = getRandomMaleEthnicName(Math.round(Math.random()*(numlibs-1)));
     // for (t = 0; t < 10000 && !stop; t++) {
-    //   gname = generateBabyName(bname, gname, 'girl');
-    //   bname = generateBabyName(bname, gname, 'boy');
+    //   gname = generateBabyName(bname, gname, 'Female');
+    //   bname = generateBabyName(bname, gname, 'Male');
     //   if (gname == null) {
     //     console.log('null name after '+t+' parents were '+myGuys[1].name+' and '+gname);
     //     stop = true;
@@ -1378,7 +1386,7 @@ const maleIndian = [
   'Vishal',
   'Vivek',
   'Yash',
-]
+];
 
 const femaleIndian = [
   'Aastha',

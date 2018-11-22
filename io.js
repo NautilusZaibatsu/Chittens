@@ -118,18 +118,14 @@ function openUploadDialog() {
   let element = document.createElement('div');
 element.innerHTML = '<input type="file">';
 let fileInput = element.firstChild;
-
 fileInput.addEventListener('change', function() {
     let file = fileInput.files[0];
-
     if (file.name.match(/\.(chi)$/)) {
         let reader = new FileReader();
         reader.onload = function() {
-
-            console.log(reader.result);
+            //console.log(reader.result);
             pasteChibi(reader.result);
         };
-
 reader.readAsText(file);
     } else {
         alert('File not supported, .chi only');

@@ -1,7 +1,12 @@
+/**
+* function to initialise all the buttons
+*/
 function initButtons() {
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Show me more'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Choose this Chibi'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Give them all away'));
+  buttons[0].visible = false;
+  buttons[1].visible = false;
   buttons[2].visible = false;
   buttons.push(new Button(canvasWidth/2, 310, 'Give away'));
   buttons.push(new Button(canvasWidth/2, 350, 'Close'));
@@ -12,15 +17,16 @@ function initButtons() {
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Welcome to the Cattery'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'Choose a girl'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Selection'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 125, 'Selection'));
   labels[2].visible = false;
-  selectionInfo = new infoPanel();
+  selectionInfo = new InfoPanel();
 }
 
 /**
 * function to describe a button
-* @param {int} x - the x coordinate
-* @param {int} y - the y coordinate
+* @param {int} x - the x coordinate of the middle of the button
+* @param {int} y - the y coordinate of the top of the button
+* @param {string} text - text on the button
 */
 function Button(x, y, text) {
   this.x = x;
@@ -35,7 +41,7 @@ function Button(x, y, text) {
   this.reinitSizes = function() {
     this.width = (this.text.length*fontWidth)+20;
     this.size = ((this.text.length*fontWidth)+20);
-  }
+  };
   this.update = function() {
     if (this.visible) {
       ctx.save();
@@ -58,11 +64,18 @@ function Button(x, y, text) {
     }
   };
 }
-
-function infoPanel() {
+/**
+ * function to describe the information panel
+ */
+function InfoPanel() {
   this.visible = false;
   this.update = function() {
     if (this.visible) {
+      if (selection.snuggling > 0) {
+        buttons[3].available = false;
+      } else {
+        buttons[3].available = true;
+      }
       let c2 = ntc.name(selection.secondColour)[1];
       let cString = ntc.name(selection.firstColour)[1];
       if (c2 !== cString) {
@@ -70,7 +83,7 @@ function infoPanel() {
       }
       let offsetX = (11 + cString.length)*fontWidth/2;
       ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 155 + 20 );
+      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 170 + 20 );
       ctx.fillStyle = outputArray[2];
       ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
       ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
@@ -80,20 +93,23 @@ function infoPanel() {
       ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 40);
       ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 55);
       ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 55);
-      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 70);
-      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 70);
-      ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 85);
-      ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 85);
-      ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 100);
-      ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 100);
-      ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 115);
-      ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
-      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 130);
-      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 130);
-      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 145);
-      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 145);
+      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 70);
+      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 70);
+
+      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 85);
+      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 85);
+      ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 100);
+      ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 100);
+      ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 115);
+      ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
+      ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 130);
+      ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
+      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 145);
+      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 145);
+      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 160);
+      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 160);
     }
-  }
+  };
 }
 
 function handleButton(input) {
@@ -101,18 +117,14 @@ function handleButton(input) {
     case 0:
     if (!chosenChibiF) {
       for (let i = currentChibis; i < chibis.length; i++) {
-        if (chibis[i] !== selection) {
           chibis.splice(i, 1);
           i--;
-        }
       }
       initFemaleCattery();
     } else if (!chosenChibiM) {
       for (let i = currentChibis; i < chibis.length; i++) {
-        if (chibis[i] !== selection) {
           chibis.splice(i, 1);
           i--;
-        }
       }
       initMaleCattery();
     }
@@ -279,6 +291,9 @@ function clickMouse(e) {
   }
 }
 
+/**
+ * function to check for and process mouse hovering over objects
+ */
 function hover() {
   let hovered = false;
   for (let i = 0; i < buttons.length; i++) {

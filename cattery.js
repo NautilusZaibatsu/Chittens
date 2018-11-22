@@ -71,7 +71,7 @@ function initFemaleCattery() {
       let thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5);
-      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize;
+      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75;
       chibis[thisCatBox+currentChibis].coatMod[0] = Math.random();
       chibis[thisCatBox+currentChibis].coatMod[1] = Math.random();
       chibis[thisCatBox+currentChibis].thickness = (Math.random()*0.5)+0.5;
@@ -80,7 +80,7 @@ function initFemaleCattery() {
       chibis[thisCatBox+currentChibis].secondColour = mixTwoColours(randomColourRealistic(), randomColourRealistic(), 0.5);
       chibis[thisCatBox+currentChibis].inCatBox = boxes[thisCatBox];
       chibis[thisCatBox+currentChibis].birthday = Math.random()*1000;
-      chibis[thisCatBox+currentChibis].love = Math.round((Math.random()*50));
+      chibis[thisCatBox+currentChibis].love = 50 + Math.round((Math.random()*50));
       while (chibis[thisCatBox+currentChibis].name == null) {
         chibis[thisCatBox+currentChibis].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
       }
@@ -115,7 +115,7 @@ function initMaleCattery() {
       let thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5);
-      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize;
+      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75;
       chibis[thisCatBox+currentChibis].coatMod[0] = Math.random();
       chibis[thisCatBox+currentChibis].coatMod[1] = Math.random();
       chibis[thisCatBox+currentChibis].thickness = (Math.random()*0.5)+0.5;
@@ -124,7 +124,7 @@ function initMaleCattery() {
       chibis[thisCatBox+currentChibis].secondColour = mixTwoColours(randomColourRealistic(), randomColourRealistic(), 0.5);
       chibis[thisCatBox+currentChibis].inCatBox = boxes[thisCatBox];
       chibis[thisCatBox+currentChibis].birthday = Math.random()*1000;
-      chibis[thisCatBox+currentChibis].love = Math.round((Math.random()*50));
+      chibis[thisCatBox+currentChibis].love = 50 + Math.round((Math.random()*50));
       while (chibis[thisCatBox+currentChibis].name == null) {
         chibis[thisCatBox+currentChibis].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
       }
@@ -149,7 +149,7 @@ function CatBox(x, y, size, thickness) {
       ctx.strokeStyle = mixTwoColours(trueWhite, outputArray[2], 0.5);
       if (this.highlighted) {
         ctx.fillText(chibis[this.id].name, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2)+10);
-        ctx.fillText(this.id+'Age '+ chibis[this.id].age, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 25);
+        ctx.fillText('Age '+ chibis[this.id].age, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 25);
         ctx.fillText('Gender '+chibis[this.id].gender, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 40);
         let c2 = ntc.name(chibis[this.id].secondColour)[1];
         let cString = ntc.name(chibis[this.id].firstColour)[1];
@@ -157,11 +157,12 @@ function CatBox(x, y, size, thickness) {
           cString += ' & '+ c2;
         }
         ctx.fillText('Colour '+cString, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 55);
-        ctx.fillText('Maximum size '+Math.round((chibis[this.id].maxSize)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 70);
-        ctx.fillText('Thickness '+Math.round((chibis[this.id].thickness*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 85);
-        ctx.fillText('Legginess '+Math.round((chibis[this.id].legginess*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 100);
-        ctx.fillText('Ear width '+Math.round((chibis[this.id].ears*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 115);
-        ctx.fillText('Birthhour '+tickerToTime(Math.round(chibis[this.id].birthday)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 130);
+        ctx.fillText('Size '+Math.round((chibis[this.id].size)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 70);
+        ctx.fillText('Max size '+Math.round((chibis[this.id].maxSize)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 85);
+        ctx.fillText('Thickness '+Math.round((chibis[this.id].thickness*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 100);
+        ctx.fillText('Legginess '+Math.round((chibis[this.id].legginess*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 115);
+        ctx.fillText('Ear width '+Math.round((chibis[this.id].ears*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 130);
+        ctx.fillText('Birthhour '+tickerToTime(Math.round(chibis[this.id].birthday)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 145);
       }
     } else {
       ctx.strokeStyle = outputArray[2];

@@ -6,6 +6,7 @@ changelog
 ~ reworked front and back legs to fit the new bodylook
 ~ if you have no male or no female chibis left you will now be returned to the appropriate cattery instead of a random chibi spawning
 ~ added a stats panel for selected chibi, you can now give away (remove from your game) chibis from here.
+~ added saving and loading of chibis. Loading can be done from a cattery, saving can be done from stats panel
 
 20/11/2018 = 0.48
 ~ added litter mechanic
