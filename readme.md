@@ -1,7 +1,13 @@
 #chibis
 
 changelog
-10/11/2018 = 0.48
+21/11/2018 = 0.49
+~ added length to chibi's bodies so the back end follows the front around
+~ reworked front and back legs to fit the new bodylook
+~ if you have no male or no female chibis left you will now be returned to the appropriate cattery instead of a random chibi spawning
+~ added a stats panel for selected chibi, you can now give away (remove from your game) chibis from here.
+
+20/11/2018 = 0.48
 ~ added litter mechanic
 ~ added German and Indian names
 ~ added thickness and legginess attributes to Chibis

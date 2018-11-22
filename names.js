@@ -9,20 +9,21 @@ const namesinlib = 50;
 */
 function generateBabyName(maleName, femaleName, gender) {
     // console.log('generate '+gender+' baby for '+maleName+' & '+femaleName);
-    let nameLogic = 'random';
     let stop = false;
     let ethnic = null;
     let thisSeed = null;
-    if (Math.random() < 0.45) {
+    let nameLogic = 'random';
+    let nameLogicChance = Math.random();
+    if (nameLogicChance < 0.49) {
       nameLogic = 'maleParent';
-    } else if (Math.random() < 0.9) {
+    } else if (nameLogicChance < 0.98) {
       nameLogic = 'femaleParent';
     }
     if (nameLogic == 'random') {
   if (gender == 'boy' || (gender == 'non binary' && Math.random() < 0.5)) {
-        return getMaleName(Math.round(Math.random()*((numlibs * namesinlib)-1)));
-      } else if (gender == 'girl') {
-        return getFemaleName(Math.round(Math.random()*((numlibs * namesinlib)-1)));
+        return getMaleName(Math.floor(Math.random()*((numlibs * namesinlib))));
+      } else {
+        return getFemaleName(Math.floor(Math.random()*((numlibs * namesinlib))));
       }
       // male parent
     } else if (nameLogic == 'maleParent') {
@@ -242,8 +243,10 @@ function generateBabyName(maleName, femaleName, gender) {
         result = generateBabyName(maleName, femaleName, gender);
         console.log('prevented from picking identical name '+result);
       }
+      if (result == null) {
+        console.log('Stop is '+stop+' Ethnic was '+ethnic+' namelogic was '+nameLogic+' Parents were '+maleName+' & '+femaleName+' gender was '+gender+' seed was '+thisSeed);
+      }
       return result;
-    console.log('Stop is '+stop+' Ethnic was '+ethnic+' namelogic was '+nameLogic+' Parents were '+maleName+' & '+femaleName+' gender was '+gender+' seed was '+thisSeed);
   };
   function getRandomName(seed) {
     let seedTrans = seed;

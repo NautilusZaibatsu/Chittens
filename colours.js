@@ -8,7 +8,6 @@ function randomColour() {
   let seedR = Math.floor(Math.random()*256);
   let seedG = Math.floor(Math.random()*256);
   let seedB = Math.floor(Math.random()*256);
-  debugString = 'randomColour';
   let randC = rgbToHex(seedR, seedG, seedB);
   return randC;
 }
@@ -25,7 +24,6 @@ function randomColourRealistic() {
   let randSeed = Math.random();
   if (randSeed <= 1/3) {
     // orange through peach
-    debugString = 'peach';
     seedR = Math.floor(Math.random()*255);
     seedG = Math.floor(Math.random()*(seedR/1.7));
     seedB = Math.floor(Math.random()*(seedG/1.25));
@@ -33,7 +31,6 @@ function randomColourRealistic() {
     return colour;
 } else if (randSeed <= 2/3) {
   // russian blue
-  debugString = 'blue';
    seedB = Math.floor(Math.random()*192);
    seedG = Math.floor(Math.random()*(seedB/1.08));
    seedR = Math.floor(Math.random()*(seedB/1.04));
@@ -41,7 +38,6 @@ function randomColourRealistic() {
   return colour;
 } else {
    // greys
-   debugString = 'greys';
     let seed = Math.floor(Math.random()*255);
     colour = rgbToHex(seed, seed, seed);
   return colour;
@@ -139,7 +135,6 @@ function hslToRgb(h, s, l) {
 function increaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
-  debugString = 'increase sat';
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
@@ -147,7 +142,6 @@ function increaseSaturationHEX(hex) {
 function decreaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 0, rgbhsl[2]);
-  debugString = 'decrease sat';
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   return rgbToHex(Math.round(hslrgb[0]), 0, Math.round(hslrgb[2]));
 }

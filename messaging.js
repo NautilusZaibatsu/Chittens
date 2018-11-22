@@ -15,14 +15,14 @@ function sendMessage(text) {
       }
     }
     if (!duplicate) {
-      messageBuffer.push(new Message(text, tickerToTime()));
+      messageBuffer.push(new Message(text, tickerToTime(daytimeCounter)));
     }
     if (messageBuffer.length > messagesToSave) {
       messageBuffer.splice(0, 1);
     }
   }
   currentMessage.text = text;
-  currentMessage.timeStamp = tickerToTime();
+  currentMessage.timeStamp = tickerToTime(daytimeCounter);
 }
 
 /**

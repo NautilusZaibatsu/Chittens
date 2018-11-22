@@ -7,15 +7,16 @@ function applySpeedLimit(what) {
     console.log('2418 error - speed or coordinate is not a number');
     console.log('x '+what.x+' y '+what.y+' speedX '+what.speedX+' speedY '+what.speedY);
   }
-  if (what.speedX > speedLimit) {
-    what.speedX = speedLimit;
-  } else if (what.speedX < -speedLimit) {
-    what.speedX = -speedLimit;
+  let thisSpeedLimit = speedLimit*20/what.size;
+  if (what.speedX > thisSpeedLimit) {
+    what.speedX = thisSpeedLimit;
+  } else if (what.speedX < -thisSpeedLimit) {
+    what.speedX = -thisSpeedLimit;
   }
-  if (what.speedY > speedLimit) {
-    what.speedY = speedLimit;
-  } else if (what.speedY < -speedLimit) {
-    what.speedY = -speedLimit;
+  if (what.speedY > thisSpeedLimit) {
+    what.speedY = thisSpeedLimit;
+  } else if (what.speedY < -thisSpeedLimit) {
+    what.speedY = -thisSpeedLimit;
   }
   if (what.spin > 1) {
     what.spin = 1;

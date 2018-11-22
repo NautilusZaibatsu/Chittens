@@ -2,9 +2,19 @@ function initButtons() {
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Show me more'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Choose this Chibi'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Give them all away'));
-  buttons[2].displayed = false;
+  buttons[2].visible = false;
+  buttons.push(new Button(canvasWidth/2, 310, 'Give away'));
+  buttons.push(new Button(canvasWidth/2, 350, 'Close'));
+  buttons.push(new Button(canvasWidth/2, 390, 'Save as .chi file'));
+  buttons[3].visible = false;
+  buttons[4].visible = false;
+  buttons[5].visible = false;
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Welcome to the Cattery'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'Choose a girl'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Selection'));
+  labels[2].visible = false;
+  selectionInfo = new infoPanel();
 }
 
 /**
@@ -19,11 +29,15 @@ function Button(x, y, text) {
   this.width = (this.text.length*fontWidth)+20;
   this.size = ((this.text.length*fontWidth)+20);
   this.height = 30;
-  this.displayed = true;
+  this.visible = true;
   this.available = true;
   this.highlighted = false;
+  this.reinitSizes = function() {
+    this.width = (this.text.length*fontWidth)+20;
+    this.size = ((this.text.length*fontWidth)+20);
+  }
   this.update = function() {
-    if (this.displayed) {
+    if (this.visible) {
       ctx.save();
       ctx.translate(this.x -(this.width/2), this.y);
       if (this.highlighted) {
@@ -45,13 +59,56 @@ function Button(x, y, text) {
   };
 }
 
+function infoPanel() {
+  this.visible = false;
+  this.update = function() {
+    if (this.visible) {
+      let c2 = ntc.name(selection.secondColour)[1];
+      let cString = ntc.name(selection.firstColour)[1];
+      if (c2 !== cString) {
+        cString += ' & '+ c2;
+      }
+      let offsetX = (11 + cString.length)*fontWidth/2;
+      ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
+      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 155 + 20 );
+      ctx.fillStyle = outputArray[2];
+      ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
+      ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
+      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 25);
+      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 25);
+      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 40);
+      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 40);
+      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 55);
+      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 55);
+      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 70);
+      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 70);
+      ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 85);
+      ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 85);
+      ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 100);
+      ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 100);
+      ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 115);
+      ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
+      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 130);
+      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 130);
+      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 145);
+      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 145);
+    }
+  }
+}
+
 function handleButton(input) {
   switch (input) {
     case 0:
     if (!chosenChibiF) {
+      for (let i = currentChibis; i < chibis.length; i++) {
+        if (chibis[i] !== selection) {
+          chibis.splice(i, 1);
+          i--;
+        }
+      }
       initFemaleCattery();
     } else if (!chosenChibiM) {
-      for (let i = 1; i < chibis.length; i++) {
+      for (let i = currentChibis; i < chibis.length; i++) {
         if (chibis[i] !== selection) {
           chibis.splice(i, 1);
           i--;
@@ -63,73 +120,107 @@ function handleButton(input) {
     case 1:
     if (!chosenChibiF) {
       chosenChibiF = true;
-      for (let i = 0; i < chibis.length; i++) {
+      for (let i = currentChibis; i < chibis.length; i++) {
         if (chibis[i] !== selection) {
           chibis.splice(i, 1);
           i--;
         }
       }
-      sendMessage('adopted '+chibis[0].name);
-      createGlyphs(chibis[0].x, chibis[0].y, chibis[0].firstColour, '\u2764');
-      initMaleCattery();
-      chibis[0].inCatBox = null;
+      sendMessage('adopted '+selection.name);
+      createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      boxes = [];
+      buttons[0].visible = false;
+      buttons[1].visible = false;
+      buttons[6].visible = false;
+      labels[0].visible = false;
+      labels[1].visible = false;
+      selection.inCatBox = null;
       choosingChibi = false;
+      selection = null;
     } else if (!chosenChibiM) {
       chosenChibiM = true;
-      for (let i = 1; i < chibis.length; i++) {
+      for (let i = currentChibis; i < chibis.length; i++) {
         if (chibis[i] !== selection) {
           chibis.splice(i, 1);
           i--;
         }
       }
-      sendMessage('adopted '+chibis[1].name);
-      createGlyphs(chibis[1].x, chibis[1].y, chibis[1].firstColour, '\u2764');
-      chibis[0].id = '0000';
-      chibis[1].id = '0001';
-      selection = null;
+      sendMessage('adopted '+selection.name);
+      createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       boxes = [];
-      buttons[0].displayed = false;
-      buttons[1].displayed = false;
-      labels[0].displayed = false;
-      labels[1].displayed = false;
-      sendMessage('\u2764 Once upon a time...');
-      sendMessage('It was just the two of us; '+chibis[1].name+' and '+chibis[0].name);
-      chibis[1].inCatBox = null;
+      buttons[0].visible = false;
+      buttons[1].visible = false;
+      buttons[6].visible = false;
+      labels[0].visible = false;
+      labels[1].visible = false;
+      selection.inCatBox = null;
       choosingChibi = false;
+      selection = null;
     } else if (!chosenKitten) {
       chosenKitten = true;
-        for (let i = currentChibis; i < chibis.length; i++) {
-          if (chibis[i] !== selection) {
-            chibis.splice(i, 1);
-            i--;
-          }
+      for (let i = currentChibis; i < chibis.length; i++) {
+        if (chibis[i] !== selection) {
+          chibis.splice(i, 1);
+          i--;
+        }
       }
       sendMessage(selection.name+' joined the family');
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      selection.size *= 0.8;
+      selection.reinitSizes;
       boxes = [];
-      buttons[0].displayed = false;
-      buttons[1].displayed = false;
-      labels[0].displayed = false;
-      labels[1].displayed = false;
+      buttons[0].visible = false;
+      buttons[1].visible = false;
+      buttons[2].visible = false;
+      labels[0].visible = false;
+      labels[1].visible = false;
       selection.inCatBox = null;
-      selection = null;
       choosingChibi = false;
+      selection = null;
     }
     break;
     case 2:
     chosenKitten = true;
-      for (let i = currentChibis; i < chibis.length; i++) {
-          chibis.splice(currentChibis, chibis.length - currentChibis);
+    for (let i = currentChibis; i < chibis.length; i++) {
+      chibis.splice(currentChibis, chibis.length - currentChibis);
     }
     sendMessage('A litter of chittens was rehomed');
     boxes = [];
-    buttons[0].displayed = false;
-    buttons[1].displayed = false;
-    buttons[2].displayed = false;
-    labels[0].displayed = false;
-    labels[1].displayed = false;
+    buttons[0].visible = false;
+    buttons[1].visible = false;
+    buttons[2].visible = false;
+    labels[0].visible = false;
+    labels[1].visible = false;
     selection = null;
     choosingChibi = false;
+    break;
+    case 3:
+    sendMessage(selection.name+' went to live with someone else');
+    selectionInfo.visible = false;
+    labels[2].visible = false;
+    buttons[3].visible = false;
+    buttons[4].visible = false;
+    buttons[5].visible = false;
+    for (let i = 0, stop = false; i < chibis.length && !stop; i++) {
+      if (chibis[i] == selection) {
+        stop = true;
+        chibis.splice(i, 1);
+      }
+    }
+    selection = null;
+    break;
+    case 4:
+    selectionInfo.visible = false;
+    labels[2].visible = false;
+    buttons[3].visible = false;
+    buttons[4].visible = false;
+    buttons[5].visible = false;
+    break;
+    case 5:
+    saveToFile(selection);
+    break;
+    case 6:
+    openUploadDialog();
   }
 }
 
@@ -140,7 +231,7 @@ function handleButton(input) {
 function clickMouse(e) {
   let clickedSomething = false;
   for (let i = 0; i < buttons.length; i++) {
-    if (buttons[i].available && buttons[i].displayed && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+    if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
       clickedSomething = true;
       handleButton(i);
     }
@@ -148,13 +239,7 @@ function clickMouse(e) {
   for (let i = 0; i < boxes.length; i++) {
     if (detectCollision(pointerPos, boxes[i])) {
       clickedSomething = true;
-      if (!chosenChibiF) {
-      selection = chibis[i];
-    } else if (!chosenChibiM) {
-      selection = chibis[i+1];
-    } else {
       selection = chibis[i+currentChibis];
-    }
       boxes[i].selected = true;
     } else {
       boxes[i].selected = false;
@@ -168,44 +253,36 @@ function clickMouse(e) {
     let genderString = 'female';
     if (chosenChibiF) {
       genderString = 'male';
-  }
-  if (!chosenChibiM) {
-    sendMessage('\u2764 Choose a '+genderString+' Chibi');
-    buttons[1].available = false;
-  }
+    }
+    if (!chosenChibiM) {
+      sendMessage('\u2764 Choose a '+genderString+' Chibi');
+      buttons[1].available = false;
+    }
   }
   if ((!chosenChibiF || !chosenChibiM || !chosenKitten) && selection !== null) {
     buttons[1].available = true;
   }
   // now select Chibis
   if (!clickedSomething && !choosingChibi && chosenChibiF && chosenChibiM && chosenKitten) {
-  for (let i = chibis.length-1; i >= 0; i--) {
-    if (detectCollision(pointerPos, chibis[i])) {
-      selection = chibis[i];
-      sendMessage('Selected '+selection.name);
-      sendMessage('Age '+selection.age);
-      sendMessage('Children '+ selection.children);
-      sendMessage('Gender '+selection.gender);
-      let c2 = ntc.name(selection.secondColour)[1];
-      let cString = ntc.name(selection.firstColour)[1];
-      if (c2 !== cString) {
-        cString += ' & '+ c2;
+    for (let i = chibis.length-1; i >= 0; i--) {
+      if (detectCollision(pointerPos, chibis[i])) {
+        selection = chibis[i];
+        labels[2].visible = true;
+        labels[2].text = 'Selected '+selection.name;
+        labels[2].reinitSizes();
+        selectionInfo.visible = true;
+        buttons[3].visible = true;
+        buttons[4].visible = true;
+        buttons[5].visible = true;
       }
-      sendMessage('Colour '+cString);
-      sendMessage('Maximum size '+Math.round((selection.maxSize)));
-      sendMessage('Thickness '+Math.round((selection.thickness*100))+'%');
-      sendMessage('Legginess '+Math.round((selection.legginess*100))+'%');
-      sendMessage('Ear protrusion '+Math.round((selection.ears*100))+'%');
-      sendMessage('Birthhour '+Math.round(selection.birthday));
     }
   }
-}
 }
 
 function hover() {
   let hovered = false;
   for (let i = 0; i < buttons.length; i++) {
-    if (buttons[i].available && buttons[i].displayed && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+    if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
       buttons[i].highlighted = true;
       hovered = true;
     } else {
