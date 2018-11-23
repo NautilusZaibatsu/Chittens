@@ -45,6 +45,40 @@ function randomColourRealistic() {
 }
 
 /**
+* function to return a random colour as hex
+* @return {string} the hexcode for a random colour
+*/
+function randomColourFruity() {
+  let seedR = 0;
+  let seedG = 0;
+  let seedB = 0;
+  let colour = 'red'; // for debug
+  let randSeed = Math.random();
+  if (randSeed <= 1/3) {
+    // organge
+    seedR = Math.floor(Math.random()*100) + 155;
+    seedG = Math.floor(Math.random()*108) + 100;
+    seedB = Math.floor(Math.random()*100) + 50;
+    colour = rgbToHex(seedR, seedG, seedB);
+    return colour;
+} else if (randSeed <= 2/3) {
+  //blue
+  seedR = Math.floor(Math.random()*100) + 155;
+  seedG = Math.floor(Math.random()*50) + 80;
+  seedB = Math.floor(Math.random()*50) + 80;
+   colour = rgbToHex(seedR, seedG, seedB);
+  return colour;
+} else {
+   // green
+   seedR = Math.floor(Math.random()*60) + 100;
+   seedG = Math.floor(Math.random()*100) + 155;
+   seedB = Math.floor(Math.random()*50) + 80;
+   colour = rgbToHex(seedR, seedG, seedB);
+  return colour;
+}
+}
+
+/**
 * function to turn rgb values into hexadecimal
 * @param {int} r -  red
 * @param {int} g -  green

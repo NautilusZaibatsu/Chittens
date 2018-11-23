@@ -71,7 +71,7 @@ function initFemaleCattery() {
       let thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5);
-      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75;
+      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75+ (Math.random()*0.25*chibis[thisCatBox+currentChibis].maxSize);
       chibis[thisCatBox+currentChibis].coatMod[0] = Math.random();
       chibis[thisCatBox+currentChibis].coatMod[1] = Math.random();
       chibis[thisCatBox+currentChibis].thickness = (Math.random()*0.5)+0.5;
@@ -115,7 +115,7 @@ function initMaleCattery() {
       let thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5);
-      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75;
+      chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75 + (Math.random()*0.25*chibis[thisCatBox+currentChibis].maxSize);
       chibis[thisCatBox+currentChibis].coatMod[0] = Math.random();
       chibis[thisCatBox+currentChibis].coatMod[1] = Math.random();
       chibis[thisCatBox+currentChibis].thickness = (Math.random()*0.5)+0.5;
@@ -210,7 +210,7 @@ function CatBox(x, y, size, thickness) {
 */
 function randomGender() {
   if (Math.random() < 0.004) {
-    return 'non binary';
+    return 'Non Binary';
   } else {
     let base = Math.round(Math.random());
     if (base == 0) {
@@ -229,61 +229,99 @@ function randomGender() {
 function generateBaby(parent1, parent2) {
   // male is parent1
   // female is parent2
-  // set the baby's max size
   let babyGender = randomGender();
-  let specSize = 7 + (Math.random()*9);
-  specSize = (parent1.maxSize + parent2.maxSize + specSize)/3;
-  if (chibis[chibis.length-1].gender == 'Male') {
-    specSize *= 1.1;
-  } else if (chibis[chibis.length-1].gender == 'Female') {
-    specSize /= 1.1;
+  // max size logic
+  let sizeSwitch = Math.round(Math.random()*2); // 0 to 2
+  let specSize = 1;
+  if (sizeSwitch == 0) {
+    specSize = ((parent1.maxSize*9) + ((Math.random()*9) + 7))/10;
+  } else if (sizeSwitch == 1) {
+    specSize = ((parent2.maxSize*9) + ((Math.random()*9) + 7))/10;
+  } else {
+    specSize = (parent1.maxSize + parent2.maxSize + ((Math.random()*9) + 7))/3;
   }
-  let specthickness = (Math.random()*0.5)+0.5;
-  specthickness = (parent1.thickness + parent2.thickness + specthickness)/3;
-  let speclegginess = (Math.random()*0.9)+0.1;
-  speclegginess = (parent1.legginess + parent2.legginess + speclegginess)/3;
-  // sort out the ear logic
+  // thickness logic
+  let thickSwitch = Math.round(Math.random()*2); // 0 to 2
+  let specThickness = 1;
+  if (thickSwitch == 0) {
+    specThickness = ((parent1.thickness*9) + Math.random())/10;
+  } else if (thickSwitch == 1) {
+    specThickness = ((parent2.thickness*9) + Math.random())/10;
+  } else {
+    specThickness = (parent1.thickness + parent2.thickness + Math.random())/3;
+  }
+  // legginess logic
+  let legSwitch = Math.round(Math.random()*2); // 0 to 2
+  let specLegginess = 1;
+  if (legSwitch == 0) {
+    specLegginess = ((parent1.legginess*9) + Math.random())/10;
+  } else if (legSwitch == 1) {
+    specLegginess = ((parent2.legginess*9) + Math.random())/10;
+  } else {
+    specLegginess = (parent1.legginess + parent2.legginess + Math.random())/3;
+  }
+  // ear logic
+  let earSwitch = Math.round(Math.random()*2); // 0 to 2
   let babyEars = 1;
-  let randSeed = Math.random();
-  if (randSeed < 0.3) {
-    babyEars = parent1.ears;
-  } else if (randSeed < 0.6) {
-    babyEars = parent2.ears;
+  if (earSwitch == 0) {
+    babyEars = ((parent1.ears*9) + Math.random())/10;
+  } else if (earSwitch == 1) {
+    babyEars = ((parent2.ears*9) + Math.random())/10;
   } else {
     babyEars = (parent1.ears + parent2.ears + Math.random())/3;
   }
-  chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), 10, specSize, babyGender, babyEars));
+  chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), specSize*2/3, specSize, babyGender, babyEars));
   // set the baby's ears
   // set the baby's genetic colour
-  let colour = 'red'; // for debug
+  let colour1 = 'red'; // for debug
+  let colour2 = 'blue';
   // decide which method of colour logic to use for the genetic colour
   let seed = Math.round(Math.random()*2);
   if (seed == 0) {
-    colour = parent1.firstColour;
+    colour1 = parent1.firstColour;
   } else if (seed == 1) {
-    colour = parent2.firstColour;
+    colour1 = parent2.firstColour;
   } else {
-    colour = mixTwoColours(parent1.firstColour, parent2.firstColour, 0.5);
+    colour1 = mixTwoColours(parent1.firstColour, parent2.firstColour, 0.5);
   }
-  // mix in a little random
-  chibis[chibis.length-1].firstColour = mixTwoColours(colour, randomColourRealistic(), 0.75);
   // decide which method of colour logic to use for the second colour
   seed = Math.round(Math.random()*2);
   if (seed == 0) {
-    colour = parent1.secondColour;
+    colour2 = parent1.secondColour;
   } else if (seed == 1) {
-    colour = parent2.secondColour;
+    colour2 = parent2.secondColour;
   } else {
-    colour = mixTwoColours(parent1.secondColour, parent2.secondColour, 0.5);
+    colour2 = mixTwoColours(parent1.secondColour, parent2.secondColour, 0.5);
   }
   // mix in a little random
-  chibis[chibis.length-1].secondColour = mixTwoColours(colour, randomColourRealistic(), 0.75);
+  // flip the colours sometimes
+  if (Math.random() < 0.25) {
+    chibis[chibis.length-1].secondColour = mixTwoColours(randomColourRealistic(), colour1, Math.random()*0.2);
+    chibis[chibis.length-1].firstColour = mixTwoColours(randomColourRealistic(), colour2, 0.2);
+  } else {
+  chibis[chibis.length-1].firstColour = mixTwoColours(randomColourRealistic(), colour1, Math.random()*0.2);
+  chibis[chibis.length-1].secondColour = mixTwoColours(randomColourRealistic(), colour2, 0.2);
+}
   chibis[chibis.length-1].speedY = -25;
-  // set the baby's coat and appearance modifiers
-  chibis[chibis.length-1].coatMod[0] = (parent1.coatMod[0] + parent2.coatMod[0] + Math.random())/3;
-  chibis[chibis.length-1].coatMod[1] = (parent1.coatMod[1] + parent2.coatMod[1] + Math.random())/3;
-  chibis[chibis.length-1].thickness = specthickness;
-  chibis[chibis.length-1].legginess = speclegginess;
+  // coat logic
+  let coatSwitch = Math.round(Math.random()*2); // 0 to 2
+  if (coatSwitch == 0) {
+    chibis[chibis.length-1].coatMod[0] = ((parent1.coatMod[0]*9) + Math.random())/10;
+  } else if (coatSwitch == 1) {
+    chibis[chibis.length-1].coatMod[0] = ((parent2.coatMod[0]*9) + Math.random())/10;
+  } else {
+    chibis[chibis.length-1].coatMod[0] = (parent1.coatMod[0] + parent2.coatMod[0] + Math.random())/3;
+  }
+  coatSwitch = Math.round(Math.random()*2); // 0 to 2
+  if (coatSwitch == 0) {
+    chibis[chibis.length-1].coatMod[1] = ((parent1.coatMod[1]*9) + Math.random())/10;
+  } else if (coatSwitch == 1) {
+    chibis[chibis.length-1].coatMod[1] = ((parent2.coatMod[1]*9) + Math.random())/10;
+  } else {
+    chibis[chibis.length-1].coatMod[1] = (parent1.coatMod[1] + parent2.coatMod[1] + Math.random())/3;
+  }
+  chibis[chibis.length-1].thickness = specThickness;
+  chibis[chibis.length-1].legginess = specLegginess;
   return babyGender;
 }
 
@@ -314,13 +352,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.legginess = 0.5;
   this.angleToFocus = 0;
   this.size = bodySize;
-  this.limbLength = this.size*3*this.legginess;
+  this.limbLength = this.size+(6*this.legginess);
   this.maxSize = maxSize;
   this.hitBottom = false;
   this.sitting = false;
   this.health = 100;
   this.love = 50;
   this.energy = 100;
+  this.hunger = 1000;
   this.snuggling = -1; // start at -1 so they dont try to give birth when they are not truly snuggling
   this.awake = 0;
   this.litters = 0;
@@ -335,8 +374,9 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.partnerId = null;
   guyID++;
   this.reinitSizes = function() {
-    this.limbLength = this.size*3*this.legginess;
+    this.limbLength = this.size+(6*this.legginess);
   };
+
   // method to find a partner's index
   this.getPartner = function() {
     for (let i = 0; i < chibis.length; i++) {
@@ -388,7 +428,13 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   // @return {boolean} - whether the action has a cost
   this.act = function() {
     if (!choosingChibi && this.snuggling == 0 && this.gender == 'Male') {
-      // giveBirth(this, this.focus);
+      // find out who the partner was
+      for (let stop = false, i = 0; i < chibis.length && ! stop; i++) {
+        if (this.partnerId == chibis[i].id) {
+          stop = true;
+          this.focus = chibis[i];
+        }
+      }
       createGlyphs((this.x - (this.x - this.focus.x)/2), (this.y - (this.y - this.focus.y)/2), mixTwoColours(this.firstColour, this.focus.firstColour, 0.5), '\u2764');
       initLitter(this, this.getPartner());
       this.getPartner().partnerId = null;
@@ -400,26 +446,35 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       this.snuggling --;
     } else {
       // decide whether to act or not
-      // if you've already reached nirvana, and you max out one of your meters, just sit down
-      if (this.supersaiyan == 0 && (this.health > superThreshold && this.love > superThreshold)) {
+
+      // if you've are in a state of nirvana, or in a catbox, just sit down
+      if (this.inCatBox !== null || (this.supersaiyan > 0 && (this.health > superThreshold && this.love > superThreshold))) {
         this.sitting = true;
       } else {
-        if (Math.random() <= 0.025 && this.focus.y <= this.y) {
-          // decide what to do
+        if (Math.random() <= 0.02) {
+          // decide what to target
+          let target = null;
+          // are we hungry?
+          if (this.inCatBox == null && this.hunger <= 0 && fruits.length > 0) {
+            let closestFruit = this.findClosestFruit();
+            if (closestFruit !== 'X') {
+              this.focus = closestFruit;
+              target = closestFruit;
+            }
+          }
           // are we gonna pick a mate?
-          let mate = null;
-          if (!choosingChibi && !this.elder && this.gender == 'Male' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 60
-          && this.energy >= 60 && this.size >= this.maxSize) {
-            for (let j = 0; j < chibis.length && mate == null; j++) {
-              if (this !== chibis[j] && chibis[j].awake && this.love + chibis[j].love >= 90 && !chibis[j].elder && chibis[j].gender == 'Female'
+          if (target == null && !choosingChibi && !this.elder && this.gender == 'Male' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 60
+          && this.energy >= 60) {
+            for (let j = 0; j < chibis.length && target == null; j++) {
+              if (this !== chibis[j] && chibis[j].awake && this.love + chibis[j].love >= 100 && !chibis[j].elder && chibis[j].gender == 'Female'
               && chibis[j].age > 0 && chibis[j].supersaiyan == 0 && chibis[j].health >= 60
-              && chibis[j].energy >= 60 && chibis[j].size >= chibis[j].maxSize) {
+              && chibis[j].energy >= 60) {
                 this.partnerId = ''+chibis[j].id;
                 chibis[j].partnerId = ''+this.id;
-                mate = chibis[j];
+                target = chibis[j];
                 // let nameArray = [];
                 // nameArray.push(this);
-                // nameArray.push(mate);
+                // nameArray.push(target);
                 // nameArray.sort(function twoVars(a, b) {
                 //   if (a.name > b.name) return 1;
                 //   if (a.name < b.name) return -1;
@@ -430,7 +485,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             }
           }
 
-          if (mate == null && this.elder && graveStones.length > 0) {// }&& this.anniversary) {
+
+          if (target == null && this.elder && graveStones.length > 0) {// }&& this.anniversary) {
             if (!anniversary || obelisks == 0 ) {
               // if it's a regular time of day, or there are no obelsisks, just go for the shittiest gravestone to maintain it
               let target = this.findClosestGrave();
@@ -439,34 +495,45 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
               } else {
                 this.focus = graveStones[target];
               }
-            } else if (mate == null) {
+            } else if (target == null) {
               // if it's a special time of day and there are obelisks, go for the best gravestone and make babies out of it
               this.focus = graveStones[this.findClosestObelisk()];
             }
-          } else if (mate == null) {
+          } else if (target == null) {
             // default action - jump at firefly
             this.focus = fireflies[this.findClosestFireFly()];
           }
-          if (this.focus.y <= this.y) {
-            if (this.focus == mate) {
-              // sendMessage(this.name+' jumping at mate');
-            }
             // actually jumping now
             this.speedY = -this.size;
             let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-            this.speedX += 50*Math.cos(targetangle);
-            this.speedY += 70*Math.sin(targetangle);
+            this.speedX += Math.cos(targetangle)*40;
+            this.speedY += Math.sin(targetangle)*40;
             this.y--;
             this.energy -= 7;
             this.sitting = false;
             this.health -= 1;
-          }
         } else if (this.focus.y > this.y) {
           this.sitting = true;
         }
       }
     }
   };
+  this.findClosestFruit = function() {
+    let tmp = maxDistance;
+    let target = 'X';
+    for (let f = 0; f < fruits.length; f++) {
+      let tmpX = this.x-fruits[f].x;
+      let tmpY = this.y-fruits[f].y;
+      let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
+      if (fruits[f].y < this.y && distance < tmp) {
+        tmp = distance;
+        target = fruits[f];
+      }
+    }
+    return target;
+  };
+
+
   this.findClosestFireFly = function() {
     let tmp = maxDistance;
     let target = 'X';
@@ -557,9 +624,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     if (!this.hitBottom && this.y >= trueBottom-(this.size)-(this.limbLength/2.5)) {
       this.y = trueBottom-(this.size)-(this.limbLength/2.5);
       this.hitAFloor();
-      if (this.supersaiyan > 0 && tryToPlantaTree(this.x)) {
-        sendMessage(this.name+' planted some seeds');
-      }
     }
   };
   this.hitAFloor = function() {
@@ -583,6 +647,108 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       }
     }
   };
+  this.drawFrontLegs = function() {
+  // hands
+  let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
+  handGradient.addColorStop(0, this.firstColour);
+  handGradient.addColorStop(this.coatMod[0], this.firstColour);
+  handGradient.addColorStop(1, this.secondColour);
+  ctx.lineWidth = (this.size/2.5)*this.thickness*2;
+  ctx.fillStyle = handGradient;
+  ctx.strokeStyle = handGradient;  // if we are awake and sitting on a floor
+  if (this.awake && this.hitBottom && this.sitting) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.beginPath();
+    ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  } else if (!this.awake || !this.hitBottom) {
+    // if we are holding something
+    if (this.awake && detectCollision(this, this.focus)) {
+      handGradient = ctx.createRadialGradient(this.focus.x, this.focus.y, 1, this.focus.x, this.focus.y, this.size);
+      handGradient.addColorStop(0, this.secondColour);
+      handGradient.addColorStop((1-this.coatMod[0])/2, this.secondColour);
+      handGradient.addColorStop(1, this.firstColour);
+      ctx.fillStyle = handGradient;
+      ctx.strokeStyle = handGradient;
+      ctx.save(); // 0 open
+      ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/1.25));
+      ctx.rotate(-this.rotation);
+
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.rotate(+this.rotation);
+      ctx.restore();
+      ctx.lineTo(this.focus.x, this.focus.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.save(); // 0 open
+      ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/1.25));
+      ctx.rotate(this.rotation);
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.rotate(+this.rotation);
+      ctx.restore();
+      ctx.lineTo(this.focus.x, this.focus.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+      // if we are not holding anything
+    } else if (this.awake && this.energy > 0) {
+      // left arm
+      ctx.save(); // 0 open
+      ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/1.25));
+      ctx.rotate(-this.rotation);
+
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.rotate(+this.rotation);
+      ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore(); // closed
+      // right arm
+      ctx.save(); // 0 open
+      ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/1.25));
+      ctx.rotate(-this.rotation);
+
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.rotate(+this.rotation);
+      ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore(); // closed
+    }
+  }
+}
   this.update = function() {
     let backendShiftX = this.size * this.speedX / 30;
     let backendShiftY = this.size * this.speedY / 30;
@@ -664,11 +830,15 @@ if (backendShiftY > trueBottom - this.y) {
       sleepshift = this.limbLength+(this.size/4);
     }
 
+    if (this.speedY >= -10) {
+      this.drawFrontLegs();
+    }
+
 
     if (this.awake && this.energy > 0) {
       ctx.lineWidth = (this.size/2.5)*this.thickness*2;
 
-      // legs
+      // back legs
       let legGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size*0.8));
       legGradient.addColorStop(0, trueBlack);
       legGradient.addColorStop(0.1, this.firstColour);
@@ -728,6 +898,7 @@ if (backendShiftY > trueBottom - this.y) {
       ctx.font = '10px' + ' ' + globalFont;
       let shift = this.name.length*5.6/2;
       ctx.fillText(this.name, this.x-shift, this.y-(this.size*2));
+      // ctx.fillText(Math.round(this.health)+' '+Math.round(this.love)+' '+Math.round(this.energy)+' '+Math.round(this.hunger), this.x-shift, this.y-(this.size*2));
     }
     // translate before drawing again
     ctx.fillStyle = this.firstColour;
@@ -793,9 +964,9 @@ if (backendShiftY > trueBottom - this.y) {
       ctx.translate(0, (this.limbLength+(this.size/4))/2);
     }
     // body balls
-    let bodyGradient = ctx.createRadialGradient(0, 0, this.size/3, 0, 0, (this.size*2)+Math.sqrt((backendShiftY*backendShiftY)+(backendShiftX*backendShiftX)));
+    let bodyGradient = ctx.createRadialGradient(0, 0, this.size/2, 0, 0, (this.size*3)+Math.sqrt((backendShiftY*backendShiftY)+(backendShiftX*backendShiftX)));
     bodyGradient.addColorStop(0, trueBlack);
-    bodyGradient.addColorStop(0.25, this.firstColour);
+    bodyGradient.addColorStop(0.5, this.firstColour);
     bodyGradient.addColorStop(1*this.coatMod[0], this.firstColour);
     bodyGradient.addColorStop(1, this.secondColour);
     ctx.fillStyle = bodyGradient;
@@ -817,11 +988,11 @@ if (backendShiftY > trueBottom - this.y) {
     ctx.fill();
 
     // put your front legs down if you are on the floor and healthy
-    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
     let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
     handGradient.addColorStop(0, this.firstColour);
     handGradient.addColorStop(this.coatMod[0], this.firstColour);
     handGradient.addColorStop(1, this.secondColour);
+    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
     ctx.fillStyle = handGradient;
     ctx.strokeStyle = handGradient;
     if (this.awake && this.hitBottom) {
@@ -855,9 +1026,9 @@ if (backendShiftY > trueBottom - this.y) {
     oneq = this.size/2;
     ctx.beginPath();
     ctx.moveTo(0, +this.size/2);
-    ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/2));
+    ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/5));
     ctx.lineTo(oneq*2, -(this.size*this.ears)/4);
-    ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/2));
+    ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/5));
     ctx.lineTo(oneq*4, +this.size/2);
 
     let earGradient=ctx.createLinearGradient(0, -this.size+(this.size*this.ears/2), 0, this.limbLength/4);
@@ -894,7 +1065,13 @@ if (backendShiftY > trueBottom - this.y) {
       // smile
       if (this.health >= 50 && !this.elder && this.energy > 0) {
         ctx.globalAlpha = this.love/100;
+        if (this.gender == 'Female') {
         ctx.drawImage(smile, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
+      } else if (this.gender == 'Male') {
+        ctx.drawImage(smile2, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
+      } else if (this.gender == 'Non Binary') {
+        ctx.drawImage(smile3, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
+      }
         ctx.globalAlpha = 1;
       }
     } else {
@@ -1024,105 +1201,11 @@ if (backendShiftY > trueBottom - this.y) {
     ctx.globalAlpha = 1;
     ctx.restore(); // 0
 
-
-    // hands
-    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
-    ctx.fillStyle = handGradient;
-    ctx.strokeStyle = handGradient;
-    // if we are awake and sitting on a floor
-    if (this.awake && this.hitBottom && this.sitting) {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.beginPath();
-      ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore();
+    // draw the front legs infront of the face if you are going up
+    if (this.speedY < -10) {
+      this.drawFrontLegs();
     }
-    if (!this.awake || !this.hitBottom) {
-      // if we are holding something
-      if (this.awake && detectCollision(this, this.focus)) {
-        handGradient = ctx.createRadialGradient(this.focus.x, this.focus.y, 1, this.focus.x, this.focus.y, this.size);
-        handGradient.addColorStop(0, this.secondColour);
-        handGradient.addColorStop((1-this.coatMod[0])/2, this.secondColour);
-        handGradient.addColorStop(1, this.firstColour);
-        ctx.fillStyle = handGradient;
-        ctx.strokeStyle = handGradient;
-        ctx.save(); // 0 open
-        ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/1.25));
-        ctx.rotate(-this.rotation);
 
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.rotate(+this.rotation);
-        ctx.restore();
-        ctx.lineTo(this.focus.x, this.focus.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.save(); // 0 open
-        ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/1.25));
-        ctx.rotate(this.rotation);
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.rotate(+this.rotation);
-        ctx.restore();
-        ctx.lineTo(this.focus.x, this.focus.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-        // if we are not holding anything
-      } else if (this.awake && this.energy > 0) {
-        // left arm
-        ctx.save(); // 0 open
-        ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/1.25));
-        ctx.rotate(-this.rotation);
-
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.rotate(+this.rotation);
-        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore(); // closed
-        // right arm
-        ctx.save(); // 0 open
-        ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/1.25));
-        ctx.rotate(-this.rotation);
-
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.rotate(+this.rotation);
-        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore(); // closed
-      }
-    }
     ctx.globalAlpha = 1;
   };
 }

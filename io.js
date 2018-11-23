@@ -48,8 +48,7 @@ function pasteChibi(outputbuffer) {
     choosingChibi = false;
     selection = null;
     chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0], parseFloat(attributeArray[5])));
-    console.log(outputbuffer);
-    // chibi.gender = outputbuffer[0];
+    // console.log(outputbuffer);
     chibis[chibis.length-1].secondColour = attributeArray[1];
     chibis[chibis.length-1].firstColour = attributeArray[2];
     chibis[chibis.length-1].coatMod[0] = parseFloat(attributeArray[3]);
@@ -62,6 +61,11 @@ function pasteChibi(outputbuffer) {
     chibis[chibis.length-1].name = attributeArray[13];
     chibis[chibis.length-1].elder = (attributeArray[14] == true);
     chibis[chibis.length-1].reachedNirvana = (attributeArray[15] == true);
+    chibis[chibis.length-1].love = 100;
+    seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
+    seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
+    seeds[seeds.length-1].timer = 750;
+
     if (chibis[chibis.length-1].gender == 'Female') {
       chosenChibiF = true;
     } else if (chibis[chibis.length-1].gender == 'Male') {

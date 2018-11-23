@@ -53,6 +53,8 @@ trails = [];
 glyphs = [];
 fireflies = [];
 trees = [];
+seeds = [];
+fruits = [];
 pointerPos = new MousePosition(canvasWidth/2, canvasHeight/2);
 fireflies.push(new FireFly(canvasWidth/2, trueBottom, pointerPos, 1, glowColour));
 boxes = [];
@@ -67,11 +69,11 @@ boxSize = 0;
 fontSize = 15;
 fontWidth = 8.4;
 // if it is in landscape
-if (canvasWidth > canvasHeight) {
+if (canvasWidth > canvasHeight || canvasWidth == canvasHeight) {
   boxSize = 250*proportion;
 } else {
   // if it is in portrait (like a phone)
-  boxSize = canvasWidth/3.1;
+  boxSize = canvasWidth/5;
 }
 const boxPadding = 20*proportion;
 const boxColumns = 3;
@@ -87,6 +89,10 @@ choosingChibi = false;
 // for my guys
 const smile = new Image();
 smile.src = 'smile.png';
+const smile2 = new Image();
+smile2.src = 'smile2.png';
+const smile3 = new Image();
+smile3.src = 'smile3.png';
 const flame = new Image();
 flame.src = 'flame.png';
 // landscape
@@ -162,12 +168,13 @@ function startGame() {
   // chibis[1].firstColour = randomColour();
 
   // init console data
-  console.log('Scale to base is '+proportion);
-  console.log('Maximum population is '+maxPop);
-  console.log(reportNames(100000));
-  // start the game
-  myGameArea.start();
+  sendMessage('Initialising');
   initButtons();
+  sendMessage('Checking integrity of names database');
+  console.log(reportNames());
+  // start the game
+  sendMessage('Starting simulation');
+  myGameArea.start();
 }
 
 let myGameArea = {
@@ -300,10 +307,47 @@ function updateGameArea() {
     ctx.drawImage(newtree, 0, y, iw, 1, scan, y, iw, 1);
   }
   ctx.restore();
+
+  // draw glow coming off the ground
+  ctx.globalAlpha = 0.15;
+
+  // update the seeds
+  for (let i = 0; i < seeds.length; i++) {
+    seeds[i].update();
+    if (seeds[i].planted) {
+      seeds.splice(i, 1);
+      i--;
+    }
+  }
+
+  // update the fruit
+  for (let i = 0, stop = false; i < fruits.length; i++) {
+        fruits[i].update();
+    for (let j = 0; !stop && j < chibis.length; j++) {
+      if (chibis[j].focus == fruits[i] && detectCollision(fruits[i], chibis[j])) {
+        chibis[j].hunger += 200;
+        chibis[j].health += 50;
+        stop = true;
+        sendMessage(chibis[j].name+' ate a piece of fruit');
+        chibis[j].speedX = 0;
+        chibis[j].speedY = 0;
+        seeds.push(new Seed(fruits[i].colour, chibis[j]));
+        fruits[i].parent.fruitCount--;
+        fruits.splice(i, 1);
+        i--;
+      }
+    }
+  }
+
+  let floorGlow = ctx.createLinearGradient(0, canvasHeight - muckLevel - 200, 0, canvasHeight);
+  floorGlow.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  floorGlow.addColorStop(1, mixTwoColours(trueWhite, outputArray[1], 0.5));
+  ctx.fillStyle = floorGlow;
+  ctx.fillRect(0, canvasHeight-muckLevel-5 - 200, canvasWidth, 5 + muckLevel + 200);
+  // draw the floor
   ctx.globalAlpha = 1;
 
-  // draw the floor
-  let horizon = ctx.createLinearGradient(0, canvasHeight-muckLevel-5, 0, canvasHeight-muckLevel);
+  let horizon = ctx.createLinearGradient(0, canvasHeight - muckLevel - 100, 0, canvasHeight-muckLevel);
   horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
   horizon.addColorStop(1, trueBlack);
   ctx.fillStyle = horizon;
@@ -313,13 +357,19 @@ function updateGameArea() {
   for (let i = 0; i < trees.length; i++) {
     trees[i].update();
     if (trees[i].reachedMaxHeight && trees[i].y > trueBottom) {
+      for (let j = 0; j < seeds.length; j++) {
+        if (seeds[j].parent == trees[i]) {
+          splice(j, 1);
+          j--;
+        }
+      }
       trees.splice(i, 1);
       i--;
       sendMessage('A tree died');
     }
   }
-
   // draw the message history
+  if (pointerPos.y > canvasHeight - muckLevel - 5) {
   let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
   let rMessage = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
   let gMessage = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
@@ -332,17 +382,15 @@ function updateGameArea() {
   for (let i = messageBuffer.length-2; i >= 0; i--) {
     ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
   }
-
+}
   // update the text
-  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day;
+  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length;
   basicInfo.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
-
   for (let i = 0; i < boxes.length; i++) {
     boxes[i].update();
   }
-
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].update();
   }
@@ -548,7 +596,7 @@ function everyinterval(n) {
 * @param {int} height - the height of the Tree base
 * @param {int} maxHeight - the maximum height the Tree can reach;
 */
-function Tree(x, y, width, height, maxHeight) {
+function Tree(x, y, width, height, maxHeight, fruitColour) {
   this.reachedMaxHeight = false;
   this.loadthisframe = 0;
   this.circleCenterX = x;
@@ -558,27 +606,26 @@ function Tree(x, y, width, height, maxHeight) {
   this.width = width;
   this.height = height;
   this.maxHeight = maxHeight;
+  this.fruitColour = fruitColour;
+  this.fruitCount = 0;
+  this.birthday = daytimeCounter;
   // this.angle = 0;
   // this.speedX = 0;
   // this.clockwise = clockwise;
   this.update = function() {
+    if (this.fruitCount < 4 && this.birthday == daytimeCounter) {
+      for (let i = 0; i < fruits.length; i++) {
+        if (fruits[i].parent == this) {
+          fruits.splice(i, 1);
+          i--;
+        }
+      }
+      fruits.push(new Fruit(this.fruitColour, this, 0));
+      fruits.push(new Fruit(this.fruitColour, this, 1));
+      fruits.push(new Fruit(this.fruitColour, this, 2));
+      fruits.push(new Fruit(this.fruitColour, this, 3));
+    }
     ctx.fillStyle = trueBlack;
-    // COMMENTED OUT CODE FOR CIRCULAR MOTION
-    // the radius and angle of the circle, we start at angle 0
-    // let radius = trueBottom*0.4;
-    // Math.PI/180 is for transforming angle into radiant
-    // Math.cos(angle) is the ratio of adjacent to hypothenuse
-    // Math.sin(angle) is the ratio of opposite to hypothenuse
-    // the hypothenuse is the radius
-    // let newX = radius * Math.cos(this.angle * (Math.PI/180));
-    // let newY = radius * Math.sin(this.angle * (Math.PI/180));
-    // w x and y values to the circle center
-    // let newxpos = newX + this.circleCenterX;
-    // let newypos = newY + this.circleCenterY;
-    // this.speedX = newxpos - this.x;
-    // this.x = newxpos;
-    // this.y = newypos;
-
     if (this.y > canvasHeight) {
       this.y = canvasHeight;
     }
@@ -594,796 +641,854 @@ function Tree(x, y, width, height, maxHeight) {
         this.y += (this.loadthisframe/60);
       }
     }
-    // ctx.fillRect(this.x-(this.width/2), this.y, this.width, this.height);
     ctx.globalAlpha = 0.9;
-    // ctx.fillRect(this.x-(this.width/6), this.y+this.height, this.width/3, trueBottom - this.y - this.height);
-    // ctx.globalAlpha = 1;
     ctx.drawImage(acacia, this.x-(this.width*0.5), this.y-10, this.width, 200/(300/this.width));
     ctx.fillRect(this.x-(this.width/30), this.y+(this.width/4.5), this.width/12.5, trueBottom - this.y - this.height);
-    // label
-    // ctx.fillStyle = glowColour;
-    // ctx.font = '10px' + ' ' + globalFont;
-    // ctx.fillText(this.reachedMaxHeight, this.x, this.y);
-
-
-    // increase the angle so that it moves in circular way
-    // it is not necessary to limit/reset the angle to 360°
-    // because sinus and cosinus work for angles bigger than 360°
-    //   if (this.clockwise) {
-    //   this.angle ++;
-    // } else {
-    //   this.angle --;
-    // }
     this.loadthisframe = 0;
   };
 }
 
-/**
-* function for a piece of plain text
-* @param {int} size - the size
-* @param {string} colour - the colour
-* @param {int} x - the x pos
-* @param {int} y - the y pos
+/** function to describe a seed for a tree
 */
-function TextElement(size, colour, x, y) {
-  this.size = size;
-  this.x = x;
-  this.y = y;
+function Seed(colour, owner) {
   this.colour = colour;
+  this.ownerid = ''+owner.id;
+  this.timer = 250;
+  this.planted = false;
   this.update = function() {
-    ctx.font = this.size + ' ' + globalFont;
-    ctx.fillStyle = this.colour;
-    ctx.fillText(this.text, this.x, this.y);
-    ctx.globalAlpha = 1;
-  };
-}
-
-/**
-* function for a firefly
-* @param {int} x - the x pos
-* @param {int} y - the y pos
-* @param {object} focus - the firefly's focus
-* @param {int} size - the size
-* @param {string} firstColour - the colour
-*/
-function FireFly(x, y, focus, size, firstColour) {
-  this.x = x;
-  this.y = y;
-  this.focus = focus;
-  this.speedX = 0;
-  this.speedY = 0;
-  this.size = size*20;
-  this.touches = 0;
-  this.touchedThisFrame = false;
-  this.firstColour = firstColour;
-  this.update = function() {
-    if (this.x < 0 || this.x > canvasWidth) {
-      this.speedX *= -0.98;
-      if (this.x < 0) {
-        this.x = ((2.5*this.size)/20);
-      } else {
-        this.x = canvasWidth - ((2.5*this.size)/20);
-      }
-    }
-    if (this.y < 0 || this.y > trueBottom) {
-      this.speedY *= -0.99;
-      if (this.y > trueBottom) {
-        this.y = trueBottom-10;
-      } else {
-        this.y += (2.5*this.size)/20;
-      }
-    }
-
-    let diffx = this.focus.x - this.x;
-    let diffy = this.focus.y - this.y;
-    let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-
-    if ((diffx > 0 && this.speedX > 0) || (diffx < 0 && this.speedX < 0)) {
-      // if we are going right and it's to our right
-      // if we are going left and it's to our left
-    } else {
-      this.speedX *= 0.99;
-    }
-    if ((diffy > 0 && this.speedY > 0) || (diffy < 0 && this.speedY < 0)) {
-      // if we are going up and it's above
-      // if we are going down and it's below
-    } else {
-      this.speedY *= 0.99;
-    }
-    this.speedX += 0.05*Math.cos(targetangle);
-    this.speedY += 0.05*Math.sin(targetangle);
-    applySpeedLimit(this);
-    this.x += this.speedX;
-    this.y += this.speedY;
-
-    let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, 100);
-    let riGlow = hexToRgb(this.firstColour).r;
-    let giGlow = hexToRgb(this.firstColour).g;
-    let biGlow = hexToRgb(this.firstColour).b;
-    let rjGlow = hexToRgb('#FF2288').r;
-    let gjGlow = hexToRgb('#FF2288').g;
-    let bjGlow = hexToRgb('#FF2288').b;
-    let combr = Math.floor(riGlow - ((((riGlow - rjGlow)/400)))*this.touches);
-    let combg = Math.floor(giGlow - ((((giGlow - gjGlow)/400)))*this.touches);
-    let combb = Math.floor(biGlow - ((((biGlow - bjGlow)/400)))*this.touches);
-    let newC = rgbToHex(combr, combg, combb);
-    glow.addColorStop(0, newC);
-    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    // Fill with gradient
-    ctx.fillStyle = glow;
-    ctx.globalAlpha = 0.15*this.size/40;// - (this.touches/2000);
-    // make it flicker when touched
-    if (this.touchedThisFrame) {
-      ctx.globalAlpha *= 0.9;
-    }
-    ctx.beginPath();
-    // ctx.fillStyle = glowColour;
-    ctx.arc(this.x, this.y, 100, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.fillStyle = trueWhite;
-    ctx.arc(this.x, this.y, (2.5*this.size)/20, 0, 2 * Math.PI);
-    ctx.fill();
-  };
-}
-/**
-* function for a grave
-* @param {int} x - the x pos
-* @param {int} y - the y pos
-* @param {int} size - the size
-* @param {int} speedX - the x speed
-* @param {int} speedY - the y speed
-* @param {boolean} elder - elder status
-* @param {string} firstColour - the colour
-*/
-function Grave(x, y, size, speedX, speedY, elder, firstColour) {
-  this.x = x;
-  this.y = y + 10;
-  this.speedX = speedX/2;
-  this.speedY = speedY/1000;
-  this.timer = 200;
-  this.hitBottom = false;
-  this.elder = elder;
-  this.tended = 0;
-  this.firstColour = firstColour;
-  // elders spawn obelisks
-  if (this.elder) {
-    this.image = obelisk;
-    this.size = size*1.5;
-    obelisks ++;
-  } else {
-    this.size = size;
-    let whichTombstone = Math.random();
-    if (whichTombstone < 0.3334) {
-      this.image = tombstone;
-    } else if (whichTombstone < 0.6667) {
-      this.image = tombstone2;
-    } else {
-      this.image = tombstone3;
-    }
-  }
-  this.update = function() {
-    if (!this.elder) {
-      this.timer -= 0.075;
-    }
-    if (!this.hitBottom && this.y < trueBottom-(this.size*5)) {
-      checkBounceSides(this);
-      checkBounceTop(this);
-      let mass = gravity*this.size*this.size;
-      this.speedX *= 0.99;
-      this.speedY += mass*gravity;
-      applySpeedLimit(this);
-      this.y += this.speedY/2;
-      this.x += this.speedX/2;
-    } else {
-      // come to a rest at the bottom
-      this.hitBottom = true;
-      this.y = trueBottom - (this.size*5);
-      this.speedY = 0;
-      this.speedX *= 0.9;
-    }
-
-    // sparks emanating from graves
-    if (this.tended > 0) {
-      let step = 100-(this.timer);
-      step -= Math.floor(step);
-      step *= 10;
-      ctx.fillStyle = glowColour;
-      ctx.font = '7px' + ' ' + globalFont;
-      ctx.globalAlpha = 0.2*(this.timer/100);
-      ctx.fillText('*', this.x, this.y+(5*this.size)-(2*step));
-      this.tended --;
-    }
-    ctx.globalAlpha = 0.2+(this.timer/100);
-    ctx.drawImage(this.image, this.x-(this.size), this.y+this.size*3, this.size*2, this.size*2);
-    ctx.globalAlpha = 1;
-  };
-}
-
-
-/**
-* function for a Ghost
-* @param {int} x - the x pos
-* @param {int} y - the y pos
-* @param {int} size - the size
-* @param {string} firstColour - the colour
-*/
-function Ghost(x, y, size, firstColour) {
-  this.x = x;
-  this.y = y;
-  this.size = size;
-  this.speedX = 0;
-  this.speedY = 0;
-  this.firstColour = firstColour;
-  this.update = function() {
-    // start floating up if the main FireFly is below you
-    if (this.y > fireflies[0].y) {
-      this.speedY = -Math.abs(0.025*(15-this.size));
-    } else {
-      this.speedY *= 0.9995;
-    }
-    let diffx = fireflies[0].x - this.x;
-    if (this.x < 0 || this.x > canvasWidth) {
-      this.speedX *= -0.99;
-    } else if ((diffx > 0 && this.speedX > 0) || (diffx < 0 && this.speedX < 0)) {
-      // if we are going right and it's to our right
-      // if we are going left and it's to our left
-    } else {
-      this.speedX *= 0.9999;
-    }
-    let targetangle = Math.atan2(fireflies[0].y - this.y, fireflies[0].x - this.x);
-    this.speedX += 0.001*Math.cos(targetangle);
-    applySpeedLimit(this);
-    this.x += this.speedX;
-    this.y += this.speedY;
-    ctx.globalAlpha = 0.1;
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(Math.atan2(-trueBottom, this.speedX*500));
-    ctx.rotate(90 * Math.PI / 180);
-    ctx.drawImage(spectre, -(this.size), -(this.size), this.size*2, this.size*4);
-    ctx.restore();
-    let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.size*20);
-    glow.addColorStop(0, glowColour);
-    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    // Fill with gradient
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size*20, 0, 2 * Math.PI);
-    ctx.fill();
-  };
-}
-
-/**
-* the mouse position object
-* @param {int} x - the x position
-* @param {int} y - the y position
-*/
-function MousePosition(x, y) {
-  this.x = x;
-  this.y = y;
-  this.size = 10;
-}
-
-/**
-* function to track where the mouse is
-* @param {event} e - the mousemove event
-* @return {MousePosition} mouse - the XY pointer
-*/
-function trackMouse(e) {
-  let mouseX;
-  let mouseY;
-  if (e.offsetX) {
-    mouseX = e.offsetX;
-    mouseY = e.offsetY;
-  } else if (e.layerX) {
-    mouseX = e.layerX;
-    mouseY = e.layerY;
-  }
-  let mouse = new MousePosition(mouseX, mouseY);
-  return mouse;
-}
-
-
-/**
-* function to return health number / 100 as colour
-* @param {object} creature - the creature to calculate the colour for
-* @return {string} - the colour as a hex value
-*/
-function colourIndicator(creature) {
-  let health = Math.floor((255*creature.health)/100);
-  let love = 0;
-  if (creature.love > 0) {
-    love = Math.round((255*creature.love)/100);
-  } else {
-    love = 0;
-  }
-  if (creature.energy > 0) {
-    energy = Math.round((255*creature.energy)/100);
-  } else {
-    energy = 0;
-  }
-  // handle super saiyan colours
-  if (creature.supersaiyan > 0) {
-    love += creature.supersaiyan*((superColour - love)/100); // 0 to 255
-    health += creature.supersaiyan*((superColour - health)/100); // 0 to 255
-    energy += creature.supersaiyan*((superColour - energy)/100); // 0 to 255
-  }
-  if (love < 0) {
-    love = 0;
-  } else if (love > 255) {
-    love = 255;
-  }
-  if (health > 255) {
-    health = 255;
-  } else if (health < 0) {
-    health = 0;
-  }
-  if (energy > 255) {
-    energy = 255;
-  } else if (energy < 0) {
-    energy = 0;
-  }
-  return rgbToHex(love, energy, health);
-}
-
-/**
-* function to handle chibis
-*/
-function recalculateMyGuys() {
-  // block for all my guys
-  for (let i = 0; i < chibis.length; i++) {
-    // check to see if it's time to die
-    // attrition, aging etc.
-    // check nirvana status
-    if (!choosingChibi && !chibis[i].reachedNirvana && chibis[i].litters > 0 && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
-      explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].firstColour, glowColour));
-      produceExplosion(chibis[i].x, chibis[i].y);
-      chibis[i].reachedNirvana = true;
-      chibis[i].supersaiyan = 100;
-      chibis[i].speedX = 0;
-      chibis[i].speedY = 0;
-      sendMessage(chibis[i].name+' reached nirvana');
-    }
-    // check for age
-    if (chibis[i].birthday == daytimeCounter+1) {
-      chibis[i].age ++;
-      if (chibis[i].age == 1) {
-        sendMessage(chibis[i].name+' reached adulthood');
-      }
-
-      // set elder status
-      if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 2) {
-        chibis[i].elder = true;
-        chibis[i].size*=0.8;
-        chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
-        chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour);
-
-        sendMessage(chibis[i].name+' became an Elder');
-        createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secretColour, '\u274b');
-
-        elders++;
-      } else if (elders > 1 && elders > chibis.length/4 && chibis[i].elder) {
-        chibis[i].elder = false;
-        elders --;
-        sendMessage(chibis[i].name+' is no longer an elder');
-      }
-    }
-    if (!choosingChibi && chibis[i].health <= 0) {
-      createGlyphs(chibis[i].x, chibis[i].y, trueBlack, '\u271A');
-      if (chibis[i].elder) {
-        sendMessage('Elder '+chibis[i].name+' died');
-        elders--;
-      }
-      graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
-      sendMessage(chibis[i].name+' died');
-      chibis.splice(i, 1);
-      i--;
-    } else {
-      // grow them a tiny bit
-      if (this.size < this.maxSize) {
-        this.size += this.size/1000;
-        this.reinitSizes();
-      }
-      if (!chibis[i].supersaiyan == 0 && chibis[i].supersaiyan <= 50) {
-        sendMessage(chibis[i].name+'\'s nirvana ended');
-        chibis[i].supersaiyan = 0;
-      } else if (chibis[i].supersaiyan > 0) {
-        chibis[i].supersaiyan -= 0.05;
-        chibis[i].energy = 100;
-      }
-      if (chibis[i].love > 0.25) {
-        chibis[i].love -= 0.1;
-      } else if (chibis[i].love > 100) {
-        chibis[i].love = 100;
-      }
-      if (chibis[i].health > 0) {
-        chibis[i].health -= 0.001;
-      }
-      if (chibis[i].speedY < 0) {
-        chibis[i].health -= 0.1;
-      }
-      // if asleep, gain energy and a little health
-      if (!chibis[i].awake) {
-        chibis[i].energy += 0.125;
-        chibis[i].health += 0.05;
-      }
-      // if energy goes above 100, wake up
-      if (!chibis[i].awake && chibis[i].energy > 90) {
-        chibis[i].awake = true;
-        // console.log('woke up');
-      }
-      if (chibis[i].health > 100) {
-        chibis[i].health = 100;
-      }
-
-      // if you're a supersaiyan and you hit a grave ...
-
-      // if you're an elder and you hit your focus (a grave or obelisk)
-      for (let f = 0; f < fireflies.length; f++) {
-        if (chibis[i].elder && chibis[i].awake && chibis[i].focus!== fireflies[f]) {
-          if (detectCollision(chibis[i], chibis[i].focus)) {
-            chibis[i].speedX *=0.5;
-            chibis[i].speedY *=0.5;
-            if ((!chibis[i].focus.elder || !anniversary)) {
-              chibis[i].focus.tended = 50;
-              chibis[i].focus.timer += 5;
-              let newC = mixTwoColours(chibis[i].firstColour, glowColour, 0.5);
-              starfield.push(new Inert(3, 3, newC, chibis[i].focus.x, chibis[i].focus.y+(5*chibis[i].focus.size), true));
-              chibis[i].health += 0.5;
-            } else {
-              chibis[i].focus.timer -= 30;
-              chibis[i].love += 10;
-              generateBaby(chibis[i], chibis[i]);
-              let nameSeed = Math.round(Math.random()*totalMaleNames);
-              if (chibis[chibis.length-1].gender == 'Male') {
-                chibis[chibis.length-1].name = getMaleName(nameSeed);
-              } else if (chibis[chibis.length-1].gender == 'Female') {
-                chibis[chibis.length-1].name = getFemaleName(nameSeed);
-              } else {
-                let nameSeed2 = Math.round(Math.random()*numlibs*namesinlib);
-                chibis[chibis.length-1].name = getRandomName(nameSeed+nameSeed2);
-              }
-              sendMessage(chibis[chibis.length-1].name+' was sprouted at an obelisk');
+    this.timer --;
+    let found = false;
+    if (this.timer <= 0) {
+      for (let i = 0; i < chibis.length; i++) {
+        if (chibis[i].id == this.ownerid) {
+          found = true;
+          if (found && chibis[i].sitting && chibis[i].snuggling <= 0
+            && chibis[i].y >= trueBottom-(chibis[i].size)-(chibis[i].limbLength/2.5)
+            && tryToPlantaTree(chibis[i].x, this.colour)) {
+              this.planted = true;
+              sendMessage(chibis[i].name+' planted a seed');
             }
           }
         }
+        if (!found) {
+          // cheap way to tag the seed to be killed
+          this.planted = true;
+        }
       }
-
-      for (let j = 0; j < chibis.length; j++) {
-        // if two guys bump into each other
-        if (i !== j && detectCollision(chibis[i], chibis[j])) {
-          // spread the love
-          // let loveDiff = (chibis[j].love + chibis[i].love)/2;
-          // chibis[i].love = (loveDiff/2)+(chibis[i].love/2);
-          // chibis[j].love = (loveDiff/2)+(chibis[j].love/2);
-        }
-
-        if (!choosingChibi && i !== j && chibis[i].awake && chibis[j].awake && detectCollision(chibis[i], chibis[j])) {
-          collide(chibis[i], chibis[j]);
-          // having a snuggle
-          if (chibis[i].snuggling <= 0 && chibis[j].snuggling <= 0 && chibis[i].partnerId == chibis[j].id && chibis[j].partnerId == chibis[i].id
-            && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
-            && chibis[i].health >= 50 && chibis[j].health >= 50 && chibis[i].energy >= 50 && chibis[j].energy >= 50) {
-              // snuggle
-              // pay the costs
-              chibis[i].health -= 20;
-              chibis[j].health -= 20;
-              chibis[i].energy -= 35;
-              chibis[j].energy -= 35;
-              chibis[i].love += 50;
-              chibis[j].love += 50;
-              chibis[i].speedX = 0;
-              chibis[j].speedX = 0;
-              chibis[i].speedY = 0;
-              chibis[j].speedY = 0;
-              if (chibis[i].gender == 'Female') {
-                chibis[i].snuggling = 250;
-                chibis[j].snuggling = 270;
-              } else if (chibis[i].gender == 'Male') {
-                chibis[i].snuggling = 270;
-                chibis[j].snuggling = 250;
-              }
-              sendMessage(chibis[i].name+ ' and '+chibis[j].name+' had a snuggle');
-            }
-          }
-        }
-
-        // calculate angle to focus
-        chibis[i].angleToFocus = Math.atan2(chibis[i].focus.y - chibis[i].y, chibis[i].focus.x - chibis[i].x);
-        diffx = Math.cos(chibis[i].angleToFocus)*4;
-        diffy = Math.sin(chibis[i].angleToFocus)*4;
-
-
-        if ((diffx > 0 && chibis[i].speedX > 0) || (diffx < 0 && chibis[i].speedX < 0)) {
-          // if we are going right and it's to our right
-          // if we are going left and it's to our left
-        } else {
-          chibis[i].speedX *= 0.98;
-        }
-
-        // change direction mid air
-
-
-        // limit speedX and speedY
-        applySpeedLimit(chibis[i]);
-
-        // apply gravity and movement
-        chibis[i].x += chibis[i].speedX/4;
-        chibis[i].rotation += chibis[i].spin;
-        chibis[i].spin *= 0.9;
-        while (chibis[i].rotation > 6) {
-          chibis[i].rotation -= 6;
-        }
-        while (chibis[i].rotation < -6) {
-          chibis[i].rotation += 6;
-        }
-
-        if (!chibis[i].hitBottom) {
-          let mass = gravity*chibis[i].size*chibis[i].size;
-          chibis[i].speedY += mass/2;
-          chibis[i].y += chibis[i].speedY/4;
-        }
-        chibis[i].physicsCheck();
-        // change direction mid air
-      }
-    }
-  }
-  /**
-  * function to attempt to plant a tree
-  * @param {int} x - the x coordinate where the mate is trying to place a tree
-  * @return {boolean} - whether the tree was planted or not
-  */
-  function tryToPlantaTree(x) {
-    let allow = true;
-    let maxHeight = trueBottom*0.60+(Math.random()*(trueBottom*0.30));
-    let treeWidth = 35 + (Math.random()*45);
-    for (let j = 0; j < trees.length; j++) {
-      if (trees[j].x == x || ( x - (treeWidth/4) < trees[j].x + (trees[j].width/4) && trees[j].x - (trees[j].width/4) < x + (treeWidth/4))) {
-        allow = false;
-      }
-    }
-    if (allow) {
-      trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight));
-      return true;
-    }
-    return false;
-  }
-
-
-  /**
-  * function to handle comets
-  */
-  function recalculateComets() {
-    for (let i =0; i < comets.length; i++) {
-      comets[i].x += comets[i].speedX*5;
-      comets[i].y += comets[i].speedY*5;
-      if (comets[i].x < 0 || comets[i].x > canvasWidth || comets[i].y < 0 || comets[i].y > trueBottom) {
-        comets.splice(i, 1);
-        i--;
-      } else {
-        trails.push(new Particle(comets[i].size/2, glowColour, comets[i].x, comets[i].y, comets[i].speedX*15, comets[i].speedY*15));
-        comets[i].update();
-      }
-    }
+    };
   }
 
   /**
-  * function to habndle the decorative starfield
+  * function to describe a piece of fruit on a tree
   */
-  function recalculateStarfield() {
-    // if there is less than the designated amount, add one
-    if (starfield.length < 50*proportion) {
-      let ranX = Math.floor(Math.random()*(canvasWidth));
-      let ranSize = Math.random()*3;
-      starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, trueBottom, false));
-      // if there is more than the designated amount, remove one
-    } else {
-      if (starfield.length > 100*proportion) {
-        starfield.splice(0, 1);
-      }
-    }
-    // moving stars
-    for (let i = 0; i < starfield.length; i++) {
-      starfield[i].y -= Math.abs(0.5*(4-starfield[i].size));
-      // starfield wrapping
-      if (starfield[i].y <= 1) {
-        starfield[i].y = trueBottom;
-        // starfield[i].manmade = false;
-      }
-    }
-  }
-
-
-  /**
-  * an interactable object that is not alive
-  * @param {int} width - the width of the inert
-  * @param {int} height - the height of the inert
-  * @param {string} colour - the colour of the object
-  * @param {int} x - the x position
-  * @param {int} y - the y position
-  * @param {boolean} manmade - whether it was made at a gravestone by an elder
-  */
-  function Inert(width, height, colour, x, y, manmade) {
-    this.width = width;
-    this.height = height;
-    this.size = width;
+  function Fruit(colour, parent, treePos) {
     this.colour = colour;
-    this.manmade = manmade;
-    this.x = x;
-    this.y = y;
-    this.speedX = 0;
-    this.speedY = 0;
+    this.parent = parent;
+    this.treePos = treePos; // 0 to 3
+    this.size = this.parent.width/20;
+    this.x = 0;
+    this.y = 0;
     this.update = function() {
-      if (this.size > 0.5) {
-        this.size *= 0.999;
-      }
-      // draw the thing
-      if (this.manmade) {
-        ctx.globalAlpha = 1;
-      } else {
-        let tmp = this.size/3; // 0 to 1
-        tmp = 1 - tmp;
-        ctx.globalAlpha = tmp*(1-(1/(trueBottom/this.y)));
-      }
+      ctx.save();
+      this.x = this.parent.x - (this.size*2.5) + ((treePos-1)*this.parent.width)/4;
+      this.y = this.parent.y + (this.parent.width/4.5);
+      ctx.translate(this.x, this.y);
       ctx.fillStyle = this.colour;
-      ctx.fillRect(this.x, this.y, this.size, this.size);
-      ctx.globalAlpha = 1;
-    };
-  }
-  /**
-  * function to create an explosion (graphical only)
-  * @param {int} x - the x position
-  * @param {int} y - the y position
-  * @param {string} colour1 - colour of the outside of the explosion
-  * @param {string} colour2 - colour of the inside of the explosion
-  */
-  function Explosion(x, y, colour1, colour2) {
-    this.x = x;
-    this.y = y;
-    this.colour1 = colour1;
-    this.colour2 = colour2;
-    this.timer = 0;
-    this.update = function() {
-      ctx.fillStyle = this.colour1;
-      ctx.globalAlpha = 0.3*(1-(this.timer/200));
+      ctx.globalAlpha = 0.4;
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
+      ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
       ctx.fill();
-      let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.timer);
-      glow.addColorStop(0, this.colour2);
+      ctx.globalAlpha = 0.025;
+      let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 100);
+      glow.addColorStop(0, this.colour);
       glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      // Fill with gradient
       ctx.fillStyle = glow;
-      ctx.globalAlpha = 0.2;
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
+      ctx.arc(0, 0, 100, 0, 2 * Math.PI);
       ctx.fill();
+      ctx.restore();
     };
-  }
+  };
+
   /**
-  * function to describe a particle (trail usually);
+  * function for a piece of plain text
   * @param {int} size - the size
   * @param {string} colour - the colour
-  * @param {int} x - the x position
-  * @param {int} y - the y position
-  * @param {int} speedX - the x speed
-  * @param {int} speedY - the y speed
+  * @param {int} x - the x pos
+  * @param {int} y - the y pos
   */
-  function Particle(size, colour, x, y, speedX, speedY) {
+  function TextElement(size, colour, x, y) {
     this.size = size;
-    this.colour = colour;
     this.x = x;
     this.y = y;
-    this.speedX = speedX/2;
-    this.speedY = speedY/2;
-    this.timer = 5;
+    this.colour = colour;
     this.update = function() {
-      // draw the thing
-      // console.log(this.width);
-      ctx.globalAlpha = (this.timer/15);
-      ctx.lineWidth = size;
-      ctx.strokeStyle = this.colour;
-      ctx.beginPath();
-      ctx.moveTo(this.x, this.y);
-      ctx.lineTo(this.x-this.speedX, this.y-this.speedY);
-      ctx.stroke();
-
-      // ctx.fillRect(this.x, this.y, this.width, this.height);
+      ctx.font = this.size + ' ' + globalFont;
+      ctx.fillStyle = this.colour;
+      ctx.fillText(this.text, this.x, this.y);
       ctx.globalAlpha = 1;
     };
   }
 
-/**
- * function to create a glyph
- * @param {int} x -  the x coordinate
- * @param {int} y -  the y coordinate
- * @param {string} colour - the colour
- * @param {string} symbol - the symbol of the glyph
-*/
-  function createGlyphs(x, y, colour, symbol) {
-    let speed = 2;
-    glyphs.push(new Glyph(x, y, 0, -speed, colour, symbol));
-    glyphs.push(new Glyph(x, y, 0, speed, colour, symbol));
-    glyphs.push(new Glyph(x, y, speed, 0, colour, symbol));
-    glyphs.push(new Glyph(x, y, -speed, 0, colour, symbol));
-    glyphs.push(new Glyph(x, y, speed/1.5, speed/1.5, colour, symbol));
-    glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, colour, symbol));
-    glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, colour, symbol));
-    glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, colour, symbol));
-  }
-
   /**
-  * function to control glyphs
-  * @param {int} x - the x position
-  * @param {int} y - the y position
-  * @param {int} speedX - the x speed
-  * @param {int} speedY - the y speed
-  * @param {string} colour - the colour
-  * @param {string} symbol - the symbol of the glyph
+  * function for a firefly
+  * @param {int} x - the x pos
+  * @param {int} y - the y pos
+  * @param {object} focus - the firefly's focus
+  * @param {int} size - the size
+  * @param {string} firstColour - the colour
   */
-  function Glyph(x, y, speedX, speedY, colour, symbol) {
-    this.speedX = speedX;
-    this.speedY = speedY;
-    this.size = fontWidth;
-    this.timer = 100;
+  function FireFly(x, y, focus, size, firstColour) {
     this.x = x;
     this.y = y;
-    this.spin = 0;
-    this.rotation = 0;
-    this.step = 0.2;
-    this.colour = colour;
-    this.symbol = symbol;
+    this.focus = focus;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.size = size*20;
+    this.touches = 0;
+    this.touchedThisFrame = false;
+    this.firstColour = firstColour;
     this.update = function() {
-      this.speedY += gravity;
-      for (let i = 0; i < glyphs.length; i++) {
-        if (glyphs[i] !== this && detectCollision(glyphs[i], this)) {
-          collide(this, glyphs[i]);
+      if (this.x < 0 || this.x > canvasWidth) {
+        this.speedX *= -0.98;
+        if (this.x < 0) {
+          this.x = ((2.5*this.size)/20);
+        } else {
+          this.x = canvasWidth - ((2.5*this.size)/20);
         }
       }
-      checkBounceSides(this);
-      checkBounceTop(this);
-      checkBounceBottom(this);
+      if (this.y < 0 || this.y > trueBottom) {
+        this.speedY *= -0.99;
+        if (this.y > trueBottom) {
+          this.y = trueBottom-10;
+        } else {
+          this.y += (2.5*this.size)/20;
+        }
+      }
+
+      let diffx = this.focus.x - this.x;
+      let diffy = this.focus.y - this.y;
+      let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
+
+      if ((diffx > 0 && this.speedX > 0) || (diffx < 0 && this.speedX < 0)) {
+        // if we are going right and it's to our right
+        // if we are going left and it's to our left
+      } else {
+        this.speedX *= 0.99;
+      }
+      if ((diffy > 0 && this.speedY > 0) || (diffy < 0 && this.speedY < 0)) {
+        // if we are going up and it's above
+        // if we are going down and it's below
+      } else {
+        this.speedY *= 0.99;
+      }
+      this.speedX += 0.05*Math.cos(targetangle);
+      this.speedY += 0.05*Math.sin(targetangle);
       applySpeedLimit(this);
       this.x += this.speedX;
       this.y += this.speedY;
-      this.rotation += this.spin;
-      this.spin *= 0.9;
-      while (this.rotation > 6) {
-        this.rotation -= 6;
+
+      let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, 100);
+      let riGlow = hexToRgb(this.firstColour).r;
+      let giGlow = hexToRgb(this.firstColour).g;
+      let biGlow = hexToRgb(this.firstColour).b;
+      let rjGlow = hexToRgb('#FF2288').r;
+      let gjGlow = hexToRgb('#FF2288').g;
+      let bjGlow = hexToRgb('#FF2288').b;
+      let combr = Math.floor(riGlow - ((((riGlow - rjGlow)/400)))*this.touches);
+      let combg = Math.floor(giGlow - ((((giGlow - gjGlow)/400)))*this.touches);
+      let combb = Math.floor(biGlow - ((((biGlow - bjGlow)/400)))*this.touches);
+      let newC = rgbToHex(combr, combg, combb);
+      glow.addColorStop(0, newC);
+      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      // Fill with gradient
+      ctx.fillStyle = glow;
+      ctx.globalAlpha = 0.15*this.size/40;// - (this.touches/2000);
+      // make it flicker when touched
+      if (this.touchedThisFrame) {
+        ctx.globalAlpha *= 0.9;
       }
-      while (this.rotation < -6) {
-        this.rotation += 6;
+      ctx.beginPath();
+      // ctx.fillStyle = glowColour;
+      ctx.arc(this.x, this.y, 100, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.fillStyle = trueWhite;
+      ctx.arc(this.x, this.y, (2.5*this.size)/20, 0, 2 * Math.PI);
+      ctx.fill();
+    };
+  }
+  /**
+  * function for a grave
+  * @param {int} x - the x pos
+  * @param {int} y - the y pos
+  * @param {int} size - the size
+  * @param {int} speedX - the x speed
+  * @param {int} speedY - the y speed
+  * @param {boolean} elder - elder status
+  * @param {string} firstColour - the colour
+  */
+  function Grave(x, y, size, speedX, speedY, elder, firstColour) {
+    this.x = x;
+    this.y = y + 10;
+    this.speedX = speedX/2;
+    this.speedY = speedY/1000;
+    this.timer = 200;
+    this.hitBottom = false;
+    this.elder = elder;
+    this.tended = 0;
+    this.firstColour = firstColour;
+    // elders spawn obelisks
+    if (this.elder) {
+      this.image = obelisk;
+      this.size = size*1.5;
+      obelisks ++;
+    } else {
+      this.size = size;
+      let whichTombstone = Math.random();
+      if (whichTombstone < 0.3334) {
+        this.image = tombstone;
+      } else if (whichTombstone < 0.6667) {
+        this.image = tombstone2;
+      } else {
+        this.image = tombstone3;
       }
-      this.timer -= this.step;
-      // draw glyph
-      ctx.globalAlpha = (this.timer/100)+0.000001;
-      ctx.fillStyle = this.colour;
-      ctx.font = '14px' + ' ' + globalFont;
-      ctx.save();
-      ctx.translate(this.x-(this.size/2), this.y+(this.size/2));
-      ctx.rotate(this.rotation);
-      ctx.fillText(this.symbol, 0, 0);
-      ctx.restore();
+    }
+    this.update = function() {
+      if (!this.elder) {
+        this.timer -= 0.075;
+      }
+      if (!this.hitBottom && this.y < trueBottom-(this.size*5)) {
+        checkBounceSides(this);
+        checkBounceTop(this);
+        let mass = gravity*(this.size*this.thickness*2)*(this.size*this.thickness*2);
+        this.speedX *= 0.99;
+        this.speedY += mass*gravity;
+        applySpeedLimit(this);
+        this.y += this.speedY/2;
+        this.x += this.speedX/2;
+      } else {
+        // come to a rest at the bottom
+        this.hitBottom = true;
+        this.y = trueBottom - (this.size*5);
+        this.speedY = 0;
+        this.speedX *= 0.9;
+      }
+
+      // sparks emanating from graves
+      if (this.tended > 0) {
+        let step = 100-(this.timer);
+        step -= Math.floor(step);
+        step *= 10;
+        ctx.fillStyle = glowColour;
+        ctx.font = '7px' + ' ' + globalFont;
+        ctx.globalAlpha = 0.2*(this.timer/100);
+        ctx.fillText('*', this.x, this.y+(5*this.size)-(2*step));
+        this.tended --;
+      }
+      ctx.globalAlpha = 0.2+(this.timer/100);
+      ctx.drawImage(this.image, this.x-(this.size), this.y+this.size*3, this.size*2, this.size*2);
+      ctx.globalAlpha = 1;
     };
   }
 
 
+  /**
+  * function for a Ghost
+  * @param {int} x - the x pos
+  * @param {int} y - the y pos
+  * @param {int} size - the size
+  * @param {string} firstColour - the colour
+  */
+  function Ghost(x, y, size, firstColour) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.firstColour = firstColour;
+    this.update = function() {
+      // start floating up if the main FireFly is below you
+      if (this.y > fireflies[0].y) {
+        this.speedY = -Math.abs(0.025*(15-this.size));
+      } else {
+        this.speedY *= 0.9995;
+      }
+      let diffx = fireflies[0].x - this.x;
+      if (this.x < 0 || this.x > canvasWidth) {
+        this.speedX *= -0.99;
+      } else if ((diffx > 0 && this.speedX > 0) || (diffx < 0 && this.speedX < 0)) {
+        // if we are going right and it's to our right
+        // if we are going left and it's to our left
+      } else {
+        this.speedX *= 0.9999;
+      }
+      let targetangle = Math.atan2(fireflies[0].y - this.y, fireflies[0].x - this.x);
+      this.speedX += 0.001*Math.cos(targetangle);
+      applySpeedLimit(this);
+      this.x += this.speedX;
+      this.y += this.speedY;
+      ctx.globalAlpha = 0.1;
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(Math.atan2(-trueBottom, this.speedX*500));
+      ctx.rotate(90 * Math.PI / 180);
+      ctx.drawImage(spectre, -(this.size), -(this.size), this.size*2, this.size*4);
+      ctx.restore();
+      let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.size*20);
+      glow.addColorStop(0, glowColour);
+      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      // Fill with gradient
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size*20, 0, 2 * Math.PI);
+      ctx.fill();
+    };
+  }
+
+  /**
+  * the mouse position object
+  * @param {int} x - the x position
+  * @param {int} y - the y position
+  */
+  function MousePosition(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = 10;
+  }
+
+  /**
+  * function to track where the mouse is
+  * @param {event} e - the mousemove event
+  * @return {MousePosition} mouse - the XY pointer
+  */
+  function trackMouse(e) {
+    let mouseX;
+    let mouseY;
+    if (e.offsetX) {
+      mouseX = e.offsetX;
+      mouseY = e.offsetY;
+    } else if (e.layerX) {
+      mouseX = e.layerX;
+      mouseY = e.layerY;
+    }
+    let mouse = new MousePosition(mouseX, mouseY);
+    return mouse;
+  }
 
 
   /**
-  * function to turn the current ticker in the form of a 24 hour clock
-  * @param {int} counter - the current time of day (0 to 1000)
-  * @return {string} the minutes and seconds
+  * function to return health number / 100 as colour
+  * @param {object} creature - the creature to calculate the colour for
+  * @return {string} - the colour as a hex value
   */
-  function tickerToTime(counter) {
-    let seconds = (86400/1000)*(counter);
-    let minutes = Math.floor(seconds/60);
-    let hours = Math.floor(minutes/60);
-    hours = ('0' + hours).slice(-2);
-    minutes = Math.floor(minutes - (hours*60));
-    minutes = ('0' + minutes).slice(-2);
-    // seconds = Math.floor(seconds - (minutes*60));
-    // seconds = ('0' + seconds).slice(-2);
-    return (hours+':'+minutes/* +':'+seconds*/);
+  function colourIndicator(creature) {
+    let health = Math.floor((255*creature.health)/100);
+    let love = 0;
+    if (creature.love > 0) {
+      love = Math.round((255*creature.love)/100);
+    } else {
+      love = 0;
+    }
+    if (creature.energy > 0) {
+      energy = Math.round((255*creature.energy)/100);
+    } else {
+      energy = 0;
+    }
+    // handle super saiyan colours
+    if (creature.supersaiyan > 0) {
+      love += creature.supersaiyan*((superColour - love)/100); // 0 to 255
+      health += creature.supersaiyan*((superColour - health)/100); // 0 to 255
+      energy += creature.supersaiyan*((superColour - energy)/100); // 0 to 255
+    }
+    if (love < 0) {
+      love = 0;
+    } else if (love > 255) {
+      love = 255;
+    }
+    if (health > 255) {
+      health = 255;
+    } else if (health < 0) {
+      health = 0;
+    }
+    if (energy > 255) {
+      energy = 255;
+    } else if (energy < 0) {
+      energy = 0;
+    }
+    return rgbToHex(love, energy, health);
   }
+
+  /**
+  * function to handle chibis
+  */
+  function recalculateMyGuys() {
+    // block for all my guys
+    for (let i = 0; i < chibis.length; i++) {
+      // check to see if it's time to die
+      // attrition, aging etc.
+      // check nirvana status
+      if (!choosingChibi && !chibis[i].reachedNirvana && chibis[i].litters > 0 && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
+        explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].firstColour, glowColour));
+        produceExplosion(chibis[i].x, chibis[i].y);
+        chibis[i].reachedNirvana = true;
+        chibis[i].supersaiyan = 100;
+        chibis[i].speedX = 0;
+        chibis[i].speedY = 0;
+        sendMessage(chibis[i].name+' reached nirvana');
+      }
+      // check for age
+      if (chibis[i].birthday == daytimeCounter+1) {
+        chibis[i].age ++;
+        if (chibis[i].age == 1) {
+          sendMessage(chibis[i].name+' reached adulthood');
+        }
+
+        // set elder status
+        if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 2) {
+          chibis[i].elder = true;
+          chibis[i].size*=0.8;
+          chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
+          chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour);
+
+          sendMessage(chibis[i].name+' became an Elder');
+          createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secretColour, '\u274b');
+
+          elders++;
+        } else if (elders > 1 && elders > chibis.length/4 && chibis[i].elder) {
+          chibis[i].elder = false;
+          elders --;
+          sendMessage(chibis[i].name+' is no longer an elder');
+        }
+      }
+      if (!choosingChibi && chibis[i].health <= 0) {
+        createGlyphs(chibis[i].x, chibis[i].y, trueBlack, '\u271A');
+        if (chibis[i].elder) {
+          sendMessage('Elder '+chibis[i].name+' died');
+          elders--;
+        }
+        graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
+        sendMessage(chibis[i].name+' died');
+        chibis.splice(i, 1);
+        i--;
+      } else {
+        // grow them a tiny bit
+        if (chibis[i].size < chibis[i].maxSize) {
+          chibis[i].size += 1/500;
+          chibis[i].reinitSizes();
+        }
+        if (!chibis[i].supersaiyan == 0 && chibis[i].supersaiyan <= 50) {
+          sendMessage(chibis[i].name+'\'s nirvana ended');
+          chibis[i].supersaiyan = 0;
+        } else if (chibis[i].supersaiyan > 0) {
+          chibis[i].supersaiyan -= 0.05;
+          chibis[i].energy = 100;
+        }
+        if (chibis[i].love > 0.25) {
+          chibis[i].love -= 0.1;
+        } else if (chibis[i].love > 100) {
+          chibis[i].love = 100;
+        }
+        if (chibis[i].health > 0) {
+          chibis[i].health -= 0.001;
+        }
+        if (chibis[i].inCatBox == null && chibis[i].hunger <= 0) {
+          sendMessage(chibis[i].name+' felt hungry');
+          chibis[i].health -= 0.001;
+        }
+        if (chibis[i].speedY < 0) {
+          chibis[i].health -= 0.1;
+        }
+        // if asleep, gain energy and a little health
+        if (!chibis[i].awake) {
+          chibis[i].energy += 0.125;
+          chibis[i].health += 0.05;
+        }
+        // if energy goes above 100, wake up
+        if (!chibis[i].awake && chibis[i].energy > 90) {
+          chibis[i].awake = true;
+          // console.log('woke up');
+        }
+        if (chibis[i].health > 100) {
+          chibis[i].health = 100;
+        }
+        if (chibis[i].hunger > 0) {
+          chibis[i].hunger -= 0.25;
+        }
+
+        // if you're a supersaiyan and you hit a grave ...
+
+        // if you're an elder and you hit your focus (a grave or obelisk)
+        for (let f = 0; f < graveStones.length; f++) {
+          if (chibis[i].elder && chibis[i].awake && chibis[i].focus == graveStones[f]) {
+            if (detectCollision(chibis[i], chibis[i].focus)) {
+              chibis[i].speedX *=0.5;
+              chibis[i].speedY *=0.5;
+              if ((!chibis[i].focus.elder || !anniversary)) {
+                chibis[i].focus.tended = 50;
+                chibis[i].focus.timer += 5;
+                let newC = mixTwoColours(chibis[i].firstColour, glowColour, 0.5);
+                starfield.push(new Inert(3, 3, newC, chibis[i].focus.x, chibis[i].focus.y+(5*chibis[i].focus.size), true));
+                chibis[i].health += 0.5;
+              } else {
+                chibis[i].focus.timer -= 30;
+                chibis[i].love += 10;
+                generateBaby(chibis[i], chibis[i]);
+                let nameSeed = Math.round(Math.random()*totalMaleNames);
+                if (chibis[chibis.length-1].gender == 'Male') {
+                  chibis[chibis.length-1].name = getMaleName(nameSeed);
+                } else if (chibis[chibis.length-1].gender == 'Female') {
+                  chibis[chibis.length-1].name = getFemaleName(nameSeed);
+                } else {
+                  let nameSeed2 = Math.round(Math.random()*numlibs*namesinlib);
+                  chibis[chibis.length-1].name = getRandomName(nameSeed+nameSeed2);
+                }
+                sendMessage(chibis[chibis.length-1].name+' was sprouted at an obelisk');
+              }
+            }
+          }
+        }
+
+        for (let j = 0; j < chibis.length; j++) {
+          // if two guys bump into each other
+          if (i !== j && detectCollision(chibis[i], chibis[j])) {
+            // spread the love
+            // let loveDiff = (chibis[j].love + chibis[i].love)/2;
+            // chibis[i].love = (loveDiff/2)+(chibis[i].love/2);
+            // chibis[j].love = (loveDiff/2)+(chibis[j].love/2);
+          }
+
+          if (!choosingChibi && i !== j && chibis[i].awake && chibis[j].awake && detectCollision(chibis[i], chibis[j])) {
+            collide(chibis[i], chibis[j]);
+            // having a snuggle
+            if (chibis[i].snuggling <= 0 && chibis[j].snuggling <= 0 && chibis[i].partnerId == chibis[j].id && chibis[j].partnerId == chibis[i].id
+              && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
+              && chibis[i].health >= 50 && chibis[j].health >= 50 && chibis[i].energy >= 50 && chibis[j].energy >= 50) {
+                // snuggle
+                // pay the costs
+                chibis[i].health -= 20;
+                chibis[j].health -= 20;
+                chibis[i].energy -= 35;
+                chibis[j].energy -= 35;
+                chibis[i].love += 50;
+                chibis[j].love += 50;
+                chibis[i].speedX = 0;
+                chibis[j].speedX = 0;
+                chibis[i].speedY = 0;
+                chibis[j].speedY = 0;
+                if (chibis[i].gender == 'Female') {
+                  chibis[i].snuggling = 270;
+                  chibis[j].snuggling = 250;
+                } else if (chibis[i].gender == 'Male') {
+                  chibis[i].snuggling = 250;
+                  chibis[j].snuggling = 270;
+                }
+                sendMessage(chibis[i].name+ ' and '+chibis[j].name+' had a snuggle');
+              }
+            }
+          }
+
+          // calculate angle to focus
+          chibis[i].angleToFocus = Math.atan2(chibis[i].focus.y - chibis[i].y, chibis[i].focus.x - chibis[i].x);
+          diffx = Math.cos(chibis[i].angleToFocus)*4;
+          diffy = Math.sin(chibis[i].angleToFocus)*4;
+
+
+          if ((diffx > 0 && chibis[i].speedX > 0) || (diffx < 0 && chibis[i].speedX < 0)) {
+            // if we are going right and it's to our right
+            // if we are going left and it's to our left
+          } else {
+            chibis[i].speedX *= 0.98;
+          }
+
+          // change direction mid air
+
+
+          // limit speedX and speedY
+          applySpeedLimit(chibis[i]);
+
+          // apply gravity and movement
+          chibis[i].x += chibis[i].speedX/4;
+          chibis[i].rotation += chibis[i].spin;
+          chibis[i].spin *= 0.9;
+          while (chibis[i].rotation > 6) {
+            chibis[i].rotation -= 6;
+          }
+          while (chibis[i].rotation < -6) {
+            chibis[i].rotation += 6;
+          }
+
+          if (!chibis[i].hitBottom) {
+            let mass = gravity*chibis[i].size*6;
+            chibis[i].speedY += mass;
+            chibis[i].y += chibis[i].speedY/4;
+          }
+          chibis[i].physicsCheck();
+          // change direction mid air
+        }
+      }
+    }
+    /**
+    * function to attempt to plant a tree
+    * @param {int} x - the x coordinate where the mate is trying to place a tree
+    * @return {boolean} - whether the tree was planted or not
+    */
+    function tryToPlantaTree(x, fruitColour) {
+      let allow = true;
+      let maxHeight = trueBottom*0.30+(Math.random()*(trueBottom*0.30));
+      let treeWidth = 35 + (Math.random()*45);
+      for (let j = 0; j < trees.length; j++) {
+        if (trees[j].x == x || ( x - (treeWidth/4) < trees[j].x + (trees[j].width/4) && trees[j].x - (trees[j].width/4) < x + (treeWidth/4))) {
+          allow = false;
+        }
+      }
+      if (allow) {
+        trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight, fruitColour));
+        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 0));
+        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 1));
+        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 2));
+        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 3));
+
+        return true;
+      }
+      return false;
+    }
+
+
+    /**
+    * function to handle comets
+    */
+    function recalculateComets() {
+      for (let i =0; i < comets.length; i++) {
+        comets[i].x += comets[i].speedX*5;
+        comets[i].y += comets[i].speedY*5;
+        if (comets[i].x < 0 || comets[i].x > canvasWidth || comets[i].y < 0 || comets[i].y > trueBottom) {
+          comets.splice(i, 1);
+          i--;
+        } else {
+          trails.push(new Particle(comets[i].size/2, glowColour, comets[i].x, comets[i].y, comets[i].speedX*15, comets[i].speedY*15));
+          comets[i].update();
+        }
+      }
+    }
+
+    /**
+    * function to habndle the decorative starfield
+    */
+    function recalculateStarfield() {
+      // if there is less than the designated amount, add one
+      if (starfield.length < 50*proportion) {
+        let ranX = Math.floor(Math.random()*(canvasWidth));
+        let ranSize = Math.random()*3;
+        starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, trueBottom, false));
+        // if there is more than the designated amount, remove one
+      } else {
+        if (starfield.length > 100*proportion) {
+          starfield.splice(0, 1);
+        }
+      }
+      // moving stars
+      for (let i = 0; i < starfield.length; i++) {
+        starfield[i].y -= Math.abs(0.5*(4-starfield[i].size));
+        // starfield wrapping
+        if (starfield[i].y <= 1) {
+          starfield[i].y = trueBottom;
+          // starfield[i].manmade = false;
+        }
+      }
+    }
+
+
+    /**
+    * an interactable object that is not alive
+    * @param {int} width - the width of the inert
+    * @param {int} height - the height of the inert
+    * @param {string} colour - the colour of the object
+    * @param {int} x - the x position
+    * @param {int} y - the y position
+    * @param {boolean} manmade - whether it was made at a gravestone by an elder
+    */
+    function Inert(width, height, colour, x, y, manmade) {
+      this.width = width;
+      this.height = height;
+      this.size = width;
+      this.colour = colour;
+      this.manmade = manmade;
+      this.x = x;
+      this.y = y;
+      this.speedX = 0;
+      this.speedY = 0;
+      this.update = function() {
+        if (this.size > 0.5) {
+          this.size *= 0.999;
+        }
+        // draw the thing
+        if (this.manmade) {
+          ctx.globalAlpha = 1;
+        } else {
+          let tmp = this.size/3; // 0 to 1
+          tmp = 1 - tmp;
+          ctx.globalAlpha = tmp*(1-(1/(trueBottom/this.y)));
+        }
+        ctx.fillStyle = this.colour;
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.globalAlpha = 1;
+      };
+    }
+    /**
+    * function to create an explosion (graphical only)
+    * @param {int} x - the x position
+    * @param {int} y - the y position
+    * @param {string} colour1 - colour of the outside of the explosion
+    * @param {string} colour2 - colour of the inside of the explosion
+    */
+    function Explosion(x, y, colour1, colour2) {
+      this.x = x;
+      this.y = y;
+      this.colour1 = colour1;
+      this.colour2 = colour2;
+      this.timer = 0;
+      this.update = function() {
+        ctx.fillStyle = this.colour1;
+        ctx.globalAlpha = 0.3*(1-(this.timer/200));
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
+        ctx.fill();
+        let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.timer);
+        glow.addColorStop(0, this.colour2);
+        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = glow;
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
+        ctx.fill();
+      };
+    }
+    /**
+    * function to describe a particle (trail usually);
+    * @param {int} size - the size
+    * @param {string} colour - the colour
+    * @param {int} x - the x position
+    * @param {int} y - the y position
+    * @param {int} speedX - the x speed
+    * @param {int} speedY - the y speed
+    */
+    function Particle(size, colour, x, y, speedX, speedY) {
+      this.size = size;
+      this.colour = colour;
+      this.x = x;
+      this.y = y;
+      this.speedX = speedX/2;
+      this.speedY = speedY/2;
+      this.timer = 5;
+      this.update = function() {
+        // draw the thing
+        // console.log(this.width);
+        ctx.globalAlpha = (this.timer/15);
+        ctx.lineWidth = size;
+        ctx.strokeStyle = this.colour;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x-this.speedX, this.y-this.speedY);
+        ctx.stroke();
+
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.globalAlpha = 1;
+      };
+    }
+
+    /**
+    * function to create a glyph
+    * @param {int} x -  the x coordinate
+    * @param {int} y -  the y coordinate
+    * @param {string} colour - the colour
+    * @param {string} symbol - the symbol of the glyph
+    */
+    function createGlyphs(x, y, colour, symbol) {
+      let speed = 2;
+      glyphs.push(new Glyph(x, y, 0, -speed, colour, symbol));
+      glyphs.push(new Glyph(x, y, 0, speed, colour, symbol));
+      glyphs.push(new Glyph(x, y, speed, 0, colour, symbol));
+      glyphs.push(new Glyph(x, y, -speed, 0, colour, symbol));
+      glyphs.push(new Glyph(x, y, speed/1.5, speed/1.5, colour, symbol));
+      glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, colour, symbol));
+      glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, colour, symbol));
+      glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, colour, symbol));
+    }
+
+    /**
+    * function to control glyphs
+    * @param {int} x - the x position
+    * @param {int} y - the y position
+    * @param {int} speedX - the x speed
+    * @param {int} speedY - the y speed
+    * @param {string} colour - the colour
+    * @param {string} symbol - the symbol of the glyph
+    */
+    function Glyph(x, y, speedX, speedY, colour, symbol) {
+      this.speedX = speedX;
+      this.speedY = speedY;
+      this.size = fontWidth;
+      this.timer = 100;
+      this.x = x;
+      this.y = y;
+      this.spin = 0;
+      this.rotation = 0;
+      this.step = 0.2;
+      this.colour = colour;
+      this.symbol = symbol;
+      this.update = function() {
+        this.speedY += gravity;
+        for (let i = 0; i < glyphs.length; i++) {
+          if (glyphs[i] !== this && detectCollision(glyphs[i], this)) {
+            collide(this, glyphs[i]);
+          }
+        }
+        checkBounceSides(this);
+        checkBounceTop(this);
+        checkBounceBottom(this);
+        applySpeedLimit(this);
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.rotation += this.spin;
+        this.spin *= 0.9;
+        while (this.rotation > 6) {
+          this.rotation -= 6;
+        }
+        while (this.rotation < -6) {
+          this.rotation += 6;
+        }
+        this.timer -= this.step;
+        // draw glyph
+        ctx.globalAlpha = (this.timer/100)+0.000001;
+        ctx.fillStyle = this.colour;
+        ctx.font = '14px' + ' ' + globalFont;
+        ctx.save();
+        ctx.translate(this.x-(this.size/2), this.y+(this.size/2));
+        ctx.rotate(this.rotation);
+        ctx.fillText(this.symbol, 0, 0);
+        ctx.restore();
+      };
+    }
+
+
+
+
+    /**
+    * function to turn the current ticker in the form of a 24 hour clock
+    * @param {int} counter - the current time of day (0 to 1000)
+    * @return {string} the minutes and seconds
+    */
+    function tickerToTime(counter) {
+      let seconds = (86400/1000)*(counter);
+      let minutes = Math.floor(seconds/60);
+      let hours = Math.floor(minutes/60);
+      hours = ('0' + hours).slice(-2);
+      minutes = Math.floor(minutes - (hours*60));
+      minutes = ('0' + minutes).slice(-2);
+      // seconds = Math.floor(seconds - (minutes*60));
+      // seconds = ('0' + seconds).slice(-2);
+      return (hours+':'+minutes/* +':'+seconds*/);
+    }

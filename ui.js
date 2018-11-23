@@ -8,16 +8,16 @@ function initButtons() {
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(canvasWidth/2, 310, 'Give away'));
-  buttons.push(new Button(canvasWidth/2, 350, 'Close'));
-  buttons.push(new Button(canvasWidth/2, 390, 'Save as .chi file'));
+  buttons.push(new Button(canvasWidth/2, 325, 'Give away'));
+  buttons.push(new Button(canvasWidth/2, 365, 'Close'));
+  buttons.push(new Button(canvasWidth/2, 405, 'Save as .chi file'));
   buttons[3].visible = false;
   buttons[4].visible = false;
   buttons[5].visible = false;
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Welcome to the Cattery'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'Choose a girl'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 125, 'Selection'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 197.5, 'Selection'));
   labels[2].visible = false;
   selectionInfo = new InfoPanel();
 }
@@ -138,8 +138,11 @@ function handleButton(input) {
           i--;
         }
       }
-      sendMessage('adopted '+selection.name);
+      sendMessage(selection.name+' was adopted');
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      seeds.push(new Seed(randomColourFruity(), selection));
+      seeds.push(new Seed(randomColourFruity(), selection));
+      seeds[seeds.length-1].timer = 750;
       boxes = [];
       buttons[0].visible = false;
       buttons[1].visible = false;
@@ -157,8 +160,11 @@ function handleButton(input) {
           i--;
         }
       }
-      sendMessage('adopted '+selection.name);
+      sendMessage(selection.name+' was adopted');
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      seeds.push(new Seed(randomColourFruity(), selection));
+      seeds.push(new Seed(randomColourFruity(), selection));
+      seeds[seeds.length-1].timer = 750;
       boxes = [];
       buttons[0].visible = false;
       buttons[1].visible = false;
@@ -178,7 +184,6 @@ function handleButton(input) {
       }
       sendMessage(selection.name+' joined the family');
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
-      selection.size *= 0.8;
       selection.reinitSizes;
       boxes = [];
       buttons[0].visible = false;
