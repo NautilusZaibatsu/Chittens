@@ -4,20 +4,20 @@
 function initButtons() {
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Show me more'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Choose this Chibi'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Give them all away'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 85, 'Give them all away'));
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(canvasWidth/2, 325, 'Give away'));
-  buttons.push(new Button(canvasWidth/2, 365, 'Close'));
-  buttons.push(new Button(canvasWidth/2, 405, 'Save as .chi file'));
+  buttons.push(new Button(canvasWidth/2, 340, 'Give away'));
+  buttons.push(new Button(canvasWidth/2, 375, 'Close'));
+  buttons.push(new Button(canvasWidth/2, 410, 'Save as .chi file'));
   buttons[3].visible = false;
   buttons[4].visible = false;
   buttons[5].visible = false;
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Welcome to the Cattery'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'Choose a girl'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 197.5, 'Selection'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 105, 'Selection'));
   labels[2].visible = false;
   selectionInfo = new InfoPanel();
 }
@@ -65,8 +65,8 @@ function Button(x, y, text) {
   };
 }
 /**
- * function to describe the information panel
- */
+* function to describe the information panel
+*/
 function InfoPanel() {
   this.visible = false;
   this.update = function() {
@@ -81,9 +81,14 @@ function InfoPanel() {
       if (c2 !== cString) {
         cString += ' & '+ c2;
       }
-      let offsetX = (11 + cString.length)*fontWidth/2;
+      let offsetX = 0;
+      if (cString.length > selection.name.length) {
+        offsetX = (11 + cString.length)*fontWidth/2;
+      } else {
+        offsetX = (11 + selection.name.length)*fontWidth/2;
+      }
       ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 170 + 20 );
+      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 185 + 20 );
       ctx.fillStyle = outputArray[2];
       ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
       ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
@@ -104,10 +109,12 @@ function InfoPanel() {
       ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
       ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 130);
       ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
-      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 145);
-      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 145);
-      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 160);
-      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 160);
+      ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 145);
+      ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
+      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 160);
+      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 160);
+      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 175);
+      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 175);
     }
   };
 }
@@ -117,14 +124,14 @@ function handleButton(input) {
     case 0:
     if (!chosenChibiF) {
       for (let i = currentChibis; i < chibis.length; i++) {
-          chibis.splice(i, 1);
-          i--;
+        chibis.splice(i, 1);
+        i--;
       }
       initFemaleCattery();
     } else if (!chosenChibiM) {
       for (let i = currentChibis; i < chibis.length; i++) {
-          chibis.splice(i, 1);
-          i--;
+        chibis.splice(i, 1);
+        i--;
       }
       initMaleCattery();
     }
@@ -139,6 +146,7 @@ function handleButton(input) {
         }
       }
       sendMessage(selection.name+' was adopted');
+      selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       seeds.push(new Seed(randomColourFruity(), selection));
       seeds.push(new Seed(randomColourFruity(), selection));
@@ -161,6 +169,7 @@ function handleButton(input) {
         }
       }
       sendMessage(selection.name+' was adopted');
+      selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       seeds.push(new Seed(randomColourFruity(), selection));
       seeds.push(new Seed(randomColourFruity(), selection));
@@ -183,6 +192,7 @@ function handleButton(input) {
         }
       }
       sendMessage(selection.name+' joined the family');
+      selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       selection.reinitSizes;
       boxes = [];
@@ -297,8 +307,8 @@ function clickMouse(e) {
 }
 
 /**
- * function to check for and process mouse hovering over objects
- */
+* function to check for and process mouse hovering over objects
+*/
 function hover() {
   let hovered = false;
   for (let i = 0; i < buttons.length; i++) {

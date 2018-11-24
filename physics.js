@@ -143,19 +143,6 @@ function produceExplosion(ex, ey) {
       }
     }
   }
-  // destroy the  graves
-  for (let i = 0; i < graveStones.length; i++) {
-    if (!graveStones[i].elder) {
-      let diffx = ex - graveStones[i].x;
-      let diffy = ey - graveStones[i].y;
-      // if the firefly is within range;
-      let range = 200;
-      if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-        graveStones.splice(i, 1);
-        i--;
-      }
-    }
-  }
 }
 
 /**
@@ -217,10 +204,10 @@ function collide(obj1, obj2) {
   // calculate rotation on collision
   let targetangle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
   if (!obj1.hitBottom) {
-    obj1.spin += targetangle/10;
+    obj1.spin += targetangle/20;
   }
   if (!obj2.hitBottom) {
-    obj2.spin -= targetangle/10;
+    obj2.spin -= targetangle/20;
   }
   applySpeedLimit(obj1);
   applySpeedLimit(obj2);

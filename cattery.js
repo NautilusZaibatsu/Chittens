@@ -1,5 +1,3 @@
-
-
 function initLitter(mParent, fParent) {
   sendMessage('\u2764 '+fParent.name+' gave birth to '+mParent.name+'\'s chittens');
   labels[1] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Choose one of '+fParent.name+' and '+mParent.name+'\'s litter to keep');
@@ -81,6 +79,7 @@ function initFemaleCattery() {
       chibis[thisCatBox+currentChibis].inCatBox = boxes[thisCatBox];
       chibis[thisCatBox+currentChibis].birthday = Math.random()*1000;
       chibis[thisCatBox+currentChibis].love = 50 + Math.round((Math.random()*50));
+      chibis[thisCatBox+currentChibis].tailLength = (Math.random()*0.75)+0.25;
       while (chibis[thisCatBox+currentChibis].name == null) {
         chibis[thisCatBox+currentChibis].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
       }
@@ -125,6 +124,7 @@ function initMaleCattery() {
       chibis[thisCatBox+currentChibis].inCatBox = boxes[thisCatBox];
       chibis[thisCatBox+currentChibis].birthday = Math.random()*1000;
       chibis[thisCatBox+currentChibis].love = 50 + Math.round((Math.random()*50));
+      chibis[thisCatBox+currentChibis].tailLength = (Math.random()*0.75)+0.25;
       while (chibis[thisCatBox+currentChibis].name == null) {
         chibis[thisCatBox+currentChibis].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
       }
@@ -162,7 +162,8 @@ function CatBox(x, y, size, thickness) {
         ctx.fillText('Thickness '+Math.round((chibis[this.id].thickness*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 100);
         ctx.fillText('Legginess '+Math.round((chibis[this.id].legginess*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 115);
         ctx.fillText('Ear width '+Math.round((chibis[this.id].ears*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 130);
-        ctx.fillText('Birthhour '+tickerToTime(Math.round(chibis[this.id].birthday)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 145);
+        ctx.fillText('Tail length '+Math.round((chibis[this.id].tailLength*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 145);
+        ctx.fillText('Birthhour '+tickerToTime(Math.round(chibis[this.id].birthday)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 160);
       }
     } else {
       ctx.strokeStyle = outputArray[2];
@@ -260,6 +261,18 @@ function generateBaby(parent1, parent2) {
   } else {
     specLegginess = (parent1.legginess + parent2.legginess + Math.random())/3;
   }
+
+  // tail logic
+  let tailSwitch = Math.round(Math.random()*2);
+  let specTail = 1;
+  if (tailSwitch == 0) {
+    specTail = ((parent1.tailLength*9) + ((Math.random()*0.75)+0.25))/10;
+  } else if (tailSwitch == 1) {
+    specTail = ((parent2.tailLength*9) + ((Math.random()*0.75)+0.25))/10;
+  } else {
+    specLegginess = (parent1.tailLength + parent2.tailLength + ((Math.random()*0.75)+0.25))/3;
+  }
+
   // ear logic
   let earSwitch = Math.round(Math.random()*2); // 0 to 2
   let babyEars = 1;
@@ -299,9 +312,9 @@ function generateBaby(parent1, parent2) {
     chibis[chibis.length-1].secondColour = mixTwoColours(randomColourRealistic(), colour1, Math.random()*0.2);
     chibis[chibis.length-1].firstColour = mixTwoColours(randomColourRealistic(), colour2, 0.2);
   } else {
-  chibis[chibis.length-1].firstColour = mixTwoColours(randomColourRealistic(), colour1, Math.random()*0.2);
-  chibis[chibis.length-1].secondColour = mixTwoColours(randomColourRealistic(), colour2, 0.2);
-}
+    chibis[chibis.length-1].firstColour = mixTwoColours(randomColourRealistic(), colour1, Math.random()*0.2);
+    chibis[chibis.length-1].secondColour = mixTwoColours(randomColourRealistic(), colour2, 0.2);
+  }
   chibis[chibis.length-1].speedY = -25;
   // coat logic
   let coatSwitch = Math.round(Math.random()*2); // 0 to 2
@@ -322,6 +335,7 @@ function generateBaby(parent1, parent2) {
   }
   chibis[chibis.length-1].thickness = specThickness;
   chibis[chibis.length-1].legginess = specLegginess;
+  chibis[chibis.length-1].tailLength = specTail;
   return babyGender;
 }
 
@@ -352,7 +366,10 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.legginess = 0.5;
   this.angleToFocus = 0;
   this.size = bodySize;
-  this.limbLength = this.size+(6*this.legginess);
+  this.cellShadeThickness = this.size/10;
+  this.cellShadeLine = '';
+  this.limbLength = (this.size*1.2)+(6*this.legginess); // 10 to 16 + 0 to 6 == 16 to 6
+  this.tailLength = 0;
   this.maxSize = maxSize;
   this.hitBottom = false;
   this.sitting = false;
@@ -361,6 +378,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.energy = 100;
   this.hunger = 1000;
   this.snuggling = -1; // start at -1 so they dont try to give birth when they are not truly snuggling
+  this.nomnomnom = -1; // as above
   this.awake = 0;
   this.litters = 0;
   this.id = ('0000' + guyID).slice(-4);
@@ -374,7 +392,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.partnerId = null;
   guyID++;
   this.reinitSizes = function() {
-    this.limbLength = this.size+(6*this.legginess);
+    this.limbLength = (this.size*1.2)+(6*this.legginess);
+    this.cellShadeThickness = this.size/10;
   };
 
   // method to find a partner's index
@@ -427,7 +446,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   // act
   // @return {boolean} - whether the action has a cost
   this.act = function() {
-    if (!choosingChibi && this.snuggling == 0 && this.gender == 'Male') {
+    if (!choosingChibi && this.snuggling == 0 && this.gender == 'Female') {
       // find out who the partner was
       for (let stop = false, i = 0; i < chibis.length && ! stop; i++) {
         if (this.partnerId == chibis[i].id) {
@@ -436,21 +455,24 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         }
       }
       createGlyphs((this.x - (this.x - this.focus.x)/2), (this.y - (this.y - this.focus.y)/2), mixTwoColours(this.firstColour, this.focus.firstColour, 0.5), '\u2764');
-      initLitter(this, this.getPartner());
-      this.getPartner().partnerId = null;
+      let birthPartner = this.getPartner();
+      initLitter(birthPartner, this);
+      birthPartner.partnerId = null;
       this.partnerId = null;
       // take snuggling to -1 so that it doesn't give birth forever
+      this.snuggling = -1;
+      birthPartner.snuggling = -1;
+    } else if (!choosingChibi && this.snuggling > 0) {
       this.snuggling --;
-    } else if (this.snuggling > 0) {
-      this.sitting = true;
-      this.snuggling --;
+    } else if (this.inCatBox == null && this.nomnomnom >= 0) {
+      // if you're eating, decrease the eating timer
+      this.nomnomnom --;
     } else {
-      // decide whether to act or not
-
       // if you've are in a state of nirvana, or in a catbox, just sit down
       if (this.inCatBox !== null || (this.supersaiyan > 0 && (this.health > superThreshold && this.love > superThreshold))) {
         this.sitting = true;
       } else {
+        // decide whether to act this frame
         if (Math.random() <= 0.02) {
           // decide what to target
           let target = null;
@@ -463,12 +485,12 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             }
           }
           // are we gonna pick a mate?
-          if (target == null && !choosingChibi && !this.elder && this.gender == 'Male' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 60
-          && this.energy >= 60) {
+          if (target == null && !choosingChibi && !this.elder && this.gender == 'Male' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 50
+          && this.energy >= 50) {
             for (let j = 0; j < chibis.length && target == null; j++) {
               if (this !== chibis[j] && chibis[j].awake && this.love + chibis[j].love >= 100 && !chibis[j].elder && chibis[j].gender == 'Female'
-              && chibis[j].age > 0 && chibis[j].supersaiyan == 0 && chibis[j].health >= 60
-              && chibis[j].energy >= 60) {
+              && chibis[j].age > 0 && chibis[j].supersaiyan == 0 && chibis[j].health >= 50
+              && chibis[j].energy >= 50) {
                 this.partnerId = ''+chibis[j].id;
                 chibis[j].partnerId = ''+this.id;
                 target = chibis[j];
@@ -503,17 +525,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             // default action - jump at firefly
             this.focus = fireflies[this.findClosestFireFly()];
           }
-            // actually jumping now
-            this.speedY = -this.size;
-            let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-            this.speedX += Math.cos(targetangle)*40;
-            this.speedY += Math.sin(targetangle)*40;
-            this.y--;
-            this.energy -= 7;
-            this.sitting = false;
-            this.health -= 1;
+          // actually jumping now
+          this.speedY = -this.size;
+          let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
+          this.speedX += Math.cos(targetangle)*40;
+          this.speedY += Math.sin(targetangle)*40;
+          this.y--;
+          this.energy -= 7;
+          this.sitting = false;
+          this.health -= 1;
         } else if (this.focus.y > this.y) {
-          this.sitting = true;
+          // this.sitting = true;
         }
       }
     }
@@ -525,7 +547,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       let tmpX = this.x-fruits[f].x;
       let tmpY = this.y-fruits[f].y;
       let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
-      if (fruits[f].y < this.y && distance < tmp) {
+      if (fruits[f].eaterId == null && fruits[f].y < this.y && distance < tmp) {
         tmp = distance;
         target = fruits[f];
       }
@@ -609,7 +631,9 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         trees[i].loadthisframe += this.size;
         hitTree = true;
         this.hitAFloor();
-        this.energy -= 0.01;
+        if (this.nomnomnom < 0 && this.snuggling <= 0) {
+          this.energy -= 0.01;
+        }
         if (this.y > trueBottom-(this.size)-(this.limbLength/2.5)) {
           this.y = trueBottom-(this.size)-(this.limbLength/2.5);
         }
@@ -628,7 +652,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   };
   this.hitAFloor = function() {
     this.speedY = 0;
-    if (this.energy <= 0) {
+    if (this.energy <= 0 && this.nomnomnom < 0) {
       // fall asleep when tired
       this.sitting = false;
       this.awake = false;
@@ -648,116 +672,195 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     }
   };
   this.drawFrontLegs = function() {
-  // hands
-  let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
-  handGradient.addColorStop(0, this.firstColour);
-  handGradient.addColorStop(this.coatMod[0], this.firstColour);
-  handGradient.addColorStop(1, this.secondColour);
-  ctx.lineWidth = (this.size/2.5)*this.thickness*2;
-  ctx.fillStyle = handGradient;
-  ctx.strokeStyle = handGradient;  // if we are awake and sitting on a floor
-  if (this.awake && this.hitBottom && this.sitting) {
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.beginPath();
-    ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.restore();
-  } else if (!this.awake || !this.hitBottom) {
-    // if we are holding something
-    if (this.awake && detectCollision(this, this.focus)) {
-      handGradient = ctx.createRadialGradient(this.focus.x, this.focus.y, 1, this.focus.x, this.focus.y, this.size);
-      handGradient.addColorStop(0, this.secondColour);
-      handGradient.addColorStop((1-this.coatMod[0])/2, this.secondColour);
-      handGradient.addColorStop(1, this.firstColour);
+    // hands
+    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
+    handGradient.addColorStop(0, this.firstColour);
+    handGradient.addColorStop(this.coatMod[0], this.firstColour);
+    handGradient.addColorStop(1, this.secondColour);
+    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
+    ctx.fillStyle = handGradient;
+    ctx.strokeStyle = handGradient;
+    // if we are awake and sitting on a floor
+    if (this.awake && this.hitBottom && this.sitting) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      // CELL SHADING
+      ctx.fillStyle = this.cellShadeLine;
+      ctx.beginPath();
+      ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.fill();
       ctx.fillStyle = handGradient;
-      ctx.strokeStyle = handGradient;
-      ctx.save(); // 0 open
-      ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/1.25));
-      ctx.rotate(-this.rotation);
-
+      // REAL DRAWING
       ctx.beginPath();
-      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
+      ctx.arc(-(this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
       ctx.fill();
-
+      // CELL SHADING
+      ctx.fillStyle = this.cellShadeLine;
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.rotate(+this.rotation);
+      ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = handGradient;
+      // REAL DRAWING
+      ctx.beginPath();
+      ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
       ctx.restore();
-      ctx.lineTo(this.focus.x, this.focus.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.save(); // 0 open
-      ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/1.25));
-      ctx.rotate(this.rotation);
-      ctx.beginPath();
-      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.rotate(+this.rotation);
-      ctx.restore();
-      ctx.lineTo(this.focus.x, this.focus.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-      // if we are not holding anything
-    } else if (this.awake && this.energy > 0) {
-      // left arm
-      ctx.save(); // 0 open
-      ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/1.25));
-      ctx.rotate(-this.rotation);
-
-      ctx.beginPath();
-      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.rotate(+this.rotation);
-      ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore(); // closed
-      // right arm
-      ctx.save(); // 0 open
-      ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/1.25));
-      ctx.rotate(-this.rotation);
-
-      ctx.beginPath();
-      ctx.arc(0, 0, this.size/4*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.rotate(+this.rotation);
-      ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore(); // closed
+    } else if (!this.awake || !this.hitBottom) {
+      // if we are holding something
+      if (this.awake && detectCollision(this, this.focus)) {
+        // CELL SHADING
+        ctx.fillStyle = this.cellShadeLine;
+        ctx.strokeStyle = this.cellShadeLine;
+        ctx.lineWidth += this.cellShadeThickness;
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(-this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.lineTo(this.focus.x, this.focus.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.focus.x, this.focus.y, (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.lineTo(this.focus.x, this.focus.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.focus.x, this.focus.y, (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.lineWidth -= this.cellShadeThickness;
+        // REAL DRAWING
+        handGradient = ctx.createRadialGradient(this.focus.x, this.focus.y, 1, this.focus.x, this.focus.y, this.size);
+        handGradient.addColorStop(0, this.secondColour);
+        handGradient.addColorStop((1-this.coatMod[0])/2, this.secondColour);
+        handGradient.addColorStop(1, this.firstColour);
+        ctx.fillStyle = handGradient;
+        ctx.strokeStyle = handGradient;
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.arc(-this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.lineTo(this.focus.x, this.focus.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.arc(this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.lineTo(this.focus.x, this.focus.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.focus.x, this.focus.y, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        // if we are not holding anything
+      } else if (this.awake && this.energy > 0) {
+        // CELL SHADING
+        ctx.fillStyle = this.cellShadeLine;
+        ctx.strokeStyle = this.cellShadeLine;
+        ctx.lineWidth += this.cellShadeThickness;
+        // left arm
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(-this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.save();
+        ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/2) + (this.size/1.25));
+        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore(); // closed
+        // right arm
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.save();
+        ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/5) + (this.size/1.25));
+        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore(); // closed
+        ctx.lineWidth -= this.cellShadeThickness;
+        // REAL DRAWING
+        ctx.fillStyle = handGradient;
+        ctx.strokeStyle = handGradient;
+        // left arm
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.arc(-this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.save();
+        ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/2) + (this.size/1.25));
+        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore(); // closed
+        // right arm
+        ctx.save(); // 0 open
+        ctx.translate(this.x, this.y + (this.size/3));
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.arc(this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(this.size*2/3, (this.size/4));
+        ctx.restore();
+        ctx.save();
+        ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/5) + (this.size/1.25));
+        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore(); // closed
+      }
     }
   }
-}
   this.update = function() {
+    if (this.cellShadeLine == '') {
+      this.cellShadeLine = mixTwoColours(mixTwoColours(this.secondColour, this.firstColour, 0.5), trueBlack, 0.7);
+    }
     let backendShiftX = this.size * this.speedX / 30;
     let backendShiftY = this.size * this.speedY / 30;
-if (backendShiftY > trueBottom - this.y) {
-  backendShiftY = trueBottom - this.y;
-}
+    if (backendShiftY > trueBottom - this.y) {
+      backendShiftY = trueBottom - this.y;
+    }
     if (this.awake && !this.hitBottom && detectCollision(this, this.focus)) {
       backendShiftY = -this.size/4;
-     }
+    }
 
     // calculate angle to focus
     this.angleToFocus = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
@@ -772,9 +875,8 @@ if (backendShiftY > trueBottom - this.y) {
     for (let f = 0; f < fireflies.length; f++) {
       if (this.snuggling <= 0 && !this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && detectCollision(this, fireflies[f])) {
         fireflies[f].touchedThisFrame = true;
-        this.focus = fireflies[f];
         this.resetRotation(true);
-        fireflies[f].speedX += (this.speedX*this.size)/2000;
+        fireflies[f].speedX += (this.speedX*this.size)/1500;
         fireflies[f].speedY += (this.speedY*this.size)/2000;// + (0.002 * this.size);
         if (this.energy < 100) {
           this.energy += 0.6;
@@ -787,7 +889,7 @@ if (backendShiftY > trueBottom - this.y) {
         }
         if (this.health >= superThreshold && this.love >= superThreshold && this.energy >= superThreshold) {
           // let go of the FireFly
-          this.speedY = -20;
+          this.speedY = -this.size*2;
         } else {
           let thisMiddleX = this.x;
           let thisMiddleY = this.y;
@@ -830,30 +932,29 @@ if (backendShiftY > trueBottom - this.y) {
       sleepshift = this.limbLength+(this.size/4);
     }
 
-    if (this.speedY >= -10) {
-      this.drawFrontLegs();
-    }
 
 
-    if (this.awake && this.energy > 0) {
+
+    if (this.awake && this.energy > 0 && !this.sitting) {
       ctx.lineWidth = (this.size/2.5)*this.thickness*2;
-
-      // back legs
       let legGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size*0.8));
       legGradient.addColorStop(0, trueBlack);
       legGradient.addColorStop(0.1, this.firstColour);
       legGradient.addColorStop(1, this.secondColour);
-      ctx.strokeStyle = legGradient;
-      ctx.fillStyle = legGradient;
       ctx.save(); // 0 open - rotated
       ctx.translate(this.x - backendShiftX, this.y - backendShiftY);
       if (!this.hitBottom) {
         ctx.rotate(this.rotation);
       }
 
+
+      // back legs
+      // CELL SHADING
+      ctx.fillStyle = this.cellShadeLine;
+      ctx.strokeStyle = this.cellShadeLine;
+      ctx.lineWidth += this.cellShadeThickness;
       ctx.save(); // 1 open
       ctx.translate(-(this.size/2), (this.size/2));
-      // don't rotate if we have hit the bottom
       if (!this.hitBottom) {
         if (sameDirection) {
           ctx.rotate(this.angleToFocus);
@@ -864,15 +965,17 @@ if (backendShiftY > trueBottom - this.y) {
       }
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(0, this.limbLength/1.2);
+      ctx.lineTo(0, this.limbLength/1.5);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(0, this.limbLength/1.2, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.arc(0, this.limbLength/1.5, (this.size/3.5*this.thickness*2) + this.cellShadeThickness, 0, 2 * Math.PI);
       ctx.fill();
       ctx.restore(); // 1 close
+      ctx.fillStyle = this.cellShadeLine;
+      ctx.strokeStyle = this.cellShadeLine;
+
       ctx.save(); // 1 open
       ctx.translate((this.size/2), (this.size/2));
-
       if (!this.hitBottom) {
         if (sameDirection) {
           ctx.rotate(this.angleToFocus);
@@ -883,37 +986,67 @@ if (backendShiftY > trueBottom - this.y) {
       }
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(0, this.limbLength/1.2);
+      ctx.lineTo(0, this.limbLength/1.5);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(0, this.limbLength/1.2, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.arc(0, this.limbLength/1.5, (this.size/3.5*this.thickness*2) + this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore(); // 1 close
+      ctx.lineWidth -= this.cellShadeThickness;
+      // REAL DRAWING
+      ctx.strokeStyle = legGradient;
+      ctx.fillStyle = legGradient;
+      // don't rotate if we have hit the bottom
+      ctx.save(); // 1 open
+      ctx.translate(-(this.size/2), (this.size/2));
+      if (!this.hitBottom) {
+        if (sameDirection) {
+          ctx.rotate(this.angleToFocus);
+          ctx.rotate(90 * Math.PI / 180);
+        } else {
+          ctx.rotate(legAngle);
+        }
+      }
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, this.limbLength/1.5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, this.limbLength/1.5, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore(); // 1 close
+      ctx.save(); // 1 open
+      ctx.translate((this.size/2), (this.size/2));
+      if (!this.hitBottom) {
+        if (sameDirection) {
+          ctx.rotate(this.angleToFocus);
+          ctx.rotate(90 * Math.PI / 180);
+        } else {
+          ctx.rotate(-legAngle);
+        }
+      }
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, this.limbLength/1.5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, this.limbLength/1.5, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
       ctx.fill();
       ctx.restore(); // 1 close
       ctx.restore(); // 0 close
-      ctx.strokeStyle = this.firstColour;
     }
-    // label
-    if (selection == this || this.inCatBox !== null) {
-      ctx.fillStyle = colourIndicator(this);
-      ctx.font = '10px' + ' ' + globalFont;
-      let shift = this.name.length*5.6/2;
-      ctx.fillText(this.name, this.x-shift, this.y-(this.size*2));
-      // ctx.fillText(Math.round(this.health)+' '+Math.round(this.love)+' '+Math.round(this.energy)+' '+Math.round(this.hunger), this.x-shift, this.y-(this.size*2));
-    }
+
     // translate before drawing again
-    ctx.fillStyle = this.firstColour;
     ctx.save(); // 0 open - rotated
     ctx.translate(this.x, this.y);
-
     // tail
-    ctx.save();
     // make it wag
     let tmp = Math.abs(daytimeCounter-this.birthday);
     while (tmp > 30 && tmp > 0) {
       tmp -= 30; // 0 to 30
     }
     tmp = Math.abs(tmp-15); // 0 to 15 to 0 to 15
-
+    ctx.save();
     if (!this.hitBottom && this.awake) {
       tmp = 0;
       ctx.translate(-backendShiftX, -backendShiftY);
@@ -921,22 +1054,125 @@ if (backendShiftY > trueBottom - this.y) {
       ctx.rotate(Math.atan2(-this.speedY, -this.speedX));
     }
     if (this.hitBottom || !this.awake) {
-      ctx.translate(0, sleepshift - (this.size/4));
+      ctx.translate(0, sleepshift - this.size);
     }
+    // CELL SHADING
+    ctx.fillStyle = this.cellShadeLine;
     ctx.beginPath();
-    ctx.moveTo(0, this.size/1.5);
-    ctx.arc((this.size*(-tmp+7.5)/8)*this.thickness, -(this.size*1.5), (this.size/3)*this.thickness*2, 0, Math.PI, true);// Mouth (clockwise)
-    ctx.lineTo(0, this.size/3);
+    ctx.moveTo(-this.cellShadeThickness, (this.size/1.5) - this.cellShadeThickness);
+    ctx.arc((this.size*(-tmp+7.5)/8)*this.thickness, -(2.5*this.tailLength*this.size) - (this.cellShadeThickness*2), ((this.size/3)*this.thickness*2), 0, Math.PI, true);// Mouth (clockwise)
+    ctx.lineTo(this.cellShadeThickness, this.size/3);
+    ctx.fill();
+    // REAL DRAWING
     let tailGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size*2);
     tailGradient.addColorStop(0, trueBlack);
     tailGradient.addColorStop(1*this.coatMod[0], this.firstColour);
     tailGradient.addColorStop(1, this.secondColour);
     ctx.fillStyle = tailGradient;
+    ctx.beginPath();
+    ctx.moveTo(0, (this.size/1.5) + this.cellShadeThickness);
+    ctx.arc((this.size*(-tmp+7.5)/8)*this.thickness, -(2.5*this.tailLength*this.size), (this.size/3)*this.thickness*2, 0, Math.PI, true);// Mouth (clockwise)
+    ctx.lineTo(0, this.size/3);
     ctx.fill();
     if (!this.hitBottom && this.awake) {
       ctx.rotate(-Math.atan2(-this.speedY, -this.speedX));
     }
     ctx.restore(); // 0 - rotated
+    if (this.sitting) {
+      ctx.translate(0, (this.limbLength+(this.size/4))/2);
+    }
+    // body balls
+    // CELL SHADING
+    ctx.fillStyle = this.cellShadeLine;
+    ctx.beginPath();
+    if (this.sitting) {
+      let tmp = Math.abs(daytimeCounter-this.birthday);
+      while (tmp > 15 && tmp > 0) {
+        tmp -= 15; // 0 to 30
+      }
+      tmp *= 0.5;
+      tmp = Math.abs(tmp-3.75); // -0 to -3.75 to 0 to 3.75
+      ctx.arc(-tmp+1.875, -this.size, (this.thickness*this.size*1.6)+this.cellShadeThickness, 0, 2 * Math.PI);
+    } else if (this.awake) {
+      ctx.arc(-(this.size/32) - backendShiftX, -backendShiftY, (this.thickness*this.size*1.3)+this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.arc(-(this.size/32) - (backendShiftX*2/3), -backendShiftY*2/3, (this.thickness*this.size*1.5)+this.cellShadeThickness, 0, 2 * Math.PI);
+    }
+    ctx.fill();
+    // REAL DRAWING
+    let bodyGradient = ctx.createRadialGradient(0, 0, this.size/2, 0, 0, (this.size*3)+Math.sqrt((backendShiftY*backendShiftY)+(backendShiftX*backendShiftX)));
+    bodyGradient.addColorStop(0, trueBlack);
+    bodyGradient.addColorStop(0.5, this.firstColour);
+    bodyGradient.addColorStop(1*this.coatMod[0], this.firstColour);
+    bodyGradient.addColorStop(1, this.secondColour);
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    // bum sticking in the air
+    if (this.sitting) {
+      // make it wag
+      let tmp = Math.abs(daytimeCounter-this.birthday);
+      while (tmp > 15 && tmp > 0) {
+        tmp -= 15; // 0 to 30
+      }
+      tmp *= 0.5;
+      tmp = Math.abs(tmp-3.75); // 0 to 15 to 0 to 15
+      ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.6, 0, 2 * Math.PI);
+    } else if (this.awake) {
+      ctx.arc(-(this.size/32) - backendShiftX, -backendShiftY, this.thickness*this.size*1.3, 0, 2 * Math.PI);
+      ctx.arc(-(this.size/32) - (backendShiftX*2/3), -backendShiftY*2/3, this.thickness*this.size*1.5, 0, 2 * Math.PI);
+      ctx.arc(-(this.size/32) - (backendShiftX*1/3), -backendShiftY*2/3, this.thickness*this.size*1.5, 0, 2 * Math.PI);
+    }
+    ctx.fill();
+
+    // put your front legs down if you are on the floor and healthy
+    // CELL SHADING
+    ctx.fillStyle = this.cellShadeLine;
+    ctx.strokeStyle = this.cellShadeLine;
+    ctx.lineWidth += this.cellShadeThickness;
+    if (this.awake && this.hitBottom) {
+      if (!this.sitting) {
+        ctx.beginPath();
+        ctx.moveTo(-this.size+(this.size/1.6), this.size*0.5);
+        ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(this.size-(this.size/1.6), this.size*0.5);
+        ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-this.size+(this.size/1.6), this.limbLength, (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(this.size-(this.size/1.6), this.limbLength, (this.size/3.5*this.thickness*2)+this.cellShadeThickness, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+    ctx.lineWidth -= this.cellShadeThickness;
+    // REAL DRAWING
+    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
+    handGradient.addColorStop(0, this.firstColour);
+    handGradient.addColorStop(this.coatMod[0], this.firstColour);
+    handGradient.addColorStop(1, this.secondColour);
+    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
+    ctx.fillStyle = handGradient;
+    ctx.strokeStyle = handGradient;
+    if (this.awake && this.hitBottom) {
+      if (!this.sitting) {
+        ctx.beginPath();
+        ctx.moveTo(-this.size+(this.size/1.6), this.size*0.5);
+        ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(this.size-(this.size/1.6), this.size*0.5);
+        ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
 
     // aura and trail on supersaiyans
     if (this.supersaiyan > 0) {
@@ -959,62 +1195,15 @@ if (backendShiftY > trueBottom - this.y) {
       ctx.fillStyle = this.secondColour;
       ctx.globalAlpha = 1;
     }
-
-    if (this.sitting) {
-      ctx.translate(0, (this.limbLength+(this.size/4))/2);
+    // rotate around axis and move a bit before drawing head parts
+    ctx.translate(0, -this.size/2);
+    ctx.save();
+    ctx.translate(-this.x, -this.y);
+    // draw the front legs behind the face if you are going down, or are below your focus
+    if (!this.hitBottom && (this.focus.y > this.y + this.size + this.limbLength || !this.sitting && !detectCollision(this, this.focus))) {
+    this.drawFrontLegs();
     }
-    // body balls
-    let bodyGradient = ctx.createRadialGradient(0, 0, this.size/2, 0, 0, (this.size*3)+Math.sqrt((backendShiftY*backendShiftY)+(backendShiftX*backendShiftX)));
-    bodyGradient.addColorStop(0, trueBlack);
-    bodyGradient.addColorStop(0.5, this.firstColour);
-    bodyGradient.addColorStop(1*this.coatMod[0], this.firstColour);
-    bodyGradient.addColorStop(1, this.secondColour);
-    ctx.fillStyle = bodyGradient;
-    ctx.beginPath();
-    // bum sticking in the air
-    if (this.sitting) {
-      // make it wag
-      let tmp = Math.abs(daytimeCounter-this.birthday);
-      while (tmp > 7.5 && tmp > 0) {
-        tmp -= 7.5; // 0 to 30
-      }
-      tmp = Math.abs(tmp-3.75); // 0 to 15 to 0 to 15
-      ctx.arc(-(this.size*(-tmp+3.75)/32), -this.size/2, this.thickness*this.size*1.6, 0, 2 * Math.PI);
-    } else if (this.awake) {
-      ctx.arc(-(this.size/32) - backendShiftX, -backendShiftY, this.thickness*this.size*1.3, 0, 2 * Math.PI);
-      ctx.arc(-(this.size/32) - (backendShiftX*2/3), -backendShiftY*2/3, this.thickness*this.size*1.5, 0, 2 * Math.PI);
-      ctx.arc(-(this.size/32) - (backendShiftX*1/3), -backendShiftY*2/3, this.thickness*this.size*1.5, 0, 2 * Math.PI);
-    }
-    ctx.fill();
-
-    // put your front legs down if you are on the floor and healthy
-    let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
-    handGradient.addColorStop(0, this.firstColour);
-    handGradient.addColorStop(this.coatMod[0], this.firstColour);
-    handGradient.addColorStop(1, this.secondColour);
-    ctx.lineWidth = (this.size/2.5)*this.thickness*2;
-    ctx.fillStyle = handGradient;
-    ctx.strokeStyle = handGradient;
-    if (this.awake && this.hitBottom) {
-      if (!this.sitting) {
-        ctx.beginPath();
-        ctx.moveTo(-this.size+(this.size/1.6), this.size*0.8);
-        ctx.lineTo(-this.size+(this.size/1.6), this.limbLength);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(this.size-(this.size/1.6), this.size*0.8);
-        ctx.lineTo(this.size-(this.size/1.6), this.limbLength);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(-this.size+(this.size/1.6), this.limbLength, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(this.size-(this.size/1.6), this.limbLength, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-    }
-
-    // rotate around axis before drawing head parts
+    ctx.restore();
     ctx.rotate(this.rotation);
     // ears
     ctx.save(); // 0
@@ -1024,18 +1213,27 @@ if (backendShiftY > trueBottom - this.y) {
       ctx.translate(-this.size, sleepshift);
     }
     oneq = this.size/2;
+    // CELL SHADING
+    ctx.fillStyle = this.cellShadeLine;
+    ctx.beginPath();
+    ctx.moveTo(-this.cellShadeThickness, - this.cellShadeThickness + (this.size/2));
+    ctx.lineTo(-this.cellShadeThickness - (this.ears*8), - this.cellShadeThickness - this.size+(this.size*this.ears/5));
+    ctx.lineTo((oneq*2), - this.cellShadeThickness - (this.size*this.ears)/4);
+    ctx.lineTo(this.cellShadeThickness + (oneq*4)+(this.ears*8), - this.cellShadeThickness - this.size+(this.size*this.ears/5));
+    ctx.lineTo(this.cellShadeThickness + (oneq*4), - this.cellShadeThickness + (this.size/2));
+    ctx.fill();
+    // REAL DRAWING
+    let earGradient=ctx.createLinearGradient(0, -this.size+(this.size*this.ears/2), 0, this.limbLength/4);
+    earGradient.addColorStop(0, this.secondColour);
+    earGradient.addColorStop(1-(this.coatMod[0]), this.firstColour);
+    earGradient.addColorStop(1, trueBlack);
+    ctx.fillStyle = earGradient;
     ctx.beginPath();
     ctx.moveTo(0, +this.size/2);
     ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/5));
     ctx.lineTo(oneq*2, -(this.size*this.ears)/4);
     ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/5));
     ctx.lineTo(oneq*4, +this.size/2);
-
-    let earGradient=ctx.createLinearGradient(0, -this.size+(this.size*this.ears/2), 0, this.limbLength/4);
-    earGradient.addColorStop(0, this.secondColour);
-    earGradient.addColorStop(1-(this.coatMod[0]), this.firstColour);
-    earGradient.addColorStop(1, trueBlack);
-    ctx.fillStyle = earGradient;
     ctx.fill();
     ctx.restore(); // 0
 
@@ -1049,35 +1247,75 @@ if (backendShiftY > trueBottom - this.y) {
     headGradient.addColorStop(0, this.firstColour);
     headGradient.addColorStop(1*this.coatMod[0], this.firstColour);
     headGradient.addColorStop(1, this.secondColour);
-    ctx.fillStyle = headGradient;
     if (this.sitting && this.awake) {
       ctx.translate(0, -(this.limbLength+(this.size/4))/2);
     } else if (!this.awake) {
       ctx.translate(0, -sleepshift);
     }
     if (this.awake) {
-      ctx.rotate(360 * this.coatMod[1] * Math.PI / 180);
       // awake mode
+      if (!this.sitting) {
+    // NECK
+      // CELL SHADING
+      ctx.rotate(-this.rotation);
+      ctx.fillStyle = this.cellShadeLine;
+      ctx.beginPath();
+      ctx.arc(0 - (backendShiftX*1/3), (this.size/2) - (backendShiftY*1/3), this.size+(this.thickness*this.size/5)+this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.fill();
+      // REAL DRAWING
+      ctx.fillStyle = headGradient;
+      ctx.beginPath();
+      ctx.arc(0 - (backendShiftX*1/3), (this.size/2) - (backendShiftY*1/3), this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.rotate(this.rotation);
+    }
+
+      // CELL SHADING
+      ctx.fillStyle = this.cellShadeLine;
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size+(this.thickness*this.size/5)+this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.fill();
+      // REAL DRAWING
+      ctx.fillStyle = headGradient;
+
       ctx.beginPath();
       ctx.arc(0, 0, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
       ctx.fill();
-      ctx.rotate(-360 * this.coatMod[1] * Math.PI / 180);
+      //   let numberOfSides = 4;
+      //     Xcenter = 0;
+      //     Ycenter = 0;
+      // ctx.beginPath();
+      // ctx.moveTo (Xcenter + this.size * 1.1 * Math.cos(0), Ycenter + this.size * 1.1 *  Math.sin(0));
+      // for (let i = 1; i <= numberOfSides; i++) {
+      //     ctx.lineTo (Xcenter + this.size * 1.1 * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + this.size * 1.1 * Math.sin(i * 2 * Math.PI / numberOfSides));
+      // }
+      // ctx.strokeStyle = trueWhite;
+      // ctx.lineWidth = 1;
+      // ctx.stroke();
+
       // smile
       if (this.health >= 50 && !this.elder && this.energy > 0) {
         ctx.globalAlpha = this.love/100;
         if (this.gender == 'Female') {
-        ctx.drawImage(smile, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
-      } else if (this.gender == 'Male') {
-        ctx.drawImage(smile2, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
-      } else if (this.gender == 'Non Binary') {
-        ctx.drawImage(smile3, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
-      }
+          ctx.drawImage(smile, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
+        } else if (this.gender == 'Male') {
+          ctx.drawImage(smile2, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
+        } else if (this.gender == 'Non Binary') {
+          ctx.drawImage(smile3, -(this.size)*0.8, this.size/8, this.size*1.6, this.size*0.8);
+        }
         ctx.globalAlpha = 1;
       }
     } else {
       // sleep mode
+      // CELL SHADING
+      ctx.fillStyle = this.cellShadeLine;
       ctx.beginPath();
-      ctx.arc(0, this.limbLength+(this.size/2), this.size, 3.15, 2 * Math.PI);
+      ctx.arc(0, this.limbLength+(this.size/2), this.size+this.cellShadeThickness, 3.15, 2 * Math.PI);
+      ctx.fill();
+      // REAL DRAWING
+      ctx.fillStyle = headGradient;
+      ctx.beginPath();
+      ctx.arc(0, this.limbLength+(this.size*0.6), this.size, 3.15, 2 * Math.PI);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
@@ -1104,46 +1342,67 @@ if (backendShiftY > trueBottom - this.y) {
     }
 
     // eyes
-    diffy = 0.5;
-    ctx.lineWidth = 1.5;
     if (this.awake) {
-      ctx.globalAlpha = 0.9;
-      // left eye
-      ctx.beginPath();
-      ctx.fillStyle = trueBlack;
-      ctx.save(); // 0 open
-      ctx.translate(-this.size/2, -(this.size/4));
-      ctx.arc(0, 0, this.size/2.25, 0, 2 * Math.PI);
-      ctx.fill();
-      // draw highlights
-      if (this.energy > 0) {
+      if (this.snuggling >= 0 || this.nomnomnom >= 0) {
+        ctx.drawImage(content, -this.size, -this.size, this.size*2, this.size*2);
+      } else {
+        diffy = 0.5;
+        ctx.save(); // 0 open
+        // CELL SHADING
+        ctx.fillStyle = mixTwoColours(this.secondColour, this.firstColour, 0.5);
         ctx.beginPath();
-        ctx.fillStyle = trueWhite;
-        ctx.rotate(-this.rotation);
-        ctx.arc(0, -this.size/7, this.size/6, 0, 2 * Math.PI);
-        ctx.arc(-this.size/7, this.size/5, this.size/12, 0, 2 * Math.PI);
+        ctx.save(); // 0 open
+        ctx.translate(-this.size/2, -(this.size/4));
+        ctx.arc(0, 0, (this.size/2.25)+this.cellShadeThickness, 0, 2 * Math.PI);
         ctx.fill();
-        ctx.rotate(this.rotation);
-      }
-      ctx.restore(); // 0 closed
-      // right eye
-      ctx.beginPath();
-      ctx.fillStyle = trueBlack;
-      ctx.save(); // 0 open
-      ctx.translate(this.size/2, -(this.size/4));
-      ctx.arc(0, 0, this.size/2.25, 0, 2 * Math.PI);
-      ctx.fill();
-      // draw highlights
-      if (this.energy > 0) {
+        ctx.restore();
         ctx.beginPath();
-        ctx.fillStyle = trueWhite;
-        ctx.rotate(-this.rotation);
-        ctx.arc(0, -this.size/7, this.size/6, 0, 2 * Math.PI);
-        ctx.arc(this.size/6, this.size/5, this.size/12, 0, 2 * Math.PI);
+        ctx.save(); // 0 open
+        ctx.translate(this.size/2, -(this.size/4));
+        ctx.arc(0, 0, (this.size/2.25)+this.cellShadeThickness, 0, 2 * Math.PI);
         ctx.fill();
-        ctx.rotate(this.rotation);
+        ctx.restore();
+
+        // REAL DRAWING
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.9;
+        // left eye
+        ctx.beginPath();
+        ctx.fillStyle = trueBlack;
+        ctx.translate(-this.size/2, -(this.size/4));
+        ctx.arc(0, 0, this.size/2.25, 0, 2 * Math.PI);
+        ctx.fill();
+        // draw highlights
+        if (this.energy > 0) {
+          ctx.beginPath();
+          ctx.fillStyle = trueWhite;
+          ctx.rotate(-this.rotation);
+          ctx.arc(0, -this.size/7, this.size/6, 0, 2 * Math.PI);
+          ctx.arc(-this.size/7, this.size/5, this.size/12, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.rotate(this.rotation);
+        }
+        ctx.restore(); // 0 closed
+        // right eye
+        ctx.beginPath();
+        ctx.fillStyle = trueBlack;
+        ctx.save(); // 0 open
+        ctx.translate(this.size/2, -(this.size/4));
+        ctx.arc(0, 0, this.size/2.25, 0, 2 * Math.PI);
+        ctx.fill();
+        // draw highlights
+        if (this.energy > 0) {
+          ctx.beginPath();
+          ctx.fillStyle = trueWhite;
+          ctx.rotate(-this.rotation);
+          ctx.arc(0, -this.size/7, this.size/6, 0, 2 * Math.PI);
+          ctx.arc(this.size/6, this.size/5, this.size/12, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.rotate(this.rotation);
+        }
+        ctx.restore(); // 0 closed
       }
-      ctx.restore(); // 0 closed
+
       // eyelids
       if (this.energy < 0) {
         ctx.globalAlpha = 1;
@@ -1157,13 +1416,14 @@ if (backendShiftY > trueBottom - this.y) {
       }
       ctx.globalAlpha = 1;
     }
+
     ctx.restore(); // close
     // draw status icons
     ctx.save(); // 0
     ctx.translate(this.x, this.y);
     // zzzzs
     if (!this.awake) {
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = trueWhite;
       ctx.font = '10px' + ' ' + globalFont;
       let amntToMove = this.energy; // 0 to 10
       while (amntToMove > 10) {
@@ -1197,15 +1457,61 @@ if (backendShiftY > trueBottom - this.y) {
       ctx.fillText('\u2764', -10, -(this.size*4)+amntToMove);
     }
 
+    // eating noms
+    if (this.nomnomnom > 0) {
+      ctx.fillStyle = trueWhite;
+      ctx.font = '10px' + ' ' + globalFont;
+      let alphaShift = this.nomnomnom; // 0 to 250
+      while (alphaShift > 40) {
+        alphaShift -= 40;
+      }
+      while (alphaShift < 0) {
+        alphaShift += 40;
+      }
+      ctx.globalAlpha = (1 - (alphaShift/40))/2;
+      if (ctx.globalAlpha >= 0.25) {
+        ctx.save();
+        ctx.rotate(0.5);
+        ctx.fillText('*nom*', -25, -this.size);
+        ctx.restore();
+      }
+      ctx.globalAlpha = alphaShift/40/2;
+      if (ctx.globalAlpha >= 0.25) {
+        ctx.save();
+        ctx.rotate(-0.5);
+        ctx.fillText('*nom*', -2, -this.size);
+        ctx.restore();
+      }
+    }
+
+    // label
+    if (selection == this || this.inCatBox !== null) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = colourIndicator(this);
+      ctx.font = '10px' + ' ' + globalFont;
+      let shift = this.name.length*5.6/2;
+      ctx.fillText(this.name, -shift, -(this.size*2));
+      // ctx.fillText(Math.round(this.health)+' '+Math.round(this.love)+' '+Math.round(this.energy)+' '+Math.round(this.hunger), -shift, -(this.size*2));
+    }
+
 
     ctx.globalAlpha = 1;
     ctx.restore(); // 0
 
-    // draw the front legs infront of the face if you are going up
-    if (this.speedY < -10) {
-      this.drawFrontLegs();
+    // draw the front legs infront of the face
+    if (this.hitBottom || (this.focus.y < this.y + this.size + this.limbLength || detectCollision(this, this.focus))) {
+    this.drawFrontLegs();
     }
 
     ctx.globalAlpha = 1;
   };
+}
+
+function getById(id) {
+  for (let i = 0; i < chibis.length; i++) {
+    if (id == chibis[i].id) {
+      return chibis[i];
+    }
+  }
+  return 'X';
 }

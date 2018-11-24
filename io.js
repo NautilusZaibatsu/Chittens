@@ -20,7 +20,8 @@ function copyChibi(chibi) {
   chibi.age+'*'+
   chibi.name+'*'+
   chibi.elder+'*'+
-  chibi.reachedNirvana;
+  chibi.reachedNirvana+'*'+
+  chibi.tailLength;
   console.log(outputbuffer);
   return outputbuffer;
 }
@@ -33,9 +34,12 @@ function copyChibi(chibi) {
 function pasteChibi(outputbuffer) {
 
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 16) {
-    alert('That doesn\'t seem to be the right kind of file');
+  if (attributeArray.length !== 17) {
+    sendMessage('Old filetype detected. Converting to 0.51');
+    attributeArray.push(0.5);
     //return 'X';
+  } if (attributeArray.length !== 17) {
+    alert('Failed to load file');
   } else {
     chibis.splice(currentChibis, 9);
     boxes = [];
@@ -62,6 +66,7 @@ function pasteChibi(outputbuffer) {
     chibis[chibis.length-1].elder = (attributeArray[14] == true);
     chibis[chibis.length-1].reachedNirvana = (attributeArray[15] == true);
     chibis[chibis.length-1].love = 100;
+    chibis[chibis.length-1].tailLength = parseFloat(attributeArray[16]);
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds[seeds.length-1].timer = 750;

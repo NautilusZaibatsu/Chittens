@@ -1,6 +1,13 @@
 #chibis
 
 changelog
+
+23/11/2018 = 0.051
+~ added cell shading to the chibis
+~ completely rewrote the way front legs work
+~ tails now vary in length
+~ fruit is now eaten on the floor instead of in the air when picked, this takes a short time during which the chibi cannot act
+
 22/11/2018 = 0.05
 ~ trees produce fruit, chibis get hungry and eat the fruit. Chibis then excrete seeds grow into trees
 ~ reworked the chitten generation system, litters now feel more like a group of siblings

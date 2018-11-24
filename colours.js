@@ -177,7 +177,7 @@ function decreaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 0, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
-  return rgbToHex(Math.round(hslrgb[0]), 0, Math.round(hslrgb[2]));
+  return rgbToHex(Math.round(hslrgb[0]/2), hslrgb[1]/2, Math.round(hslrgb[2]/2));
 }
 /**
 * @param {int} prop - the proportion of hex1 to hex2 (0 to 1);
