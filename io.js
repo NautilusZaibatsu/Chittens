@@ -76,6 +76,7 @@ function pasteChibi(outputbuffer) {
     } else if (chibis[chibis.length-1].gender == 'Male') {
         chosenChibiM = true;
       }
+      speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
     sendMessage(chibis[chibis.length-1].name+' arrived');
   }
 }

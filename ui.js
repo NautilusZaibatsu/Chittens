@@ -8,16 +8,16 @@ function initButtons() {
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(canvasWidth/2, 340, 'Give away'));
-  buttons.push(new Button(canvasWidth/2, 375, 'Close'));
-  buttons.push(new Button(canvasWidth/2, 410, 'Save as .chi file'));
+  buttons.push(new Button(canvasWidth/2, 355, 'Give away'));
+  buttons.push(new Button(canvasWidth/2, 390, 'Close'));
+  buttons.push(new Button(canvasWidth/2, 425, 'Save as .chi file'));
   buttons[3].visible = false;
   buttons[4].visible = false;
   buttons[5].visible = false;
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Welcome to the Cattery'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'Choose a girl'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 105, 'Selection'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 75, 'Selection'));
   labels[2].visible = false;
   selectionInfo = new InfoPanel();
 }
@@ -88,33 +88,35 @@ function InfoPanel() {
         offsetX = (11 + selection.name.length)*fontWidth/2;
       }
       ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 185 + 20 );
+      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 200 + 20 );
       ctx.fillStyle = outputArray[2];
       ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
       ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
-      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 25);
-      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 25);
-      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 40);
-      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 40);
-      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 55);
-      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 55);
-      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 70);
-      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 70);
+      ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
+      ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
 
-      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 85);
-      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 85);
-      ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 100);
-      ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 100);
-      ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 115);
-      ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
-      ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 130);
-      ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
-      ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 145);
-      ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
-      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 160);
-      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 160);
-      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 175);
-      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 175);
+      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
+      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
+      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
+      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
+      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
+      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
+      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 85);
+      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 85);
+      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 100);
+      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 100);
+      ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 115);
+      ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
+      ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 130);
+      ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
+      ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 145);
+      ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
+      ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 160);
+      ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 160);
+      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 175);
+      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 175);
+      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 190);
+      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 190);
     }
   };
 }
@@ -146,6 +148,7 @@ function handleButton(input) {
         }
       }
       sendMessage(selection.name+' was adopted');
+      speech.push(new Speak(selection, neutralWord()));
       selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       seeds.push(new Seed(randomColourFruity(), selection));
@@ -169,6 +172,7 @@ function handleButton(input) {
         }
       }
       sendMessage(selection.name+' was adopted');
+      speech.push(new Speak(selection, neutralWord()));
       selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       seeds.push(new Seed(randomColourFruity(), selection));
@@ -192,6 +196,7 @@ function handleButton(input) {
         }
       }
       sendMessage(selection.name+' joined the family');
+      speech.push(new Speak(selection, neutralWord()));
       selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       selection.reinitSizes;
@@ -295,7 +300,7 @@ function clickMouse(e) {
       if (detectCollision(pointerPos, chibis[i])) {
         selection = chibis[i];
         labels[2].visible = true;
-        labels[2].text = 'Selected '+selection.name;
+        labels[2].text = selection.name;
         labels[2].reinitSizes();
         selectionInfo.visible = true;
         buttons[3].visible = true;

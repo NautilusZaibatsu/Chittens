@@ -2,6 +2,14 @@
 
 changelog
 
+24/11/2018 = 0.52
+~ added speech bubbles
+~ trees now automatically start to drop once they reach their maximum height. This is to stop all the chibis from startving to death if they can't reach the trees
+~ made the colour range for mutations more diverse
+~ changed the way chibis look in nirvana, now it;s much more dramatic
+~ tweaked some appearance values to make the most of the cell shading system
+
+
 23/11/2018 = 0.051
 ~ added cell shading to the chibis
 ~ completely rewrote the way front legs work

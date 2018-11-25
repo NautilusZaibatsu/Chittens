@@ -34,3 +34,47 @@ function Message(text, timeStamp) {
   this.text = text;
   this.timeStamp = timeStamp;
 }
+
+/**
+ * function for instances of chibi speech
+ * @param {Chibi} who - which chibi is mewing
+ * @param {string} mew - the text the chibi is saying
+ */
+ function Speak(who, mew) {
+   this.x = who.x;
+   this.y = who.y;
+   this.scale = who.size;
+   this.who = who;
+   this.mew = '*'+mew+'*';
+   this.timeStamp = daytimeCounter;
+   this.flagged = false;
+   this.update = function () {
+     this.x = this.who.x - (fontWidth * this.mew.length/2/1.5);
+     this.y = this.who.y - (this.who.size*3);
+     ctx.font = fontSize/1.5+'px' + ' ' + globalFont;
+     ctx.fillStyle = outputArray[2];
+     ctx.fillRect(this.x - 5, this.y - 10, (fontWidth * this.mew.length/1.5) + 10, 13);
+     ctx.fillStyle = mixTwoColours(trueWhite, outputArray[2], 0.5);
+     ctx.fillText(this.mew, this.x, this.y);
+     if (daytimeCounter > this.timeStamp + 20 || daytimeCounter + 20 < this.timeStamp) {
+       this.flagged = true;
+     }
+     ctx.font = fontSize+'px' + ' ' + globalFont;
+   };
+ }
+
+function neutralWord() {
+  return neutralWords[Math.floor(Math.random()*(neutralWords.length-1))];
+}
+
+function angryWord() {
+  return angryWords[Math.floor(Math.random()*(neutralWords.length-1))];
+}
+
+function happyWord() {
+  return happyWords[Math.floor(Math.random()*(neutralWords.length-1))];
+}
+
+ const neutralWords = ['mew', 'meow', 'brrrup'];
+ const angryWords = ['grrr', 'brrrbl', 'rawr'];
+ const happyWords = ['prrr', 'mraow'];
