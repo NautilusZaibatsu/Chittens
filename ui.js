@@ -197,6 +197,8 @@ function handleButton(input) {
       }
       sendMessage(selection.name+' joined the family');
       speech.push(new Speak(selection, neutralWord()));
+      selection.size *= 0.5;
+      selection.reinitSizes();
       selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       selection.reinitSizes;
@@ -235,7 +237,9 @@ function handleButton(input) {
     buttons[5].visible = false;
     for (let i = 0, stop = false; i < chibis.length && !stop; i++) {
       if (chibis[i] == selection) {
+        graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
         stop = true;
+        removeRelationships(selection);
         chibis.splice(i, 1);
       }
     }

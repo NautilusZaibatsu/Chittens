@@ -77,4 +77,4 @@ function happyWord() {
 
  const neutralWords = ['mew', 'meow', 'brrrup'];
  const angryWords = ['grrr', 'brrrbl', 'rawr'];
- const happyWords = ['prrr', 'mraow'];
+ const happyWords = ['prrr', 'mraow', 'owo'];

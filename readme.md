@@ -4,14 +4,18 @@ changelog
 
 02/01/2019 = 0.53
 ~ added FPS counter
-~ changed the way the front legs rotate at the shoulder to make it more natural
 ~ improved performance
+~ changed the way the front legs are drawn to make it smoother and more natural
+~ kitten behaviour update. A chibi will be a kitten until it is 1 day old. It will follow it's mother attempting to suckle until it becomes independent. Kittens sleep do not pay a cost for jumping, they sleep when their mothers do. Kittens start smaller and grow faster
+~ trees now only regenerate the innermost two pieces of fruit, this should increase how far chibis spread out to eat without making anyone starve
+
+
 
 24/11/2018 = 0.52
 ~ added speech bubbles
-~ trees now automatically start to drop once they reach their maximum height. This is to stop all the chibis from startving to death if they can't reach the trees
+~ trees now automatically start to drop once they reach their maximum height. This is to stop all the chibis from starving to death if they can't reach the trees
 ~ made the colour range for mutations more diverse
-~ changed the way chibis look in nirvana, now it;s much more dramatic
+~ changed the way chibis look in nirvana, now it's much more dramatic
 ~ tweaked some appearance values to make the most of the cell shading system
 
 
