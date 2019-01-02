@@ -2,6 +2,11 @@
 
 changelog
 
+02/01/2019 = 0.53
+~ added FPS counter
+~ changed the way the front legs rotate at the shoulder to make it more natural
+~ improved performance
+
 24/11/2018 = 0.52
 ~ added speech bubbles
 ~ trees now automatically start to drop once they reach their maximum height. This is to stop all the chibis from startving to death if they can't reach the trees

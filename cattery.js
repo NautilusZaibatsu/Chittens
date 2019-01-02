@@ -437,6 +437,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   // act
   // @return {boolean} - whether the action has a cost
   this.act = function() {
+    // giving birth
     if (!choosingChibi && this.snuggling == 0 && this.gender == 'Female') {
       // find out who the partner was
       for (let stop = false, i = 0; i < chibis.length && ! stop; i++) {
@@ -666,7 +667,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     }
   };
   this.drawFrontLegs = function() {
-    // hands
+    // front legs
     let handGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size)+(this.limbLength/2.5));
     handGradient.addColorStop(0, this.firstColour);
     handGradient.addColorStop(this.coatMod[0], this.firstColour);
@@ -708,7 +709,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.lineWidth += this.cellShadeThickness;
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.moveTo(-this.size*2/3, (this.size/4));
         ctx.restore();
@@ -719,7 +719,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.fill();
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.moveTo(this.size*2/3, (this.size/4));
         ctx.restore();
@@ -738,7 +737,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.strokeStyle = handGradient;
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.arc(-this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
@@ -752,7 +750,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.fill();
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.arc(this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
@@ -773,7 +770,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         // left arm
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.moveTo(-this.size*2/3, (this.size/4));
         ctx.restore();
@@ -788,7 +784,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         // right arm
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.moveTo(this.size*2/3, (this.size/4));
         ctx.restore();
@@ -807,7 +802,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         // left arm
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.arc(-this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
@@ -825,7 +819,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         // right arm
         ctx.save(); // 0 open
         ctx.translate(this.x, this.y + (this.size/3));
-        ctx.rotate(this.rotation);
         ctx.beginPath();
         ctx.arc(this.size*2/3, (this.size/4), this.size/5*this.thickness*2, 0, 2 * Math.PI);
         ctx.fill();
@@ -845,7 +838,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   }
   this.update = function() {
     if (this.supersaiyan > 0) {
-      this.cellShadeLine = glowColour;
+      ctx.cellShadeLine = mixTwoColours(glowColour, mixTwoColours(this.secondColour, this.firstColour, 0.5), this.supersaiyan/100);
     } else if (this.cellShadeLine == '' || this.cellShadeLine == glowColour) {
       this.cellShadeLine = mixTwoColours(mixTwoColours(this.secondColour, this.firstColour, 0.5), trueBlack, 0.7);
     }
@@ -1345,7 +1338,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.save(); // 0 open
         // CELL SHADING
         if (this.supersaiyan > 0) {
-          ctx.fillStyle = mixTwoColours(glowColour, mixTwoColours(this.secondColour, this.firstColour, 0.5), this.supersaiyan/100);
+          ctx.fillStyle = this.cellShadeLine;
         } else {
         ctx.fillStyle = mixTwoColours(this.secondColour, this.firstColour, 0.5);
       }

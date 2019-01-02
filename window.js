@@ -19,11 +19,14 @@ const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
-// set the environment start time and start values
+// set the environment start time and other starting values
 const d = new Date();
 const startTime = d.getHours();
 const hourOfCreation = Math.floor(startTime * (1000/23));
 const hocLength = 1000/12;
+secondTimer = 0;
+fps = 0;
+fpsCount = 0;
 daytimeCounter = hourOfCreation;
 timeMod = daytimeCounter;
 anniversary = true;
@@ -42,6 +45,9 @@ glowColour = '#FFFF88';
 trueWhite = '#FFFFFF';
 trueBlack = '#000000';
 superColour = 255;
+
+// set timer parameters
+const glyphTimer = 100;
 
 // init stuff
 chibis = [];
@@ -213,66 +219,66 @@ function updateGameArea() {
   myGameArea.frameNo += 1;
   if (myGameArea.frameNo == 1 || everyinterval(3)) {
     // fire a comet
-    if (Math.random() < 0.005) {
+    if (fps >= 30 && Math.random() < 0.005) {
       ranX = Math.floor(Math.random()*(canvasWidth));
       ranY = Math.floor(Math.random()*(trueBottom/2));
       comets.push(new Inert(2, 2, glowColour, ranX, ranY, false));
       comets[comets.length-1].speedX = (Math.random()*2)-1;
       comets[comets.length-1].speedY = -(Math.random()+0.1);
     }
-  }
-  // change the colour by time of day
-  for (let tick = 0; tick < nightcolour.length; tick++) {
-    let ri = 0;
-    let gi = 0;
-    let bi = 0;
-    let rj = 0;
-    let gj = 0;
-    let bj = 0;
-    if (daytimeCounter < 250) {
-      timeMod = daytimeCounter;
-      ri = hexToRgb(midnightcolour[tick]).r;
-      gi = hexToRgb(midnightcolour[tick]).g;
-      bi = hexToRgb(midnightcolour[tick]).b;
-      rj = hexToRgb(morningcolour[tick]).r;
-      gj = hexToRgb(morningcolour[tick]).g;
-      bj = hexToRgb(morningcolour[tick]).b;
-    } else if (daytimeCounter < 500) {
-      timeMod = daytimeCounter - 250;
-      ri = hexToRgb(morningcolour[tick]).r;
-      gi = hexToRgb(morningcolour[tick]).g;
-      bi = hexToRgb(morningcolour[tick]).b;
-      rj = hexToRgb(middaycolour[tick]).r;
-      gj = hexToRgb(middaycolour[tick]).g;
-      bj = hexToRgb(middaycolour[tick]).b;
-    } else if (daytimeCounter < 750) {
-      timeMod = daytimeCounter - 500;
-      ri = hexToRgb(middaycolour[tick]).r;
-      gi = hexToRgb(middaycolour[tick]).g;
-      bi = hexToRgb(middaycolour[tick]).b;
-      rj = hexToRgb(nightcolour[tick]).r;
-      gj = hexToRgb(nightcolour[tick]).g;
-      bj = hexToRgb(nightcolour[tick]).b;
-    } else {
-      timeMod = daytimeCounter - 750;
-      ri = hexToRgb(nightcolour[tick]).r;
-      gi = hexToRgb(nightcolour[tick]).g;
-      bi = hexToRgb(nightcolour[tick]).b;
-      rj = hexToRgb(midnightcolour[tick]).r;
-      gj = hexToRgb(midnightcolour[tick]).g;
-      bj = hexToRgb(midnightcolour[tick]).b;
+    // change the colour by time of day
+    for (let tick = 0; tick < nightcolour.length; tick++) {
+      let ri = 0;
+      let gi = 0;
+      let bi = 0;
+      let rj = 0;
+      let gj = 0;
+      let bj = 0;
+      if (daytimeCounter < 250) {
+        timeMod = daytimeCounter;
+        ri = hexToRgb(midnightcolour[tick]).r;
+        gi = hexToRgb(midnightcolour[tick]).g;
+        bi = hexToRgb(midnightcolour[tick]).b;
+        rj = hexToRgb(morningcolour[tick]).r;
+        gj = hexToRgb(morningcolour[tick]).g;
+        bj = hexToRgb(morningcolour[tick]).b;
+      } else if (daytimeCounter < 500) {
+        timeMod = daytimeCounter - 250;
+        ri = hexToRgb(morningcolour[tick]).r;
+        gi = hexToRgb(morningcolour[tick]).g;
+        bi = hexToRgb(morningcolour[tick]).b;
+        rj = hexToRgb(middaycolour[tick]).r;
+        gj = hexToRgb(middaycolour[tick]).g;
+        bj = hexToRgb(middaycolour[tick]).b;
+      } else if (daytimeCounter < 750) {
+        timeMod = daytimeCounter - 500;
+        ri = hexToRgb(middaycolour[tick]).r;
+        gi = hexToRgb(middaycolour[tick]).g;
+        bi = hexToRgb(middaycolour[tick]).b;
+        rj = hexToRgb(nightcolour[tick]).r;
+        gj = hexToRgb(nightcolour[tick]).g;
+        bj = hexToRgb(nightcolour[tick]).b;
+      } else {
+        timeMod = daytimeCounter - 750;
+        ri = hexToRgb(nightcolour[tick]).r;
+        gi = hexToRgb(nightcolour[tick]).g;
+        bi = hexToRgb(nightcolour[tick]).b;
+        rj = hexToRgb(midnightcolour[tick]).r;
+        gj = hexToRgb(midnightcolour[tick]).g;
+        bj = hexToRgb(midnightcolour[tick]).b;
+      }
+      let dayR = Math.floor(ri - ((((ri - rj)/250))*timeMod));
+      let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
+      let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
+      outputArray[tick] = rgbToHex(dayR, dayG, dayB);
     }
-    let dayR = Math.floor(ri - ((((ri - rj)/250))*timeMod));
-    let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
-    let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
-    outputArray[tick] = rgbToHex(dayR, dayG, dayB);
   }
-  let tankGradient=ctx.createLinearGradient(0, 0, 0, canvasHeight);
+  let tankGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
   tankGradient.addColorStop(0, outputArray[0]);
   tankGradient.addColorStop(0.4, outputArray[1]);
   tankGradient.addColorStop(0.75, outputArray[2]);
   tankGradient.addColorStop(1, outputArray[3]);
-  ctx.fillStyle=tankGradient;
+  ctx.fillStyle = tankGradient;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   // change the value of trueWhite
   // trueWhite = mixTwoColours('#FFFFFF', outputArray[2], 0.5);
@@ -284,6 +290,7 @@ function updateGameArea() {
     starfield[i].update();
   }
   // trails
+  if (fps >= 30) {
   for (i = trails.length-1; i >= 0; i--) {
     trails[i].update();
     trails[i].timer --;
@@ -292,6 +299,7 @@ function updateGameArea() {
       i --;
     }
   }
+}
   // draw the ground and the background
   // draw the tree
   ctx.globalAlpha = 0.8;
@@ -301,19 +309,11 @@ function updateGameArea() {
   } else {
     ph -= 100;
   }
-  // center the image
+  // center and translate the image
   ctx.save();
   ctx.translate((canvasWidth-idealX)/2, (canvasHeight-idealY)/2);
-  // scale it to the canvas width
-  // ctx.scale(1/(idealY/canvasHeight), 1/(idealY/canvasHeight));
-  for (let y = 0; y < iw; y++) {
-    let scan = 0.3 * Math.sin((y + ph)/100);
-    ctx.drawImage(newtree, 0, y, iw, 1, scan, y, iw, 1);
-  }
+  ctx.drawImage(newtree, 0, 0, newtree.width, newtree.height);
   ctx.restore();
-
-  // draw glow coming off the ground
-  ctx.globalAlpha = 0.15;
 
   // update the seeds
   for (let i = 0; i < seeds.length; i++) {
@@ -325,10 +325,9 @@ function updateGameArea() {
   }
 
   // update the fruit
-  for (let i = 0, stop = false; i < fruits.length; i++) {
-    for (let j = 0; !stop && j < chibis.length; j++) {
-      if (fruits[i].eater == null && chibis[j].focus == fruits[i] && detectCollision(fruits[i], chibis[j])) {
-        stop = true;
+  for (let i = 0; i < fruits.length; i++) {
+    for (let j = 0; fruits[i].eater == null && j < chibis.length; j++) {
+      if (chibis[j].focus == fruits[i] && detectCollision(fruits[i], chibis[j])) {
         chibis[j].speedX = 0;
         chibis[j].speedY = 0;
         chibis[j].energy += 10;
@@ -360,7 +359,8 @@ function updateGameArea() {
       }
     }
 
-
+  // draw the glow coming off the floor
+  ctx.globalAlpha = 0.15;
   let floorGlow = ctx.createLinearGradient(0, canvasHeight - muckLevel - 200, 0, canvasHeight);
   floorGlow.addColorStop(0, 'rgba(0, 0, 0, 0)');
   floorGlow.addColorStop(1, mixTwoColours(trueWhite, outputArray[1], 0.5));
@@ -368,7 +368,6 @@ function updateGameArea() {
   ctx.fillRect(0, canvasHeight-muckLevel-5 - 200, canvasWidth, 5 + muckLevel + 200);
   // draw the floor
   ctx.globalAlpha = 1;
-
   let horizon = ctx.createLinearGradient(0, canvasHeight - muckLevel - 100, 0, canvasHeight-muckLevel);
   horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
   horizon.addColorStop(1, trueBlack);
@@ -406,7 +405,16 @@ function updateGameArea() {
   }
 }
   // update the text
-  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length;
+  let tCount = ""+daytimeCounter;
+  tCount = tCount.slice(1, 2);
+  if (tCount !== secondTimer) {
+    secondTimer = tCount;
+    fps = fpsCount;
+    fpsCount = 0;
+  } else {
+    fpsCount ++;
+  }
+  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length + ' FPS '+ fpsCount;
   basicInfo.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
@@ -494,10 +502,8 @@ function updateGameArea() {
       }
     }
 
-
-    // for my guys
-    // global and prep first
-    // check for both sexes
+    // check for both sexes - if either sex is not present we will init the cattery for adoption
+    if (!choosingChibi) {
     let malePresent = false;
     let femalePresent = false;
     for (let i = 0; i < chibis.length; i++) {
@@ -507,19 +513,11 @@ function updateGameArea() {
         malePresent = true;
       }
     }
-    if (!choosingChibi) {
       if (!femalePresent) {
         initFemaleCattery();
       } else if (!malePresent) {
         initMaleCattery();
       }
-      // if (chosenChibiF && chosenChibiM && chosenKitten) {
-      //   chibis.sort(function twoVars(a, b) {
-      //     if (a.health + a.energy + a.love> b.health+ b.energy + b.love) return 1;
-      //     if (a.health + a.energy + a.love< b.health+ b.energy + b.love) return -1;
-      //     return 0;
-      //   });
-      // }
     }
 
     // firefly logic
@@ -1342,7 +1340,7 @@ function Seed(colour, owner) {
     */
     function recalculateStarfield() {
       // if there is less than the designated amount, add one
-      if (starfield.length < 50*proportion) {
+      if (starfield.length < 50*proportion && fps >= 30) {
         let ranX = Math.floor(Math.random()*(canvasWidth));
         let ranSize = Math.random()*3;
         starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, trueBottom, false));
@@ -1494,7 +1492,7 @@ function Seed(colour, owner) {
       this.speedX = speedX;
       this.speedY = speedY;
       this.size = fontWidth;
-      this.timer = 100;
+      this.timer = glyphTimer;
       this.x = x;
       this.y = y;
       this.spin = 0;
@@ -1525,7 +1523,7 @@ function Seed(colour, owner) {
         }
         this.timer -= this.step;
         // draw glyph
-        ctx.globalAlpha = (this.timer/100)+0.000001;
+        ctx.globalAlpha = (this.timer/glyphTimer) + 0.000001;
         ctx.fillStyle = this.colour;
         ctx.font = '14px' + ' ' + globalFont;
         ctx.save();
