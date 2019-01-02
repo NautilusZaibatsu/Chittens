@@ -1,5 +1,5 @@
 // Version 0.03
-const numlibs = 9;
+const numlibs = 10;
 const namesinlib = 50;
 /**
 * function generate a baby name from two parents
@@ -90,6 +90,13 @@ function generateBabyName(maleName, femaleName, gender) {
         ethnic = 'indian';
       }
     }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (maleName == maleEgyptian[i]) {
+        stop = true;
+        ethnic = 'egyptian';
+      }
+    }
     if (ethnic == null) {
       console.log('Error: M '+maleName+' not found in library '+ethnic);
     }
@@ -157,6 +164,13 @@ function generateBabyName(maleName, femaleName, gender) {
       if (femaleName == femaleIndian[i]) {
         stop = true;
         ethnic = 'indian';
+      }
+    }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (femaleName == femaleEgyptian[i]) {
+        stop = true;
+        ethnic = 'egyptian';
       }
     }
     if (ethnic == null) {
@@ -238,6 +252,14 @@ function generateBabyName(maleName, femaleName, gender) {
       thisSeed = Math.floor(Math.random()*namesinlib);
       result = femaleIndian[thisSeed];
     }
+  } else if (ethnic == 'egyptian') {
+    if (gender == 'Male' || (gender == 'Non Binary' && Math.random() < 0.5)) {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = maleEgyptian[thisSeed];
+    } else {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = femaleEgyptian[thisSeed];
+    }
   }
   let flagged = false;
   for (let c = 0; c < chibis.length && !flagged; c++) {
@@ -311,6 +333,12 @@ function getRandomName(seed) {
   } else if (seed < (18 * namesinlib)) {
     seedTrans = (seed - (17 * namesinlib));
     return femaleIndian[seedTrans];
+  } else if (seed < (19 * namesinlib)) {
+    seedTrans = (seed - (18 * namesinlib));
+    return maleEgyptian[seedTrans];
+  } else if (seed < (20 * namesinlib)) {
+    seedTrans = (seed - (19 * namesinlib));
+    return femaleEgyptian[seedTrans];
   }
   console.log('error m');
 };
@@ -335,6 +363,8 @@ function getRandomMaleEthnicName(ethnicity) {
     return maleGermanic[Math.round(Math.random()*namesinlib)];
   } else if (ethnicity < 9) {
     return maleIndian[Math.round(Math.random()*namesinlib)];
+  } else if (ethnicity < 10) {
+    return maleEgyptian[Math.round(Math.random()*namesinlib)];
   }
   sendMessage('oops M '+ethinicity);
 }
@@ -357,8 +387,10 @@ function getRandomFemaleEthnicName(ethnicity) {
     return femaleChinese[Math.round(Math.random()*namesinlib)];
   } else if (ethnicity < 8) {
     return femaleGermanic[Math.round(Math.random()*namesinlib)];
-  }  else if (ethnicity < 9) {
+  } else if (ethnicity < 9) {
     return femaleIndian[Math.round(Math.random()*namesinlib)];
+  } else if (ethnicity < 10) {
+    return femaleEgyptian[Math.round(Math.random()*namesinlib)];
   }
   sendMessage('oops F '+ethinicity);
 }
@@ -391,6 +423,9 @@ function getMaleName(index) {
   } else if (index < (9 * namesinlib)) {
     seedTrans = (index - (8 * namesinlib));
     return maleIndian[seedTrans];
+  } else if (index < (10 * namesinlib)) {
+    seedTrans = (index - (9 * namesinlib));
+    return maleEgyptian[seedTrans];
   }
   console.log('error m');
 };
@@ -422,6 +457,9 @@ function getFemaleName(index) {
   } else if (index < (9 * namesinlib)) {
     seedTrans = (index - (8 * namesinlib));
     return femaleIndian[seedTrans];
+  } else if (index < (10 * namesinlib)) {
+    seedTrans = (index - (9 * namesinlib));
+    return femaleEgyptian[seedTrans];
   }
   console.log('error m');
 };
@@ -438,6 +476,7 @@ function reportNames(runtimes) {
       }
     }
   }
+  /* HARDCORE DATABSE INTEGRITY TESTING */
   // let stop = false;
   // let t = 0;
   // let gname = getFemaleName(Math.round(Math.random()*totalFemaleNames));
@@ -471,20 +510,23 @@ function reportNames(runtimes) {
   // console.log('passed test '+t+' times');
   if (maleAfrican.length == namesinlib && maleAmerican.length == namesinlib && maleCeltic.length == namesinlib
     && maleChinese.length == namesinlib && maleIslander.length == namesinlib && maleJapanese.length ==namesinlib
-    && maleIndian.length == namesinlib && maleGermanic.length == namesinlib
+    && maleIndian.length == namesinlib && maleGermanic.length == namesinlib && maleEgyptian.length == namesinlib
     && femaleAfrican.length == namesinlib && femaleAmerican.length == namesinlib && femaleCeltic.length == namesinlib
     && femaleChinese.length == namesinlib && femaleIslander.length == namesinlib && femaleJapanese.length ==namesinlib
-    && femaleIndian.length == namesinlib && femaleGermanic.length == namesinlib) {
+    && femaleIndian.length == namesinlib && femaleGermanic.length == namesinlib && femaleEgyptian.length == namesinlib) {
       return 'Database succesfully loaded';
-    }
-    +maleAfrican.length+' '+femaleAfrican.length+' african\n'
+    } else {
+    return 'Database error\n'+maleAfrican.length+' '+femaleAfrican.length+' african\n'
     +maleAmerican.length+' '+femaleAmerican.length+' american\n'
     +maleCeltic.length+' '+femaleCeltic.length+' celtic\n'
     +maleChinese.length+' '+femaleChinese.length+' chinese\n'
     +maleIslander.length+' '+femaleIslander.length+' islander\n'
     +maleJapanese.length+' '+femaleJapanese.length+' japanese\n'
     +maleIndian.length+' '+femaleIndian.length+' indian\n'
-    +maleGermanic.length+' '+femaleGermanic.length+' germanic';
+    +maleGermanic.length+' '+femaleGermanic.length+' germanic\n'
+    +maleEgyptian.length+' '+femaleEgyptian.length+' egyptian';
+
+  }
   };
 
 
@@ -707,60 +749,6 @@ function reportNames(runtimes) {
 
   const maleAmerican = [
     // native American / mayan / incan / aztec
-    'Ahuatzi',
-    'Amaruq',
-    'Aviaja',
-    'Camaxtli',
-    'Cinteotl',
-    'Cipactonal',
-    'Coatlicue',
-    'Dahteste',
-    'Ekchuah',
-    'Eueucoyotl',
-    'Hiawatha',
-    'Hokaratcha',
-    'Huacaltzintli',
-    'Huehuecoyotl',
-    'Huitzilin',
-    'Itzcali',
-    'Itzcoatl',
-    'Ixchel',
-    'Kaiah',
-    'Kimimela',
-    'Kumaglak',
-    'Maconaquea',
-    'Mixcoatl',
-    'Mextli',
-    'Nacon',
-    'Nochehuatl',
-    'Ocotlan',
-    'Pakuna',
-    'Panuk',
-    'Papina',
-    'Pebbles',
-    'Pocahontas',
-    'Sakakawea',
-    'Shenandoah',
-    'Tenoch',
-    'Tarkik',
-    'Toklo',
-    'Tayatina',
-    'Teanawesia',
-    'Teotihuacan',
-    'Tlanextic',
-    'Tupelo',
-    'Tupoc',
-    'Ujurak',
-    'Xochipilli',
-    'Yoskolo',
-    'Yotimo',
-    'Yutu',
-    'Xicotencatl',
-    'Zitkala',
-  ];
-
-  const femaleAmerican = [
-    // native American / mayan / incan / aztec
     'Acolmiztli',
     'Adlartok',
     'Ahanu',
@@ -813,6 +801,60 @@ function reportNames(runtimes) {
     'Yactecuhtli',
   ];
 
+  const femaleAmerican = [
+    // native American / mayan / incan / aztec
+    'Ahuatzi',
+    'Amaruq',
+    'Aviaja',
+    'Camaxtli',
+    'Cinteotl',
+    'Cipactonal',
+    'Coatlicue',
+    'Dahteste',
+    'Ekchuah',
+    'Eueucoyotl',
+    'Hiawatha',
+    'Hokaratcha',
+    'Huacaltzintli',
+    'Huehuecoyotl',
+    'Huitzilin',
+    'Itzcali',
+    'Itzcoatl',
+    'Ixchel',
+    'Kaiah',
+    'Kimimela',
+    'Kumaglak',
+    'Maconaquea',
+    'Mixcoatl',
+    'Mextli',
+    'Nacon',
+    'Nochehuatl',
+    'Ocotlan',
+    'Pakuna',
+    'Panuk',
+    'Papina',
+    'Pebbles',
+    'Pocahontas',
+    'Sakakawea',
+    'Shenandoah',
+    'Tenoch',
+    'Tarkik',
+    'Toklo',
+    'Tayatina',
+    'Teanawesia',
+    'Teotihuacan',
+    'Tlanextic',
+    'Tupelo',
+    'Tupoc',
+    'Ujurak',
+    'Xochipilli',
+    'Yoskolo',
+    'Yotimo',
+    'Yutu',
+    'Xicotencatl',
+    'Zitkala',
+  ];
+
   const maleJapanese = [
     // Japanese
     'Aizen',
@@ -832,6 +874,7 @@ function reportNames(runtimes) {
     'Gekka',
     'Haru',
     'Haruto',
+    'Hayao',
     'Hinata',
     'Itsuki',
     'Jijii',
@@ -843,11 +886,9 @@ function reportNames(runtimes) {
     'Koki',
     'Kukunochi',
     'Kota',
-    'Nkaazawa',
     'Minato',
     'Ohkami',
     'Ohonamochi',
-    'Oyamatsumi',
     'Reo',
     'Rikuto',
     'Ryu',
@@ -864,6 +905,7 @@ function reportNames(runtimes) {
     'Touma',
     'Yabune',
     'Yamato',
+    'Yoshi',
     'Yuuto',
   ];
 
@@ -885,12 +927,12 @@ function reportNames(runtimes) {
     'Kanna',
     'Koharu',
     'Kojin',
-    'Kokona',
     'Kishi',
     'Makoto',
     'Mamoru',
     'Mei',
     'Michiru',
+    'Mimiko',
     'Minako',
     'Misaki',
     'Miyazu',
@@ -1256,7 +1298,6 @@ function reportNames(runtimes) {
     'Johann',
     'Johannes',
     'Jonas',
-    'Joris',
     'Justus',
     'Karl',
     'Kilian',
@@ -1275,9 +1316,10 @@ function reportNames(runtimes) {
     'Lukas',
     'Mads',
     'Malte',
+    'Manfred',
     'Matteo',
+    'Marius',
     'Mattis',
-    'Max',
     'Maxim',
     'Mika',
     'Milan',
@@ -1452,6 +1494,112 @@ function reportNames(runtimes) {
     'Tanvi',
     'Vani',
     'Varsha',
+  ];
+
+  const maleEgyptian = [
+    'Aker',
+    'Amenhotep',
+    'Amun',
+    'Anhur',
+    'Anbubis',
+    'Artaxerxes',
+    'Aten',
+    'Atum',
+    'Baal',
+    'Bennu',
+    'Darius',
+    'Dedun',
+    'Djehuti',
+    'Geb',
+    'Hakor',
+    'Hapi',
+    'Harmachis',
+    'Harsiesi',
+    'Horus',
+    'Imhotep',
+    'Ishtar',
+    'Joh',
+    'Khababash',
+    'Khepri',
+    'Khnum',
+    'Khonsu',
+    'Maahes',
+    'Mesta',
+    'Necho',
+    'Neferhotep',
+    'Nefertum',
+    'Nemty',
+    'Neper',
+    'Osiris',
+    'Piankh',
+    'Ptah',
+    'Qebui',
+    'Ra',
+    'Ramesses',
+    'Set',
+    'Shu',
+    'Sobek',
+    'Sopdu',
+    'Takelot',
+    'Tefnakht',
+    'Thoth',
+    'Tuamutef',
+    'Uneg',
+    'Wepwawet',
+    'Xerxes',
+  ];
+
+  const femaleEgyptian = [
+    'Ahti',
+    'Ahmes',
+    'Amunet',
+    'Anuket',
+    'Ankhesenamun',
+    'Astarte',
+    'Bastet',
+    'Bat',
+    'Cleopatra',
+    'Hathor',
+    'Hatmehit',
+    'Hatshepsut',
+    'Heqet',
+    'Hesat',
+    'Iabet',
+    'Iah',
+    'Imi',
+    'Imentet',
+    'Isis',
+    'Kebechet',
+    'Kebehut',
+    'Maat',
+    'Mekhit',
+    'Mehit',
+    'Meritamen',
+    'Mut',
+    'Neferu',
+    'Nefertiti',
+    'Nehmetawy',
+    'Neit',
+    'Nekhbet',
+    'Nephthys',
+    'Nepit',
+    'Nitocris',
+    'Nut',
+    'Pakhet',
+    'Pelican',
+    'Qetesh',
+    'Renenutet',
+    'Satet',
+    'Sekhmet',
+    'Seshat',
+    'Sheshmetet',
+    'Sobekneferu',
+    'Tefnut',
+    'Tenenet',
+    'Tiyi',
+    'Twosret',
+    'Wadjet',
+    'Wosret',
   ];
 
   const totalMaleNames = (numlibs * namesinlib);

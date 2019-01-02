@@ -19,11 +19,14 @@ const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
-// set the environment start time and start values
-const d = new Date();
+// set the environment start time and other starting values
+d = new Date();
 const startTime = d.getHours();
 const hourOfCreation = Math.floor(startTime * (1000/23));
 const hocLength = 1000/12;
+secondTimer = 0;
+fps = 0;
+fpsCount = '00';
 daytimeCounter = hourOfCreation;
 timeMod = daytimeCounter;
 anniversary = true;
@@ -32,6 +35,7 @@ paused = false;
 chosenChibiM = false;
 chosenChibiF = false;
 chosenKitten = true;
+choiceTimer = 0;
 elders = 0;
 obelisks = 0;
 guyID = 0;
@@ -41,7 +45,11 @@ selection = null;
 glowColour = '#FFFF88';
 trueWhite = '#FFFFFF';
 trueBlack = '#000000';
+albinoRed = '#FF0000'
 superColour = 255;
+
+// set timer parameters
+const glyphTimer = 100;
 
 // init stuff
 chibis = [];
@@ -213,66 +221,83 @@ function updateGameArea() {
   myGameArea.frameNo += 1;
   if (myGameArea.frameNo == 1 || everyinterval(3)) {
     // fire a comet
-    if (Math.random() < 0.005) {
+    if (fps >= 30 && Math.random() < 0.005) {
       ranX = Math.floor(Math.random()*(canvasWidth));
       ranY = Math.floor(Math.random()*(trueBottom/2));
       comets.push(new Inert(2, 2, glowColour, ranX, ranY, false));
       comets[comets.length-1].speedX = (Math.random()*2)-1;
       comets[comets.length-1].speedY = -(Math.random()+0.1);
     }
-  }
-  // change the colour by time of day
-  for (let tick = 0; tick < nightcolour.length; tick++) {
-    let ri = 0;
-    let gi = 0;
-    let bi = 0;
-    let rj = 0;
-    let gj = 0;
-    let bj = 0;
-    if (daytimeCounter < 250) {
-      timeMod = daytimeCounter;
-      ri = hexToRgb(midnightcolour[tick]).r;
-      gi = hexToRgb(midnightcolour[tick]).g;
-      bi = hexToRgb(midnightcolour[tick]).b;
-      rj = hexToRgb(morningcolour[tick]).r;
-      gj = hexToRgb(morningcolour[tick]).g;
-      bj = hexToRgb(morningcolour[tick]).b;
-    } else if (daytimeCounter < 500) {
-      timeMod = daytimeCounter - 250;
-      ri = hexToRgb(morningcolour[tick]).r;
-      gi = hexToRgb(morningcolour[tick]).g;
-      bi = hexToRgb(morningcolour[tick]).b;
-      rj = hexToRgb(middaycolour[tick]).r;
-      gj = hexToRgb(middaycolour[tick]).g;
-      bj = hexToRgb(middaycolour[tick]).b;
-    } else if (daytimeCounter < 750) {
-      timeMod = daytimeCounter - 500;
-      ri = hexToRgb(middaycolour[tick]).r;
-      gi = hexToRgb(middaycolour[tick]).g;
-      bi = hexToRgb(middaycolour[tick]).b;
-      rj = hexToRgb(nightcolour[tick]).r;
-      gj = hexToRgb(nightcolour[tick]).g;
-      bj = hexToRgb(nightcolour[tick]).b;
-    } else {
-      timeMod = daytimeCounter - 750;
-      ri = hexToRgb(nightcolour[tick]).r;
-      gi = hexToRgb(nightcolour[tick]).g;
-      bi = hexToRgb(nightcolour[tick]).b;
-      rj = hexToRgb(midnightcolour[tick]).r;
-      gj = hexToRgb(midnightcolour[tick]).g;
-      bj = hexToRgb(midnightcolour[tick]).b;
+    // change the colour by time of day
+    for (let tick = 0; tick < nightcolour.length; tick++) {
+      let ri = 0;
+      let gi = 0;
+      let bi = 0;
+      let rj = 0;
+      let gj = 0;
+      let bj = 0;
+      if (daytimeCounter < 250) {
+        timeMod = daytimeCounter;
+        ri = hexToRgb(midnightcolour[tick]).r;
+        gi = hexToRgb(midnightcolour[tick]).g;
+        bi = hexToRgb(midnightcolour[tick]).b;
+        rj = hexToRgb(morningcolour[tick]).r;
+        gj = hexToRgb(morningcolour[tick]).g;
+        bj = hexToRgb(morningcolour[tick]).b;
+      } else if (daytimeCounter < 500) {
+        timeMod = daytimeCounter - 250;
+        ri = hexToRgb(morningcolour[tick]).r;
+        gi = hexToRgb(morningcolour[tick]).g;
+        bi = hexToRgb(morningcolour[tick]).b;
+        rj = hexToRgb(middaycolour[tick]).r;
+        gj = hexToRgb(middaycolour[tick]).g;
+        bj = hexToRgb(middaycolour[tick]).b;
+      } else if (daytimeCounter < 750) {
+        timeMod = daytimeCounter - 500;
+        ri = hexToRgb(middaycolour[tick]).r;
+        gi = hexToRgb(middaycolour[tick]).g;
+        bi = hexToRgb(middaycolour[tick]).b;
+        rj = hexToRgb(nightcolour[tick]).r;
+        gj = hexToRgb(nightcolour[tick]).g;
+        bj = hexToRgb(nightcolour[tick]).b;
+      } else {
+        timeMod = daytimeCounter - 750;
+        ri = hexToRgb(nightcolour[tick]).r;
+        gi = hexToRgb(nightcolour[tick]).g;
+        bi = hexToRgb(nightcolour[tick]).b;
+        rj = hexToRgb(midnightcolour[tick]).r;
+        gj = hexToRgb(midnightcolour[tick]).g;
+        bj = hexToRgb(midnightcolour[tick]).b;
+      }
+      let dayR = Math.floor(ri - ((((ri - rj)/250))*timeMod));
+      let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
+      let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
+      outputArray[tick] = rgbToHex(dayR, dayG, dayB);
     }
-    let dayR = Math.floor(ri - ((((ri - rj)/250))*timeMod));
-    let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
-    let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
-    outputArray[tick] = rgbToHex(dayR, dayG, dayB);
   }
-  let tankGradient=ctx.createLinearGradient(0, 0, 0, canvasHeight);
+
+  if (choosingChibi) {
+    labels[3].text = parseInt(choiceTimer/50);
+    //labels[3].reinitSizes();
+  // check the timer
+  if (choiceTimer > 0) {
+    choiceTimer --;
+  }
+  if (choiceTimer == 0) {
+      console.log('timer out');
+      if (selection == null) {
+      selection = chibis[Math.round(Math.random()*(boxes.length-1))+currentChibis];
+    }
+      handleButton(1);
+  }
+}
+
+  let tankGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
   tankGradient.addColorStop(0, outputArray[0]);
   tankGradient.addColorStop(0.4, outputArray[1]);
   tankGradient.addColorStop(0.75, outputArray[2]);
   tankGradient.addColorStop(1, outputArray[3]);
-  ctx.fillStyle=tankGradient;
+  ctx.fillStyle = tankGradient;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   // change the value of trueWhite
   // trueWhite = mixTwoColours('#FFFFFF', outputArray[2], 0.5);
@@ -284,14 +309,14 @@ function updateGameArea() {
     starfield[i].update();
   }
   // trails
-  for (i = trails.length-1; i >= 0; i--) {
-    trails[i].update();
-    trails[i].timer --;
-    if (trails[i].timer < 0) {
-      trails.splice(i, 1);
-      i --;
+    for (i = trails.length-1; i >= 0; i--) {
+      trails[i].update();
+      trails[i].timer --;
+      if (trails[i].timer < 0) {
+        trails.splice(i, 1);
+        i --;
+      }
     }
-  }
   // draw the ground and the background
   // draw the tree
   ctx.globalAlpha = 0.8;
@@ -301,19 +326,11 @@ function updateGameArea() {
   } else {
     ph -= 100;
   }
-  // center the image
+  // center and translate the image
   ctx.save();
   ctx.translate((canvasWidth-idealX)/2, (canvasHeight-idealY)/2);
-  // scale it to the canvas width
-  // ctx.scale(1/(idealY/canvasHeight), 1/(idealY/canvasHeight));
-  for (let y = 0; y < iw; y++) {
-    let scan = 0.3 * Math.sin((y + ph)/100);
-    ctx.drawImage(newtree, 0, y, iw, 1, scan, y, iw, 1);
-  }
+  ctx.drawImage(newtree, 0, 0, newtree.width, newtree.height);
   ctx.restore();
-
-  // draw glow coming off the ground
-  ctx.globalAlpha = 0.15;
 
   // update the seeds
   for (let i = 0; i < seeds.length; i++) {
@@ -325,10 +342,9 @@ function updateGameArea() {
   }
 
   // update the fruit
-  for (let i = 0, stop = false; i < fruits.length; i++) {
-    for (let j = 0; !stop && j < chibis.length; j++) {
-      if (fruits[i].eater == null && chibis[j].focus == fruits[i] && detectCollision(fruits[i], chibis[j])) {
-        stop = true;
+  for (let i = 0; i < fruits.length; i++) {
+    for (let j = 0; fruits[i].eater == null && j < chibis.length; j++) {
+      if (chibis[j].focus == fruits[i] && detectCollision(fruits[i], chibis[j])) {
         chibis[j].speedX = 0;
         chibis[j].speedY = 0;
         chibis[j].energy += 10;
@@ -339,28 +355,29 @@ function updateGameArea() {
     }
     if (fruits[i].eater !== null) {
       if (fruits[i].eater !== 'X' && fruits[i].eater.hitBottom && fruits[i].eater.nomnomnom == -1) {
-      sendMessage(fruits[i].eater.name+' ate a piece of fruit');
-      if (Math.random() < 0.1) {
-        speech.push(new Speak(fruits[i].eater, happyWord()));
+        sendMessage(fruits[i].eater.name+' ate a piece of fruit');
+        if (Math.random() < 0.1) {
+          speech.push(new Speak(fruits[i].eater, happyWord()));
+        }
+        fruits[i].eater.hunger += 200;
+        fruits[i].eater.health += 50;
+        fruits[i].eater.nomnomnom = 125;
+        fruits[i].eater.sitting = true;
+      } else if (fruits[i].eater !== 'X' && fruits[i].eater.hitBottom && fruits[i].eater.nomnomnom <= 0) {
+        fruits.splice(i, 1);
+        i--;
       }
-      fruits[i].eater.hunger += 200;
-      fruits[i].eater.health += 50;
-      fruits[i].eater.nomnomnom = 125;
-      fruits[i].eater.sitting = true;
-    } else if (fruits[i].eater !== 'X' && fruits[i].eater.hitBottom && fruits[i].eater.nomnomnom <= 0) {
-    fruits.splice(i, 1);
-    i--;
-  }
     }
   }
   // draw the fruit that should appear BEHIND chibis
   for (let i = 0; i < fruits.length; i++) {
     if (fruits[i].eater == null) {
-        fruits[i].update();
-      }
+      fruits[i].update();
     }
+  }
 
-
+  // draw the glow coming off the floor
+  ctx.globalAlpha = 0.15;
   let floorGlow = ctx.createLinearGradient(0, canvasHeight - muckLevel - 200, 0, canvasHeight);
   floorGlow.addColorStop(0, 'rgba(0, 0, 0, 0)');
   floorGlow.addColorStop(1, mixTwoColours(trueWhite, outputArray[1], 0.5));
@@ -368,7 +385,6 @@ function updateGameArea() {
   ctx.fillRect(0, canvasHeight-muckLevel-5 - 200, canvasWidth, 5 + muckLevel + 200);
   // draw the floor
   ctx.globalAlpha = 1;
-
   let horizon = ctx.createLinearGradient(0, canvasHeight - muckLevel - 100, 0, canvasHeight-muckLevel);
   horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
   horizon.addColorStop(1, trueBlack);
@@ -392,21 +408,29 @@ function updateGameArea() {
   }
   // draw the message history
   if (pointerPos.y > canvasHeight - muckLevel - 5) {
-  let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
-  let rMessage = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
-  let gMessage = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
-  let bMessage = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
-  fade.addColorStop(0, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.05)');
-  fade.addColorStop(1, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.3)');
-  // Fill with gradient
-  ctx.fillStyle = fade;
-  ctx.font = fontSize+'px' + ' ' + globalFont;
-  for (let i = messageBuffer.length-2; i >= 0; i--) {
-    ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
+    let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
+    let rMessage = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
+    let gMessage = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
+    let bMessage = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
+    fade.addColorStop(0, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.05)');
+    fade.addColorStop(1, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.3)');
+    // Fill with gradient
+    ctx.fillStyle = fade;
+    ctx.font = fontSize+'px' + ' ' + globalFont;
+    for (let i = messageBuffer.length-2; i >= 0; i--) {
+      ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
+    }
   }
-}
   // update the text
-  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length;
+  d = new Date();
+  if (d.getSeconds() !== secondTimer) {
+    secondTimer = d.getSeconds();
+    fps = fpsCount;
+    fpsCount = 0;
+  } else {
+    fpsCount ++;
+  }
+  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length + ' FPS '+ fps;
   basicInfo.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
@@ -494,32 +518,22 @@ function updateGameArea() {
       }
     }
 
-
-    // for my guys
-    // global and prep first
-    // check for both sexes
-    let malePresent = false;
-    let femalePresent = false;
-    for (let i = 0; i < chibis.length; i++) {
-      if (!chibis[i].elder && chibis[i].gender == 'Female') {
-        femalePresent = true;
-      } else if (!chibis[i].elder && chibis[i].gender == 'Male') {
-        malePresent = true;
-      }
-    }
+    // check for both sexes - if either sex is not present we will init the cattery for adoption
     if (!choosingChibi) {
+      let malePresent = false;
+      let femalePresent = false;
+      for (let i = 0; i < chibis.length; i++) {
+        if (!chibis[i].elder && chibis[i].gender == 'Female') {
+          femalePresent = true;
+        } else if (!chibis[i].elder && chibis[i].gender == 'Male') {
+          malePresent = true;
+        }
+      }
       if (!femalePresent) {
         initFemaleCattery();
       } else if (!malePresent) {
         initMaleCattery();
       }
-      // if (chosenChibiF && chosenChibiM && chosenKitten) {
-      //   chibis.sort(function twoVars(a, b) {
-      //     if (a.health + a.energy + a.love> b.health+ b.energy + b.love) return 1;
-      //     if (a.health + a.energy + a.love< b.health+ b.energy + b.love) return -1;
-      //     return 0;
-      //   });
-      // }
     }
 
     // firefly logic
@@ -559,14 +573,14 @@ function updateGameArea() {
     // DRAW SLEEP CHIBIS FIRST
     for (let i = 0; i < chibis.length; i++) {
       if (!chibis[i].awake) {
-      chibis[i].update();
-    }
+        chibis[i].update();
+      }
     }
     // NOW AWAKE CHIBIS
     for (let i = 0; i < chibis.length; i++) {
       if (chibis[i].awake) {
-             chibis[i].update();
-           }
+        chibis[i].update();
+      }
     }
 
     for (let i = 0; i < speech.length; i++) {
@@ -576,8 +590,8 @@ function updateGameArea() {
         }
       }
       if (!speech[i].flagged) {
-      speech[i].update();
-    } else {
+        speech[i].update();
+      } else {
         speech.splice(i, 1);
       }
     }
@@ -585,9 +599,9 @@ function updateGameArea() {
     // draw the fruit that should appear IN FRONT OF chibis
     for (let i = 0; i < fruits.length; i++) {
       if (fruits[i].eater !== null) {
-          fruits[i].update();
-        }
+        fruits[i].update();
       }
+    }
 
 
     // for fireflies
@@ -659,21 +673,39 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
   this.fruitColour = fruitColour;
   this.fruitCount = 0;
   this.birthday = daytimeCounter;
-  // this.angle = 0;
-  // this.speedX = 0;
-  // this.clockwise = clockwise;
-  this.update = function() {
-    if (this.fruitCount < 4 && this.birthday == daytimeCounter) {
-      for (let i = 0; i < fruits.length; i++) {
-        if (fruits[i].parent == this && fruits[i].eater == null) {
-          fruits.splice(i, 1);
-          i--;
-        }
+
+  this.spawnFruit = function() {
+    // find out how many fruits are on this tree
+    let fruitsOnTree = 0;
+    let positions = [];
+    for (let i = 0; i < fruits.length; i++) {
+      if (fruits[i].parent == this) {
+        fruitsOnTree++;
+        positions.push(fruits[i].treePos);
       }
-      fruits.push(new Fruit(this.fruitColour, this, 0));
-      fruits.push(new Fruit(this.fruitColour, this, 1));
-      fruits.push(new Fruit(this.fruitColour, this, 2));
-      fruits.push(new Fruit(this.fruitColour, this, 3));
+    }
+    if (fruitsOnTree < 4) {
+      // add a fruit in a random position
+      let target = fruitsOnTree + 1;
+      while (fruitsOnTree < target) {
+          let posTemp = Math.round(Math.random()*3);
+          if (!positions.includes(posTemp)) {
+            fruits.push(new Fruit(this.fruitColour, this, posTemp));
+            fruitsOnTree ++;
+          }
+      }
+    }
+    // check that all fruits are on screen
+    for (let i = fruits.length-1; i >= 0; i--) {
+      if (fruits[i].x < 0 || fruits[i].x > canvasWidth) {
+        fruits.splice(i, 1);
+      }
+    }
+  };
+  this.update = function() {
+    // respawning fruit
+    if (this.birthday == daytimeCounter) {
+      this.spawnFruit();
     }
     ctx.fillStyle = trueBlack;
     if (this.y > canvasHeight) {
@@ -687,10 +719,10 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
     if (this.reachedMaxHeight) {
       this.y += (this.loadthisframe/60) + (0.0125*(75/this.width));
     } else {
-    if (this.y <= canvasHeight && this.y >= trueBottom-(this.maxHeight)) {
+      if (this.y <= canvasHeight && this.y >= trueBottom-(this.maxHeight)) {
         this.y += (this.loadthisframe/60) - (0.025*(75/this.width));
+      }
     }
-  }
     ctx.globalAlpha = 0.9;
     ctx.drawImage(acacia, this.x-(this.width*0.5), this.y-10, this.width, 200/(300/this.width));
     ctx.fillRect(this.x-(this.width/30), this.y+(this.width/4.5), this.width/12.5, trueBottom - this.y - this.height);
@@ -706,27 +738,27 @@ function Seed(colour, owner) {
   this.timer = Math.random()*750;
   this.planted = false;
   this.update = function() {
-      this.timer --;
-      let found = false;
-      if (this.timer <= 0) {
-        for (let i = 0; i < chibis.length && !found; i++) {
-          if (chibis[i] == this.owner) {
-            found = true;
-            if (found && chibis[i].snuggling <= 0 && chibis[i].nomnomnom <= 0
-              && chibis[i].y >= trueBottom-chibis[i].size-chibis[i].limbLength
-              && tryToPlantaTree(chibis[i].x, this.colour)) {
-                this.planted = true;
-                sendMessage(chibis[i].name+' planted a seed');
-              }
+    this.timer --;
+    let found = false;
+    if (this.timer <= 0) {
+      for (let i = 0; i < chibis.length && !found; i++) {
+        if (chibis[i] == this.owner) {
+          found = true;
+          if (found && chibis[i].snuggling <= 0 && chibis[i].nomnomnom <= 0
+            && chibis[i].y >= trueBottom-chibis[i].size-chibis[i].limbLength
+            && tryToPlantaTree(chibis[i].x, this.colour)) {
+              this.planted = true;
+              sendMessage(chibis[i].name+' planted a seed');
             }
           }
-          if (!found) {
-            // cheap way to tag the seed to be killed
-            this.planted = true;
-          }
         }
-      };
-    }
+        if (!found) {
+          // cheap way to tag the seed to be killed
+          this.planted = true;
+        }
+      }
+    };
+  }
 
   /**
   * function to describe a piece of fruit on a tree
@@ -741,12 +773,12 @@ function Seed(colour, owner) {
     this.eater = null;
     this.update = function() {
       if (this.eater !== null) {
-            this.x = this.eater.x;
-            this.y = this.eater.y + (this.eater.size*1.75);
-    } else {
-      this.x = this.parent.x - (this.size*2.5) + ((treePos-1)*this.parent.width)/4;
-      this.y = this.parent.y + (this.parent.width/4.5);
-    }
+        this.x = this.eater.x;
+        this.y = this.eater.y + (this.eater.size*1.75);
+      } else {
+        this.x = this.parent.x - (this.size*2.5) + ((treePos-1)*this.parent.width)/4;
+        this.y = this.parent.y + (this.parent.width/4.5);
+      }
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.fillStyle = this.colour;
@@ -1086,7 +1118,7 @@ function Seed(colour, owner) {
       // check to see if it's time to die
       // attrition, aging etc.
       // check nirvana status
-      if (!choosingChibi && !chibis[i].reachedNirvana && chibis[i].litters > 0 && chibis[i].age > 0 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
+      if (!choosingChibi && !chibis[i].reachedNirvana && chibis[i].litters > 5 && chibis[i].size >= chibis[i].maxSize && chibis[i].supersaiyan == 0 && chibis[i].health >= superThreshold && chibis[i].energy >= superThreshold && chibis[i].love >= superThreshold) {
         explosions.push(new Explosion(chibis[i].x, chibis[i].y, chibis[i].firstColour, glowColour));
         produceExplosion(chibis[i].x, chibis[i].y);
         chibis[i].reachedNirvana = true;
@@ -1096,21 +1128,24 @@ function Seed(colour, owner) {
         sendMessage(chibis[i].name+' reached nirvana');
       }
       // check for age
-      if (chibis[i].birthday == daytimeCounter+1) {
+      if (chibis[i].inCatBox == null && chibis[i].birthday == daytimeCounter+1) {
         chibis[i].age ++;
         if (chibis[i].age == 1) {
           sendMessage(chibis[i].name+' reached adulthood');
+          chibis[i].energy += 50;
+          chibis[i].love += 25;
+          createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secondColour, '\u274b');
         }
 
         // set elder status
-        if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 2) {
+        if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 10) {
           chibis[i].elder = true;
-          chibis[i].size*=0.8;
+          chibis[i].size *= 0.8;
           chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
           chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour);
 
           sendMessage(chibis[i].name+' became an Elder');
-          createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secretColour, '\u274b');
+          createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secondColour, '\u274b');
 
           elders++;
         } else if (elders > 1 && elders > chibis.length/4 && chibis[i].elder) {
@@ -1127,18 +1162,22 @@ function Seed(colour, owner) {
         }
         graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
         sendMessage(chibis[i].name+' died');
+        removeRelationships(chibis[i]);
         chibis.splice(i, 1);
         i--;
       } else {
         // grow them a tiny bit
         if (chibis[i].size < chibis[i].maxSize) {
-          chibis[i].size += 1/1000;
+          chibis[i].size += 1/2000;
+          if (chibis[i].age < 1) {
+            chibis[i].size += 1/2000;
+          }
           chibis[i].reinitSizes();
         }
         if (!chibis[i].supersaiyan == 0 && chibis[i].supersaiyan <= 50) {
           sendMessage(chibis[i].name+'\'s nirvana ended');
           chibis[i].supersaiyan = 0;
-        } else if (chibis[i].supersaiyan > 0) {
+        } else if (chibis[i].supersaiyan >= 0.05) {
           chibis[i].supersaiyan -= 0.05;
           chibis[i].energy = 100;
         }
@@ -1147,14 +1186,13 @@ function Seed(colour, owner) {
         } else if (chibis[i].love > 100) {
           chibis[i].love = 100;
         }
-        if (chibis[i].health > 0) {
+        if (chibis[i].health > 0 && chibis[i].inCatBox !== null) {
           chibis[i].health -= 0.001;
         }
         if (chibis[i].inCatBox == null && chibis[i].hunger <= 0 && chibis[i].awake && chibis[i].snuggling <= 0 && chibis[i].nomnomnom <= 0) {
           if (Math.random() <= 0.001) {
             speech.push(new Speak(chibis[i], angryWord()));
           }
-          sendMessage(chibis[i].name+' felt hungry');
           chibis[i].health -= 0.001;
         }
         if (chibis[i].speedY < 0) {
@@ -1179,13 +1217,13 @@ function Seed(colour, owner) {
 
         // if you're a supersaiyan and you hit the floor
         if (chibis[i].supersaiyan > 0 && chibis[i].hitBottom){
-        tryToPlantaTree(chibis[i].x, randomColourFruity());
-      }
+          tryToPlantaTree(chibis[i].x, randomColourFruity());
+        }
 
         // if you're an elder and you hit your focus (a grave or obelisk)
         for (let f = 0; f < graveStones.length; f++) {
           if (chibis[i].elder && chibis[i].awake && chibis[i].focus == graveStones[f]) {
-            if (detectCollision(chibis[i], chibis[i].focus)) {
+            if (chibis[i].hitFocus) {
               chibis[i].speedX *=0.5;
               chibis[i].speedY *=0.5;
               if ((!chibis[i].focus.elder || !anniversary)) {
@@ -1215,14 +1253,15 @@ function Seed(colour, owner) {
 
         for (let j = 0; j < chibis.length; j++) {
           // if two guys bump into each other
-          if (!choosingChibi && i !== j && chibis[i].awake && chibis[j].awake && detectCollision(chibis[i], chibis[j])) {
+          if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age > 0 && chibis[j].age > 0 && detectCollision(chibis[i], chibis[j])) {
             collide(chibis[i], chibis[j]);
             // having a snuggle
-            if (chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling <= 0 && chibis[j].snuggling <= 0
+            if (!choosingChibi && chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
               && chibis[i].partner == chibis[j] && chibis[i].gender == 'Male' && chibis[j].gender == 'Female'
               && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
               && chibis[i].health >= 40 && chibis[j].health >= 40 && chibis[i].energy >= 40 && chibis[j].energy >= 40) {
                 // snuggle
+                chibis[j].partner = chibis[i]
                 // pay the costs
                 chibis[i].health -= 20;
                 chibis[j].health -= 20;
@@ -1239,8 +1278,8 @@ function Seed(colour, owner) {
                 if (Math.random() < 1/3) {
                   speech.push(new Speak(chibis[i], happyWord()));
                 } else if (Math.random() < 2/3) {
-                    speech.push(new Speak(chibis[j], happyWord()));
-                  }
+                  speech.push(new Speak(chibis[j], happyWord()));
+                }
                 if (chibis[i].gender == 'Female') {
                   chibis[i].snuggling = 270;
                   chibis[j].snuggling = 250;
@@ -1309,11 +1348,6 @@ function Seed(colour, owner) {
       }
       if (allow) {
         trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight, fruitColour));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 0));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 1));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 2));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 3));
-
         return true;
       }
       return false;
@@ -1342,7 +1376,7 @@ function Seed(colour, owner) {
     */
     function recalculateStarfield() {
       // if there is less than the designated amount, add one
-      if (starfield.length < 50*proportion) {
+      if (starfield.length < 50*proportion && fps >= 30) {
         let ranX = Math.floor(Math.random()*(canvasWidth));
         let ranSize = Math.random()*3;
         starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, trueBottom, false));
@@ -1494,7 +1528,7 @@ function Seed(colour, owner) {
       this.speedX = speedX;
       this.speedY = speedY;
       this.size = fontWidth;
-      this.timer = 100;
+      this.timer = glyphTimer;
       this.x = x;
       this.y = y;
       this.spin = 0;
@@ -1525,7 +1559,7 @@ function Seed(colour, owner) {
         }
         this.timer -= this.step;
         // draw glyph
-        ctx.globalAlpha = (this.timer/100)+0.000001;
+        ctx.globalAlpha = (this.timer/glyphTimer) + 0.000001;
         ctx.fillStyle = this.colour;
         ctx.font = '14px' + ' ' + globalFont;
         ctx.save();

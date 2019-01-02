@@ -15,9 +15,10 @@ function initButtons() {
   buttons[4].visible = false;
   buttons[5].visible = false;
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Welcome to the Cattery'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'Choose a girl'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 150, 'Welcome to the Cattery'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Choose a girl'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 75, 'Selection'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'X'));
   labels[2].visible = false;
   selectionInfo = new InfoPanel();
 }
@@ -76,11 +77,16 @@ function InfoPanel() {
       } else {
         buttons[3].available = true;
       }
+      let cString = '';
+      if (selection.albinism) {
+        cString = 'Albino';
+      } else {
       let c2 = ntc.name(selection.secondColour)[1];
-      let cString = ntc.name(selection.firstColour)[1];
+      cString = ntc.name(selection.firstColour)[1];
       if (c2 !== cString) {
         cString += ' & '+ c2;
       }
+    }
       let offsetX = 0;
       if (cString.length > selection.name.length) {
         offsetX = (11 + cString.length)*fontWidth/2;
@@ -94,7 +100,6 @@ function InfoPanel() {
       ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
       ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
       ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
-
       ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
       ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
       ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
@@ -139,6 +144,7 @@ function handleButton(input) {
     }
     break;
     case 1:
+    labels[3].visible = false;
     if (!chosenChibiF) {
       chosenChibiF = true;
       for (let i = currentChibis; i < chibis.length; i++) {
@@ -197,6 +203,8 @@ function handleButton(input) {
       }
       sendMessage(selection.name+' joined the family');
       speech.push(new Speak(selection, neutralWord()));
+      selection.size *= 0.5;
+      selection.reinitSizes();
       selection.sitting = false;
       createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
       selection.reinitSizes;
@@ -236,6 +244,8 @@ function handleButton(input) {
     for (let i = 0, stop = false; i < chibis.length && !stop; i++) {
       if (chibis[i] == selection) {
         stop = true;
+        graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
+        removeRelationships(selection);
         chibis.splice(i, 1);
       }
     }

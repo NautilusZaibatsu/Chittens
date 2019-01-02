@@ -21,7 +21,18 @@ function copyChibi(chibi) {
   chibi.name+'*'+
   chibi.elder+'*'+
   chibi.reachedNirvana+'*'+
-  chibi.tailLength;
+  chibi.tailLength+'*'+
+  chibi.albinism+'*'+
+  chibi.albinismGene+'*'+
+  chibi.bodypartCode[0]+'*'+
+  chibi.bodypartCode[1]+'*'+
+  chibi.bodypartCode[2]+'*'+
+  chibi.bodypartCode[3]+'*'+
+  chibi.bodypartCode[4]+'*'+
+  chibi.bodypartCode[5]+'*'+
+  chibi.bodypartCode[6]+'*'+
+  chibi.bodypartCode[7]+'*'+
+  chibi.bodypartCode[8];
   console.log(outputbuffer);
   return outputbuffer;
 }
@@ -32,13 +43,11 @@ function copyChibi(chibi) {
 * @return {Chibi} copyBuffer - the buffer array for copies of lifeforms
 */
 function pasteChibi(outputbuffer) {
-
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 17) {
-    sendMessage('Old filetype detected. Converting to 0.51');
-    attributeArray.push(0.5);
+  if (attributeArray.length !== 28) {
+    sendMessage('Old filetype detected');
     //return 'X';
-  } if (attributeArray.length !== 17) {
+  } if (attributeArray.length !== 28) {
     alert('Failed to load file');
   } else {
     chibis.splice(currentChibis, 9);
@@ -67,16 +76,20 @@ function pasteChibi(outputbuffer) {
     chibis[chibis.length-1].reachedNirvana = (attributeArray[15] == true);
     chibis[chibis.length-1].love = 100;
     chibis[chibis.length-1].tailLength = parseFloat(attributeArray[16]);
+    chibis[chibis.length-1].albinism = (attributeArray[17] == true);
+    chibis[chibis.length-1].albinismGene = (attributeArray[18] == true);
+    for (let i = 0; i < 9; i ++) {
+      chibis[chibis.length-1].bodypartCode[i] = parseInt(attributeArray[i+19]);
+    }
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds[seeds.length-1].timer = 750;
-
     if (chibis[chibis.length-1].gender == 'Female') {
       chosenChibiF = true;
     } else if (chibis[chibis.length-1].gender == 'Male') {
-        chosenChibiM = true;
-      }
-      speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
+      chosenChibiM = true;
+    }
+    speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
     sendMessage(chibis[chibis.length-1].name+' arrived');
   }
 }
@@ -126,21 +139,21 @@ function uploadChibi() {
 
 function openUploadDialog() {
   let element = document.createElement('div');
-element.innerHTML = '<input type="file">';
-let fileInput = element.firstChild;
-fileInput.addEventListener('change', function() {
+  element.innerHTML = '<input type="file">';
+  let fileInput = element.firstChild;
+  fileInput.addEventListener('change', function() {
     let file = fileInput.files[0];
     if (file.name.match(/\.(chi)$/)) {
-        let reader = new FileReader();
-        reader.onload = function() {
-            //console.log(reader.result);
-            pasteChibi(reader.result);
-        };
-reader.readAsText(file);
+      let reader = new FileReader();
+      reader.onload = function() {
+        //console.log(reader.result);
+        pasteChibi(reader.result);
+      };
+      reader.readAsText(file);
     } else {
-        alert('File not supported, .chi only');
+      alert('File not supported, .chi only');
     }
-});
+  });
 
-fileInput.click();
+  fileInput.click();
 }
