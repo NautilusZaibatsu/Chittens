@@ -290,7 +290,6 @@ function updateGameArea() {
     starfield[i].update();
   }
   // trails
-  if (fps >= 30) {
     for (i = trails.length-1; i >= 0; i--) {
       trails[i].update();
       trails[i].timer --;
@@ -299,7 +298,6 @@ function updateGameArea() {
         i --;
       }
     }
-  }
   // draw the ground and the background
   // draw the tree
   ctx.globalAlpha = 0.8;
@@ -657,7 +655,7 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
   this.fruitCount = 0;
   this.birthday = daytimeCounter;
   this.update = function() {
-    if (this.fruitCount < 4 && this.birthday == daytimeCounter) {
+    if (fruits.length < chibis.length && !this.reachedMaxHeight && this.birthday == daytimeCounter) {
       for (let i = 0; i < fruits.length; i++) {
         if (fruits[i].parent == this && fruits[i].eater == null && (fruits[i].treePos == 1 || fruits[i].treePos == 2)) {
           fruits.splice(i, 1);
@@ -1092,13 +1090,15 @@ function Seed(colour, owner) {
         chibis[i].age ++;
         if (chibis[i].age == 1) {
           sendMessage(chibis[i].name+' reached adulthood');
+          chibis[i].energy += 50;
+          chibis[i].love += 25;
           createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secondColour, '\u274b');
         }
 
         // set elder status
         if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 10) {
           chibis[i].elder = true;
-          chibis[i].size*=0.8;
+          chibis[i].size *= 0.8;
           chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
           chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour);
 
@@ -1144,7 +1144,7 @@ function Seed(colour, owner) {
         } else if (chibis[i].love > 100) {
           chibis[i].love = 100;
         }
-        if (chibis[i].health > 0) {
+        if (chibis[i].health > 0 && chibis[i].inCatBox !== null) {
           chibis[i].health -= 0.001;
         }
         if (chibis[i].inCatBox == null && chibis[i].hunger <= 0 && chibis[i].awake && chibis[i].snuggling <= 0 && chibis[i].nomnomnom <= 0) {

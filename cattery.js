@@ -455,7 +455,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       this.partner.snuggling = -1;
       this.partner.partner = null;
       this.partner = null;
-    } else if (!choosingChibi && this.snuggling > 0) {
+    } else if ((!this.gender == 'Male' && this.snuggling >= 0) || (!choosingChibi && this.snuggling >= 0)) {
       this.snuggling --;
     } else if (this.inCatBox == null && this.nomnomnom >= 0) {
       // if you're eating, decrease the eating timer
@@ -646,7 +646,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         trees[i].loadthisframe += this.size;
         hitTree = true;
         this.hitAFloor();
-        if (this.nomnomnom < 0 && this.snuggling <= 0) {
+        if (this.nomnomnom <= 0 && this.snuggling <= 0) {
           this.energy -= 0.01;
         }
         if (this.y > trueBottom-(this.size)-(this.limbLength/2.5)) {
@@ -916,15 +916,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     // set body colour
     ctx.fillStyle= this.firstColour;
 
-    if (this.awake && this.mother !== null && this.age < 1 && this.hitBottom && this.mother.snuggling <= 0 && detectCollision(this, this.mother)) {
+    if (this.inCatBox == null && this.awake && this.mother !== null && this.age < 1 && this.hitBottom && this.mother.snuggling == -1 && detectCollision(this, this.mother)) {
       this.speedX = 0;
       this.speedY = 0;
-      if (!this.mother.awake) {
+      if (!this.mother.awake && this.nomnomnom !== -1) {
         this.energy = this.mother.energy - (Math.random()*30);
-        this.sitting = false;
         this.awake = false;
-      } else if (this.nomnomnom <= 0 && this.mother.awake) {
-        this.mother.energy -= 0.1;
+      } else if (this.mother.awake && this.nomnomnom !== -1) {
+        this.mother.energy -= 2.5;
         this.mother.speedX = 0;
         this.mother.speedY = 0;
         this.mother.sitting = true;
@@ -1542,6 +1541,10 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.fillText(this.name, -shift, -(this.size*2));
       // ctx.fillText(Math.round(this.health)+' '+Math.round(this.love)+' '+Math.round(this.energy)+' '+Math.round(this.hunger), -shift, -(this.size*2));
     }
+    /* debug label */
+    // ctx.fillStyle = trueWhite;
+    // ctx.font = '10px' + ' ' + globalFont;
+    // ctx.fillText(this.snuggling+' '+this.nomnomnom, 0, -10 - (this.size*2));
 
 
     ctx.globalAlpha = 1;
