@@ -890,14 +890,15 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   };
 
   this.update = function() {
-    if (this.focus !== null) {
-    ctx.strokeStyle = trueWhite;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.focus.x, this.focus.y);
-    ctx.stroke();
-    }
+    /* focus lines */
+    // if (this.focus !== null) {
+    // ctx.strokeStyle = trueWhite;
+    // ctx.lineWidth = 1;
+    // ctx.beginPath();
+    // ctx.moveTo(this.x, this.y);
+    // ctx.lineTo(this.focus.x, this.focus.y);
+    // ctx.stroke();
+    // }
     this.hitFocus = detectCollision(this, this.focus);
     if (this.supersaiyan > 0) {
       this.cellShadeLine = mixTwoColours(glowColour, mixTwoColours(this.secondColour, this.firstColour, 0.5), this.supersaiyan/100);
