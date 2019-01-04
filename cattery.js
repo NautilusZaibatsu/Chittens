@@ -310,13 +310,13 @@ function generateBaby(parent1, parent2) {
     colour2 = mixTwoColours(parent1.secondColour, parent2.secondColour, 0.5);
   }
   // mix in a little random
-  // flip the colours sometimes
   if (Math.random() < 0.25) {
+    // flip the colours
     chibis[chibis.length-1].secondColour = mixTwoColours(randomColour(), colour1, Math.random()*0.2);
-    chibis[chibis.length-1].firstColour = mixTwoColours(randomColour(), colour2, 0.2);
+    chibis[chibis.length-1].firstColour = mixTwoColours(randomColour(), colour2, Math.random()*0.2);
   } else {
     chibis[chibis.length-1].firstColour = mixTwoColours(randomColour(), colour1, Math.random()*0.2);
-    chibis[chibis.length-1].secondColour = mixTwoColours(randomColour(), colour2, 0.2);
+    chibis[chibis.length-1].secondColour = mixTwoColours(randomColour(), colour2, Math.random()*0.2);
   }
   chibis[chibis.length-1].speedY = -25;
   // coat logic
@@ -445,17 +445,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     // giving birth
     if (!choosingChibi && this.snuggling == 0 && this.gender == 'Female') {
       if (this.partner !== null) {
+        this.partner.snuggling = -1;
+        this.partner.partner = null;
         createGlyphs((this.x - (this.x - this.partner.x)/2), (this.y - (this.y - this.partner.y)/2), mixTwoColours(this.firstColour, this.partner.firstColour, 0.5), '\u2764');
         initLitter(this.partner, this);
+        // take snuggling to -1 so that it doesn't give birth forever
       } else {
         sendMessage(this.name + ' had a phantom pregnancy');
       }
-      // take snuggling to -1 so that it doesn't give birth forever
       this.snuggling = -1;
-      this.partner.snuggling = -1;
-      this.partner.partner = null;
       this.partner = null;
-    } else if ((!this.gender == 'Male' && this.snuggling >= 0) || (!choosingChibi && this.snuggling >= 0)) {
+    } else if ((this.gender == 'Male' && this.snuggling >= 0) || (!choosingChibi && this.snuggling >= 0)) {
       this.snuggling --;
     } else if (this.inCatBox == null && this.nomnomnom >= 0) {
       // if you're eating, decrease the eating timer
@@ -744,14 +744,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.lineWidth += this.cellShadeThickness;
         // left arm
         ctx.save();
-        ctx.translate(this.x-this.size+(this.size/3), this.y + (this.size/1.5));
+        ctx.translate(this.x-this.size+(this.size/3), this.y + (this.size/1.5) - (footSize/2));
         ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), (footSize)+this.cellShadeThickness, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore(); // closed
         // right arm
         ctx.save();
-        ctx.translate(this.x+this.size-(this.size/3), this.y + (this.size/1.5));
+        ctx.translate(this.x+this.size-(this.size/3), this.y + (this.size/1.5) - (footSize/2));
         ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), (footSize)+this.cellShadeThickness, 0, 2 * Math.PI);
         ctx.fill();
@@ -762,14 +762,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.strokeStyle = handGradient;
         // left arm
         ctx.save();
-        ctx.translate(this.x - this.size + (this.size/3), this.y + (this.size/1.5));
+        ctx.translate(this.x - this.size + (this.size/3), this.y + (this.size/1.5) - (footSize/2));
         ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore(); // closed
         // right arm
         ctx.save();
-        ctx.translate(this.x + this.size - (this.size/3), this.y + (this.size/1.5));
+        ctx.translate(this.x + this.size - (this.size/3), this.y + (this.size/1.5) - (footSize/2));
         ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
         ctx.fill();
@@ -870,7 +870,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.moveTo(-this.size*2/3, (this.size/4));
         ctx.restore();
         ctx.save();
-        ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/2) + (this.size/1.25));
+        ctx.translate(this.x - this.size+(this.size/3), this.y + (this.size/1.25));
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
         ctx.restore(); // closed
@@ -881,7 +881,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.moveTo(this.size*2/3, (this.size/4));
         ctx.restore();
         ctx.save();
-        ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/5) + (this.size/1.25));
+        ctx.translate(this.x + this.size - (this.size/3), this.y + (this.size/1.5));
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
         ctx.restore(); // closed
@@ -890,6 +890,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   };
 
   this.update = function() {
+    if (this.focus !== null) {
+    ctx.strokeStyle = trueWhite;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.focus.x, this.focus.y);
+    ctx.stroke();
+    }
     this.hitFocus = detectCollision(this, this.focus);
     if (this.supersaiyan > 0) {
       this.cellShadeLine = mixTwoColours(glowColour, mixTwoColours(this.secondColour, this.firstColour, 0.5), this.supersaiyan/100);
@@ -922,7 +930,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       if (!this.mother.awake && this.nomnomnom !== -1) {
         this.energy = this.mother.energy - (Math.random()*30);
         this.awake = false;
-      } else if (this.mother.awake && this.nomnomnom !== -1) {
+      } else if (this.mother.awake && this.nomnomnom == -1) {
         this.mother.energy -= 2.5;
         this.mother.speedX = 0;
         this.mother.speedY = 0;
@@ -1575,9 +1583,20 @@ gainMeter = function(who) {
 * @param {Chibi} who - the chibi
 */
 removeRelationships = function(who) {
+  // remove mother and partner
   for (let i = 0; i < chibis.length; i++) {
     if (chibis[i].mother == who) {
       chibis[i].mother = null;
+    }
+    if (chibis[i].partner == who) {
+      chibis[i].partner = null;
+    }
+  }
+  // kill fruit that is being consumes
+  for (let i = 0; i < fruits.length; i++) {
+    if (fruits[i].eater == who) {
+      fruits.splice(i, 1);
+      i--;
     }
   }
 };

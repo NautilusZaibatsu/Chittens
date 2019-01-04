@@ -64,15 +64,15 @@ function Message(text, timeStamp) {
  }
 
 function neutralWord() {
-  return neutralWords[Math.floor(Math.random()*(neutralWords.length-1))];
+  return neutralWords[Math.round(Math.random()*(neutralWords.length-1))];
 }
 
 function angryWord() {
-  return angryWords[Math.floor(Math.random()*(neutralWords.length-1))];
+  return angryWords[Math.round(Math.random()*(angryWords.length-1))];
 }
 
 function happyWord() {
-  return happyWords[Math.floor(Math.random()*(neutralWords.length-1))];
+  return happyWords[Math.round(Math.random()*(happyWords.length-1))];
 }
 
  const neutralWords = ['mew', 'meow', 'brrrup'];

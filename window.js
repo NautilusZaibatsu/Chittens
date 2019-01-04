@@ -654,16 +654,39 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
   this.fruitColour = fruitColour;
   this.fruitCount = 0;
   this.birthday = daytimeCounter;
-  this.update = function() {
-    if (fruits.length < chibis.length && !this.reachedMaxHeight && this.birthday == daytimeCounter) {
-      for (let i = 0; i < fruits.length; i++) {
-        if (fruits[i].parent == this && fruits[i].eater == null && (fruits[i].treePos == 1 || fruits[i].treePos == 2)) {
-          fruits.splice(i, 1);
-          i--;
-        }
+
+  this.spawnFruit = function() {
+    // find out how many fruits are on this tree
+    let fruitsOnTree = 0;
+    let positions = [];
+    for (let i = 0; i < fruits.length; i++) {
+      if (fruits[i].parent == this) {
+        fruitsOnTree++;
+        positions.push(fruits[i].treePos);
       }
-      fruits.push(new Fruit(this.fruitColour, this, 1));
-      fruits.push(new Fruit(this.fruitColour, this, 2));
+    }
+    if (fruitsOnTree < 4) {
+      // add a fruit in a random position
+      let target = fruitsOnTree + 1;
+      while (fruitsOnTree < target) {
+          let posTemp = Math.round(Math.random()*3);
+          if (!positions.includes(posTemp)) {
+            fruits.push(new Fruit(this.fruitColour, this, posTemp));
+            fruitsOnTree ++;
+          }
+      }
+    }
+    // check that all fruits are on screen
+    for (let i = fruits.length-1; i >= 0; i--) {
+      if (fruits[i].x < 0 || fruits[i].x > canvasWidth) {
+        fruits.splice(i, 1);
+      }
+    }
+  };
+  this.update = function() {
+    // respawning fruit
+    if (this.birthday == daytimeCounter) {
+      this.spawnFruit();
     }
     ctx.fillStyle = trueBlack;
     if (this.y > canvasHeight) {
@@ -1214,11 +1237,12 @@ function Seed(colour, owner) {
           if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age > 0 && chibis[j].age > 0 && detectCollision(chibis[i], chibis[j])) {
             collide(chibis[i], chibis[j]);
             // having a snuggle
-            if (!choosingChibi && chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling <= 0 && chibis[j].snuggling <= 0
+            if (!choosingChibi && chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
               && chibis[i].partner == chibis[j] && chibis[i].gender == 'Male' && chibis[j].gender == 'Female'
               && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
               && chibis[i].health >= 40 && chibis[j].health >= 40 && chibis[i].energy >= 40 && chibis[j].energy >= 40) {
                 // snuggle
+                chibis[j].partner = chibis[i]
                 // pay the costs
                 chibis[i].health -= 20;
                 chibis[j].health -= 20;
@@ -1305,11 +1329,6 @@ function Seed(colour, owner) {
       }
       if (allow) {
         trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight, fruitColour));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 0));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 1));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 2));
-        fruits.push(new Fruit(fruitColour, trees[trees.length-1], 3));
-
         return true;
       }
       return false;

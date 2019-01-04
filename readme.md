@@ -7,7 +7,8 @@ changelog
 ~ improved performance
 ~ changed the way the front legs are drawn to make it smoother and more natural
 ~ kitten behaviour update. A chibi will be a kitten until it is 1 day old. It will follow it's mother attempting to suckle until it becomes independent. Kittens sleep do not pay a cost for jumping, they sleep when their mothers do. Kittens start smaller and grow faster
-~ trees do not regenerate fruit every day any more, instead they regenerate only when supply is low
+~ trees now regenerate only one piece of fruit per day
+~ added Egyptian names
 
 
 

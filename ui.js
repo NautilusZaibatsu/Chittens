@@ -237,8 +237,8 @@ function handleButton(input) {
     buttons[5].visible = false;
     for (let i = 0, stop = false; i < chibis.length && !stop; i++) {
       if (chibis[i] == selection) {
-        graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
         stop = true;
+        graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
         removeRelationships(selection);
         chibis.splice(i, 1);
       }
