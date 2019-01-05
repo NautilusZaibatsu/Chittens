@@ -35,6 +35,7 @@ paused = false;
 chosenChibiM = false;
 chosenChibiF = false;
 chosenKitten = true;
+choiceTimer = 0;
 elders = 0;
 obelisks = 0;
 guyID = 0;
@@ -44,6 +45,7 @@ selection = null;
 glowColour = '#FFFF88';
 trueWhite = '#FFFFFF';
 trueBlack = '#000000';
+albinoRed = '#FF0000'
 superColour = 255;
 
 // set timer parameters
@@ -273,6 +275,23 @@ function updateGameArea() {
       outputArray[tick] = rgbToHex(dayR, dayG, dayB);
     }
   }
+
+  if (choosingChibi) {
+    labels[3].text = parseInt(choiceTimer/50);
+    //labels[3].reinitSizes();
+  // check the timer
+  if (choiceTimer > 0) {
+    choiceTimer --;
+  }
+  if (choiceTimer == 0) {
+      console.log('timer out');
+      if (selection == null) {
+      selection = chibis[Math.round(Math.random()*(boxes.length-1))+currentChibis];
+    }
+      handleButton(1);
+  }
+}
+
   let tankGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
   tankGradient.addColorStop(0, outputArray[0]);
   tankGradient.addColorStop(0.4, outputArray[1]);

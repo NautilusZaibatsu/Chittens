@@ -9,6 +9,9 @@ changelog
 ~ kitten behaviour update. A chibi will be a kitten until it is 1 day old. It will follow it's mother attempting to suckle until it becomes independent. Kittens sleep do not pay a cost for jumping, they sleep when their mothers do. Kittens start smaller and grow faster
 ~ trees now regenerate only one piece of fruit per day
 ~ added Egyptian names
+~ added albinism and backbone of gene disorder system
+~ each body part is now coloured individually, allowing for 512 combinations
+~ added a countdown when choosing a chibi. If the timer runs out the game will chose the currently selected Chibi, if there is no selection it will choose a random one
 
 
 
