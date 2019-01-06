@@ -974,7 +974,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         this.energy = this.mother.energy - (Math.random()*30);
         this.awake = false;
         this.sitting = false;
-      } else if (this.mother.awake) {
+      } else if (this.mother.awake && this.nomnomnom == -1) {
         this.mother.energy -= 2.5;
         this.mother.speedX = 0;
         this.mother.speedY = 0;
@@ -1695,7 +1695,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     /* debug label */
     // ctx.fillStyle = trueWhite;
     // ctx.font = '10px' + ' ' + globalFont;
-    // ctx.fillText(this.albinismGene, 0, -10 - (this.size*2));
+    // ctx.fillText(this.energy, 0, -10 - (this.size*2));
 
     ctx.globalAlpha = 1;
     ctx.restore(); // 0
