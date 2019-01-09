@@ -8,17 +8,17 @@ function initButtons() {
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(canvasWidth/2, 355, 'Give away'));
-  buttons.push(new Button(canvasWidth/2, 390, 'Close'));
-  buttons.push(new Button(canvasWidth/2, 425, 'Save as .chi file'));
+  buttons.push(new Button(canvasWidth/2, 370, 'Give away'));
+  buttons.push(new Button(canvasWidth/2, 405, 'Close'));
+  buttons.push(new Button(canvasWidth/2, 440, 'Save as .chi file'));
   buttons[3].visible = false;
   buttons[4].visible = false;
   buttons[5].visible = false;
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 150, 'Welcome to the Cattery'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Choose a girl'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 75, 'Selection'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 70, 'X'));
+  labels.push(new Button(canvasWidth/2, 10, 'Welcome message'));
+  labels.push(new Button(canvasWidth/2, 45, 'Choose a ....'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 100, 'Selection'));
+  labels.push(new Button(canvasWidth/2, 80, 'X'));
   labels[2].visible = false;
   selectionInfo = new InfoPanel();
 }
@@ -88,13 +88,15 @@ function InfoPanel() {
       }
     }
       let offsetX = 0;
-      if (cString.length > selection.name.length) {
+      if ((cString.length > selection.name.length) && (cString.length > 8)) { // 8 == length of 'positive' and 'negative'
         offsetX = (11 + cString.length)*fontWidth/2;
-      } else {
+      } else if (selection.name.length > 8) {
         offsetX = (11 + selection.name.length)*fontWidth/2;
+      } else {
+        offsetX = (11 + 8)*fontWidth/2;
       }
       ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 200 + 20 );
+      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 215 + 20 );
       ctx.fillStyle = outputArray[2];
       ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
       ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
@@ -122,6 +124,12 @@ function InfoPanel() {
       ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 175);
       ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 190);
       ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 190);
+      ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 205);
+      let ag = 'Negative';
+      if (selection.albinismGene) {
+        ag = 'Positive';
+      }
+      ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 205);
     }
   };
 }
@@ -220,6 +228,7 @@ function handleButton(input) {
     }
     break;
     case 2:
+    labels[3].visible = false;
     chosenKitten = true;
     for (let i = currentChibis; i < chibis.length; i++) {
       chibis.splice(currentChibis, chibis.length - currentChibis);

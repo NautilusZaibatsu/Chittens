@@ -3,10 +3,11 @@
 **/
 
 // universal physics constants
-const gravity = 0.02;
-const elasticity = 0.2;
-const speedLimit = 100;
-const superThreshold = 99;
+const gravity = 0.02; // constant for gravity
+const elasticity = 0.2; // bounciness of chibis
+const speedLimit = 100; // maximum X or Y speed
+const superThreshold = 99; // upper limit for hitting supersaiyan / nirvana
+const maturesAt = 2; // age the chibis turn into adults at
 // canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
 const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
@@ -44,8 +45,10 @@ selection = null;
 // set global colours / limits
 glowColour = '#FFFF88';
 trueWhite = '#FFFFFF';
+nosePink = '#f5b1f5';
 trueBlack = '#000000';
-albinoRed = '#FF0000'
+albinoRed = '#FF0000';
+albinoCellshade = '#DDDDDD';
 superColour = 255;
 
 // set timer parameters
@@ -155,30 +158,13 @@ outputArray = [];
 // UI and messaging
 basicInfo = new TextElement(fontSize+'px', trueWhite, 10, canvasHeight - 10);
 newestMessage = new TextElement(fontSize+'px', trueWhite, 10, canvasHeight - 30);
+topLabel = new TextElement(fontSize+'px', trueWhite, 10, 20);
 let messagesToSave = canvasHeight/20;
 
 /**
 * function to start the simulation
 */
 function startGame() {
-  // chibis.push(new Chibi(canvasWidth*0.75, trueBottom-20, 6, 11.5, 'Female', 0));
-  // chibis.push(new Chibi(canvasWidth-(canvasWidth*0.75), trueBottom-20, 6, 12, 'Male', 1));
-  // let ethnicitySeed = Math.round(Math.random()*(numlibs-1));
-  // while (chibis[0].name == null) {
-  //   chibis[0].name = getRandomFemaleEthnicName(ethnicitySeed);
-  // }
-  // while (chibis[1].name == null) {
-  //   chibis[1].name = getRandomMaleEthnicName(ethnicitySeed);
-  // }
-  // chibis[0].age = 1;
-  // chibis[1].age = 1;
-  // chibis[0].coatMod[0] = Math.random();
-  // chibis[1].coatMod[0] = Math.random();
-  // chibis[0].coatMod[1] = Math.random();
-  // chibis[1].coatMod[1] = Math.random();
-  // chibis[0].firstColour = randomColour();
-  // chibis[1].firstColour = randomColour();
-
   // init console data
   sendMessage('Initialising');
   initButtons();
@@ -284,7 +270,6 @@ function updateGameArea() {
     choiceTimer --;
   }
   if (choiceTimer == 0) {
-      console.log('timer out');
       if (selection == null) {
       selection = chibis[Math.round(Math.random()*(boxes.length-1))+currentChibis];
     }
@@ -430,8 +415,10 @@ function updateGameArea() {
   } else {
     fpsCount ++;
   }
-  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length + ' FPS '+ fps;
+  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length;
   basicInfo.update();
+  topLabel.text = 'v0.054 FPS '+fps;
+  topLabel.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
   for (let i = 0; i < boxes.length; i++) {
@@ -922,7 +909,7 @@ function Seed(colour, owner) {
     this.x = x;
     this.y = y + 10;
     this.speedX = speedX/2;
-    this.speedY = speedY/1000;
+    this.speedY = speedY/2;
     this.timer = 200;
     this.hitBottom = false;
     this.elder = elder;
@@ -951,7 +938,7 @@ function Seed(colour, owner) {
       if (!this.hitBottom && this.y < trueBottom-(this.size*5)) {
         checkBounceSides(this);
         checkBounceTop(this);
-        let mass = gravity*(this.size*this.thickness*2)*(this.size*this.thickness*2);
+        let mass = gravity*(this.size*2)*(this.size*2);
         this.speedX *= 0.99;
         this.speedY += mass*gravity;
         applySpeedLimit(this);
@@ -1130,7 +1117,7 @@ function Seed(colour, owner) {
       // check for age
       if (chibis[i].inCatBox == null && chibis[i].birthday == daytimeCounter+1) {
         chibis[i].age ++;
-        if (chibis[i].age == 1) {
+        if (chibis[i].age == maturesAt) {
           sendMessage(chibis[i].name+' reached adulthood');
           chibis[i].energy += 50;
           chibis[i].love += 25;
@@ -1169,7 +1156,7 @@ function Seed(colour, owner) {
         // grow them a tiny bit
         if (chibis[i].size < chibis[i].maxSize) {
           chibis[i].size += 1/2000;
-          if (chibis[i].age < 1) {
+          if (chibis[i].age < maturesAt) {
             chibis[i].size += 1/2000;
           }
           chibis[i].reinitSizes();
@@ -1216,44 +1203,13 @@ function Seed(colour, owner) {
         }
 
         // if you're a supersaiyan and you hit the floor
-        if (chibis[i].supersaiyan > 0 && chibis[i].hitBottom){
+        if (chibis[i].supersaiyan > 0 && chibis[i].hitBottom) {
           tryToPlantaTree(chibis[i].x, randomColourFruity());
-        }
-
-        // if you're an elder and you hit your focus (a grave or obelisk)
-        for (let f = 0; f < graveStones.length; f++) {
-          if (chibis[i].elder && chibis[i].awake && chibis[i].focus == graveStones[f]) {
-            if (chibis[i].hitFocus) {
-              chibis[i].speedX *=0.5;
-              chibis[i].speedY *=0.5;
-              if ((!chibis[i].focus.elder || !anniversary)) {
-                chibis[i].focus.tended = 50;
-                chibis[i].focus.timer += 5;
-                let newC = mixTwoColours(chibis[i].firstColour, glowColour, 0.5);
-                starfield.push(new Inert(3, 3, newC, chibis[i].focus.x, chibis[i].focus.y+(5*chibis[i].focus.size), true));
-                chibis[i].health += 0.5;
-              } else {
-                chibis[i].focus.timer -= 30;
-                chibis[i].love += 10;
-                generateBaby(chibis[i], chibis[i]);
-                let nameSeed = Math.round(Math.random()*totalMaleNames);
-                if (chibis[chibis.length-1].gender == 'Male') {
-                  chibis[chibis.length-1].name = getMaleName(nameSeed);
-                } else if (chibis[chibis.length-1].gender == 'Female') {
-                  chibis[chibis.length-1].name = getFemaleName(nameSeed);
-                } else {
-                  let nameSeed2 = Math.round(Math.random()*numlibs*namesinlib);
-                  chibis[chibis.length-1].name = getRandomName(nameSeed+nameSeed2);
-                }
-                sendMessage(chibis[chibis.length-1].name+' was sprouted at an obelisk');
-              }
-            }
-          }
         }
 
         for (let j = 0; j < chibis.length; j++) {
           // if two guys bump into each other
-          if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age > 0 && chibis[j].age > 0 && detectCollision(chibis[i], chibis[j])) {
+          if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age >= maturesAt && chibis[j].age >= maturesAt && detectCollision(chibis[i], chibis[j])) {
             collide(chibis[i], chibis[j]);
             // having a snuggle
             if (!choosingChibi && chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
@@ -1261,7 +1217,7 @@ function Seed(colour, owner) {
               && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
               && chibis[i].health >= 40 && chibis[j].health >= 40 && chibis[i].energy >= 40 && chibis[j].energy >= 40) {
                 // snuggle
-                chibis[j].partner = chibis[i]
+                chibis[j].partner = chibis[i];
                 // pay the costs
                 chibis[i].health -= 20;
                 chibis[j].health -= 20;

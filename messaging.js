@@ -7,7 +7,7 @@ let currentMessage = new Message('init');
 */
 function sendMessage(text) {
   let duplicate = false;
-  // stop the same message from repeating too often
+  // stop the same message from repeating too often - check last ten messages
   if (currentMessage.text !== text) {
     for (let i = messageBuffer.length-1; i > messageBuffer.length-11 && i >= 0; i--) {
       if (messageBuffer[i].text == text) {

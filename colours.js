@@ -5,9 +5,9 @@
 * @return {string} the hexcode for a random colour
 */
 function randomColour() {
-  let seedR = Math.floor(Math.random()*256);
-  let seedG = Math.floor(Math.random()*256);
-  let seedB = Math.floor(Math.random()*256);
+  let seedR = Math.round(Math.random()*255);
+  let seedG = Math.round(Math.random()*255);
+  let seedB = Math.round(Math.random()*255);
   let randC = rgbToHex(seedR, seedG, seedB);
   return randC;
 }

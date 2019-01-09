@@ -32,7 +32,10 @@ function copyChibi(chibi) {
   chibi.bodypartCode[5]+'*'+
   chibi.bodypartCode[6]+'*'+
   chibi.bodypartCode[7]+'*'+
-  chibi.bodypartCode[8];
+  chibi.bodypartCode[8]+'*'+
+  chibi.bodypartCode[9]+'*'+
+  chibi.bodypartCode[10]+'*'+
+  chibi.bodypartCode[11];
   console.log(outputbuffer);
   return outputbuffer;
 }
@@ -44,10 +47,10 @@ function copyChibi(chibi) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 28) {
+  if (attributeArray.length !== 31) {
     sendMessage('Old filetype detected');
     //return 'X';
-  } if (attributeArray.length !== 28) {
+  } if (attributeArray.length !== 31) {
     alert('Failed to load file');
   } else {
     chibis.splice(currentChibis, 9);
@@ -57,6 +60,7 @@ function pasteChibi(outputbuffer) {
     buttons[2].visible = false;
     labels[0].visible = false;
     labels[1].visible = false;
+    labels[3].visible = false;
     buttons[6].visible = false;
     choosingChibi = false;
     selection = null;
@@ -78,7 +82,8 @@ function pasteChibi(outputbuffer) {
     chibis[chibis.length-1].tailLength = parseFloat(attributeArray[16]);
     chibis[chibis.length-1].albinism = (attributeArray[17] == true);
     chibis[chibis.length-1].albinismGene = (attributeArray[18] == true);
-    for (let i = 0; i < 9; i ++) {
+    noseColourCheck(chibis[chibis.length-1]);
+    for (let i = 0; i < 12; i ++) {
       chibis[chibis.length-1].bodypartCode[i] = parseInt(attributeArray[i+19]);
     }
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
@@ -154,6 +159,5 @@ function openUploadDialog() {
       alert('File not supported, .chi only');
     }
   });
-
   fileInput.click();
 }

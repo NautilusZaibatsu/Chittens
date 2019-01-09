@@ -1,6 +1,8 @@
 function initChoiceBoxes() {
   labels[3].visible = true;
-  choiceTimer = 500;
+  if (!choosingChibi) {
+    choiceTimer = 500;
+  }
   selectionInfo.visible = false;
   choosingChibi = true;
   labels[0].visible = true;
@@ -16,11 +18,12 @@ function initChoiceBoxes() {
   selection = null;
 }
 
+
 function initLitter(mParent, fParent) {
   initChoiceBoxes();
   sendMessage('\u2764 '+fParent.name+' gave birth to '+mParent.name+'\'s chittens');
-  labels[1] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 150, 'Choose one of '+fParent.name+' and '+mParent.name+'\'s litter to keep');
-  labels[0] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'The others will be adopted by nice people');
+  labels[0] = new Button(canvasWidth/2, 10, 'Choose one of '+fParent.name+' and '+mParent.name+'\'s litter to keep');
+  labels[1] = new Button(canvasWidth/2, 45, 'The others will be adopted by nice people');
   maleParent = mParent;
   femaleParent = fParent;
   chosenKitten = false;
@@ -44,8 +47,22 @@ function initLitter(mParent, fParent) {
       chibis[thisCatBox+currentChibis].x = (canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2);
       chibis[thisCatBox+currentChibis].y = (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2);
       count++;
+      noseColourCheck(chibis[thisCatBox+currentChibis]);
     }
   }
+  // Pick of litter
+  chibis[currentChibis].size *= 1.2;
+  chibis[currentChibis].reinitSizes();
+  boxes[0].text = 'Pick';
+  // Runt of litter
+  chibis[chibis.length-1].size *= 0.6;
+  chibis[chibis.length-1].reinitSizes();
+  chibis[chibis.length-1].maxSize *= 0.75;
+  chibis[chibis.length-1].health *= 0.5;
+  chibis[chibis.length-1].firstColour = mixTwoColours(randomColour(), chibis[chibis.length-1].firstColour, 0.5);
+  chibis[chibis.length-1].secondColour = mixTwoColours(randomColour(), chibis[chibis.length-1].secondColour, 0.5);
+  noseColourCheck(chibis[chibis.length-1]);
+  boxes[boxes.length-1].text = 'Runt';
 }
 
 
@@ -53,8 +70,8 @@ function initFemaleCattery() {
   initChoiceBoxes();
   chosenChibiF = false;
   sendMessage('\u2764 Choose a female Chibi');
-  labels[0] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 150, 'Welcome to the Cattery');
-  labels[1] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Choose a girl');
+  labels[0] = new Button(canvasWidth/2, 10, 'Welcome to the Cattery');
+  labels[1] = new Button(canvasWidth/2, 45, 'Choose a girl');
   buttons[0].visible = true;
   buttons[6].visible = true;
   for (let i = 0; i < boxColumns; i++) {
@@ -63,7 +80,7 @@ function initFemaleCattery() {
       chibis.push(new Chibi((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2), 6, ((Math.random()*9) + 7)/1.1, 'Female', Math.random()));
       let thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
-      chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5) + 1;
+      chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5) + maturesAt;
       chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75+ (Math.random()*0.25*chibis[thisCatBox+currentChibis].maxSize);
       chibis[thisCatBox+currentChibis].coatMod[0] = Math.random();
       chibis[thisCatBox+currentChibis].coatMod[1] = Math.random();
@@ -79,7 +96,8 @@ function initFemaleCattery() {
         chibis[thisCatBox+currentChibis].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
       }
       chibis[thisCatBox+currentChibis].bodypartCode = randomBodyPartCode();
-      applyGeneticDisorders(chibis[thisCatBox+currentChibis]);
+      applyGenetics(chibis[thisCatBox+currentChibis]);
+      noseColourCheck(chibis[thisCatBox+currentChibis]);
     }
   }
 }
@@ -88,8 +106,8 @@ function initMaleCattery() {
   initChoiceBoxes();
   chosenChibiM = false;
   sendMessage('\u2764 Choose a male Chibi');
-  labels[0] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 150, 'Welcome to the Cattery');
-  labels[1] = new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 110, 'Choose a boy');
+  labels[0] = new Button(canvasWidth/2, 10, 'Welcome to the Cattery');
+  labels[1] = new Button(canvasWidth/2, 45, 'Choose a boy');
   buttons[0].visible = true;
   buttons[6].visible = true;
   for (let i = 0; i < boxColumns; i++) {
@@ -98,7 +116,7 @@ function initMaleCattery() {
       chibis.push(new Chibi((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2), 6, ((Math.random()*9) + 7)*1.1, 'Male', Math.random()));
       let thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
-      chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5) + 1;
+      chibis[thisCatBox+currentChibis].age = Math.round(Math.random()*5) + maturesAt;
       chibis[thisCatBox+currentChibis].size = chibis[thisCatBox+currentChibis].maxSize*0.75 + (Math.random()*0.25*chibis[thisCatBox+currentChibis].maxSize);
       chibis[thisCatBox+currentChibis].coatMod[0] = Math.random();
       chibis[thisCatBox+currentChibis].coatMod[1] = Math.random();
@@ -114,7 +132,8 @@ function initMaleCattery() {
         chibis[thisCatBox+currentChibis].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
       }
       chibis[thisCatBox+currentChibis].bodypartCode = randomBodyPartCode();
-      applyGeneticDisorders(chibis[thisCatBox+currentChibis]);
+      applyGenetics(chibis[thisCatBox+currentChibis]);
+      noseColourCheck(chibis[thisCatBox+currentChibis]);
     }
   }
 }
@@ -130,7 +149,9 @@ function CatBox(x, y, size, thickness) {
   this.selected = false;
   this.highlighted = false;
   this.id = 0;
+  this.text = '';
   this.update = function() {
+    ctx.fillText(this.text, this.x+5, this.y+15);
     ctx.lineWidth = this.thickness;
     if (this.highlighted || this.selected) {
       ctx.strokeStyle = mixTwoColours(trueWhite, outputArray[2], 0.5);
@@ -156,6 +177,11 @@ function CatBox(x, y, size, thickness) {
         ctx.fillText('Ear width '+Math.round((chibis[this.id].ears*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 130);
         ctx.fillText('Tail length '+Math.round((chibis[this.id].tailLength*100))+'%', (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 145);
         ctx.fillText('Birthhour '+tickerToTime(Math.round(chibis[this.id].birthday)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 160);
+        let ag = 'Negative';
+        if (chibis[this.id].albinismGene) {
+          ag = 'Positive';
+        }
+        ctx.fillText('Albino Gene '+ag, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 175);
       }
     } else {
       ctx.strokeStyle = outputArray[2];
@@ -346,7 +372,7 @@ function generateBaby(parent1, parent2) {
   }
 
   let tmpBodypartCode = [];
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < 12; i++) {
     if (Math.random() < 0.5) {
       tmpBodypartCode.push(parent1.bodypartCode[i]);
     } else {
@@ -378,8 +404,9 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.gender = gender;
   this.secondColour = trueBlack;
   this.firstColour = trueWhite;
+  this.noseColour = '#000000';
   this.coatMod = [1, 1];
-  this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   this.ears = ears; // 0.5 is average
   this.thickness = 0.5; // 0.5 is average
   this.legginess = 0.5;
@@ -486,14 +513,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         // decide whether to act this frame
         let chanceToAct = Math.random();
         // twice as likely to act if infant
-        if (this.age < 1) {
+        if (this.age < maturesAt) {
           chanceToAct *= 0.5;
         }
         if (chanceToAct <= 0.02) {
           // decide what to target
           let target = null;
           // if not an adult, just follow mother
-          if (this.age < 1 && this.mother !== null) {
+          if (this.age < maturesAt && this.mother !== null) {
             this.focus = this.mother;
             target = this.mother;
           }
@@ -506,11 +533,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             }
           }
           // are we gonna pick a mate?
-          if (target == null && !choosingChibi && !this.elder && this.gender == 'Male' && this.age > 0 && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 50
+          if (target == null && !choosingChibi && !this.elder && this.gender == 'Male' && this.age >= maturesAt && chibis.length <= maxPop && this.supersaiyan == 0 && this.health >= 50
           && this.energy >= 50) {
             for (let j = 0; j < chibis.length && target == null; j++) {
               if (this !== chibis[j] && chibis[j].awake && this.love + chibis[j].love >= 100 && !chibis[j].elder && chibis[j].gender == 'Female'
-              && chibis[j].age > 0 && chibis[j].supersaiyan == 0 && chibis[j].health >= 50
+              && chibis[j].age >= maturesAt && chibis[j].supersaiyan == 0 && chibis[j].health >= 50
               && chibis[j].energy >= 50) {
                 this.partner = chibis[j];
                 chibis[j].partner = this;
@@ -520,20 +547,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           }
 
 
-          if (target == null && this.elder && graveStones.length > 0) {// }&& this.anniversary) {
-            if (!anniversary || obelisks == 0 ) {
-              // if it's a regular time of day, or there are no obelsisks, just go for the shittiest gravestone to maintain it
-              let target = this.findClosestGrave();
-              if (target == 'X') {
-                this.focus = fireflies[this.findClosestFireFly()];
-              } else {
-                this.focus = graveStones[target];
-              }
-            } else if (target == null) {
-              // if it's a special time of day and there are obelisks, go for the best gravestone and make babies out of it
-              this.focus = graveStones[this.findClosestObelisk()];
-            }
-          } else if (target == null) {
+          if (target == null) {
             // default action - jump at firefly
             this.focus = fireflies[this.findClosestFireFly()];
           }
@@ -543,7 +557,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             speech.push(new Speak(this, neutralWord()));
           }
 
-          if (this.age < 1 && this.mother !== null && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size)*2) && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size)*2)) {
+          if (this.age < maturesAt && this.mother !== null && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size)*2) && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size)*2)) {
             if (this.mother.awake) {
               this.sitting = true;
             } else if (this.nomnomnom == -1) {
@@ -556,7 +570,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
             let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
             this.speedX += Math.cos(targetangle)*40;
             this.speedY += Math.sin(targetangle)*40;
-            if (this.age < 1) {
+            if (this.age < maturesAt) {
               this.speedX *= 0.5;
               this.speedY *= 0.5;
             } else {
@@ -602,51 +616,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     if (target == 'X') {
       console.log('no FireFly to target');
       return 0;
-    }
-    return target;
-  };
-
-  this.findClosestGrave = function() {
-    let tmp = maxDistance;
-    let tmp2 = 100;
-    let target = 'X';
-    for (let i = 0; i < graveStones.length; i++) {
-      if (graveStones[i].timer < tmp2) {
-        let tmpX = this.x-graveStones[i].x;
-        let tmpY = this.y-graveStones[i].y;
-        let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
-        if (distance < tmp) {
-          tmp = distance;
-          tmp2 = graveStones[i].timer;
-          target = i;
-        }
-      }
-    }
-    if (target == 'X') {
-    }
-    return target;
-  };
-
-  this.findClosestObelisk = function() {
-    let target = 'X';
-    if (chibis.length >= maxPop) {
-      return target;
-    }
-    let tmp = maxDistance;
-    for (let i=0; i < graveStones.length; i++) {
-      if (graveStones[i].elder) {
-        let tmpX = this.x-graveStones[i].x;
-        let tmpY = this.y-graveStones[i].y;
-        let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
-        if (distance < tmp) {
-          tmp = distance;
-          target = i;
-        }
-      }
-    }
-    if (target == 'X') {
-      // console.log('no viable target found');
-      return target;
     }
     return target;
   };
@@ -886,7 +855,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.moveTo(-this.size*2/3, (this.size/4));
         ctx.restore();
         ctx.save();
-        ctx.translate(this.x-this.size+(this.size/3), this.y+(this.size/2) + (this.size/1.25));
+        ctx.translate(this.x-this.size+(this.size/3), this.y + (this.size/1.25));
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
         ctx.restore(); // closed
@@ -897,7 +866,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.moveTo(this.size*2/3, (this.size/4));
         ctx.restore();
         ctx.save();
-        ctx.translate(this.x+this.size-(this.size/3), this.y+(this.size/5) + (this.size/1.25));
+        ctx.translate(this.x+this.size-(this.size/3), this.y + (this.size/1.25));
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
         ctx.restore(); // closed
@@ -943,7 +912,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     // }
     this.hitFocus = detectCollision(this, this.focus);
     if (this.albinism) {
-      this.cellShadeLine = trueWhite;
+      this.cellShadeLine = albinoCellshade;
     } else if (this.supersaiyan > 0) {
       this.cellShadeLine = mixTwoColours(glowColour, mixTwoColours(this.secondColour, this.firstColour, 0.5), this.supersaiyan/100);
     } else {
@@ -967,7 +936,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     let offsetX = Math.abs(this.focus.x - this.x);
     let legAngle = Math.atan2(this.speedY, this.speedX);
 
-    if (this.inCatBox == null && this.awake && this.mother !== null && this.age < 1 && this.hitBottom && this.mother.snuggling == -1 && detectCollision(this, this.mother)) {
+    if (this.inCatBox == null && this.awake && this.mother !== null && this.age < maturesAt && this.hitBottom && this.mother.snuggling == -1 && detectCollision(this, this.mother)) {
       this.speedX = 0;
       this.speedY = 0;
       if (!this.mother.awake && this.nomnomnom == -1) {
@@ -1039,15 +1008,15 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       let leftFootColour = trueWhite;
       let rightFootColour = trueWhite;
       if (!this.albinism) {
-      leftFootColour = this.firstColour;
-      rightFootColour = this.firstColour;
-      if (this.bodypartCode[7] == 1) {
-        leftFootColour = this.secondColour;
+        leftFootColour = this.firstColour;
+        rightFootColour = this.firstColour;
+        if (this.bodypartCode[7] == 1) {
+          leftFootColour = this.secondColour;
+        }
+        if (this.bodypartCode[8] == 1) {
+          rightFootColour = this.secondColour;
+        }
       }
-      if (this.bodypartCode[8] == 1) {
-        rightFootColour = this.secondColour;
-      }
-    }
       ctx.lineWidth = (this.size/2.5)*this.thickness*2;
       let legGradient = ctx.createRadialGradient(0, 0, 1, 0, 0, (this.size*0.8));
       legGradient.addColorStop(0, trueBlack);
@@ -1533,11 +1502,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         diffy = 0.5;
         ctx.save(); // 0 open
         // CELL SHADING
-        if (this.supersaiyan > 0) {
-          ctx.fillStyle = this.cellShadeLine;
-        } else {
-          ctx.fillStyle = mixTwoColours(this.secondColour, this.firstColour, 0.5);
-        }
+        ctx.fillStyle = this.cellShadeLine;
         ctx.beginPath();
         ctx.save(); // 0 open
         ctx.translate(-this.size/2, -(this.size/4));
@@ -1616,7 +1581,77 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.globalAlpha = 1;
     }
 
+    // jowl
+    if (this.awake) {
+    // chin
+    // cellshading
+    ctx.fillStyle = this.cellShadeLine;
+    ctx.beginPath();
+    ctx.arc(0, this.size/1.5, (this.size/3.5) + this.cellShadeThickness, 0, 2 * Math.PI);
+    ctx.fill();
+    // real drawing
+    if (!this.albinism) {
+      if (this.bodypartCode[11] == 0) {
+        ctx.fillStyle = this.firstColour;
+      } else {
+        ctx.fillStyle = this.secondColour;
+      }
+    } else {
+      ctx.fillStyle = trueWhite;
+    }
+    ctx.beginPath();
+    ctx.arc(0, this.size/1.5, (this.size/3.5), 0, 2 * Math.PI);
+    ctx.fill();
+    // cellshading
+    ctx.fillStyle = this.cellShadeLine;
+    ctx.beginPath();
+    ctx.arc(-(this.size/4), this.size/2.5, (this.size/3.5) + this.cellShadeThickness, 0, 2 * Math.PI);
+    ctx.arc((this.size/4), this.size/2.5, (this.size/3.5) + this.cellShadeThickness, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // real drawing
+    if (!this.albinism) {
+      if (this.bodypartCode[9] == 0) {
+        ctx.fillStyle = this.firstColour;
+      } else {
+        ctx.fillStyle = this.secondColour;
+      }
+    } else {
+      ctx.fillStyle = trueWhite;
+    }
+    ctx.beginPath();
+    ctx.arc(-(this.size/4), this.size/2.5, this.size/3.5, 0, 2 * Math.PI);
+    ctx.fill();
+    if (!this.albinism) {
+      if (this.bodypartCode[10] == 0) {
+        ctx.fillStyle = this.firstColour;
+      } else {
+        ctx.fillStyle = this.secondColour;
+      }
+    } else {
+      ctx.fillStyle = trueWhite;
+    }
+    ctx.beginPath();
+    ctx.arc((this.size/4), this.size/2.5, this.size/3.5, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // nose
+// cell cellshading
+ctx.fillStyle = this.cellShadeLine;
+ctx.fillRect(-(this.size/3.5) - this.cellShadeThickness, (this.size/2.5) - (this.size/3) - this.cellShadeThickness, (this.size/1.75) + (this.cellShadeThickness*2), (this.size/4) + (this.cellShadeThickness*2));
+ctx.fillRect(-(this.size/12) - this.cellShadeThickness, (this.size/2.5) - (this.size/3) - this.cellShadeThickness, (this.size/6) + (this.cellShadeThickness*2), (this.size/2.5) + (this.cellShadeThickness*2));
+
+// real drawing
+    if (!this.albinism) {
+      ctx.fillStyle = this.noseColour;
+    } else {
+      ctx.fillStyle = nosePink;
+    }
+    ctx.fillRect(-(this.size/3.5), (this.size/2.5) - (this.size/3), this.size/1.75, this.size/4);
+    ctx.fillRect(-(this.size/12), (this.size/2.5) - (this.size/3), this.size/6, this.size/2.5);
+  }
     ctx.restore(); // close
+
     // draw status icons
     ctx.save(); // 0
     ctx.translate(this.x, this.y);
@@ -1743,10 +1778,10 @@ removeRelationships = function(who) {
   }
 };
 
-/** function to apply genetic disorders to Chibis
+/** function to apply genetics and  disorders to Chibis
 * @param {Chibi} who - the chibi
 */
-applyGeneticDisorders = function(who) {
+applyGenetics = function(who) {
   // albinism
   let albinoChance = Math.random();
   if (albinoChance <= 0.04) {
@@ -1757,13 +1792,23 @@ applyGeneticDisorders = function(who) {
   }
 };
 
+noseColourCheck = function(who) {
+  let c1 = hexToRgb(who.firstColour).r + hexToRgb(who.firstColour).g + hexToRgb(who.firstColour).b;
+  let c2 = hexToRgb(who.secondColour).r + hexToRgb(who.secondColour).g + hexToRgb(who.secondColour).b;
+  if (c1 + c2 > 765) {
+    who.noseColour = nosePink;
+  } else {
+    who.noseColour = trueBlack;
+  }
+};
+
 /** function to create a random bodypartCode
 * this code is used to denote the zones of colour on a Chibi
 * @return {array} - the bodypart code
 */
 randomBodyPartCode = function() {
   let tmpArray = [];
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < 12; i++) {
     tmpArray.push(Math.round(Math.random()));
   }
   return tmpArray;
