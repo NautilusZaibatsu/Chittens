@@ -16,24 +16,23 @@ function randomColour() {
 * function to return a random colour as hex
 * @return {string} the hexcode for a random colour
 */
-function randomColourRealistic() {
+function randomColourRealistic(seed) {
   let seedR = 0;
   let seedG = 0;
   let seedB = 0;
   let colour = 'red'; // for debug
-  let randSeed = Math.random();
-  if (randSeed <= 1/3) {
+  if (seed <= 1/3) {
     // orange through peach
-    seedR = Math.floor(Math.random()*255);
+    seedR = Math.floor(Math.random()*200);
     seedG = Math.floor(Math.random()*(seedR/1.7));
     seedB = Math.floor(Math.random()*(seedG/1.25));
     colour = rgbToHex(seedR, seedG, seedB);
     return colour;
-} else if (randSeed <= 2/3) {
+} else if (seed <= 2/3) {
   // russian blue
-   seedB = Math.floor(Math.random()*192);
-   seedG = Math.floor(Math.random()*(seedB/1.08));
-   seedR = Math.floor(Math.random()*(seedB/1.04));
+   seedB = Math.floor(Math.random()*200);
+   seedG = (seedB/2) + Math.floor(Math.random()*50);//Math.floor(Math.random()*(seedB));
+   seedR = seedG; //Math.floor(Math.random()*(seedB));
    colour = rgbToHex(seedR, seedG, seedB);
   return colour;
 } else {

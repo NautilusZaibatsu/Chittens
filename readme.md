@@ -8,6 +8,7 @@ changelog
 ~ added pick and runt of litter. Picks start larger, runts start smaller, grow to a smaller size, but have more unique colours
 ~ Kittens now take 2 days to mature instead of 1
 ~ elders no longer tend graves, they just don't breed any more
+~ tweaked starting colour algorithms to be more realistic
 
 02/01/2019 = 0.53
 ~ added FPS counter

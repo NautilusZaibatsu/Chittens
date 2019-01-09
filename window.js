@@ -913,7 +913,6 @@ function Seed(colour, owner) {
     this.timer = 200;
     this.hitBottom = false;
     this.elder = elder;
-    this.tended = 0;
     this.firstColour = firstColour;
     // elders spawn obelisks
     if (this.elder) {
@@ -952,17 +951,6 @@ function Seed(colour, owner) {
         this.speedX *= 0.9;
       }
 
-      // sparks emanating from graves
-      if (this.tended > 0) {
-        let step = 100-(this.timer);
-        step -= Math.floor(step);
-        step *= 10;
-        ctx.fillStyle = glowColour;
-        ctx.font = '7px' + ' ' + globalFont;
-        ctx.globalAlpha = 0.2*(this.timer/100);
-        ctx.fillText('*', this.x, this.y+(5*this.size)-(2*step));
-        this.tended --;
-      }
       ctx.globalAlpha = 0.2+(this.timer/100);
       ctx.drawImage(this.image, this.x-(this.size), this.y+this.size*3, this.size*2, this.size*2);
       ctx.globalAlpha = 1;
