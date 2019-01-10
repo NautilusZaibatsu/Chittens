@@ -7,7 +7,7 @@ const gravity = 0.02; // constant for gravity
 const elasticity = 0.2; // bounciness of chibis
 const speedLimit = 100; // maximum X or Y speed
 const superThreshold = 99; // upper limit for hitting supersaiyan / nirvana
-const maturesAt = 2; // age the chibis turn into adults at
+const maturesAt = 1; // age the chibis turn into adults at
 // canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
 const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
@@ -48,7 +48,6 @@ trueWhite = '#FFFFFF';
 nosePink = '#f5b1f5';
 trueBlack = '#000000';
 albinoRed = '#FF0000';
-albinoCellshade = '#DDDDDD';
 superColour = 255;
 
 // set timer parameters
@@ -107,7 +106,7 @@ const smile3 = new Image();
 smile3.src = 'smile3.png';
 const content = new Image();
 content.src = 'content.png';
-
+// flame aura
 const flame = new Image();
 flame.src = 'flame.png';
 // landscape
@@ -127,7 +126,7 @@ const obelisk = new Image();
 obelisk.src = 'obelisk.png';
 // Ghosts
 const spectre = new Image();
-spectre.src = 'Ghost.png';
+spectre.src = 'ghost.png';
 // explosions
 let explosions = [];
 
@@ -977,7 +976,7 @@ function Seed(colour, owner) {
       if (this.y > fireflies[0].y) {
         this.speedY = -Math.abs(0.025*(15-this.size));
       } else {
-        this.speedY *= 0.9995;
+        this.speedY *= 0.9999;
       }
       let diffx = fireflies[0].x - this.x;
       if (this.x < 0 || this.x > canvasWidth) {
@@ -1197,7 +1196,7 @@ function Seed(colour, owner) {
 
         for (let j = 0; j < chibis.length; j++) {
           // if two guys bump into each other
-          if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age >= maturesAt && chibis[j].age >= maturesAt && detectCollision(chibis[i], chibis[j])) {
+          if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age >= maturesAt && chibis[j].age >= maturesAt && chibis[i].snuggling == -1 && chibis[j].snuggling == -1 && detectCollision(chibis[i], chibis[j])) {
             collide(chibis[i], chibis[j]);
             // having a snuggle
             if (!choosingChibi && chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
@@ -1485,6 +1484,8 @@ function Seed(colour, owner) {
         for (let i = 0; i < glyphs.length; i++) {
           if (glyphs[i] !== this && detectCollision(glyphs[i], this)) {
             collide(this, glyphs[i]);
+            this.timer -= this.step;
+            glyphs[i].timer -= glyphs[i].step;
           }
         }
         checkBounceSides(this);

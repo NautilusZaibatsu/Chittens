@@ -81,11 +81,20 @@ function InfoPanel() {
       if (selection.albinism) {
         cString = 'Albino';
       } else {
-      let c2 = ntc.name(selection.secondColour)[1];
-      cString = ntc.name(selection.firstColour)[1];
-      if (c2 !== cString) {
-        cString += ' & '+ c2;
-      }
+        let c1 = ntc.name(selection.firstColour)[1];
+        let c2 = ntc.name(selection.secondColour)[1];
+        let c3 = ntc.name(selection.thirdColour)[1];
+        if (c1 == c2 & c1 == c3) {
+          cString = c1;
+        } else if (c1 == c2) {
+          cString = c1 + ' & '+ c3;
+        } else if (c1 == c3) {
+          cString = c1 + ' & '+ c2;
+        } else if (c2 == c3) {
+          cString = c1 + ' & '+ c2;
+        } else {
+          cString = c1 +', '+c2+' & '+c3;
+        }
     }
       let offsetX = 0;
       if ((cString.length > selection.name.length) && (cString.length > 8)) { // 8 == length of 'positive' and 'negative'
@@ -245,6 +254,7 @@ function handleButton(input) {
     break;
     case 3:
     sendMessage(selection.name+' went to live with someone else');
+    speech.push(new Speak(selection, angryWord()));
     selectionInfo.visible = false;
     labels[2].visible = false;
     buttons[3].visible = false;

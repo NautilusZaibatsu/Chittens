@@ -35,22 +35,21 @@ function copyChibi(chibi) {
   chibi.bodypartCode[8]+'*'+
   chibi.bodypartCode[9]+'*'+
   chibi.bodypartCode[10]+'*'+
-  chibi.bodypartCode[11];
-  console.log(outputbuffer);
+  chibi.bodypartCode[11]+'*'+
+  chibi.thirdColour;
+  // console.log(outputbuffer);
   return outputbuffer;
 }
 
 /**
 * function to read a lifeforms's parameter string and return a valid lifeform object to be instantiated in the pool
-* @param {string} chibi - the lifeforms' parameter string
-* @return {Chibi} copyBuffer - the buffer array for copies of lifeforms
+* @param {string} outputbuffer - the lifeforms' parameter string
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 31) {
+  if (attributeArray.length !== 32) {
     sendMessage('Old filetype detected');
-    //return 'X';
-  } if (attributeArray.length !== 31) {
+  } if (attributeArray.length !== 32) {
     alert('Failed to load file');
   } else {
     chibis.splice(currentChibis, 9);
@@ -86,6 +85,7 @@ function pasteChibi(outputbuffer) {
     for (let i = 0; i < 12; i ++) {
       chibis[chibis.length-1].bodypartCode[i] = parseInt(attributeArray[i+19]);
     }
+    chibis[chibis.length-1].thirdColour = attributeArray[31];
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds[seeds.length-1].timer = 750;

@@ -179,6 +179,8 @@ function decreaseSaturationHEX(hex) {
   return rgbToHex(Math.round(hslrgb[0]/2), hslrgb[1]/2, Math.round(hslrgb[2]/2));
 }
 /**
+* @param {string} hex1
+* @param {string} hex2
 * @param {int} prop - the proportion of hex1 to hex2 (0 to 1);
 */
 function mixTwoColours(hex1, hex2, prop) {
@@ -191,6 +193,28 @@ function mixTwoColours(hex1, hex2, prop) {
   combr = Math.round((ri*prop)+(rj*(1-prop)));
   combg = Math.round((gi*prop)+(gj*(1-prop)));
   combb = Math.round((bi*prop)+(bj*(1-prop)));
-  debuString = 'mixTwoColours';
+  debugString = 'mixTwoColours';
+  return rgbToHex(combr, combg, combb);
+}
+
+/**
+* @param {string} hex1
+* @param {string} hex2
+* @param {string} hex3
+*/
+function mixThreeColours(hex1, hex2, hex3) {
+  ri = hexToRgb(hex1).r;
+  gi = hexToRgb(hex1).g;
+  bi = hexToRgb(hex1).b;
+  rj = hexToRgb(hex2).r;
+  gj = hexToRgb(hex2).g;
+  bj = hexToRgb(hex2).b;
+  rk = hexToRgb(hex3).r;
+  gk = hexToRgb(hex3).g;
+  bk = hexToRgb(hex3).b;
+  combr = Math.round((ri + rj + rk)/3);
+  combg = Math.round((gi + gj + gk)/3);
+  combb = Math.round((bi + bj + bk)/3);
+  debugString = 'mixThreeColours';
   return rgbToHex(combr, combg, combb);
 }

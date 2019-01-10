@@ -3,11 +3,9 @@
 changelog
 
 09/01/2019 = 0.54
-~ fixed a bug causing gravestones to lose momentum immediately
-~ added jowls and noses. Nose colour is not genetic; lighter Chibis have pink noses. darker Chibis have black noses. Jowl colouration raises coat combinations to 4,096 (not including gradients / shading)
-~ added pick and runt of litter. Picks start larger, runts start smaller, grow to a smaller size, but have more unique colours
-~ Kittens now take 2 days to mature instead of 1
-~ elders no longer tend graves, they just don't breed any more
+~ added a third colour to Chibi's coats
+~ added jowls and noses. Nose colour is not genetic; lighter Chibis have pink noses. darker Chibis have black noses
+~ elders no longer tend graves, they still don't breed any more
 ~ tweaked starting colour algorithms to be more realistic
 
 02/01/2019 = 0.53
