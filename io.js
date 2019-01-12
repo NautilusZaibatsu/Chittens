@@ -59,9 +59,7 @@ function pasteChibi(outputbuffer) {
   } if (attributeArray.length !== 39) {
     alert('Failed to load file');
   } else {
-    chibis.splice(currentChibis, 9);
     boxes = [];
-    choosingChibi = false;
     selection = null;
     chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0], parseFloat(attributeArray[5])));
     // console.log(outputbuffer);
@@ -97,11 +95,6 @@ function pasteChibi(outputbuffer) {
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds[seeds.length-1].timer = 750;
-    if (chibis[chibis.length-1].gender == 'Female') {
-      chosenChibiF = true;
-    } else if (chibis[chibis.length-1].gender == 'Male') {
-      chosenChibiM = true;
-    }
     speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
     sendMessage(chibis[chibis.length-1].name+' arrived');
   }
