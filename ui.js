@@ -95,52 +95,52 @@ function InfoPanel() {
         } else {
           cString = c1 +', '+c2+' & '+c3;
         }
-    }
+      }
       let offsetX = 0;
       if ((cString.length > selection.name.length) && (cString.length > 8)) { // 8 == length of 'positive' and 'negative'
-        offsetX = (11 + cString.length)*fontWidth/2;
-      } else if (selection.name.length > 8) {
-        offsetX = (11 + selection.name.length)*fontWidth/2;
-      } else {
-        offsetX = (11 + 8)*fontWidth/2;
-      }
-      ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 215 + 20 );
-      ctx.fillStyle = outputArray[2];
-      ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
-      ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
-      ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
-      ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
-      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
-      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
-      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
-      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
-      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
-      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
-      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 85);
-      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 85);
-      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 100);
-      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 100);
-      ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 115);
-      ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
-      ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 130);
-      ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
-      ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 145);
-      ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
-      ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 160);
-      ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 160);
-      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 175);
-      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 175);
-      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 190);
-      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 190);
-      ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 205);
-      let ag = 'Negative';
-      if (selection.albinismGene) {
-        ag = 'Positive';
-      }
-      ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 205);
+      offsetX = (11 + cString.length)*fontWidth/2;
+    } else if (selection.name.length > 8) {
+      offsetX = (11 + selection.name.length)*fontWidth/2;
+    } else {
+      offsetX = (11 + 8)*fontWidth/2;
     }
-  };
+    ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
+    ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 215 + 20 );
+    ctx.fillStyle = outputArray[2];
+    ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
+    ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
+    ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
+    ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
+    ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
+    ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
+    ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
+    ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
+    ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
+    ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
+    ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 85);
+    ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 85);
+    ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 100);
+    ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 100);
+    ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 115);
+    ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
+    ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 130);
+    ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
+    ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 145);
+    ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
+    ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 160);
+    ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 160);
+    ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 175);
+    ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 175);
+    ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 190);
+    ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 190);
+    ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 205);
+    let ag = 'Negative';
+    if (selection.albinismGene) {
+      ag = 'Positive';
+    }
+    ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 205);
+  }
+};
 }
 
 function handleButton(input) {
@@ -338,6 +338,55 @@ function clickMouse(e) {
       }
     }
   }
+  // now check sliders
+  for (let i = 0; i < sliders.length; i++) {
+    if (detectCollision(sliders[i].sBar, pointerPos)) {
+      sliders[i].sBar.dragging = true;
+      clickedSomething = true;
+    } else {
+      sliders[i].sBar.dragging = false;
+    }
+  }
+
+  // colour bar
+  if (pointerPos.x >= colourBars.x && pointerPos.x <= colourBars.x + 100 && pointerPos.y >= colourBars.y && pointerPos.y <= colourBars.y + 20) {
+    if (pointerPos.x - colourBars.x < 33.3) {
+      colourBars.selected = 0;
+    } else if (pointerPos.x - colourBars.x < 66.6) {
+      colourBars.selected = 1;
+    } else {
+      colourBars.selected = 2;
+    }
+  }
+  // colour picker
+  if (pointerPos.x >= colourBlock.x && pointerPos.x <= colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y <= colourBlock.y + 100) {
+    let xCoord = Math.round((pointerPos.x - colourBlock.x)/colourBlock.pixelSize);
+    let yCoord = Math.round((pointerPos.y - colourBlock.y)/colourBlock.pixelSize);
+    let newIndex = (yCoord*colourBlock.pixelColumns) + xCoord;
+    if (newIndex > 624) {
+      newIndex = 624;
+    }
+    if (colourBars.selected == 0) {
+      experiment.firstColour = colourBlock.pixels[newIndex];
+      noseColourCheck(experiment);
+    } else if (colourBars.selected == 1) {
+      experiment.secondColour = colourBlock.pixels[newIndex];
+    } else {
+      experiment.thirdColour = colourBlock.pixels[newIndex];
+    }
+  }
+}
+
+function unclickMouse(e) {
+  // check sliders
+  for (let i = 0; i < sliders.length; i++) {
+    if (sliders[i].sBar.dragging) {
+      sliders[i].sBar.dragging = false;
+      if (i > 6 && i < 18) {
+        sliders[i].currentPos = Math.round(sliders[i].currentPos);
+      }
+    }
+  }
 }
 
 /**
@@ -360,4 +409,223 @@ function hover() {
       boxes[i].highlighted = false;
     }
   }
+}
+
+/**
+* function to describe a slider
+*/
+function Slider(lowerLimit, upperLimit, currentPos, x, y, txt) {
+  this.id = sliderIndex;
+  sliderIndex ++;
+  this.lowerLimit = lowerLimit;
+  this.upperLimit = upperLimit;
+  this.currentPos = currentPos;
+  this.relativePosition = 0;
+  this.proportion = 1;
+  this.x = x;
+  this.y = y;
+  this.text = txt;
+  this.sBar = new SliderBar(this);
+  this.update = function() {
+    // bar base is 0 to 100
+    this.proportion = 100/(Math.abs(this.upperLimit - this.lowerLimit));
+    this.relativePosition = this.proportion * (this.currentPos - this.lowerLimit);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = trueBlack;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x + 100, this.y);
+    ctx.stroke();
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px' + ' ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.text, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+    this.sBar.update();
+  };
+}
+
+/**
+* function to describe a slider bar
+*/
+function SliderBar(parent) {
+  this.parent = parent;
+  this.dragging = false;
+  this.colour = trueWhite;
+  // translate coord to center
+  this.x = this.parent.x;
+  this.y = this.parent.y;
+  this.size = 10;
+  this.update = function() {
+    // if (this.colour == trueWhite || !this.dragging) {
+    //   if (this.parent.currentPos == 0) {
+    //     this.parent.sBar.colour = experiment.firstColour;
+    //   } else if (this.parent.currentPos == 1) {
+    //     this.parent.sBar.colour = experiment.secondColour;
+    //   } else if (this.parent.currentPos == 2) {
+    //     this.parent.sBar.colour = experiment.thirdColour;
+    //   }
+    // }
+    if (this.dragging) {
+      let correctMouseX = pointerPos.x;
+      if (correctMouseX < this.parent.x) {
+        correctMouseX = this.parent.x;
+      } else if (correctMouseX > this.parent.x + 100) {
+        correctMouseX = this.parent.x + 100;
+      }
+      let score = (correctMouseX - this.parent.x);
+      this.parent.currentPos = (score / this.parent.proportion) + this.parent.lowerLimit;
+      this.x = correctMouseX;
+      ctx.fillRect(this.x - 5, this.y -10, 10, 20);
+      if (this.parent.id == 0) {
+        experiment.thickness = this.parent.currentPos;
+      } else if (this.parent.id == 1) {
+        experiment.maxSize = this.parent.currentPos;
+        experiment.size = experiment.maxSize;
+        experiment.reinitSizes();
+      } else if (this.parent.id == 2) {
+        experiment.legginess = this.parent.currentPos;
+        experiment.reinitSizes();
+      } else if (this.parent.id == 3) {
+        experiment.ears = this.parent.currentPos;
+      } else if (this.parent.id == 4) {
+        experiment.tailLength = this.parent.currentPos;
+      } else if (this.parent.id == 5) {
+        experiment.coatMod[0] = this.parent.currentPos;
+      } else if (this.parent.id == 6) {
+        experiment.coatMod[1] = this.parent.currentPos;
+      } else if (this.parent.id == 7) {
+        experiment.bodypartCode[0] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 8) {
+        experiment.bodypartCode[1] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 9) {
+        experiment.bodypartCode[7] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 10) {
+        experiment.bodypartCode[8] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 11) {
+        experiment.bodypartCode[2] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 12) {
+        experiment.bodypartCode[9] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 13) {
+        experiment.bodypartCode[10] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 14) {
+        experiment.bodypartCode[11] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 15) {
+        experiment.bodypartCode[3] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 16) {
+        experiment.bodypartCode[4] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 17) {
+        experiment.bodypartCode[5] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 18) {
+        experiment.bodypartCode[6] = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 19) {
+        experiment.nosePos = this.parent.currentPos;
+      } else if (this.parent.id == 20) {
+        experiment.eyePosX = this.parent.currentPos;
+      } else if (this.parent.id == 21) {
+        experiment.eyePosY = this.parent.currentPos;
+      } else if (this.parent.id == 22) {
+        experiment.headWidth = this.parent.currentPos;
+      } else if (this.parent.id == 23) {
+        experiment.headHeight = this.parent.currentPos;
+      }
+    } else {
+      this.x = this.parent.x + this.parent.relativePosition;
+    }
+    ctx.fillStyle = this.colour;
+    ctx.fillRect(this.x - 2.5, this.y - 10, 5, 20);
+  };
+}
+
+function ColourBar(x, y) {
+  this.x = x;
+  this.y = y;
+  this.text = 'colours';
+  this.selected = 0;
+  this.update = function() {
+    ctx.font = '12px' + ' ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.text, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = experiment.firstColour;
+    ctx.fillRect(this.x, this.y, 33.3, 20);
+    ctx.fillStyle = experiment.secondColour;
+    ctx.fillRect(this.x + 33.3, this.y, 33.3, 20);
+    ctx.fillStyle = experiment.thirdColour;
+    ctx.fillRect(this.x + 66.6, this.y, 33.3, 20);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = trueWhite;
+    if (this.selected == 0) {
+      ctx.strokeRect(this.x, this.y, 33.3, 20);
+    } else if (this.selected == 1) {
+      ctx.strokeRect(this.x + 33.3, this.y, 33.3, 20);
+    } else if (this.selected == 2) {
+      ctx.strokeRect(this.x + 66.6, this.y, 33.3, 20);
+    }
+  };
+}
+
+function ColourPixelBlock() {
+  this.x = 130;
+  this.y = 30;
+  this.pixelSize = 4;
+  this.huePixels = [];
+  this.pixelRows = 25;
+  this.pixelColumns = 25;
+  // convert x axis
+  let lrInterval = (256*6)/this.pixelColumns; // 71.68
+  // generate hue gradient
+  for (let i = 0; i < this.pixelColumns; i++) {
+    this.huePixels.push((i * lrInterval)+(lrInterval/2));
+  }
+  // convert gradient positions to hex values
+  for (let i = 0; i < this.huePixels.length; i ++) {
+    if (this.huePixels[i] < 256) {
+      let tmp = [255, 0, Math.round(this.huePixels[i])];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < 256*2) {
+      let tmp = [255 + 256 - Math.round(this.huePixels[i]), 0, 255];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < 256*3) {
+      let tmp = [0, Math.round(this.huePixels[i] - (256*2)), 255];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < 256*4) {
+      let tmp = [0, 255, 255 + (256*3) - Math.round(this.huePixels[i])];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < 256*5) {
+      let tmp = [Math.round(this.huePixels[i]) - (256*4), 255, 0];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < 256*6) {
+      let tmp = [255, 255 + (256*5) - Math.round(this.huePixels[i]), 0];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    }
+  }
+
+  let outputPixels = [];
+  // create all rows and populate white - transparent - black fade
+  let tmpPix = [];
+  for (let i = 0; i < this.pixelRows; i ++) {
+    if (i < this.pixelRows/2) {
+      for (let j = 0; j < this.pixelRows; j++) {
+        tmpPix[j] = mixTwoColours('#FFFFFF', this.huePixels[j], 1 - (i/this.pixelRows*2));
+      }
+      outputPixels = outputPixels.concat(tmpPix);
+    } else if (i > this.pixelRows/2) {
+      for (let j = 0; j < this.pixelRows; j++) {
+        tmpPix[j] = mixTwoColours('#000000', this.huePixels[j], (i - (this.pixelRows/2))/this.pixelRows*2);
+      }
+      outputPixels = outputPixels.concat(tmpPix);
+    } else {
+      outputPixels = outputPixels.concat(this.huePixels);
+    }
+  }
+  this.pixels = outputPixels;
+
+  this.update = function() {
+    for (let i = 0; i < outputPixels.length; i ++) {
+      let row = Math.floor(i/this.pixelRows);
+      ctx.fillStyle = this.pixels[i];
+      ctx.fillRect(this.x + (i * this.pixelSize) - (row * this.pixelSize * this.pixelColumns), this.y + (row * this.pixelSize), this.pixelSize, this.pixelSize);
+    }
+  };
 }

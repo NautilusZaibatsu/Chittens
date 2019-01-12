@@ -13,6 +13,39 @@ function randomColour() {
 }
 
 /**
+* function to create a realistic coat for a chibi
+* @return {array} three hex colours
+*/
+function generateRealisticCoat(randSeed) {
+  if (randSeed == null) {
+    randSeed = Math.round(Math.random()*4);
+  }
+  let coatArray = [];
+  // solid colour
+  if (randSeed < 3) {
+  coatArray[0] = randomColourRealistic(Math.random());
+  coatArray[1] = coatArray[0];
+  coatArray[2] = coatArray[0];
+} else if (randSeed == 3) {
+  // bi-colour
+  coatArray[0] = trueWhite;
+  coatArray[1] = randomColourRealistic(Math.random());
+  coatArray[2] = coatArray[0];
+} else {
+  // calico / tortoiseshell
+  let seed = 2;
+  coatArray[0] = randomColourRealistic(Math.random()/3); // an orange
+  coatArray[1] = randomColourRealistic((2/3) + (Math.random()/3)); // a grey
+  coatArray[2] = trueWhite;
+}
+return coatArray;
+  // striped tabby
+  // spotted tabby
+  // ticked tabby
+  // classic tabby
+};
+
+/**
 * function to return a random colour as hex
 * @return {string} the hexcode for a random colour
 */
@@ -23,14 +56,14 @@ function randomColourRealistic(seed) {
   let colour = 'red'; // for debug
   if (seed <= 1/3) {
     // orange through peach
-    seedR = Math.floor(Math.random()*200);
+    seedR = Math.floor(Math.random()*255);
     seedG = Math.floor(Math.random()*(seedR/1.7));
     seedB = Math.floor(Math.random()*(seedG/1.25));
     colour = rgbToHex(seedR, seedG, seedB);
     return colour;
 } else if (seed <= 2/3) {
   // russian blue
-   seedB = Math.floor(Math.random()*200);
+   seedB = Math.floor(Math.random()*255);
    seedG = (seedB/2) + Math.floor(Math.random()*50);//Math.floor(Math.random()*(seedB));
    seedR = seedG; //Math.floor(Math.random()*(seedB));
    colour = rgbToHex(seedR, seedG, seedB);
@@ -172,11 +205,11 @@ function increaseSaturationHEX(hex) {
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
 
-function decreaseSaturationHEX(hex) {
+function decreaseSaturationHEX(hex, fraction) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 0, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
-  return rgbToHex(Math.round(hslrgb[0]/2), hslrgb[1]/2, Math.round(hslrgb[2]/2));
+  return rgbToHex(Math.round(hslrgb[0]/fraction), hslrgb[1]/2, Math.round(hslrgb[2]/fraction));
 }
 /**
 * @param {string} hex1
@@ -193,7 +226,6 @@ function mixTwoColours(hex1, hex2, prop) {
   combr = Math.round((ri*prop)+(rj*(1-prop)));
   combg = Math.round((gi*prop)+(gj*(1-prop)));
   combb = Math.round((bi*prop)+(bj*(1-prop)));
-  debugString = 'mixTwoColours';
   return rgbToHex(combr, combg, combb);
 }
 

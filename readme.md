@@ -2,6 +2,11 @@
 
 changelog
 
+11/01/2019 = 0.55
+~ major update to way coat coloration works, tweaks across the board to allow for upcoming breeds feature
+~ added more nose and eye variation
+~ experimental gene editor added. no save, close or import function yet. It's just a toy atm
+
 09/01/2019 = 0.54
 ~ added a third colour to Chibi's coats
 ~ added jowls and noses. Nose colour is not genetic; lighter Chibis have pink noses. darker Chibis have black noses

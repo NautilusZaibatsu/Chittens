@@ -72,6 +72,68 @@ buttons = [];
 labels = [];
 speech = [];
 
+// gene editing
+spliceBox = new CatBox(20, 30, 100, 5);
+experiment = new Chibi(70, 90, 13.5, 10, 'Female', Math.random());
+experiment.age = Math.round(Math.random()*5) + maturesAt;
+experiment.size = experiment.maxSize;
+experiment.coatMod[0] = Math.random();
+experiment.coatMod[1] = Math.random();
+experiment.thickness = (Math.random()*0.5)+0.5;
+experiment.legginess = (Math.random()*0.9)+0.1;
+let colourArray = generateRealisticCoat(4);
+experiment.firstColour = colourArray[0];
+experiment.secondColour = colourArray[1];
+experiment.thirdColour = colourArray[2];
+experiment.inCatBox = spliceBox;
+experiment.birthday = Math.random()*1000;
+experiment.tailLength = (Math.random()*0.75)+0.25;
+experiment.nosePos = Math.random();
+experiment.eyePosX = Math.random();
+experiment.eyePosY = Math.random();
+experiment.headWidth = Math.random();
+
+while (experiment.name == null) {
+  experiment.name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
+}
+experiment.bodypartCode = randomBodyPartCode();
+noseColourCheck(experiment);
+experiment.awake = true;
+experiment.hitBottom = true;
+sliderIndex = 0;
+sliders = [];
+sliders[0] = new Slider(0.5, 1, experiment.thickness, 20, 185, 'thickness');
+sliders[1] = new Slider(5, 20, experiment.size, 20, 155, 'size');
+sliders[2] = new Slider(0, 1, experiment.legginess, 20, 215, 'legginess');
+sliders[3] = new Slider(0, 1, experiment.ears, 20, 245, 'ear width');
+sliders[4] = new Slider(0, 1, experiment.tailLength, 20, 275, 'tail length');
+sliders[5] = new Slider(0, 1, experiment.coatMod[0], 20, 305, 'fade');
+sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 335, 'fade angle');
+
+sliders[7] = new Slider(0, 2, experiment.bodypartCode[0], 130, 440, 'front foot left');
+sliders[8] = new Slider(0, 2, experiment.bodypartCode[1], 130, 470, 'front foot right');
+sliders[9] = new Slider(0, 2, experiment.bodypartCode[7], 130, 500, 'back foot left');
+sliders[10] = new Slider(0, 2, experiment.bodypartCode[8], 130, 530, 'back foot right');
+
+sliders[11] = new Slider(0, 2, experiment.bodypartCode[2], 130, 200, 'head');
+sliders[12] = new Slider(0, 2, experiment.bodypartCode[9], 130, 230, 'jowl left');
+sliders[13] = new Slider(0, 2, experiment.bodypartCode[10], 130, 260, 'jowl right');
+sliders[14] = new Slider(0, 2, experiment.bodypartCode[11], 130, 290, 'chin');
+
+sliders[15] = new Slider(0, 2, experiment.bodypartCode[3], 130, 320, 'ear left');
+sliders[16] = new Slider(0, 2, experiment.bodypartCode[4], 130, 350, 'right ear');
+sliders[17] = new Slider(0, 2, experiment.bodypartCode[5], 130, 380, 'body');
+sliders[18] = new Slider(0, 2, experiment.bodypartCode[6], 130, 410, 'tail');
+
+sliders[19] = new Slider(0, 1, experiment.nosePos, 20, 365, 'nose height');
+sliders[20] = new Slider(0, 1, experiment.eyePosX, 20, 395, 'eyes width');
+sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 425, 'eyes height');
+sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 455, 'head width');
+sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 485, 'head height');
+
+colourBars = new ColourBar(130, 155);
+colourBlock = new ColourPixelBlock();
+
 // font
 let debugString = 'nothing'; // for debugging
 const globalFont = 'Consolas';
@@ -191,6 +253,9 @@ let myGameArea = {
     this.canvas.addEventListener('mousedown', function(event) {
       clickMouse(event);
     });
+    this.canvas.addEventListener('mouseup', function(event) {
+      unclickMouse(event);
+    });
   },
   clear: function() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -264,17 +329,17 @@ function updateGameArea() {
   if (choosingChibi) {
     labels[3].text = parseInt(choiceTimer/50);
     //labels[3].reinitSizes();
-  // check the timer
-  if (choiceTimer > 0) {
-    choiceTimer --;
-  }
-  if (choiceTimer == 0) {
-      if (selection == null) {
-      selection = chibis[Math.round(Math.random()*(boxes.length-1))+currentChibis];
+    // check the timer
+    if (choiceTimer > 0) {
+      choiceTimer --;
     }
+    if (choiceTimer == 0) {
+      if (selection == null) {
+        selection = chibis[Math.round(Math.random()*(boxes.length-1))+currentChibis];
+      }
       handleButton(1);
+    }
   }
-}
 
   let tankGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
   tankGradient.addColorStop(0, outputArray[0]);
@@ -293,14 +358,14 @@ function updateGameArea() {
     starfield[i].update();
   }
   // trails
-    for (i = trails.length-1; i >= 0; i--) {
-      trails[i].update();
-      trails[i].timer --;
-      if (trails[i].timer < 0) {
-        trails.splice(i, 1);
-        i --;
-      }
+  for (i = trails.length-1; i >= 0; i--) {
+    trails[i].update();
+    trails[i].timer --;
+    if (trails[i].timer < 0) {
+      trails.splice(i, 1);
+      i --;
     }
+  }
   // draw the ground and the background
   // draw the tree
   ctx.globalAlpha = 0.8;
@@ -416,10 +481,11 @@ function updateGameArea() {
   }
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length;
   basicInfo.update();
-  topLabel.text = 'v0.054 FPS '+fps;
+  topLabel.text = 'v0.055 FPS '+fps;
   topLabel.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
+
   for (let i = 0; i < boxes.length; i++) {
     boxes[i].update();
   }
@@ -430,6 +496,13 @@ function updateGameArea() {
     labels[i].update();
   }
   selectionInfo.update();
+  spliceBox.update();
+  experiment.update();
+  colourBars.update();
+  colourBlock.update();
+  for (let i = 0; i < sliders.length; i++) {
+    sliders[i].update();
+  }
 
   if (!paused) {
     if (daytimeCounter < 1000) {
@@ -674,11 +747,11 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
       // add a fruit in a random position
       let target = fruitsOnTree + 1;
       while (fruitsOnTree < target) {
-          let posTemp = Math.round(Math.random()*3);
-          if (!positions.includes(posTemp)) {
-            fruits.push(new Fruit(this.fruitColour, this, posTemp));
-            fruitsOnTree ++;
-          }
+        let posTemp = Math.round(Math.random()*3);
+        if (!positions.includes(posTemp)) {
+          fruits.push(new Fruit(this.fruitColour, this, posTemp));
+          fruitsOnTree ++;
+        }
       }
     }
     // check that all fruits are on screen
@@ -1115,8 +1188,10 @@ function Seed(colour, owner) {
         if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 10) {
           chibis[i].elder = true;
           chibis[i].size *= 0.8;
-          chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour);
-          chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour);
+          chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour, 2);
+          chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour, 2);
+          chibis[i].thirdColour = decreaseSaturationHEX(chibis[i].thirdColour, 2);
+
 
           sendMessage(chibis[i].name+' became an Elder');
           createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secondColour, '\u274b');

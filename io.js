@@ -36,7 +36,12 @@ function copyChibi(chibi) {
   chibi.bodypartCode[9]+'*'+
   chibi.bodypartCode[10]+'*'+
   chibi.bodypartCode[11]+'*'+
-  chibi.thirdColour;
+  chibi.thirdColour+'*'+
+  chibi.nosePos+'*'+
+  chibi.eyePosX+'*'+
+  chibi.eyePosY+'*'+
+  chibi.headWidth+'*'+
+  chibi.headHeight;
   // console.log(outputbuffer);
   return outputbuffer;
 }
@@ -47,9 +52,9 @@ function copyChibi(chibi) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 32) {
+  if (attributeArray.length !== 37) {
     sendMessage('Old filetype detected');
-  } if (attributeArray.length !== 32) {
+  } if (attributeArray.length !== 37) {
     alert('Failed to load file');
   } else {
     chibis.splice(currentChibis, 9);
@@ -86,6 +91,12 @@ function pasteChibi(outputbuffer) {
       chibis[chibis.length-1].bodypartCode[i] = parseInt(attributeArray[i+19]);
     }
     chibis[chibis.length-1].thirdColour = attributeArray[31];
+    chibis[chibis.length-1].nosePos = parseFloat(attributeArray[32]);
+    chibis[chibis.length-1].eyePosX = parseFloat(attributeArray[32]);
+    chibis[chibis.length-1].eyePosY = parseFloat(attributeArray[32]);
+    chibis[chibis.length-1].headWidth = parseFloat(attributeArray[33]);
+    chibis[chibis.length-1].headHeight = parseFloat(attributeArray[34]);
+
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds[seeds.length-1].timer = 750;
