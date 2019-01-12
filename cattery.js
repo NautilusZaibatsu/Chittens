@@ -20,6 +20,7 @@ function initChoiceBoxes() {
 
 function initLitter(mParent, fParent) {
   initChoiceBoxes();
+  choiceTimer = 500;
   labels[3].visible = true;
   sendMessage('\u2764 '+fParent.name+' gave birth to '+mParent.name+'\'s chittens');
   labels[0] = new Button(canvasWidth/2, 10, 'Choose one of '+fParent.name+' and '+mParent.name+'\'s litter to keep');
@@ -499,7 +500,7 @@ function generateBaby(parent1, parent2) {
   chibis[chibis.length-1].eyeSize = specEyeSize;
   chibis[chibis.length-1].headWidth = specHeadW;
   chibis[chibis.length-1].headHeight = specHeadH;
-  chibis[chibis.length-1].speedY = -25;
+  chibis[chibis.length-1].speedY = -10;
   return babyGender;
 }
 
