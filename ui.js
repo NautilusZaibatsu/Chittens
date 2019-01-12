@@ -2,7 +2,7 @@
 * function to initialise all the buttons
 */
 function initButtons() {
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 70, 'Show me more'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 65, 'Show me more'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Choose this Chibi'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 85, 'Give them all away'));
   buttons[0].visible = false;
@@ -14,12 +14,32 @@ function initButtons() {
   buttons[3].visible = false;
   buttons[4].visible = false;
   buttons[5].visible = false;
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 110, 'Load from .chi file'));
+  // menu shit
+  buttons.push(new Button(396, 0, 'Load'));
+
+  // gene editing
+  buttons.push(new Button(60, 530, 'Save Female'));
+  buttons.push(new Button(60, 565, 'Save Male'));
+  buttons.push(new Button(60, 600, 'Close'));
+  buttons[7].visible = false;
+  buttons[8].visible = false;
+  buttons[9].visible = false;
+  // menu shit
+  buttons.push(new Button(160, 0, 'Create'));
+  buttons.push(new Button(240, 0, 'Adopt F'));
+  buttons.push(new Button(324, 0, 'Adopt M'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 100, 'Close'));
+  buttons[13].visible = false;
+
+
   labels.push(new Button(canvasWidth/2, 10, 'Welcome message'));
   labels.push(new Button(canvasWidth/2, 45, 'Choose a ....'));
   labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 100, 'Selection'));
   labels.push(new Button(canvasWidth/2, 80, 'X'));
+  labels[0].visible = false;
+  labels[1].visible = false;
   labels[2].visible = false;
+  labels[3].visible = false;
   selectionInfo = new InfoPanel();
 }
 
@@ -35,7 +55,7 @@ function Button(x, y, text) {
   this.text = text;
   this.width = (this.text.length*fontWidth)+20;
   this.size = ((this.text.length*fontWidth)+20);
-  this.height = 30;
+  this.height = 25;
   this.visible = true;
   this.available = true;
   this.highlighted = false;
@@ -60,7 +80,7 @@ function Button(x, y, text) {
       } else {
         ctx.fillStyle = outputArray[2];
       }
-      ctx.fillText(this.text, 10, 20);
+      ctx.fillText(this.text, 10, 18);
       ctx.restore();
     }
   };
@@ -105,7 +125,7 @@ function InfoPanel() {
       offsetX = (11 + 8)*fontWidth/2;
     }
     ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-    ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 215 + 20 );
+    ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 230 + 20 );
     ctx.fillStyle = outputArray[2];
     ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
     ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
@@ -117,28 +137,30 @@ function InfoPanel() {
     ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
     ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
     ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
-    ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 85);
-    ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 85);
-    ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 100);
-    ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 100);
-    ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 115);
-    ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 115);
-    ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 130);
-    ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
-    ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 145);
-    ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
-    ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 160);
-    ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 160);
-    ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 175);
-    ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 175);
-    ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 190);
-    ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 190);
-    ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 205);
+    ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 85);
+    ctx.fillText(ntc.name(selection.eyeColour)[1], -offsetX + (canvasWidth/2) + 100, 140 + 85);
+    ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 100);
+    ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 100);
+    ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 115);
+    ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 115);
+    ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 130);
+    ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
+    ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 145);
+    ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
+    ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 160);
+    ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 160);
+    ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 175);
+    ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 175);
+    ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 190);
+    ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 190);
+    ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 205);
+    ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 205);
+    ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 220);
     let ag = 'Negative';
     if (selection.albinismGene) {
       ag = 'Positive';
     }
-    ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 205);
+    ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 220);
   }
 };
 }
@@ -180,10 +202,13 @@ function handleButton(input) {
       boxes = [];
       buttons[0].visible = false;
       buttons[1].visible = false;
-      buttons[6].visible = false;
       labels[0].visible = false;
       labels[1].visible = false;
       selection.inCatBox = null;
+      buttons[10].available = true;
+      buttons[11].available = true;
+      buttons[12].available = true;
+      buttons[13].visible = false;
       choosingChibi = false;
       selection = null;
     } else if (!chosenChibiM) {
@@ -204,10 +229,13 @@ function handleButton(input) {
       boxes = [];
       buttons[0].visible = false;
       buttons[1].visible = false;
-      buttons[6].visible = false;
       labels[0].visible = false;
       labels[1].visible = false;
       selection.inCatBox = null;
+      buttons[10].available = true;
+      buttons[11].available = true;
+      buttons[12].available = true;
+      buttons[13].visible = false;
       choosingChibi = false;
       selection = null;
     } else if (!chosenKitten) {
@@ -282,6 +310,71 @@ function handleButton(input) {
     break;
     case 6:
     openUploadDialog();
+    break;
+    case 7:
+    pasteChibi(copyChibi(experiment));
+    break;
+    case 8:
+    pasteChibi(copyChibi(experiment));
+    chibis[chibis.length-1].gender = 'Male';
+    chibis[chibis.length-1].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
+    break;
+    case 9:
+    geneEditing = false;
+    buttons[7].visible = false;
+    buttons[8].visible = false;
+    buttons[9].visible = false;
+    buttons[10].available = true;
+    buttons[11].available = true;
+    buttons[12].available = true;
+    buttons[6].available = true;
+    break;
+    case 10:
+    geneEditing = true;
+    buttons[7].visible = true;
+    buttons[8].visible = true;
+    buttons[9].visible = true;
+    buttons[10].available = false;
+    buttons[11].available = false;
+    buttons[12].available = false;
+    buttons[6].available = false;
+    break;
+    case 11:
+    initFemaleCattery();
+    buttons[10].available = false;
+    buttons[11].available = false;
+    buttons[12].available = false;
+    buttons[6].available = false;
+    break;
+    case 12:
+    initMaleCattery();
+    buttons[10].available = false;
+    buttons[11].available = false;
+    buttons[12].available = false;
+    buttons[6].available = false;
+    break;
+    case 13:
+    choosingChibi = false;
+    chosenChibiF = true;
+    chosenChibiM = true;
+    selection = null;
+    boxes = [];
+    for (let i = currentChibis; i < chibis.length; i++) {
+      if (chibis[i] !== selection) {
+        chibis.splice(i, 1);
+        i--;
+      }
+    }
+    buttons[0].visible = false;
+    buttons[1].visible = false;
+    labels[0].visible = false;
+    labels[1].visible = false;
+    buttons[13].visible = false;
+    buttons[10].available = true;
+    buttons[11].available = true;
+    buttons[12].available = true;
+    buttons[6].available = true;
+    break;
   }
 }
 
@@ -338,6 +431,10 @@ function clickMouse(e) {
       }
     }
   }
+
+  // if we are gene editing, turn on click checkers
+  if (geneEditing) {
+
   // now check sliders
   for (let i = 0; i < sliders.length; i++) {
     if (detectCollision(sliders[i].sBar, pointerPos)) {
@@ -350,12 +447,14 @@ function clickMouse(e) {
 
   // colour bar
   if (pointerPos.x >= colourBars.x && pointerPos.x <= colourBars.x + 100 && pointerPos.y >= colourBars.y && pointerPos.y <= colourBars.y + 20) {
-    if (pointerPos.x - colourBars.x < 33.3) {
+    if (pointerPos.x - colourBars.x < 25) {
       colourBars.selected = 0;
-    } else if (pointerPos.x - colourBars.x < 66.6) {
+    } else if (pointerPos.x - colourBars.x < 50) {
       colourBars.selected = 1;
-    } else {
+    } else if (pointerPos.x - colourBars.x < 75){
       colourBars.selected = 2;
+    } else {
+      colourBars.selected = 3;
     }
   }
   // colour picker
@@ -371,13 +470,17 @@ function clickMouse(e) {
       noseColourCheck(experiment);
     } else if (colourBars.selected == 1) {
       experiment.secondColour = colourBlock.pixels[newIndex];
-    } else {
+    } else if (colourBars.selected == 2) {
       experiment.thirdColour = colourBlock.pixels[newIndex];
+    } else {
+      experiment.eyeColour = colourBlock.pixels[newIndex];
     }
   }
 }
+}
 
 function unclickMouse(e) {
+  if (geneEditing) {
   // check sliders
   for (let i = 0; i < sliders.length; i++) {
     if (sliders[i].sBar.dragging) {
@@ -387,6 +490,7 @@ function unclickMouse(e) {
       }
     }
   }
+}
 }
 
 /**
@@ -528,6 +632,8 @@ function SliderBar(parent) {
         experiment.headWidth = this.parent.currentPos;
       } else if (this.parent.id == 23) {
         experiment.headHeight = this.parent.currentPos;
+      }  else if (this.parent.id == 24) {
+        experiment.eyeSize = this.parent.currentPos;
       }
     } else {
       this.x = this.parent.x + this.parent.relativePosition;
@@ -548,19 +654,23 @@ function ColourBar(x, y) {
     ctx.fillText(this.text, this.x, this.y - 8);
     ctx.globalAlpha = 1;
     ctx.fillStyle = experiment.firstColour;
-    ctx.fillRect(this.x, this.y, 33.3, 20);
+    ctx.fillRect(this.x, this.y, 25, 20);
     ctx.fillStyle = experiment.secondColour;
-    ctx.fillRect(this.x + 33.3, this.y, 33.3, 20);
+    ctx.fillRect(this.x + 25, this.y, 25, 20);
     ctx.fillStyle = experiment.thirdColour;
-    ctx.fillRect(this.x + 66.6, this.y, 33.3, 20);
+    ctx.fillRect(this.x + 50, this.y, 25, 20);
+    ctx.fillStyle = experiment.eyeColour;
+    ctx.fillRect(this.x + 75, this.y, 25, 20);
     ctx.lineWidth = 3;
     ctx.strokeStyle = trueWhite;
     if (this.selected == 0) {
-      ctx.strokeRect(this.x, this.y, 33.3, 20);
+      ctx.strokeRect(this.x, this.y, 25, 20);
     } else if (this.selected == 1) {
-      ctx.strokeRect(this.x + 33.3, this.y, 33.3, 20);
+      ctx.strokeRect(this.x + 25, this.y, 25, 20);
     } else if (this.selected == 2) {
-      ctx.strokeRect(this.x + 66.6, this.y, 33.3, 20);
+      ctx.strokeRect(this.x + 50, this.y, 25, 20);
+    } else if (this.selected == 3) {
+      ctx.strokeRect(this.x + 75, this.y, 25, 20);
     }
   };
 }

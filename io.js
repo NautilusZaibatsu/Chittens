@@ -41,7 +41,9 @@ function copyChibi(chibi) {
   chibi.eyePosX+'*'+
   chibi.eyePosY+'*'+
   chibi.headWidth+'*'+
-  chibi.headHeight;
+  chibi.headHeight+'*'+
+  chibi.eyeColour+'*'+
+  chibi.eyeSize;
   // console.log(outputbuffer);
   return outputbuffer;
 }
@@ -52,20 +54,13 @@ function copyChibi(chibi) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 37) {
+  if (attributeArray.length !== 39) {
     sendMessage('Old filetype detected');
-  } if (attributeArray.length !== 37) {
+  } if (attributeArray.length !== 39) {
     alert('Failed to load file');
   } else {
     chibis.splice(currentChibis, 9);
     boxes = [];
-    buttons[0].visible = false;
-    buttons[1].visible = false;
-    buttons[2].visible = false;
-    labels[0].visible = false;
-    labels[1].visible = false;
-    labels[3].visible = false;
-    buttons[6].visible = false;
     choosingChibi = false;
     selection = null;
     chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0], parseFloat(attributeArray[5])));
@@ -92,10 +87,12 @@ function pasteChibi(outputbuffer) {
     }
     chibis[chibis.length-1].thirdColour = attributeArray[31];
     chibis[chibis.length-1].nosePos = parseFloat(attributeArray[32]);
-    chibis[chibis.length-1].eyePosX = parseFloat(attributeArray[32]);
-    chibis[chibis.length-1].eyePosY = parseFloat(attributeArray[32]);
-    chibis[chibis.length-1].headWidth = parseFloat(attributeArray[33]);
-    chibis[chibis.length-1].headHeight = parseFloat(attributeArray[34]);
+    chibis[chibis.length-1].eyePosX = parseFloat(attributeArray[33]);
+    chibis[chibis.length-1].eyePosY = parseFloat(attributeArray[34]);
+    chibis[chibis.length-1].headWidth = parseFloat(attributeArray[35]);
+    chibis[chibis.length-1].headHeight = parseFloat(attributeArray[36]);
+    chibis[chibis.length-1].eyeColour = attributeArray[37];
+    chibis[chibis.length-1].eyeSize = parseFloat(attributeArray[38]);
 
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));

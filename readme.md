@@ -2,37 +2,38 @@
 
 changelog
 
-11/01/2019 = 0.55
-~ major update to way coat coloration works, tweaks across the board to allow for upcoming breeds feature
-~ added more nose and eye variation
-~ experimental gene editor added. no save, close or import function yet. It's just a toy atm
+12/02/2019 = 0.056
+~ alpha gene editor implemented, use it to spawn a chibi of your design. Access it through the editor tab
+~ added eye colours and eye size variation
+~ added load and both catteries to top menu
 
-09/01/2019 = 0.54
+11/01/2019 = 0.055
+~ major update to way coat coloration works, tweaks across the board to allow for upcoming breeds feature
+~ added more head shape, nose and eye position variation
+
+09/01/2019 = 0.054
 ~ added a third colour to Chibi's coats
 ~ added jowls and noses. Nose colour is not genetic; lighter Chibis have pink noses. darker Chibis have black noses
 ~ elders no longer tend graves, they still don't breed any more
 ~ tweaked starting colour algorithms to be more realistic
 
-02/01/2019 = 0.53
+02/01/2019 = 0.053
 ~ added FPS counter
 ~ improved performance
 ~ changed the way the front legs are drawn to make it smoother and more natural
-~ kitten behaviour update. A Chibi will be a kitten until it is 1 day old. It will follow it's mother attempting to suckle until it becomes independent. Kittens sleep do not pay a cost for jumping, they sleep when their mothers do. Kittens start smaller and grow faster
+~ kitten behaviour update. A Chibi will be a kitten until it is 1 day old. It will follow it's mother attempting to suckle until it becomes independent. Kittens do not pay a cost for jumping, they sleep when their mothers do. Kittens start smaller and grow faster
 ~ trees now regenerate only one piece of fruit per day
 ~ added Egyptian names
 ~ added albinism and backbone of gene disorder system
 ~ each body part is now coloured individually, allowing for 512 combinations (not including gradients / shading)
 ~ added a countdown when choosing a Chibi. If the timer runs out the game will chose the currently selected Chibi, if there is no selection it will choose a random one
 
-
-
-24/11/2018 = 0.52
+24/11/2018 = 0.052
 ~ added speech bubbles
 ~ trees now automatically start to drop once they reach their maximum height. This is to stop all the Chibis from starving to death if they can't reach the trees
 ~ made the colour range for mutations more diverse
 ~ changed the way Chibis look in nirvana, now it's much more dramatic
 ~ tweaked some appearance values to make the most of the cell shading system
-
 
 23/11/2018 = 0.051
 ~ added cell shading to the Chibis

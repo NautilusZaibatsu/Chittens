@@ -1,5 +1,5 @@
 /**
-* mate 0.44
+* mate 0.056
 **/
 
 // universal physics constants
@@ -40,6 +40,9 @@ choiceTimer = 0;
 elders = 0;
 obelisks = 0;
 guyID = 0;
+maleCount = 0;
+femaleCount = 0;
+nonbinaryCount = 0;
 selection = null;
 
 // set global colours / limits
@@ -73,6 +76,7 @@ labels = [];
 speech = [];
 
 // gene editing
+geneEditing = false;
 spliceBox = new CatBox(20, 30, 100, 5);
 experiment = new Chibi(70, 90, 13.5, 10, 'Female', Math.random());
 experiment.age = Math.round(Math.random()*5) + maturesAt;
@@ -92,6 +96,8 @@ experiment.nosePos = Math.random();
 experiment.eyePosX = Math.random();
 experiment.eyePosY = Math.random();
 experiment.headWidth = Math.random();
+experiment.eyeColour = getRandomEyeColour();
+experiment.eyeSize = Math.random();
 
 while (experiment.name == null) {
   experiment.name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
@@ -128,8 +134,9 @@ sliders[18] = new Slider(0, 2, experiment.bodypartCode[6], 130, 410, 'tail');
 sliders[19] = new Slider(0, 1, experiment.nosePos, 20, 365, 'nose height');
 sliders[20] = new Slider(0, 1, experiment.eyePosX, 20, 395, 'eyes width');
 sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 425, 'eyes height');
-sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 455, 'head width');
-sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 485, 'head height');
+sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 485, 'head width');
+sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 515, 'head height');
+sliders[24] = new Slider(0, 1, experiment.eyeSize, 20, 455, 'eye size');
 
 colourBars = new ColourBar(130, 155);
 colourBlock = new ColourPixelBlock();
@@ -326,7 +333,7 @@ function updateGameArea() {
     }
   }
 
-  if (choosingChibi) {
+  if (!chosenKitten) {
     labels[3].text = parseInt(choiceTimer/50);
     //labels[3].reinitSizes();
     // check the timer
@@ -479,9 +486,9 @@ function updateGameArea() {
   } else {
     fpsCount ++;
   }
-  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+chibis.length;
+  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N';
   basicInfo.update();
-  topLabel.text = 'v0.055 FPS '+fps;
+  topLabel.text = 'v0.056 FPS '+fps;
   topLabel.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
@@ -496,6 +503,8 @@ function updateGameArea() {
     labels[i].update();
   }
   selectionInfo.update();
+  // gene editing block
+  if (geneEditing) {
   spliceBox.update();
   experiment.update();
   colourBars.update();
@@ -503,6 +512,7 @@ function updateGameArea() {
   for (let i = 0; i < sliders.length; i++) {
     sliders[i].update();
   }
+}
 
   if (!paused) {
     if (daytimeCounter < 1000) {
@@ -578,22 +588,32 @@ function updateGameArea() {
     }
 
     // check for both sexes - if either sex is not present we will init the cattery for adoption
-    if (!choosingChibi) {
       let malePresent = false;
       let femalePresent = false;
+      femaleCount = 0;
+      maleCount = 0;
+      nonbinaryCount = 0;
       for (let i = 0; i < chibis.length; i++) {
-        if (!chibis[i].elder && chibis[i].gender == 'Female') {
+        if (chibis[i].inCatBox == null) {
+        if (chibis[i].gender == 'Female') {
           femalePresent = true;
-        } else if (!chibis[i].elder && chibis[i].gender == 'Male') {
+          femaleCount ++;
+        } else if (chibis[i].gender == 'Male') {
           malePresent = true;
+          maleCount ++;
+        } else {
+          nonbinaryCount++;
         }
       }
-      if (!femalePresent) {
-        initFemaleCattery();
-      } else if (!malePresent) {
-        initMaleCattery();
-      }
     }
+
+    //   if (!choosingChibi) {
+    //   if (!femalePresent) {
+    //     initFemaleCattery();
+    //   } else if (!malePresent) {
+    //     initMaleCattery();
+    //   }
+    // }
 
     // firefly logic
     for (let f = 0; f < fireflies.length; f++) {

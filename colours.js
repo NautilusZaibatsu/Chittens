@@ -13,6 +13,35 @@ function randomColour() {
 }
 
 /**
+* function to generate a realistic eye colour for starters
+* @return {hex} - a colour
+*/
+function getRandomEyeColour() {
+  let randSeed = Math.round(Math.random()*2); // 0, 1 or 2
+  let seedG = 0;
+  let seedB = 0;
+  let colour = 'red'; // for debug
+  if (randSeed <= 1/3) {
+    // blues
+    seedB = Math.floor(Math.random()*180);
+    seedG = Math.floor(Math.random()*seedB);
+    seedR = seedG;
+  } else if (randSeed == 1) {
+    // greens
+    seedG = Math.floor(Math.random()*130);
+    seedR = Math.floor(Math.random()*seedG);
+    seedB = seedR;
+  } else {
+    // browns
+    seedR = 76.5;
+    seedG = Math.floor(Math.random()*seedR);
+    seedB = seedG;
+  }
+  colour = rgbToHex(seedR, seedG, seedB);
+  return mixTwoColours(randomColour(), colour, (Math.random()*0.5));
+}
+
+/**
 * function to create a realistic coat for a chibi
 * @return {array} three hex colours
 */
@@ -23,22 +52,21 @@ function generateRealisticCoat(randSeed) {
   let coatArray = [];
   // solid colour
   if (randSeed < 3) {
-  coatArray[0] = randomColourRealistic(Math.random());
-  coatArray[1] = coatArray[0];
-  coatArray[2] = coatArray[0];
-} else if (randSeed == 3) {
-  // bi-colour
-  coatArray[0] = trueWhite;
-  coatArray[1] = randomColourRealistic(Math.random());
-  coatArray[2] = coatArray[0];
-} else {
-  // calico / tortoiseshell
-  let seed = 2;
-  coatArray[0] = randomColourRealistic(Math.random()/3); // an orange
-  coatArray[1] = randomColourRealistic((2/3) + (Math.random()/3)); // a grey
-  coatArray[2] = trueWhite;
-}
-return coatArray;
+    coatArray[0] = randomColourRealistic(Math.random());
+    coatArray[1] = coatArray[0];
+    coatArray[2] = coatArray[0];
+  } else if (randSeed == 3) {
+    // bi-colour
+    coatArray[0] = trueWhite;
+    coatArray[1] = randomColourRealistic(Math.random());
+    coatArray[2] = coatArray[0];
+  } else {
+    // calico / tortoiseshell
+    coatArray[0] = randomColourRealistic(Math.random()/3); // an orange
+    coatArray[1] = randomColourRealistic((2/3) + (Math.random()/3)); // a grey
+    coatArray[2] = trueWhite;
+  }
+  return coatArray;
   // striped tabby
   // spotted tabby
   // ticked tabby
@@ -60,20 +88,18 @@ function randomColourRealistic(seed) {
     seedG = Math.floor(Math.random()*(seedR/1.7));
     seedB = Math.floor(Math.random()*(seedG/1.25));
     colour = rgbToHex(seedR, seedG, seedB);
-    return colour;
-} else if (seed <= 2/3) {
-  // russian blue
-   seedB = Math.floor(Math.random()*255);
-   seedG = (seedB/2) + Math.floor(Math.random()*50);//Math.floor(Math.random()*(seedB));
-   seedR = seedG; //Math.floor(Math.random()*(seedB));
-   colour = rgbToHex(seedR, seedG, seedB);
-  return colour;
-} else {
-   // greys
+  } else if (seed <= 2/3) {
+    // russian blue
+    seedB = Math.floor(Math.random()*255);
+    seedG = (seedB/2) + Math.floor(Math.random()*50);//Math.floor(Math.random()*(seedB));
+    seedR = seedG; //Math.floor(Math.random()*(seedB));
+    colour = rgbToHex(seedR, seedG, seedB);
+  } else {
+    // greys
     let seed = Math.floor(Math.random()*255);
     colour = rgbToHex(seed, seed, seed);
+  }
   return colour;
-}
 }
 
 /**
@@ -93,21 +119,21 @@ function randomColourFruity() {
     seedB = Math.floor(Math.random()*100) + 50;
     colour = rgbToHex(seedR, seedG, seedB);
     return colour;
-} else if (randSeed <= 2/3) {
-  //blue
-  seedR = Math.floor(Math.random()*100) + 155;
-  seedG = Math.floor(Math.random()*50) + 80;
-  seedB = Math.floor(Math.random()*50) + 80;
-   colour = rgbToHex(seedR, seedG, seedB);
-  return colour;
-} else {
-   // green
-   seedR = Math.floor(Math.random()*60) + 100;
-   seedG = Math.floor(Math.random()*100) + 155;
-   seedB = Math.floor(Math.random()*50) + 80;
-   colour = rgbToHex(seedR, seedG, seedB);
-  return colour;
-}
+  } else if (randSeed <= 2/3) {
+    //blue
+    seedR = Math.floor(Math.random()*100) + 155;
+    seedG = Math.floor(Math.random()*50) + 80;
+    seedB = Math.floor(Math.random()*50) + 80;
+    colour = rgbToHex(seedR, seedG, seedB);
+    return colour;
+  } else {
+    // green
+    seedR = Math.floor(Math.random()*60) + 100;
+    seedG = Math.floor(Math.random()*100) + 155;
+    seedB = Math.floor(Math.random()*50) + 80;
+    colour = rgbToHex(seedR, seedG, seedB);
+    return colour;
+  }
 }
 
 /**
