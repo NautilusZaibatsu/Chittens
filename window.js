@@ -584,7 +584,7 @@ function updateGameArea() {
         }
         sendMessage('A Ghost became a FireFly');
         fireflies.push(new FireFly(myGhosts[i].x, myGhosts[i].y, fireflies[fireflies.length-1], fireFlySize, myGhosts[i].firstColour));
-        fireflies[fireflies.length-1].touches = 500;
+        fireflies[fireflies.length-1].touches = 0;
         myGhosts.splice(i, 1);
         i--;
       } else {
@@ -623,7 +623,7 @@ function updateGameArea() {
     // firefly logic
     for (let f = 0; f < fireflies.length; f++) {
       fireflies[f].touchedThisFrame = false;
-      if (fireflies[f].touches >= 400) {
+      if (fireflies[f].touches >= 500) {
         sendMessage('A FireFly was overwhelmed');
         // create the explosion
         explosions.push(new Explosion(fireflies[f].x, fireflies[f].y, '#FF2288', glowColour));

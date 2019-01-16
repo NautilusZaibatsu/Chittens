@@ -61,27 +61,27 @@ changelog
 ~ added more variation between the sexes
 ~ reworked the jumping algorithms
 
-21/11/2018 = 0.49
+21/11/2018 = 0.049
 ~ added length to Chibi's bodies so the back end follows the front around
 ~ reworked front and back legs to fit the new body look
 ~ if you have no male or no female Chibis left you will now be returned to the appropriate cattery instead of a random Chibi spawning
 ~ added a stats panel for selected Chibi, you can now give away (remove from your game) Chibis from here.
 ~ added saving and loading of Chibis. Loading can be done from a cattery, saving can be done from stats panel
 
-20/11/2018 = 0.48
+20/11/2018 = 0.048
 ~ added litter mechanic
 ~ added German and Indian names
 ~ added thickness and legginess attributes to Chibis
 ~ incorporated ntc by Chirag Mehta - http://chir.ag/projects/ntc
 ~ fixed some scaling problems on mobile
 
-19/11/2018 = 0.47
+19/11/2018 = 0.047
 features
 ~ Chibis now wiggle their bums in the air while waiting to pounce
 ~ added the cattery, so you can choose your starting pair
 ~ improved variation and realism of the Chibi's coats
 
-18/11/2018 = 0.46
+18/11/2018 = 0.046
 ~ Chibis now choose each other to mate
 ~ added individual colour shading to Chibis
 ~ added physics based symbols that emit from Chibis on certain events
@@ -89,13 +89,13 @@ features
 ~ large performance upgrade
 ~ prevented Chibis from naming their children after themselves
 
-17/11/2018 = 0.45
+17/11/2018 = 0.045
 features
 ~ added trees, Chibis will plant them whilst in a nirvana
 ~ added Chinese names for Chibis
 ~ added non binary gender
 
-16/11/2018 = 0.44
+16/11/2018 = 0.044
 features
 ~ added a Chibi naming system, parents name their children according to their culture
 ~ added ability for the player select a mate
