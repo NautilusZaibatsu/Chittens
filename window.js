@@ -1,5 +1,5 @@
 /**
-* mate 0.056
+* mate 0.057
 **/
 
 // universal physics constants
@@ -30,15 +30,12 @@ fps = 0;
 fpsCount = '00';
 daytimeCounter = hourOfCreation;
 timeMod = daytimeCounter;
-anniversary = true;
 day = 0;
 paused = false;
-chosenChibiM = false;
-chosenChibiF = false;
+chosenChibiM = true;
+chosenChibiF = true;
 chosenKitten = true;
 choiceTimer = 0;
-elders = 0;
-obelisks = 0;
 guyID = 0;
 maleCount = 0;
 femaleCount = 0;
@@ -48,10 +45,14 @@ selection = null;
 // set global colours / limits
 glowColour = '#FFFF88';
 trueWhite = '#FFFFFF';
-nosePink = '#f5b1f5';
+nosePink = '#f5b2c1';
+noseBlack = '#37191f';
 trueBlack = '#000000';
 albinoRed = '#FF0000';
 superColour = 255;
+genderPink = '#f27bfe';
+genderBlue = '#78c7fc';
+genderPurple = '#9978f1';
 
 // set timer parameters
 const glyphTimer = 100;
@@ -98,12 +99,13 @@ experiment.eyePosY = Math.random();
 experiment.headWidth = Math.random();
 experiment.eyeColour = getRandomEyeColour();
 experiment.eyeSize = Math.random();
-
+experiment.maxAge = 14 + (Math.random()*6);
+experiment.fangs = Math.random();
 while (experiment.name == null) {
   experiment.name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
 }
 experiment.bodypartCode = randomBodyPartCode();
-noseColourCheck(experiment);
+experiment.noseColour = skinColourCheck(experiment.firstColour);
 experiment.awake = true;
 experiment.hitBottom = true;
 sliderIndex = 0;
@@ -114,7 +116,7 @@ sliders[2] = new Slider(0, 1, experiment.legginess, 20, 215, 'legginess');
 sliders[3] = new Slider(0, 1, experiment.ears, 20, 245, 'ear width');
 sliders[4] = new Slider(0, 1, experiment.tailLength, 20, 275, 'tail length');
 sliders[5] = new Slider(0, 1, experiment.coatMod[0], 20, 305, 'fade');
-sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 335, 'fade angle');
+sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 335, 'coat angle');
 
 sliders[7] = new Slider(0, 2, experiment.bodypartCode[0], 130, 440, 'front foot left');
 sliders[8] = new Slider(0, 2, experiment.bodypartCode[1], 130, 470, 'front foot right');
@@ -137,6 +139,9 @@ sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 425, 'eyes height');
 sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 485, 'head width');
 sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 515, 'head height');
 sliders[24] = new Slider(0, 1, experiment.eyeSize, 20, 455, 'eye size');
+sliders[25] = new Slider(0, 1, experiment.fangs, 20, 545, 'fang size');
+sliders[26] = new Slider(0, 2, experiment.pattern, 130, 560, 'pattern');
+sliders[27] = new Slider(0, 1, experiment.patternAlpha, 130, 590, 'opacity');
 
 colourBars = new ColourBar(130, 155);
 colourBlock = new ColourPixelBlock();
@@ -175,6 +180,13 @@ const smile3 = new Image();
 smile3.src = 'smile3.png';
 const content = new Image();
 content.src = 'content.png';
+const pattern0 = new Image();
+pattern0.src = 'pattern0.png';
+const pattern1 = new Image();
+pattern1.src = 'pattern1.png';
+const pattern2 = new Image();
+pattern2.src = 'pattern2.png';
+
 // flame aura
 const flame = new Image();
 flame.src = 'flame.png';
@@ -275,6 +287,7 @@ let myGameArea = {
 function updateGameArea() {
   myGameArea.clear();
   ctx = myGameArea.context;
+  c = document.getElementById("myCanvas");
   myGameArea.frameNo += 1;
   if (myGameArea.frameNo == 1 || everyinterval(3)) {
     // fire a comet
@@ -333,9 +346,9 @@ function updateGameArea() {
     }
   }
 
+  // countdown timer when choosing from a litter
   if (!chosenKitten) {
     labels[3].text = parseInt(choiceTimer/50);
-    //labels[3].reinitSizes();
     // check the timer
     if (choiceTimer > 0) {
       choiceTimer --;
@@ -488,7 +501,7 @@ function updateGameArea() {
   }
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N';
   basicInfo.update();
-  topLabel.text = 'v0.056 FPS '+fps;
+  topLabel.text = 'v0.057 FPS '+fps;
   topLabel.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
@@ -502,33 +515,26 @@ function updateGameArea() {
   for (let i = 0; i < labels.length; i++) {
     labels[i].update();
   }
-  selectionInfo.update();
+  if (selection !== null) {
+    selectionInfo.update();
+  }
   // gene editing block
   if (geneEditing) {
-  spliceBox.update();
-  experiment.update();
-  colourBars.update();
-  colourBlock.update();
-  for (let i = 0; i < sliders.length; i++) {
-    sliders[i].update();
+    spliceBox.update();
+    experiment.update();
+    colourBars.update();
+    colourBlock.update();
+    for (let i = 0; i < sliders.length; i++) {
+      sliders[i].update();
+    }
   }
-}
 
   if (!paused) {
     if (daytimeCounter < 1000) {
       daytimeCounter += 0.25;
-      // establish if it is the age of creation or not
-      if (chosenChibiF && chosenChibiM && !anniversary && (daytimeCounter <= Math.abs(1000-(hourOfCreation + hocLength) || daytimeCounter >= hourOfCreation) && daytimeCounter <= (hourOfCreation + hocLength))) {
-        anniversary = true;
-        if (elders > 0) {
-          sendMessage('The Hour of Creation began');
-        }
+      // increase daytime counter
+      if (daytimeCounter == hourOfCreation) {
         day ++;
-      } else if (chosenChibiF && chosenChibiM && anniversary && (daytimeCounter >= Math.abs(1000-(hourOfCreation + hocLength)) || daytimeCounter >= (hourOfCreation+ hocLength))) {
-        anniversary = false;
-        if (elders > 0) {
-          sendMessage('The Hour of Creation ended');
-        }
       }
     } else {
       daytimeCounter = 1;
@@ -558,7 +564,6 @@ function updateGameArea() {
       if (graveStones[d].timer < 1) {
         let ghostSize = graveStones[d].size;
         if (graveStones[d].elder) {
-          obelisks --;
           ghostSize /= 3;
         }
         myGhosts.push(new Ghost(graveStones[d].x, graveStones[d].y, ghostSize*0.8, graveStones[d].firstColour));
@@ -579,7 +584,7 @@ function updateGameArea() {
         }
         sendMessage('A Ghost became a FireFly');
         fireflies.push(new FireFly(myGhosts[i].x, myGhosts[i].y, fireflies[fireflies.length-1], fireFlySize, myGhosts[i].firstColour));
-        fireflies[fireflies.length-1].touches = 200;
+        fireflies[fireflies.length-1].touches = 500;
         myGhosts.splice(i, 1);
         i--;
       } else {
@@ -588,13 +593,13 @@ function updateGameArea() {
     }
 
     // check for both sexes - if either sex is not present we will init the cattery for adoption
-      let malePresent = false;
-      let femalePresent = false;
-      femaleCount = 0;
-      maleCount = 0;
-      nonbinaryCount = 0;
-      for (let i = 0; i < chibis.length; i++) {
-        if (chibis[i].inCatBox == null) {
+    let malePresent = false;
+    let femalePresent = false;
+    femaleCount = 0;
+    maleCount = 0;
+    nonbinaryCount = 0;
+    for (let i = 0; i < chibis.length; i++) {
+      if (chibis[i].inCatBox == null) {
         if (chibis[i].gender == 'Female') {
           femalePresent = true;
           femaleCount ++;
@@ -649,7 +654,7 @@ function updateGameArea() {
     }
 
     recalculateMyGuys();
-    // DRAW SLEEP CHIBIS FIRST
+    // DRAW SLEEPING CHIBIS FIRST
     for (let i = 0; i < chibis.length; i++) {
       if (!chibis[i].awake) {
         chibis[i].update();
@@ -718,6 +723,7 @@ function updateGameArea() {
     //   ctx.globalAlpha = 1
     // }
   }
+
 }
 
 /**
@@ -952,6 +958,7 @@ function Seed(colour, owner) {
       }
       this.speedX += 0.05*Math.cos(targetangle);
       this.speedY += 0.05*Math.sin(targetangle);
+
       applySpeedLimit(this);
       this.x += this.speedX;
       this.y += this.speedY;
@@ -1002,7 +1009,7 @@ function Seed(colour, owner) {
     this.y = y + 10;
     this.speedX = speedX/2;
     this.speedY = speedY/2;
-    this.timer = 200;
+    this.timer = 500;
     this.hitBottom = false;
     this.elder = elder;
     this.firstColour = firstColour;
@@ -1010,7 +1017,6 @@ function Seed(colour, owner) {
     if (this.elder) {
       this.image = obelisk;
       this.size = size*1.5;
-      obelisks ++;
     } else {
       this.size = size;
       let whichTombstone = Math.random();
@@ -1194,46 +1200,44 @@ function Seed(colour, owner) {
         chibis[i].speedY = 0;
         sendMessage(chibis[i].name+' reached nirvana');
       }
-      // check for age
+      // increasing age, and related checks
       if (chibis[i].inCatBox == null && chibis[i].birthday == daytimeCounter+1) {
         chibis[i].age ++;
+        // maturing to adult
         if (chibis[i].age == maturesAt) {
           sendMessage(chibis[i].name+' reached adulthood');
           chibis[i].energy += 50;
           chibis[i].love += 25;
-          createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secondColour, '\u274b');
-        }
-
-        // set elder status
-        if (!choosingChibi && chibis[i].reachedNirvana && !chibis[i].elder && elders+1 <= chibis.length/4 && chibis[i].litters >= 10) {
+          createGlyphs(chibis[i].x, chibis[i].y, mixThreeColours(chibis[i].firstColour, chibis[i].secondColour, chibis[i].thirdColour), '\u274b');
+          // reaching old age
+        } else if (chibis[i].age >= chibis[i].maxAge-1 && !chibis[i].elder) {
           chibis[i].elder = true;
-          chibis[i].size *= 0.8;
           chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour, 2);
           chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour, 2);
           chibis[i].thirdColour = decreaseSaturationHEX(chibis[i].thirdColour, 2);
-
-
-          sendMessage(chibis[i].name+' became an Elder');
-          createGlyphs(chibis[i].x, chibis[i].y, chibis[i].secondColour, '\u274b');
-
-          elders++;
-        } else if (elders > 1 && elders > chibis.length/4 && chibis[i].elder) {
-          chibis[i].elder = false;
-          elders --;
-          sendMessage(chibis[i].name+' is no longer an elder');
+          sendMessage(chibis[i].name+' reached old age');
+          createGlyphs(chibis[i].x, chibis[i].y, mixThreeColours(chibis[i].firstColour, chibis[i].secondColour, chibis[i].thirdColour), '\u274b');
+          // dying of old age
+        } else if (chibis[i].snuggling == -1 && chibis[i].nomnomnom == -1 && chibis[i].age > chibis[i].maxAge) {
+          sendMessage(chibis[i].name+' died of old age');
+          graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
+          removeRelationships(chibis[i]);
+          chibis.splice(i, 1);
+          i--;
         }
       }
-      if (!choosingChibi && chibis[i].health <= 0) {
-        createGlyphs(chibis[i].x, chibis[i].y, trueBlack, '\u271A');
-        if (chibis[i].elder) {
-          sendMessage('Elder '+chibis[i].name+' died');
-          elders--;
-        }
+    }
+    // start a new loop to check for next cause of death
+    for (let i = 0; i < chibis.length; i++) {
+      // dying because of low health
+      if (chibis[i].health <= 0) {
+        createGlyphs(chibis[i].x, chibis[i].y, mixThreeColours(chibis[i].firstColour, chibis[i].secondColour, chibis[i].thirdColour), '\u271A');
         graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
         sendMessage(chibis[i].name+' died');
         removeRelationships(chibis[i]);
         chibis.splice(i, 1);
         i--;
+        // so as long as that doesn't kill you......
       } else {
         // grow them a tiny bit
         if (chibis[i].size < chibis[i].maxSize) {
@@ -1290,11 +1294,11 @@ function Seed(colour, owner) {
         }
 
         for (let j = 0; j < chibis.length; j++) {
-          // if two guys bump into each other
-          if (i !== j && chibis[i].awake && chibis[j].awake && chibis[i].age >= maturesAt && chibis[j].age >= maturesAt && chibis[i].snuggling == -1 && chibis[j].snuggling == -1 && detectCollision(chibis[i], chibis[j])) {
+          // if two chibis bump into each other
+          if (i !== j && chibis[i].awake && chibis[j].awake && !chibis[i].hitBottom && !chibis[j].hitBottom && detectCollision(chibis[i], chibis[j])) {
             collide(chibis[i], chibis[j]);
             // having a snuggle
-            if (!choosingChibi && chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
+            if (chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
               && chibis[i].partner == chibis[j] && chibis[i].gender == 'Male' && chibis[j].gender == 'Female'
               && chibis[i].supersaiyan == 0 && chibis[j].supersaiyan == 0 && !chibis[i].elder && !chibis[j].elder
               && chibis[i].health >= 40 && chibis[j].health >= 40 && chibis[i].energy >= 40 && chibis[j].energy >= 40) {
@@ -1342,10 +1346,6 @@ function Seed(colour, owner) {
           } else {
             chibis[i].speedX *= 0.98;
           }
-
-          // change direction mid air
-
-
           // limit speedX and speedY
           applySpeedLimit(chibis[i]);
 
@@ -1360,19 +1360,24 @@ function Seed(colour, owner) {
             chibis[i].rotation += 6;
           }
 
+
           if (!chibis[i].hitBottom) {
             let mass = gravity*chibis[i].size*6;
             chibis[i].speedY += mass;
             chibis[i].y += chibis[i].speedY/4;
+            if (Math.round(chibis[i].speedY) == 0) {
+              let tmp = ((chibis[i].jumpY*4)+chibis[i].y)/5;
+              chibis[i].jumpY = tmp;
+            }
           }
           chibis[i].physicsCheck();
-          // change direction mid air
         }
       }
     }
     /**
     * function to attempt to plant a tree
     * @param {int} x - the x coordinate where the mate is trying to place a tree
+    * @param {hex} fruitColour - the colour of the fruit
     * @return {boolean} - whether the tree was planted or not
     */
     function tryToPlantaTree(x, fruitColour) {
@@ -1577,7 +1582,7 @@ function Seed(colour, owner) {
       this.update = function() {
         this.speedY += gravity;
         for (let i = 0; i < glyphs.length; i++) {
-          if (glyphs[i] !== this && detectCollision(glyphs[i], this)) {
+          if (fps > 30 && glyphs[i] !== this && detectCollision(glyphs[i], this)) {
             collide(this, glyphs[i]);
             this.timer -= this.step;
             glyphs[i].timer -= glyphs[i].step;

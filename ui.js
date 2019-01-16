@@ -8,9 +8,9 @@ function initButtons() {
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(canvasWidth/2, 370, 'Give away'));
-  buttons.push(new Button(canvasWidth/2, 405, 'Close'));
-  buttons.push(new Button(canvasWidth/2, 440, 'Save as .chi file'));
+  buttons.push(new Button(canvasWidth/2, 335, 'Give away'));
+  buttons.push(new Button(canvasWidth/2, 370, 'Close'));
+  buttons.push(new Button(canvasWidth/2, 405, 'Save as .chi file'));
   buttons[3].visible = false;
   buttons[4].visible = false;
   buttons[5].visible = false;
@@ -18,9 +18,9 @@ function initButtons() {
   buttons.push(new Button(396, 0, 'Load'));
 
   // gene editing
-  buttons.push(new Button(60, 530, 'Save Female'));
-  buttons.push(new Button(60, 565, 'Save Male'));
-  buttons.push(new Button(60, 600, 'Close'));
+  buttons.push(new Button(60, 560, 'Save Female'));
+  buttons.push(new Button(60, 595, 'Save Male'));
+  buttons.push(new Button(60, 630, 'Close'));
   buttons[7].visible = false;
   buttons[8].visible = false;
   buttons[9].visible = false;
@@ -34,8 +34,8 @@ function initButtons() {
 
   labels.push(new Button(canvasWidth/2, 10, 'Welcome message'));
   labels.push(new Button(canvasWidth/2, 45, 'Choose a ....'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 100, 'Selection'));
-  labels.push(new Button(canvasWidth/2, 80, 'X'));
+  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 30, 'Selection'));
+  labels.push(new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'X'));
   labels[0].visible = false;
   labels[1].visible = false;
   labels[2].visible = false;
@@ -98,8 +98,13 @@ function InfoPanel() {
         buttons[3].available = true;
       }
       let cString = '';
-      if (selection.albinism) {
-        cString = 'Albino';
+      if (selection.albino || selection.sphynx) {
+        if (selection.albino) {
+          cString = 'Albino ';
+        }
+        if (selection.sphynx) {
+          cString += 'Sphynx';
+        }
       } else {
         let c1 = ntc.name(selection.firstColour)[1];
         let c2 = ntc.name(selection.secondColour)[1];
@@ -116,53 +121,58 @@ function InfoPanel() {
           cString = c1 +', '+c2+' & '+c3;
         }
       }
-      let offsetX = 0;
-      if ((cString.length > selection.name.length) && (cString.length > 8)) { // 8 == length of 'positive' and 'negative'
-      offsetX = (11 + cString.length)*fontWidth/2;
-    } else if (selection.name.length > 8) {
-      offsetX = (11 + selection.name.length)*fontWidth/2;
-    } else {
-      offsetX = (11 + 8)*fontWidth/2;
+      let eColour = ntc.name(selection.eyeColour)[1];
+      // determine width of this box
+      let offsetX = 8; // 8 == length of 'positive' and 'negative'
+      if (cString.length > offsetX) {
+        offsetX = cString.length;
+      }
+      if (eColour.length > offsetX) {
+        offsetX = eColour.length;
+      }
+      if (selection.name.length > offsetX) {
+        offsetX = selection.name.length;
+      }
+      offsetX += 11;
+      offsetX *= fontWidth/2;
+
+      ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
+      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 205 );
+      ctx.fillStyle = outputArray[2];
+      ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
+      ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
+      ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
+      ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
+      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
+      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
+      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
+      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
+      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
+      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
+      ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 85);
+      ctx.fillText(eColour, -offsetX + (canvasWidth/2) + 100, 140 + 85);
+      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 100);
+      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 100);
+      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 115);
+      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 115);
+      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 130);
+      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 130);
+      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 145);
+      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 145);
+      ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 160);
+      let ag = 'Negative';
+      if (selection.albinoGene) {
+        ag = 'Positive';
+      }
+      ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 160);
+      ctx.fillText('Sphynx Gene ', -offsetX + (canvasWidth/2), 140 + 175);
+      let sg = 'Negative';
+      if (selection.sphynxGene) {
+        sg = 'Positive';
+      }
+      ctx.fillText(sg, -offsetX + (canvasWidth/2) + 100, 140 + 175);
     }
-    ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-    ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 230 + 20 );
-    ctx.fillStyle = outputArray[2];
-    ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
-    ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
-    ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
-    ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
-    ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
-    ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
-    ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
-    ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
-    ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
-    ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
-    ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 85);
-    ctx.fillText(ntc.name(selection.eyeColour)[1], -offsetX + (canvasWidth/2) + 100, 140 + 85);
-    ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 100);
-    ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 100);
-    ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 115);
-    ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 115);
-    ctx.fillText('Thickness ', -offsetX + (canvasWidth/2), 140 + 130);
-    ctx.fillText(Math.round((selection.thickness*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 130);
-    ctx.fillText('Legginess ', -offsetX + (canvasWidth/2), 140 + 145);
-    ctx.fillText(Math.round((selection.legginess*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 145);
-    ctx.fillText('Ear width ', -offsetX + (canvasWidth/2), 140 + 160);
-    ctx.fillText(Math.round((selection.ears*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 160);
-    ctx.fillText('Tail length ', -offsetX + (canvasWidth/2), 140 + 175);
-    ctx.fillText(Math.round((selection.tailLength*100))+'%', -offsetX + (canvasWidth/2) + 100, 140 + 175);
-    ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 190);
-    ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 190);
-    ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 205);
-    ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 205);
-    ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 220);
-    let ag = 'Negative';
-    if (selection.albinismGene) {
-      ag = 'Positive';
-    }
-    ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 220);
-  }
-};
+  };
 }
 
 function handleButton(input) {
@@ -195,14 +205,14 @@ function handleButton(input) {
       sendMessage(selection.name+' was adopted');
       speech.push(new Speak(selection, neutralWord()));
       selection.sitting = false;
-      createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      createGlyphs(selection.x, selection.y, mixThreeColours(selection.firstColour, selection.secondColour, selection.thirdColour), '\u2764');
       seeds.push(new Seed(randomColourFruity(), selection));
       seeds.push(new Seed(randomColourFruity(), selection));
       seeds[seeds.length-1].timer = 750;
       boxes = [];
       buttons[0].visible = false;
       buttons[1].visible = false;
-      buttons[3].visible = false;
+      buttons[2].visible = false;
       labels[0].visible = false;
       labels[1].visible = false;
       selection.inCatBox = null;
@@ -224,7 +234,7 @@ function handleButton(input) {
       sendMessage(selection.name+' was adopted');
       speech.push(new Speak(selection, neutralWord()));
       selection.sitting = false;
-      createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      createGlyphs(selection.x, selection.y, mixThreeColours(selection.firstColour, selection.secondColour, selection.thirdColour), '\u2764');
       seeds.push(new Seed(randomColourFruity(), selection));
       seeds.push(new Seed(randomColourFruity(), selection));
       seeds[seeds.length-1].timer = 750;
@@ -255,7 +265,7 @@ function handleButton(input) {
       selection.size *= 0.5;
       selection.reinitSizes();
       selection.sitting = false;
-      createGlyphs(selection.x, selection.y, selection.firstColour, '\u2764');
+      createGlyphs(selection.x, selection.y, mixThreeColours(selection.firstColour, selection.secondColour, selection.thirdColour), '\u2764');
       selection.reinitSizes;
       boxes = [];
       buttons[0].visible = false;
@@ -263,6 +273,10 @@ function handleButton(input) {
       buttons[2].visible = false;
       labels[0].visible = false;
       labels[1].visible = false;
+      buttons[10].available = true;
+      buttons[11].available = true;
+      buttons[12].available = true;
+      buttons[6].available = true;
       selection.inCatBox = null;
       choosingChibi = false;
       selection = null;
@@ -279,6 +293,10 @@ function handleButton(input) {
     buttons[0].visible = false;
     buttons[1].visible = false;
     buttons[2].visible = false;
+    buttons[10].available = true;
+    buttons[11].available = true;
+    buttons[12].available = true;
+    buttons[6].available = true;
     labels[0].visible = false;
     labels[1].visible = false;
     selection = null;
@@ -313,6 +331,10 @@ function handleButton(input) {
     saveToFile(selection);
     break;
     case 6:
+    buttons[3].visible = false;
+    buttons[4].visible = false;
+    buttons[5].visible = false;
+    labels[2].visible = false;
     openUploadDialog();
     break;
     case 7:
@@ -321,7 +343,10 @@ function handleButton(input) {
     case 8:
     pasteChibi(copyChibi(experiment));
     chibis[chibis.length-1].gender = 'Male';
-    chibis[chibis.length-1].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
+    chibis[chibis.length-1].name = null;
+    while (chibis[chibis.length-1].name == null) {
+      chibis[chibis.length-1].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
+    }
     break;
     case 9:
     geneEditing = false;
@@ -334,6 +359,13 @@ function handleButton(input) {
     buttons[6].available = true;
     break;
     case 10:
+    if (selection !== null) {
+      cloneChibi(copyChibi(selection), experiment);
+      labels[2].visible = false;
+      buttons[3].visible = false;
+      buttons[4].visible = false;
+      buttons[5].visible = false;
+    }
     geneEditing = true;
     buttons[7].visible = true;
     buttons[8].visible = true;
@@ -388,22 +420,24 @@ function handleButton(input) {
 */
 function clickMouse(e) {
   let clickedSomething = false;
-  for (let i = 0; i < buttons.length; i++) {
-    if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
-      clickedSomething = true;
-      handleButton(i);
-    }
-  }
   for (let i = 0; i < boxes.length; i++) {
-    if (detectCollision(pointerPos, boxes[i])) {
+    if (!clickedSomething && detectCollision(pointerPos, boxes[i])) {
       clickedSomething = true;
-      selection = chibis[i+currentChibis];
+      selection = chibis[chibis.length - boxes.length + i];
       boxes[i].selected = true;
     } else {
       boxes[i].selected = false;
     }
   }
-  if (!clickedSomething && !(chosenChibiF && chosenChibiM)) {
+  if (!clickedSomething) {
+    for (let i = 0; i < buttons.length; i++) {
+      if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+        clickedSomething = true;
+        handleButton(i);
+      }
+    }
+  }
+  if (!clickedSomething && choosingChibi) {
     selection = null;
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].selected = false;
@@ -412,7 +446,7 @@ function clickMouse(e) {
     if (chosenChibiF) {
       genderString = 'male';
     }
-    if (!chosenChibiM) {
+    if (!chosenChibiM || !chosenChibiF) {
       sendMessage('\u2764 Choose a '+genderString+' Chibi');
       buttons[1].available = false;
     }
@@ -421,7 +455,7 @@ function clickMouse(e) {
     buttons[1].available = true;
   }
   // now select Chibis
-  if (!clickedSomething && !choosingChibi && chosenChibiF && chosenChibiM && chosenKitten) {
+  if (!clickedSomething && !choosingChibi) {
     for (let i = chibis.length-1; i >= 0; i--) {
       if (detectCollision(pointerPos, chibis[i])) {
         selection = chibis[i];
@@ -439,62 +473,62 @@ function clickMouse(e) {
   // if we are gene editing, turn on click checkers
   if (geneEditing) {
 
-  // now check sliders
-  for (let i = 0; i < sliders.length; i++) {
-    if (detectCollision(sliders[i].sBar, pointerPos)) {
-      sliders[i].sBar.dragging = true;
-      clickedSomething = true;
-    } else {
-      sliders[i].sBar.dragging = false;
+    // now check sliders
+    for (let i = 0; i < sliders.length; i++) {
+      if (detectCollision(sliders[i].sBar, pointerPos)) {
+        sliders[i].sBar.dragging = true;
+        clickedSomething = true;
+      } else {
+        sliders[i].sBar.dragging = false;
+      }
     }
-  }
 
-  // colour bar
-  if (pointerPos.x >= colourBars.x && pointerPos.x <= colourBars.x + 100 && pointerPos.y >= colourBars.y && pointerPos.y <= colourBars.y + 20) {
-    if (pointerPos.x - colourBars.x < 25) {
-      colourBars.selected = 0;
-    } else if (pointerPos.x - colourBars.x < 50) {
-      colourBars.selected = 1;
-    } else if (pointerPos.x - colourBars.x < 75){
-      colourBars.selected = 2;
-    } else {
-      colourBars.selected = 3;
+    // colour bar
+    if (pointerPos.x >= colourBars.x && pointerPos.x <= colourBars.x + 100 && pointerPos.y >= colourBars.y && pointerPos.y <= colourBars.y + 20) {
+      if (pointerPos.x - colourBars.x < 25) {
+        colourBars.selected = 0;
+      } else if (pointerPos.x - colourBars.x < 50) {
+        colourBars.selected = 1;
+      } else if (pointerPos.x - colourBars.x < 75){
+        colourBars.selected = 2;
+      } else {
+        colourBars.selected = 3;
+      }
     }
-  }
-  // colour picker
-  if (pointerPos.x >= colourBlock.x && pointerPos.x <= colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y <= colourBlock.y + 100) {
-    let xCoord = Math.round((pointerPos.x - colourBlock.x)/colourBlock.pixelSize);
-    let yCoord = Math.round((pointerPos.y - colourBlock.y)/colourBlock.pixelSize);
-    let newIndex = (yCoord*colourBlock.pixelColumns) + xCoord;
-    if (newIndex > 624) {
-      newIndex = 624;
-    }
-    if (colourBars.selected == 0) {
-      experiment.firstColour = colourBlock.pixels[newIndex];
-      noseColourCheck(experiment);
-    } else if (colourBars.selected == 1) {
-      experiment.secondColour = colourBlock.pixels[newIndex];
-    } else if (colourBars.selected == 2) {
-      experiment.thirdColour = colourBlock.pixels[newIndex];
-    } else {
-      experiment.eyeColour = colourBlock.pixels[newIndex];
-    }
-  }
-}
-}
-
-function unclickMouse(e) {
-  if (geneEditing) {
-  // check sliders
-  for (let i = 0; i < sliders.length; i++) {
-    if (sliders[i].sBar.dragging) {
-      sliders[i].sBar.dragging = false;
-      if (i > 6 && i < 18) {
-        sliders[i].currentPos = Math.round(sliders[i].currentPos);
+    // colour picker
+    if (pointerPos.x >= colourBlock.x && pointerPos.x <= colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y <= colourBlock.y + 100) {
+      let xCoord = Math.round((pointerPos.x - colourBlock.x)/colourBlock.pixelSize);
+      let yCoord = Math.round((pointerPos.y - colourBlock.y)/colourBlock.pixelSize);
+      let newIndex = (yCoord*colourBlock.pixelColumns) + xCoord;
+      if (newIndex > 624) {
+        newIndex = 624;
+      }
+      if (colourBars.selected == 0) {
+        experiment.firstColour = colourBlock.pixels[newIndex];
+        experiment.noseColour = skinColourCheck(experiment.firstColour);
+      } else if (colourBars.selected == 1) {
+        experiment.secondColour = colourBlock.pixels[newIndex];
+      } else if (colourBars.selected == 2) {
+        experiment.thirdColour = colourBlock.pixels[newIndex];
+      } else {
+        experiment.eyeColour = colourBlock.pixels[newIndex];
       }
     }
   }
 }
+
+function unclickMouse(e) {
+  if (geneEditing) {
+    // check sliders
+    for (let i = 0; i < sliders.length; i++) {
+      if (sliders[i].sBar.dragging) {
+        sliders[i].sBar.dragging = false;
+        if ((i > 6 && i < 18) || i == 26) {
+          sliders[i].currentPos = Math.round(sliders[i].currentPos);
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -636,8 +670,14 @@ function SliderBar(parent) {
         experiment.headWidth = this.parent.currentPos;
       } else if (this.parent.id == 23) {
         experiment.headHeight = this.parent.currentPos;
-      }  else if (this.parent.id == 24) {
+      } else if (this.parent.id == 24) {
         experiment.eyeSize = this.parent.currentPos;
+      } else if (this.parent.id == 25) {
+        experiment.fangs = this.parent.currentPos;
+      } else if (this.parent.id == 26) {
+        experiment.pattern = Math.round(this.parent.currentPos);
+      } else if (this.parent.id == 27) {
+        experiment.patternAlpha = this.parent.currentPos;
       }
     } else {
       this.x = this.parent.x + this.parent.relativePosition;

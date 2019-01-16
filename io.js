@@ -22,8 +22,8 @@ function copyChibi(chibi) {
   chibi.elder+'*'+
   chibi.reachedNirvana+'*'+
   chibi.tailLength+'*'+
-  chibi.albinism+'*'+
-  chibi.albinismGene+'*'+
+  chibi.albino+'*'+
+  chibi.albinoGene+'*'+
   chibi.bodypartCode[0]+'*'+
   chibi.bodypartCode[1]+'*'+
   chibi.bodypartCode[2]+'*'+
@@ -43,9 +43,54 @@ function copyChibi(chibi) {
   chibi.headWidth+'*'+
   chibi.headHeight+'*'+
   chibi.eyeColour+'*'+
-  chibi.eyeSize;
+  chibi.eyeSize+'*'+
+  chibi.maxAge+'*'+
+  chibi.fangs+'*'+
+  chibi.sphynx+'*'+
+  chibi.sphynxGene+'*'+
+  chibi.patternAlpha+'*'+
+  chibi.pattern;
   // console.log(outputbuffer);
   return outputbuffer;
+}
+
+function cloneChibi(outputbuffer, who) {
+  let attributeArray = outputbuffer.split('*');
+  selection = null;
+  who.age = 12;
+  who.elder = false;
+  who.reachedNirvana = false;
+  who.secondColour = attributeArray[1];
+  who.firstColour = attributeArray[2];
+  who.coatMod[0] = parseFloat(attributeArray[3]);
+  who.coatMod[1] = parseFloat(attributeArray[4]);
+  who.thickness = parseFloat(attributeArray[6]);
+  who.legginess = parseFloat(attributeArray[7]);
+  who.limbLength = parseFloat(attributeArray[9]);
+  who.birthday = parseFloat(attributeArray[11]);
+  who.name = attributeArray[13];
+  who.love = 100;
+  who.tailLength = parseFloat(attributeArray[16]);
+  who.albino = (attributeArray[17] == 'true');
+  who.albinoGene = (attributeArray[18] == 'true');
+  who.noseColour = skinColourCheck(who.firstColour);
+  for (let i = 0; i < 12; i ++) {
+    who.bodypartCode[i] = parseInt(attributeArray[i+19]);
+  }
+  who.thirdColour = attributeArray[31];
+  who.nosePos = parseFloat(attributeArray[32]);
+  who.eyePosX = parseFloat(attributeArray[33]);
+  who.eyePosY = parseFloat(attributeArray[34]);
+  who.headWidth = parseFloat(attributeArray[35]);
+  who.headHeight = parseFloat(attributeArray[36]);
+  who.eyeColour = attributeArray[37];
+  who.eyeSize = parseFloat(attributeArray[38]);
+  who.maxAge = parseFloat(attributeArray[39]);
+  who.fangs = parseFloat(attributeArray[40]);
+  who.sphynx = (attributeArray[41] == 'true');
+  who.sphynxGene = (attributeArray[42] == 'true');
+  who.patternAlpha = parseFloat(attributeArray[43]);
+  who.pattern = parseFloat(attributeArray[43]);
 }
 
 /**
@@ -54,49 +99,19 @@ function copyChibi(chibi) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 39) {
+  if (attributeArray.length !== 45) {
     sendMessage('Old filetype detected');
-  } if (attributeArray.length !== 39) {
+  } if (attributeArray.length !== 45) {
     alert('Failed to load file');
   } else {
-    boxes = [];
-    selection = null;
     chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0], parseFloat(attributeArray[5])));
-    // console.log(outputbuffer);
-    chibis[chibis.length-1].secondColour = attributeArray[1];
-    chibis[chibis.length-1].firstColour = attributeArray[2];
-    chibis[chibis.length-1].coatMod[0] = parseFloat(attributeArray[3]);
-    chibis[chibis.length-1].coatMod[1] = parseFloat(attributeArray[4]);
-    chibis[chibis.length-1].thickness = parseFloat(attributeArray[6]);
-    chibis[chibis.length-1].legginess = parseFloat(attributeArray[7]);
-    chibis[chibis.length-1].limbLength = parseFloat(attributeArray[9]);
-    chibis[chibis.length-1].birthday = parseFloat(attributeArray[11]);
-    chibis[chibis.length-1].age = parseFloat(attributeArray[12]);
-    chibis[chibis.length-1].name = attributeArray[13];
-    chibis[chibis.length-1].elder = (attributeArray[14] == true);
-    chibis[chibis.length-1].reachedNirvana = (attributeArray[15] == true);
-    chibis[chibis.length-1].love = 100;
-    chibis[chibis.length-1].tailLength = parseFloat(attributeArray[16]);
-    chibis[chibis.length-1].albinism = (attributeArray[17] == true);
-    chibis[chibis.length-1].albinismGene = (attributeArray[18] == true);
-    noseColourCheck(chibis[chibis.length-1]);
-    for (let i = 0; i < 12; i ++) {
-      chibis[chibis.length-1].bodypartCode[i] = parseInt(attributeArray[i+19]);
-    }
-    chibis[chibis.length-1].thirdColour = attributeArray[31];
-    chibis[chibis.length-1].nosePos = parseFloat(attributeArray[32]);
-    chibis[chibis.length-1].eyePosX = parseFloat(attributeArray[33]);
-    chibis[chibis.length-1].eyePosY = parseFloat(attributeArray[34]);
-    chibis[chibis.length-1].headWidth = parseFloat(attributeArray[35]);
-    chibis[chibis.length-1].headHeight = parseFloat(attributeArray[36]);
-    chibis[chibis.length-1].eyeColour = attributeArray[37];
-    chibis[chibis.length-1].eyeSize = parseFloat(attributeArray[38]);
-
+    cloneChibi(outputbuffer, chibis[chibis.length-1]);
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds[seeds.length-1].timer = 750;
     speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
     sendMessage(chibis[chibis.length-1].name+' arrived');
+    selection = null;
   }
 }
 

@@ -47,7 +47,7 @@ function getRandomEyeColour() {
 */
 function generateRealisticCoat(randSeed) {
   if (randSeed == null) {
-    randSeed = Math.round(Math.random()*4);
+    randSeed = Math.round(Math.random()*3);
   }
   let coatArray = [];
   // solid colour
@@ -55,16 +55,11 @@ function generateRealisticCoat(randSeed) {
     coatArray[0] = randomColourRealistic(Math.random());
     coatArray[1] = coatArray[0];
     coatArray[2] = coatArray[0];
-  } else if (randSeed == 3) {
+  } else {
     // bi-colour
     coatArray[0] = trueWhite;
     coatArray[1] = randomColourRealistic(Math.random());
     coatArray[2] = coatArray[0];
-  } else {
-    // calico / tortoiseshell
-    coatArray[0] = randomColourRealistic(Math.random()/3); // an orange
-    coatArray[1] = randomColourRealistic((2/3) + (Math.random()/3)); // a grey
-    coatArray[2] = trueWhite;
   }
   return coatArray;
   // striped tabby
@@ -233,9 +228,9 @@ function increaseSaturationHEX(hex) {
 
 function decreaseSaturationHEX(hex, fraction) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
-  let hslrgb = hslToRgb(rgbhsl[0], 0, rgbhsl[2]);
+  let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1]/fraction, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
-  return rgbToHex(Math.round(hslrgb[0]/fraction), hslrgb[1]/2, Math.round(hslrgb[2]/fraction));
+  return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
 }
 /**
 * @param {string} hex1

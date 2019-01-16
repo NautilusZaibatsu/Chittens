@@ -2,10 +2,24 @@
 
 changelog
 
+16/02/2019 = 0.057
+~ chibis now reach elder status in the last days of their life and then die of old age a day or two later
+~ the litter selector and cattery boxes are now colour coded
+~ selecting a chibi and then clicking Create now lets you use that chibi as a template
+~ added coat patterns
+~ added fangs
+~ added hairless cats
+~ added templates to the catteries, they appear randomly: Persian, Siamese, Russian Blue, Calico, Tortoiseshell
+~ chibis no longer try to get fruits they cannot reach
+~ fixed several bugs causing catteries or chibis to glitch out when a chibi in the simulation died whilst choosing a kitten
+~ fixed a bug causing front paws to disconnect from the front arms
+~ loads more bug fixes
+
 12/02/2019 = 0.056
 ~ alpha gene editor implemented, use it to spawn a chibi of your design. Access it through the editor tab
 ~ added eye colours and eye size variation
-~ added load and both catteries to top menu
+~ added buttons for loading and both catteries to top menu
+~ added maximum age and dying of old age
 
 11/01/2019 = 0.055
 ~ major update to way coat coloration works, tweaks across the board to allow for upcoming breeds feature
