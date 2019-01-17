@@ -49,7 +49,8 @@ function copyChibi(chibi) {
   chibi.sphynx+'*'+
   chibi.sphynxGene+'*'+
   chibi.patternAlpha+'*'+
-  chibi.pattern;
+  chibi.pattern+'*'+
+  chibi.eyeColour2;
   // console.log(outputbuffer);
   return outputbuffer;
 }
@@ -90,7 +91,8 @@ function cloneChibi(outputbuffer, who) {
   who.sphynx = (attributeArray[41] == 'true');
   who.sphynxGene = (attributeArray[42] == 'true');
   who.patternAlpha = parseFloat(attributeArray[43]);
-  who.pattern = parseFloat(attributeArray[43]);
+  who.pattern = parseFloat(attributeArray[44]);
+  who.eyeColour2 = attributeArray[45];
 }
 
 /**
@@ -99,9 +101,9 @@ function cloneChibi(outputbuffer, who) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 45) {
+  if (attributeArray.length !== 46) {
     sendMessage('Old filetype detected');
-  } if (attributeArray.length !== 45) {
+  } if (attributeArray.length !== 46) {
     alert('Failed to load file');
   } else {
     chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0], parseFloat(attributeArray[5])));

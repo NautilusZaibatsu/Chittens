@@ -1,5 +1,5 @@
-// Version 0.03
-const numlibs = 10;
+// Version 0.04
+const numlibs = 13;
 const namesinlib = 50;
 /**
 * function generate a baby name from two parents
@@ -97,6 +97,27 @@ function generateBabyName(maleName, femaleName, gender) {
         ethnic = 'egyptian';
       }
     }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (maleName == maleArabic[i]) {
+        stop = true;
+        ethnic = 'arabic';
+      }
+    }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (maleName == maleThai[i]) {
+        stop = true;
+        ethnic = 'thai';
+      }
+    }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (maleName == maleRussian[i]) {
+        stop = true;
+        ethnic = 'russian';
+      }
+    }
     if (ethnic == null) {
       console.log('Error: M '+maleName+' not found in library '+ethnic);
     }
@@ -171,6 +192,27 @@ function generateBabyName(maleName, femaleName, gender) {
       if (femaleName == femaleEgyptian[i]) {
         stop = true;
         ethnic = 'egyptian';
+      }
+    }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (femaleName == femaleArabic[i]) {
+        stop = true;
+        ethnic = 'arabic';
+      }
+    }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (femaleName == femaleThai[i]) {
+        stop = true;
+        ethnic = 'thai';
+      }
+    }
+    for (let i = 0; !stop && i < namesinlib; i++) {
+      // find the name first to determine which pool to draw from
+      if (femaleName == femaleRussian[i]) {
+        stop = true;
+        ethnic = 'russian';
       }
     }
     if (ethnic == null) {
@@ -260,6 +302,30 @@ function generateBabyName(maleName, femaleName, gender) {
       thisSeed = Math.floor(Math.random()*namesinlib);
       result = femaleEgyptian[thisSeed];
     }
+  } else if (ethnic == 'arabic') {
+    if (gender == 'Male' || (gender == 'Non Binary' && Math.random() < 0.5)) {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = maleArabic[thisSeed];
+    } else {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = femaleArabic[thisSeed];
+    }
+  } else if (ethnic == 'thai') {
+    if (gender == 'Male' || (gender == 'Non Binary' && Math.random() < 0.5)) {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = maleThai[thisSeed];
+    } else {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = femaleThai[thisSeed];
+    }
+  } else if (ethnic == 'russian') {
+    if (gender == 'Male' || (gender == 'Non Binary' && Math.random() < 0.5)) {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = maleRussian[thisSeed];
+    } else {
+      thisSeed = Math.floor(Math.random()*namesinlib);
+      result = femaleRussian[thisSeed];
+    }
   }
   let flagged = false;
   for (let c = 0; c < chibis.length && !flagged; c++) {
@@ -271,7 +337,6 @@ function generateBabyName(maleName, femaleName, gender) {
     console.log('Prevented from picking name that is already in the game '+result);
     result = generateBabyName(maleName, femaleName, gender);
   }
-
   if (result == null) {
     console.log('Stop is '+stop+' Ethnic was '+ethnic+' namelogic was '+nameLogic+' Parents were '+maleName+' & '+femaleName+' gender was '+gender+' seed was '+thisSeed);
   }
@@ -301,7 +366,6 @@ function getRandomName(seed) {
     return maleChinese[seedTrans];
   } else if (seed < (8 * namesinlib)) {
     seedTrans = (seed - (7 * namesinlib));
-    debugString = ' '+seed+' celtic female '+femaleCeltic[seedTrans];
     return femaleCeltic[seedTrans];
   } else if (seed < (9 * namesinlib)) {
     seedTrans = (seed - (8 * namesinlib));
@@ -339,1268 +403,1673 @@ function getRandomName(seed) {
   } else if (seed < (20 * namesinlib)) {
     seedTrans = (seed - (19 * namesinlib));
     return femaleEgyptian[seedTrans];
+  } else if (seed < (21 * namesinlib)) {
+    seedTrans = (seed - (20 * namesinlib));
+    return maleArabic[seedTrans];
+  } else if (seed < (22 * namesinlib)) {
+    seedTrans = (seed - (21 * namesinlib));
+    return femaleArabic[seedTrans];
+  } else if (seed < (23 * namesinlib)) {
+    seedTrans = (seed - (22 * namesinlib));
+    return maleThai[seedTrans];
+  } else if (seed < (24 * namesinlib)) {
+    seedTrans = (seed - (23 * namesinlib));
+    return femaleThai[seedTrans];
+  } else if (seed < (25 * namesinlib)) {
+    seedTrans = (seed - (24 * namesinlib));
+    return maleRussian[seedTrans];
+  } else if (seed < (26 * namesinlib)) {
+    seedTrans = (seed - (25 * namesinlib));
+    return femaleRussian[seedTrans];
   }
   console.log('error m');
 };
 
 // feed it 0 - 6
 function getRandomMaleEthnicName(ethnicity) {
+  let index = Math.round(Math.random()*(namesinlib-1));
   if (ethnicity < 1) {
-    return maleCeltic[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 2) {
-    return maleScandinavian[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 3) {
-    return maleJapanese[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 4) {
-    return maleAmerican[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 5) {
-    return maleIslander[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 6) {
-    return maleAfrican[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 7) {
-    return maleChinese[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 8) {
-    return maleGermanic[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 9) {
-    return maleIndian[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 10) {
-    return maleEgyptian[Math.round(Math.random()*namesinlib)];
-  }
-  sendMessage('oops M '+ethinicity);
-}
-
-// feed it 0 - 6
-function getRandomFemaleEthnicName(ethnicity) {
-  if (ethnicity < 1) {
-    return femaleCeltic[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 2) {
-    return femaleScandinavian[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 3) {
-    return femaleJapanese[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 4) {
-    return femaleAmerican[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 5) {
-    return femaleIslander[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 6) {
-    return femaleAfrican[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 7) {
-    return femaleChinese[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 8) {
-    return femaleGermanic[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 9) {
-    return femaleIndian[Math.round(Math.random()*namesinlib)];
-  } else if (ethnicity < 10) {
-    return femaleEgyptian[Math.round(Math.random()*namesinlib)];
-  }
-  sendMessage('oops F '+ethinicity);
-}
-
-function getMaleName(index) {
-  let seedTrans = index;
-  if (index < namesinlib) {
     return maleCeltic[index];
-  } else if (index < (2 * namesinlib)) {
-    seedTrans = (index - namesinlib);
-    return maleScandinavian[seedTrans];
-  } else if (index < (3 * namesinlib)) {
-    seedTrans = (index - (2 * namesinlib));
-    return maleJapanese[seedTrans];
-  } else if (index < (4 * namesinlib)) {
-    seedTrans = (index - (3 * namesinlib));
-    return maleAmerican[seedTrans];
-  } else if (index < (5 * namesinlib)) {
-    seedTrans = (index - (4 * namesinlib));
-    return maleIslander[seedTrans];
-  } else if (index < (6 * namesinlib)) {
-    seedTrans = (index - (5 * namesinlib));
-    return maleAfrican[seedTrans];
-  } else if (index < (7 * namesinlib)) {
-    seedTrans = (index - (6 * namesinlib));
-    return maleChinese[seedTrans];
-  } else if (index < (8 * namesinlib)) {
-    seedTrans = (index - (7 * namesinlib));
-    return maleGermanic[seedTrans];
-  } else if (index < (9 * namesinlib)) {
-    seedTrans = (index - (8 * namesinlib));
-    return maleIndian[seedTrans];
-  } else if (index < (10 * namesinlib)) {
-    seedTrans = (index - (9 * namesinlib));
-    return maleEgyptian[seedTrans];
+  } else if (ethnicity < 2) {
+    return maleScandinavian[index];
+  } else if (ethnicity < 3) {
+    return maleJapanese[index];
+  } else if (ethnicity < 4) {
+    return maleAmerican[index];
+  } else if (ethnicity < 5) {
+    return maleIslander[index];
+  } else if (ethnicity < 6) {
+    return maleAfrican[index];
+  } else if (ethnicity < 7) {
+    return maleChinese[index];
+  } else if (ethnicity < 8) {
+    return maleGermanic[index];
+  } else if (ethnicity < 9) {
+    return maleIndian[index];
+  } else if (ethnicity < 10) {
+    return maleEgyptian[index];
+  } else if (ethnicity < 11) {
+    return maleArabic[index];
+  } else if (ethnicity < 12) {
+    return maleThai[index];
+  } else if (ethnicity < 13) {
+    return maleRussian[index];
   }
-  console.log('error m');
-};
-function getFemaleName(index) {
-  let seedTrans = index;
-  if (index < namesinlib) {
-    return femaleCeltic[index];
-  } else if (index < (2 * namesinlib)) {
-    seedTrans = (index - namesinlib);
-    return femaleScandinavian[seedTrans];
-  } else if (index < (3 * namesinlib)) {
-    seedTrans = (index - (2 * namesinlib));
-    return femaleJapanese[seedTrans];
-  } else if (index < (4 * namesinlib)) {
-    seedTrans = (index - (3 * namesinlib));
-    return femaleAmerican[seedTrans];
-  } else if (index < (5 * namesinlib)) {
-    seedTrans = (index - (4 * namesinlib));
-    return femaleIslander[seedTrans];
-  } else if (index < (6 * namesinlib)) {
-    seedTrans = (index - (5 * namesinlib));
-    return femaleAfrican[seedTrans];
-  } else if (index < (7 * namesinlib)) {
-    seedTrans = (index - (6 * namesinlib));
-    return femaleChinese[seedTrans];
-  } else if (index < (8 * namesinlib)) {
-    seedTrans = (index - (7 * namesinlib));
-    return femaleGermanic[seedTrans];
-  } else if (index < (9 * namesinlib)) {
-    seedTrans = (index - (8 * namesinlib));
-    return femaleIndian[seedTrans];
-  } else if (index < (10 * namesinlib)) {
-    seedTrans = (index - (9 * namesinlib));
-    return femaleEgyptian[seedTrans];
+    sendMessage('oops M '+ethinicity);
   }
-  console.log('error m');
-};
 
-function reportNames(runtimes) {
-  // STRESS TESTING
-  for (let i = 0; i < namesinlib*numlibs; i++) {
-    if (getRandomName(i) == undefined) {
-      console.log('undefined name found '+i+debugString);
+  // feed it 0 - 6femaleCeltic[index]);
+  function getRandomFemaleEthnicName(ethnicity) {
+    let index = Math.round(Math.random()*(namesinlib-1));
+    if (ethnicity < 1) {
+      return femaleCeltic[index];
+    } else if (ethnicity < 2) {
+      return femaleScandinavian[index];
+    } else if (ethnicity < 3) {
+      return femaleJapanese[index];
+    } else if (ethnicity < 4) {
+      return femaleAmerican[index];
+    } else if (ethnicity < 5) {
+      return femaleIslander[index];
+    } else if (ethnicity < 6) {
+      return femaleAfrican[index];
+    } else if (ethnicity < 7) {
+      return femaleChinese[index];
+    } else if (ethnicity < 8) {
+      return femaleGermanic[index];
+    } else if (ethnicity < 9) {
+      return femaleIndian[index];
+    } else if (ethnicity < 10) {
+      return femaleEgyptian[index];
+    } else if (ethnicity < 11) {
+      return femaleArabic[index];
+    } else if (ethnicity < 12) {
+      return femaleThai[index];
+    } else if (ethnicity < 13) {
+      return femaleRussian[index];
     }
-    for (let j = 0; j < namesinlib*numlibs; j++) {
-      if (i !== j && getRandomName(i) == getRandomName(j)) {
-        console.log('duplicate name found '+i+debugString);
-      }
-    }
+    sendMessage('oops F '+ethinicity);
   }
-  /* HARDCORE DATABSE INTEGRITY TESTING */
-  // let stop = false;
-  // let t = 0;
-  // let gname = getFemaleName(Math.round(Math.random()*totalFemaleNames));
-  // let bname = getMaleName(Math.round(Math.random()*totalMaleNames));
-  // for (t = 0; t < runtimes && !stop; t++) {
-  //   gname = generateBabyName(bname, gname, 'Female');
-  //   bname = generateBabyName(bname, gname, 'Male');
-  //   if (gname == null) {
-  //     console.log('null name after '+t+' parents were '+myGuys[1].name+' and '+gname);
-  //     stop = true;
-  //   }
-  //   if (bname == null) {
-  //     console.log('null name after '+t+' parents were '+bname+' and '+myGuys[0].name);
-  //     stop = true;
-  //   }
-  // }
-  // gname = getRandomFemaleEthnicName(Math.round(Math.random()*(numlibs-1)));
-  // bname = getRandomMaleEthnicName(Math.round(Math.random()*(numlibs-1)));
-  // for (t = 0; t < 10000 && !stop; t++) {
-  //   gname = generateBabyName(bname, gname, 'Female');
-  //   bname = generateBabyName(bname, gname, 'Male');
-  //   if (gname == null) {
-  //     console.log('null name after '+t+' parents were '+myGuys[1].name+' and '+gname);
-  //     stop = true;
-  //   }
-  //   if (bname == null) {
-  //     console.log('null name after '+t+' parents were '+bname+' and '+myGuys[0].name);
-  //     stop = true;
-  //   }
-  // }
-  // console.log('passed test '+t+' times');
-  if (maleAfrican.length == namesinlib && maleAmerican.length == namesinlib && maleCeltic.length == namesinlib
-    && maleChinese.length == namesinlib && maleIslander.length == namesinlib && maleJapanese.length ==namesinlib
-    && maleIndian.length == namesinlib && maleGermanic.length == namesinlib && maleEgyptian.length == namesinlib
-    && femaleAfrican.length == namesinlib && femaleAmerican.length == namesinlib && femaleCeltic.length == namesinlib
-    && femaleChinese.length == namesinlib && femaleIslander.length == namesinlib && femaleJapanese.length ==namesinlib
-    && femaleIndian.length == namesinlib && femaleGermanic.length == namesinlib && femaleEgyptian.length == namesinlib) {
-      return 'Database succesfully loaded';
-    } else {
-    return 'Database error\n'+maleAfrican.length+' '+femaleAfrican.length+' african\n'
-    +maleAmerican.length+' '+femaleAmerican.length+' american\n'
-    +maleCeltic.length+' '+femaleCeltic.length+' celtic\n'
-    +maleChinese.length+' '+femaleChinese.length+' chinese\n'
-    +maleIslander.length+' '+femaleIslander.length+' islander\n'
-    +maleJapanese.length+' '+femaleJapanese.length+' japanese\n'
-    +maleIndian.length+' '+femaleIndian.length+' indian\n'
-    +maleGermanic.length+' '+femaleGermanic.length+' germanic\n'
-    +maleEgyptian.length+' '+femaleEgyptian.length+' egyptian';
 
-  }
+  function getMaleName(index) {
+    let seedTrans = index;
+    if (index < namesinlib) {
+      return maleCeltic[index];
+    } else if (index < (2 * namesinlib)) {
+      seedTrans = (index - namesinlib);
+      return maleScandinavian[seedTrans];
+    } else if (index < (3 * namesinlib)) {
+      seedTrans = (index - (2 * namesinlib));
+      return maleJapanese[seedTrans];
+    } else if (index < (4 * namesinlib)) {
+      seedTrans = (index - (3 * namesinlib));
+      return maleAmerican[seedTrans];
+    } else if (index < (5 * namesinlib)) {
+      seedTrans = (index - (4 * namesinlib));
+      return maleIslander[seedTrans];
+    } else if (index < (6 * namesinlib)) {
+      seedTrans = (index - (5 * namesinlib));
+      return maleAfrican[seedTrans];
+    } else if (index < (7 * namesinlib)) {
+      seedTrans = (index - (6 * namesinlib));
+      return maleChinese[seedTrans];
+    } else if (index < (8 * namesinlib)) {
+      seedTrans = (index - (7 * namesinlib));
+      return maleGermanic[seedTrans];
+    } else if (index < (9 * namesinlib)) {
+      seedTrans = (index - (8 * namesinlib));
+      return maleIndian[seedTrans];
+    } else if (index < (10 * namesinlib)) {
+      seedTrans = (index - (9 * namesinlib));
+      return maleEgyptian[seedTrans];
+    } else if (index < (11 * namesinlib)) {
+      seedTrans = (index - (10 * namesinlib));
+      return maleArabic[seedTrans];
+    } else if (index < (12 * namesinlib)) {
+      seedTrans = (index - (11 * namesinlib));
+      return maleThai[seedTrans];
+    } else if (index < (13 * namesinlib)) {
+      seedTrans = (index - (12 * namesinlib));
+      return maleRussian[seedTrans];
+    }
+    console.log('error m');
   };
 
+  function getFemaleName(index) {
+    let seedTrans = index;
+    if (index < namesinlib) {
+      return femaleCeltic[index];
+    } else if (index < (2 * namesinlib)) {
+      seedTrans = (index - namesinlib);
+      return femaleScandinavian[seedTrans];
+    } else if (index < (3 * namesinlib)) {
+      seedTrans = (index - (2 * namesinlib));
+      return femaleJapanese[seedTrans];
+    } else if (index < (4 * namesinlib)) {
+      seedTrans = (index - (3 * namesinlib));
+      return femaleAmerican[seedTrans];
+    } else if (index < (5 * namesinlib)) {
+      seedTrans = (index - (4 * namesinlib));
+      return femaleIslander[seedTrans];
+    } else if (index < (6 * namesinlib)) {
+      seedTrans = (index - (5 * namesinlib));
+      return femaleAfrican[seedTrans];
+    } else if (index < (7 * namesinlib)) {
+      seedTrans = (index - (6 * namesinlib));
+      return femaleChinese[seedTrans];
+    } else if (index < (8 * namesinlib)) {
+      seedTrans = (index - (7 * namesinlib));
+      return femaleGermanic[seedTrans];
+    } else if (index < (9 * namesinlib)) {
+      seedTrans = (index - (8 * namesinlib));
+      return femaleIndian[seedTrans];
+    } else if (index < (10 * namesinlib)) {
+      seedTrans = (index - (9 * namesinlib));
+      return femaleEgyptian[seedTrans];
+    } else if (index < (11 * namesinlib)) {
+      seedTrans = (index - (10 * namesinlib));
+      return femaleArabic[seedTrans];
+    } else if (index < (12 * namesinlib)) {
+      seedTrans = (index - (11 * namesinlib));
+      return femaleThai[seedTrans];
+    } else if (index < (13 * namesinlib)) {
+      seedTrans = (index - (12 * namesinlib));
+      return femaleRussian[seedTrans];
+    }
+    console.log('error m');
+  };
 
-  const maleCeltic = [
-    // celtic
-    'Adair',
-    'Aidan',
-    'Aeron',
-    'Ahearn',
-    'Angus',
-    'Bledig',
-    'Brenin',
-    'Brychan',
-    'Cadoc',
-    'Cian',
-    'Diarmid',
-    'Donnan',
-    'Conor',
-    'Dewi',
-    'Dylan',
-    'Eachann',
-    'Elisud',
-    'Ewan',
-    'Fergus',
-    'Finn',
-    'Gar',
-    'Glyn',
-    'Griffin',
-    'Gwalchgwyn',
-    'Iestyn',
-    'Ieuan',
-    'Ioan',
-    'Lachlan',
-    'Logan',
-    'Llew',
-    'Macsen',
-    'Manawydan',
-    'Matholwch',
-    'Niall',
-    'Oenghus',
-    'Oisin',
-    'Peredyr',
-    'Pryderi',
-    'Pwyll',
-    'Rory',
-    'Sion',
-    'Stefan',
-    'Tegeirian',
-    'Terryn',
-    'Talog',
-    'Tamhas',
-    'Taron',
-    'Tomos',
-    'Trystan',
-    'Tudor',
-  ];
-
-  const femaleCeltic = [
-    // celtic
-    'Aeval',
-    'Ailsa',
-    'Aileen',
-    'Aine',
-    'Angharad',
-    'Aoife',
-    'Arabel',
-    'Aranrhod',
-    'Blodeuyn',
-    'Branwen',
-    'Caoimhe',
-    'Catriona',
-    'Cerian',
-    'Ceridwen',
-    'Cernunnos',
-    'Conchenn',
-    'Deoiridh',
-    'Efa',
-    'Elen',
-    'Epona',
-    'Eirian',
-    'Fionnuala',
-    'Goewyn',
-    'Gwawr',
-    'Greer',
-    'Hedydd',
-    'Isla',
-    'Jura',
-    'Lili',
-    'Maebh',
-    'Maeve',
-    'Manannan',
-    'Mererid',
-    'Mhairi',
-    'Morrigan',
-    'Nesta',
-    'Nia',
-    'Niamh',
-    'Olwen',
-    'Rhiannon',
-    'Seren',
-    'Saoirse',
-    'Siobhan',
-    'Sinead',
-    'Siriol',
-    'Sorcha',
-    'Swyn',
-    'Tegan',
-    'Taryn',
-    'Una',
-  ];
-
-
-  const maleScandinavian = [
-    // scandinavian
-    'Aaric',
-    'Aksel',
-    'Andhrimnir',
-    'Alfadir',
-    'Arvid',
-    'Astrild',
-    'Amhlaoibh',
-    'Bragi',
-    'Dag',
-    'Ersbjorn',
-    'Fandral',
-    'Fell',
-    'Folke',
-    'Grim',
-    'Gunnolf',
-    'Gustav',
-    'Heimdall',
-    'Holgan',
-    'Hjalmar',
-    'Isak',
-    'Jormingand',
-    'Jorn',
-    'Jutka',
-    'Kjartan',
-    'Loki',
-    'Loui',
-    'Ludvig',
-    'Magni',
-    'Malte',
-    'Modi',
-    'Melker',
-    'Mimir',
-    'Nils',
-    'Njal',
-    'Njord',
-    'Odin',
-    'Otto',
-    'Radorm',
-    'Sigge',
-    'Sindri',
-    'Sleipnir',
-    'Tage',
-    'Thorbiartl',
-    'Thorne',
-    'Troy',
-    'Valmiki',
-    'Vide',
-    'Viggo',
-    'Volstaff',
-    'Yisreal',
-  ];
-
-  const femaleScandinavian = [
-    // scandinavian
-    'Alma',
-    'Astrid',
-    'Atla',
-    'Brynhild',
-    'Bylgia',
-    'Eir',
-    'Freya',
-    'Freyr',
-    'Fulla',
-    'Gale',
-    'Gefion',
-    'Greta',
-    'Gunnhild',
-    'Hedda',
-    'Hedvig',
-    'Hela',
-    'Hilde',
-    'Indunn',
-    'Ines',
-    'Ingrid',
-    'Jord',
-    'Lofn',
-    'Lova',
-    'Majken',
-    'Maja',
-    'Moa',
-    'Noomi',
-    'Nott',
-    'Ostara',
-    'Rae',
-    'Ragnhild',
-    'Ran',
-    'Ranveig',
-    'Saga',
-    'Signe',
-    'Sigrid',
-    'Sigrunn',
-    'Sif',
-    'Skadi',
-    'Sjofn',
-    'Sjojn',
-    'Solveig',
-    'Svanhild',
-    'Torhild',
-    'Torunn',
-    'Tyra',
-    'Var',
-    'Vigdis',
-    'Voluspa',
-    'Yngvild',
-  ];
-
-  const maleAmerican = [
-    // native American / mayan / incan / aztec
-    'Acolmiztli',
-    'Adlartok',
-    'Ahanu',
-    'Aqakuktuqa',
-    'Anacaona',
-    'Apozanolotl',
-    'Atiqtalaaq',
-    'Axayacatl',
-    'Byue',
-    'Cherokee',
-    'Chicomecoatl',
-    'Chipahua',
-    'Coaxoch',
-    'Copacati',
-    'Cuauhtemoc',
-    'Cuicatl',
-    'Goyahkla',
-    'Ichipuchtli',
-    'Ixcuiname',
-    'Ixtli',
-    'Ikiaq',
-    'Kanaaq',
-    'Kireama',
-    'Kirima',
-    'Kohana',
-    'Lalawethika',
-    'Mariana',
-    'Nanouk',
-    'Nenetl',
-    'Nuvua',
-    'Oello',
-    'Pachamama',
-    'Pahkakino',
-    'Pontiac',
-    'Quetzalcoatl',
-    'Quetzalli',
-    'Sequoiah',
-    'Shilah',
-    'Squanto',
-    'Taregan',
-    'Tatanka',
-    'Tayanna',
-    'Tecumseh',
-    'Teyemthohisa',
-    'Tezcatlipoca',
-    'Tlazolteotl',
-    'Tukkuttok',
-    'Xipetotec',
-    'Xochiquetzal',
-    'Yactecuhtli',
-  ];
-
-  const femaleAmerican = [
-    // native American / mayan / incan / aztec
-    'Ahuatzi',
-    'Amaruq',
-    'Aviaja',
-    'Camaxtli',
-    'Cinteotl',
-    'Cipactonal',
-    'Coatlicue',
-    'Dahteste',
-    'Ekchuah',
-    'Eueucoyotl',
-    'Hiawatha',
-    'Hokaratcha',
-    'Huacaltzintli',
-    'Huehuecoyotl',
-    'Huitzilin',
-    'Itzcali',
-    'Itzcoatl',
-    'Ixchel',
-    'Kaiah',
-    'Kimimela',
-    'Kumaglak',
-    'Maconaquea',
-    'Mixcoatl',
-    'Mextli',
-    'Nacon',
-    'Nochehuatl',
-    'Ocotlan',
-    'Pakuna',
-    'Panuk',
-    'Papina',
-    'Pebbles',
-    'Pocahontas',
-    'Sakakawea',
-    'Shenandoah',
-    'Tenoch',
-    'Tarkik',
-    'Toklo',
-    'Tayatina',
-    'Teanawesia',
-    'Teotihuacan',
-    'Tlanextic',
-    'Tupelo',
-    'Tupoc',
-    'Ujurak',
-    'Xochipilli',
-    'Yoskolo',
-    'Yotimo',
-    'Yutu',
-    'Xicotencatl',
-    'Zitkala',
-  ];
-
-  const maleJapanese = [
-    // Japanese
-    'Aizen',
-    'Ashitaka',
-    'Asahi',
-    'Amatsu',
-    'Bishamon',
-    'Daibosatsu',
-    'Daiki',
-    'Daikoku',
-    'Eita',
-    'Ekibiogami',
-    'Funaki',
-    'Fujiwara',
-    'Fujukin',
-    'Fukurokuju',
-    'Gekka',
-    'Haru',
-    'Haruto',
-    'Hayao',
-    'Hinata',
-    'Itsuki',
-    'Jijii',
-    'Jiro',
-    'Jinushigami',
-    'Kaneko',
-    'Kakihara',
-    'Katsushiro',
-    'Koki',
-    'Kukunochi',
-    'Kota',
-    'Minato',
-    'Ohkami',
-    'Ohonamochi',
-    'Reo',
-    'Rikuto',
-    'Ryu',
-    'Saburo',
-    'Shoma',
-    'Sosuki',
-    'Sota',
-    'Suijin',
-    'Taisei',
-    'Takumi',
-    'Takayama',
-    'Tatsuki',
-    'Tenjin',
-    'Touma',
-    'Yabune',
-    'Yamato',
-    'Yoshi',
-    'Yuuto',
-  ];
-
-  const femaleJapanese = [
-    // Japanese
-    'Akari',
-    'Aoi',
-    'Ayaka',
-    'Chibiusa',
-    'Haniyasu',
-    'Hina',
-    'Himari',
-    'Hime',
-    'Ichika',
-    'Izanami',
-    'Kaminari',
-    'Kamui',
-    'Kanayama',
-    'Kanna',
-    'Koharu',
-    'Kojin',
-    'Kishi',
-    'Makoto',
-    'Mamoru',
-    'Mei',
-    'Michiru',
-    'Mimiko',
-    'Minako',
-    'Misaki',
-    'Miyazu',
-    'Miyu',
-    'Momoka',
-    'Nanami',
-    'Natsuki',
-    'Niko',
-    'Ria',
-    'Rio',
-    'Ruka',
-    'Sakura',
-    'San',
-    'Sana',
-    'Sara',
-    'Sayori',
-    'Shiori',
-    'Tanabata',
-    'Tatsuta',
-    'Toyouke',
-    'Ukemochi',
-    'Usagi',
-    'Wakahiru',
-    'Yui',
-    'Yuki',
-    'Yume',
-    'Yuna',
-    'Yuri',
-  ];
+  function reportNames(runtimes) {
+    console.log('Loading and testing names database')
+    // STRESS TESTING
+    for (let i = 0; i < namesinlib*numlibs; i++) {
+      if (getRandomName(i) == undefined) {
+        console.log('undefined name found '+i+debugString);
+      }
+    }
+    /* HARDCORE DATABASE INTEGRITY TESTING */
+    // let stop = false;
+    // let t = 0;
+    // let gname = getFemaleName(Math.round(Math.random()*totalFemaleNames));
+    // let bname = getMaleName(Math.round(Math.random()*totalMaleNames));
+    // for (t = 0; t < runtimes && !stop; t++) {
+    //   gname = generateBabyName(bname, gname, 'Female');
+    //   bname = generateBabyName(bname, gname, 'Male');
+    //   if (gname == null) {
+    //     console.log('null name after '+t+' parents were '+myGuys[1].name+' and '+gname);
+    //     stop = true;
+    //   }
+    //   if (bname == null) {
+    //     console.log('null name after '+t+' parents were '+bname+' and '+myGuys[0].name);
+    //     stop = true;
+    //   }
+    // }
+    // gname = getRandomFemaleEthnicName(Math.round(Math.random()*(numlibs-1)));
+    // bname = getRandomMaleEthnicName(Math.round(Math.random()*(numlibs-1)));
+    // for (t = 0; t < 10000 && !stop; t++) {
+    //   gname = generateBabyName(bname, gname, 'Female');
+    //   bname = generateBabyName(bname, gname, 'Male');
+    //   if (gname == null) {
+    //     console.log('null name after '+t+' parents were '+myGuys[1].name+' and '+gname);
+    //     stop = true;
+    //   }
+    //   if (bname == null) {
+    //     console.log('null name after '+t+' parents were '+bname+' and '+myGuys[0].name);
+    //     stop = true;
+    //   }
+    // }
+    // console.log('passed test '+t+' times');
+    if (maleAfrican.length == namesinlib && maleAmerican.length == namesinlib && maleCeltic.length == namesinlib
+      && maleChinese.length == namesinlib && maleIslander.length == namesinlib && maleJapanese.length ==namesinlib
+      && maleIndian.length == namesinlib && maleGermanic.length == namesinlib && maleEgyptian.length == namesinlib
+      && maleArabic.length == namesinlib && maleThai.length == namesinlib && maleRussian.length == namesinlib && maleScandinavian.length == namesinlib
+      && femaleRussian.length == namesinlib
+      && femaleAfrican.length == namesinlib && femaleAmerican.length == namesinlib && femaleCeltic.length == namesinlib
+      && femaleChinese.length == namesinlib && femaleIslander.length == namesinlib && femaleJapanese.length == namesinlib
+      && femaleIndian.length == namesinlib && femaleGermanic.length == namesinlib && femaleEgyptian.length == namesinlib
+      && femaleArabic.length == namesinlib && femaleThai.length == namesinlib && femaleScandinavian.length == namesinlib) {
+        // check for duplicates
+        for (let i = 0; i < namesinlib * numlibs; i++) {
+          let duplicateF = 0;
+          let duplicateM = 0;
+          for (let j = 0; j < namesinlib * numlibs; j++) {
+            if (getFemaleName(i) == getFemaleName(j)) {
+              duplicateF ++;
+            }
+            if (getFemaleName(i) == getMaleName(j)) {
+              duplicateF ++;
+            }
+            if (getMaleName(i) == getMaleName(j)) {
+              duplicateM ++;
+            }
+            if (getMaleName(i) == getFemaleName(j)) {
+              duplicateM ++;
+            }
+          }
+          if (duplicateF > 1 || duplicateM > 1) {
+            console.log('Duplicate name found in dictionary');
+            if (duplicateF > 1) {
+              console.log(getFemaleName(i));
+            } else {
+              console.log(getMaleName(i));
+            }
+          }
+        }
+        console.log('African, American, Arabic, Celtic, Chinese, Egyptian, Germanic, Indian, Islander, Japanese, Russian, Scandinavian & Thai');
+        // for (let i = 0; i < 50; i ++) {
+        //   console.log(getRandomMaleEthnicName(0));
+        //   console.log(getRandomFemaleEthnicName(0));
+        // }
+        return numlibs+' name libraries succesfully loaded';
+      } else {
+        return 'Database error\n'
+        +maleAfrican.length+' '+femaleAfrican.length+' african\n'
+        +maleAmerican.length+' '+femaleAmerican.length+' american\n'
+        +maleArabic.length+' '+femaleArabic.length+' arabic\n'
+        +maleCeltic.length+' '+femaleCeltic.length+' celtic\n'
+        +maleChinese.length+' '+femaleChinese.length+' chinese\n'
+        +maleEgyptian.length+' '+femaleEgyptian.length+' egyptian\n'
+        +maleGermanic.length+' '+femaleGermanic.length+' germanic\n'
+        +maleIndian.length+' '+femaleIndian.length+' islander\n'
+        +maleIslander.length+' '+femaleIslander.length+' islander\n'
+        +maleJapanese.length+' '+femaleJapanese.length+' japanese\n'
+        +maleRussian.length+' '+femaleRussian.length+' Russian\n'
+        +maleScandinavian.length+' '+femaleScandinavian.length+' Scandinavian\n'
+        +maleThai.length+' '+femaleThai.length+' Thai';
+      }
+    };
 
 
-  const maleIslander = [
-    // islander
-    'Aleki',
-    'Aheahe',
-    'Afa',
-    'Akamai',
-    'Akamu',
-    'Akea',
-    'Ainalani',
-    'Akeakamai',
-    'Ao',
-    'Apukohai',
-    'Aputi',
-    'Atea',
-    'Atutahi',
-    'Auraka',
-    'Fetu',
-    'Hawea',
-    'Kahale',
-    'Kahikilani',
-    'Kaiholo',
-    'Kahuna',
-    'Kaikani',
-    'Kaleo',
-    'Kanaloa',
-    'Kamapua\'a',
-    'Keala',
-    'Koa',
-    'Kuahana',
-    'Kulani',
-    'Kukailimoku',
-    'Lahahana',
-    'Lagi',
-    'Loto',
-    'Iosefa',
-    'Ku',
-    'Manaia',
-    'Manuia',
-    'Maru',
-    'Makaio',
-    'Makoa',
-    'Moaalii',
-    'Mokualii',
-    'Ne\'igalomeatiga',
-    'Noelani',
-    'Rangi',
-    'Tamati',
-    'Tamatoa',
-    'Tui',
-    'Ulaulekeahi',
-    'Ukanipo',
-    'Vaea',
-  ];
+    const maleCeltic = [
+      // celtic
+      'Adair',
+      'Aidan',
+      'Aeron',
+      'Ahearn',
+      'Angus',
+      'Bledig',
+      'Brenin',
+      'Brychan',
+      'Cadoc',
+      'Cian',
+      'Diarmid',
+      'Donnan',
+      'Conor',
+      'Dewi',
+      'Dylan',
+      'Eachann',
+      'Elisud',
+      'Ewan',
+      'Fergus',
+      'Finn',
+      'Gar',
+      'Glyn',
+      'Griffin',
+      'Gwalchgwyn',
+      'Iestyn',
+      'Ieuan',
+      'Ioan',
+      'Lachlan',
+      'Logan',
+      'Llew',
+      'Macsen',
+      'Manawydan',
+      'Matholwch',
+      'Niall',
+      'Oenghus',
+      'Oisin',
+      'Peredyr',
+      'Pryderi',
+      'Pwyll',
+      'Rory',
+      'Sion',
+      'Stefan',
+      'Tegeirian',
+      'Terryn',
+      'Talog',
+      'Tamhas',
+      'Taron',
+      'Tomos',
+      'Trystan',
+      'Tudor',
+    ];
 
-  const femaleIslander = [
-    // islander
-    'Alalahe',
-    'Alani',
-    'Arihi',
-    'Anuhea',
-    'Asoese',
-    'Elei',
-    'Elikapeka',
-    'Emere',
-    'Faumea',
-    'Fetuilelagi',
-    'Haukea',
-    'Hinakuluiau',
-    'Hokulani',
-    'Iekikia',
-    'Iolana',
-    'Iwalani',
-    'Kakalina',
-    'Kala',
-    'Kalea',
-    'Kapo',
-    'Kiha',
-    'La\'akea',
-    'La\'ei',
-    'Lahela',
-    'Leilani',
-    'Leimomi',
-    'Lalago',
-    'Laka',
-    'Lanuola',
-    'Lakakane',
-    'Lie',
-    'Luana',
-    'Mahealani',
-    'Masina',
-    'Moana',
-    'Natia',
-    'Penina',
-    'Poliahu',
-    'Samaria',
-    'Sefina',
-    'Sina',
-    'Tala',
-    'Taka',
-    'Tama',
-    'Talia',
-    'Tamah',
-    'Tausa\'afia',
-    'Teuila',
-    'Ululani',
-    'Waiola',
-  ];
-
-  const maleAfrican = [
-    'Adebi',
-    'Akida',
-    'Asani',
-    'Barke',
-    'Barongo',
-    'Biko',
-    'Bobo',
-    'Bokamoso',
-    'Chandu',
-    'Djimon',
-    'Haji',
-    'Hami',
-    'Issa',
-    'Fela',
-    'Femi',
-    'Jabali',
-    'Jabori',
-    'Jomo',
-    'Inanna',
-    'Kellan',
-    'Kenyada',
-    'Kolo',
-    'Kimani',
-    'Kito',
-    'Kobe',
-    'Kondo',
-    'Kwame',
-    'Lubanzi',
-    'Maleek',
-    'Morongo',
-    'Mosi',
-    'M\'Baku',
-    'N\'Jobu',
-    'Obi',
-    'Omari',
-    'Samora',
-    'Sefu',
-    'Shaka',
-    'Simba',
-    'Sulley',
-    'Soweto',
-    'Tau',
-    'T\'Chaka',
-    'T\'Challah',
-    'Thimba',
-    'W\'Kabi',
-    'Yaya',
-    'Zain',
-    'Zababa',
-    'Zuberi',
-  ];
-  const femaleAfrican = [
-    'Adea',
-    'Adiah',
-    'Aja',
-    'Aiysha',
-    'Akila',
-    'Akina',
-    'Ama',
-    'Amani',
-    'Amare',
-    'Amina',
-    'Amne',
-    'Atiena',
-    'Ayo',
-    'Behati',
-    'Bishara',
-    'Chiku',
-    'Hediye',
-    'Imani',
-    'Jamila',
-    'Johari',
-    'Joice',
-    'Kichaka',
-    'Luamerava',
-    'Mosiya',
-    'Maha',
-    'Mbali',
-    'Mbwana',
-    'Mukondi',
-    'Naja',
-    'Nalah',
-    'Nakia',
-    'Nea',
-    'Nya',
-    'Nyasha',
-    'Nyimbo',
-    'Nyokabi',
-    'Ode',
-    'Okoye',
-    'Oni',
-    'Oya',
-    'Ramonda',
-    'Sabra',
-    'Shuri',
-    'Sikudhani',
-    'Thabiti',
-    'Thandiwe',
-    'Uma',
-    'Wanja',
-    'Zoya',
-    'Zola',
-  ];
-
-  const maleChinese = [
-    'Bao',
-    'Cheng',
-    'Dashuang',
-    'De',
-    'Dongfang',
-    'Dugu',
-    'Fuxi',
-    'Geng',
-    'Gentsai',
-    'Guo',
-    'Hao',
-    'Huang',
-    'Hoi',
-    'Hsi',
-    'Huaze',
-    'Jin',
-    'Jiang',
-    'Jingshen',
-    'Kang',
-    'Kuan',
-    'Li',
-    'Liansheng',
-    'Liang',
-    'Mao',
-    'Mushu',
-    'Naiqi',
-    'Pengfei',
-    'Qing',
-    'Shifu',
-    'Shun',
-    'Si',
-    'Suiren',
-    'Suo',
-    'Sun',
-    'Tianyi',
-    'Tang',
-    'Tzu',
-    'Xiangru',
-    'Xiaoqi',
-    'Xiang',
-    'Yang',
-    'Yao',
-    'Yu',
-    'Yun',
-    'Zengxiang',
-    'Zhang',
-    'Zhishen',
-    'Zhi',
-    'Zhongguo',
-    'Zhou',
-  ];
+    const femaleCeltic = [
+      // celtic
+      'Aeval',
+      'Ailsa',
+      'Aileen',
+      'Aine',
+      'Angharad',
+      'Aoife',
+      'Arabel',
+      'Aranrhod',
+      'Blodeuyn',
+      'Branwen',
+      'Caoimhe',
+      'Catriona',
+      'Cerian',
+      'Ceridwen',
+      'Cernunnos',
+      'Conchenn',
+      'Deoiridh',
+      'Efa',
+      'Elen',
+      'Epona',
+      'Eirian',
+      'Fionnuala',
+      'Goewyn',
+      'Gwawr',
+      'Greer',
+      'Hedydd',
+      'Isla',
+      'Jura',
+      'Lili',
+      'Maebh',
+      'Maeve',
+      'Manannan',
+      'Mererid',
+      'Mhairi',
+      'Morrigan',
+      'Nesta',
+      'Nia',
+      'Niamh',
+      'Olwen',
+      'Rhiannon',
+      'Seren',
+      'Saoirse',
+      'Siobhan',
+      'Sinead',
+      'Siriol',
+      'Sorcha',
+      'Swyn',
+      'Tegan',
+      'Taryn',
+      'Una',
+    ];
 
 
-  const femaleChinese = [
-    'Ban',
-    'Baobei',
-    'Beibi',
-    'Bingbing',
-    'Chan',
-    'Chin',
-    'Di',
-    'Du',
-    'Fan',
-    'Fangxiao',
-    'Gaowa',
-    'Jia',
-    'Jie',
-    'Jiao',
-    'Jingchu',
-    'Jingnan',
-    'Jinlian',
-    'Jinzhi',
-    'Ke',
-    'Koe',
-    'Li',
-    'Lingyu',
-    'Meitan',
-    'Mu',
-    'Pan',
-    'Qi',
-    'Qiurui',
-    'Qionqying',
-    'Ren',
-    'Ruan',
-    'Sanniang',
-    'Shen',
-    'Shishi',
-    'Shuo',
-    'Siyao',
-    'Tian',
-    'Tie',
-    'Wenji',
-    'Xianghua',
-    'Xiao',
-    'Xiaoyu',
-    'Xiumin',
-    'Xixi',
-    'Xun',
-    'Yan',
-    'Yi Fei',
-    'Yongyan',
-    'Yilin',
-    'Zhao',
-    'Ziyi',
-  ];
+    const maleScandinavian = [
+      // scandinavian
+      'Aaric',
+      'Aksel',
+      'Andhrimnir',
+      'Alfadir',
+      'Arvid',
+      'Astrild',
+      'Amhlaoibh',
+      'Bragi',
+      'Dag',
+      'Ersbjorn',
+      'Fandral',
+      'Fell',
+      'Folke',
+      'Grim',
+      'Gunnolf',
+      'Gustav',
+      'Heimdall',
+      'Holgan',
+      'Hjalmar',
+      'Isak',
+      'Jormingand',
+      'Jorn',
+      'Jutka',
+      'Kjartan',
+      'Loki',
+      'Loui',
+      'Ludvig',
+      'Magni',
+      'Malte',
+      'Modi',
+      'Melker',
+      'Mimir',
+      'Nils',
+      'Njal',
+      'Njord',
+      'Odin',
+      'Otto',
+      'Radorm',
+      'Sigge',
+      'Sindri',
+      'Sleipnir',
+      'Tage',
+      'Thorbiartl',
+      'Thorne',
+      'Troy',
+      'Valmiki',
+      'Vide',
+      'Viggo',
+      'Volstaff',
+      'Yisreal',
+    ];
 
-  const maleGermanic = [
-    'Benedikt',
-    'Dominik',
-    'Elias',
-    'Felix',
-    'Fritz',
-    'Hannes',
-    'Jakob',
-    'Jan',
-    'Jannik',
-    'Jannis',
-    'Johann',
-    'Johannes',
-    'Jonas',
-    'Justus',
-    'Karl',
-    'Kilian',
-    'Konstantin',
-    'Lasse',
-    'Lennart',
-    'Lenni',
-    'Lennox',
-    'Levi',
-    'Levin',
-    'Lias',
-    'Linus',
-    'Lio',
-    'Luc',
-    'Luca',
-    'Lukas',
-    'Mads',
-    'Malte',
-    'Manfred',
-    'Matteo',
-    'Marius',
-    'Mattis',
-    'Maxim',
-    'Mika',
-    'Milan',
-    'Milo',
-    'Moritz',
-    'Niels',
-    'Niklas',
-    'Niko',
-    'Ole',
-    'Oskar',
-    'Theodor',
-    'Till',
-    'Timo',
-    'Tobias',
-    'Valentin',
-  ];
+    const femaleScandinavian = [
+      // scandinavian
+      'Alma',
+      'Astrid',
+      'Atla',
+      'Brynhild',
+      'Bylgia',
+      'Eir',
+      'Freya',
+      'Freyr',
+      'Fulla',
+      'Gale',
+      'Gefion',
+      'Greta',
+      'Gunnhild',
+      'Hedda',
+      'Hedvig',
+      'Hela',
+      'Hilde',
+      'Indunn',
+      'Ines',
+      'Ingrid',
+      'Jord',
+      'Lofn',
+      'Lova',
+      'Majken',
+      'Maja',
+      'Moa',
+      'Noomi',
+      'Nott',
+      'Ostara',
+      'Rae',
+      'Ragnhild',
+      'Ran',
+      'Ranveig',
+      'Saga',
+      'Signe',
+      'Sigrid',
+      'Sigrunn',
+      'Sif',
+      'Skadi',
+      'Sjofn',
+      'Sjojn',
+      'Solveig',
+      'Svanhild',
+      'Torhild',
+      'Torunn',
+      'Tyra',
+      'Var',
+      'Vigdis',
+      'Voluspa',
+      'Yngvild',
+    ];
 
-  const femaleGermanic = [
-    'Anni',
-    'Annika',
-    'Elli',
-    'Eva',
-    'Finja',
-    'Franziska',
-    'Frieda',
-    'Hanna',
-    'Ida',
-    'Isabell',
-    'Jana',
-    'Jasmin',
-    'Johanna',
-    'Josefine',
-    'Jule',
-    'Juli',
-    'Juna',
-    'Karla',
-    'Karlotta',
-    'Katharina',
-    'Klara',
-    'Lea',
-    'Lena',
-    'Leni',
-    'Leonie',
-    'Lina',
-    'Lotta',
-    'Lucie',
-    'Luisa',
-    'Luna',
-    'Lya',
-    'Magda',
-    'Maila',
-    'Mara',
-    'Martha',
-    'Matilda',
-    'Merle',
-    'Mila',
-    'Mira',
-    'Neele',
-    'Nora',
-    'Paula',
-    'Ronja',
-    'Sara',
-    'Sofia',
-    'Sofie',
-    'Teresa',
-    'Tilda',
-    'Viktoria',
-    'Zoe',
-  ];
+    const maleAmerican = [
+      // native American / mayan / incan / aztec
+      'Acolmiztli',
+      'Adlartok',
+      'Ahanu',
+      'Aqakuktuqa',
+      'Anacaona',
+      'Apozanolotl',
+      'Atiqtalaaq',
+      'Axayacatl',
+      'Byue',
+      'Cherokee',
+      'Chicomecoatl',
+      'Chipahua',
+      'Coaxoch',
+      'Copacati',
+      'Cuauhtemoc',
+      'Cuicatl',
+      'Goyahkla',
+      'Ichipuchtli',
+      'Ixcuiname',
+      'Ixtli',
+      'Ikiaq',
+      'Kanaaq',
+      'Kireama',
+      'Kirima',
+      'Kohana',
+      'Lalawethika',
+      'Mariana',
+      'Nanouk',
+      'Nenetl',
+      'Nuvua',
+      'Oello',
+      'Pachamama',
+      'Pahkakino',
+      'Pontiac',
+      'Quetzalcoatl',
+      'Quetzalli',
+      'Sequoiah',
+      'Shilah',
+      'Squanto',
+      'Taregan',
+      'Tatanka',
+      'Tayanna',
+      'Tecumseh',
+      'Teyemthohisa',
+      'Tezcatlipoca',
+      'Tlazolteotl',
+      'Tukkuttok',
+      'Xipetotec',
+      'Xochiquetzal',
+      'Yactecuhtli',
+    ];
 
-  const maleIndian = [
-    'Aaditya',
-    'Abhi',
-    'Abhinav',
-    'Abhishek',
-    'Aditya',
-    'Ajith',
-    'Akash',
-    'Amit',
-    'Anil',
-    'Anish',
-    'Ankit',
-    'Ankur',
-    'Arjun',
-    'Aryan',
-    'Ashish',
-    'Deepak',
-    'Karan',
-    'Krish',
-    'Krishna',
-    'Kumar',
-    'Kunal',
-    'Mahesh',
-    'Manish',
-    'Manoj',
-    'Mayank',
-    'Naveen',
-    'Neeraj',
-    'Nishant',
-    'Nitin',
-    'Parth',
-    'Pranav',
-    'Prateek',
-    'Raghav',
-    'Rahul',
-    'Raj',
-    'Raju',
-    'Rakesh',
-    'Rishabh',
-    'Rohan',
-    'Rohit',
-    'Sanjay',
-    'Shivam',
-    'Shyam',
-    'Soham',
-    'Vaibhav',
-    'Vikas',
-    'Vinay',
-    'Vishal',
-    'Vivek',
-    'Yash',
-  ];
+    const femaleAmerican = [
+      // native American / mayan / incan / aztec
+      'Ahuatzi',
+      'Amaruq',
+      'Aviaja',
+      'Camaxtli',
+      'Cinteotl',
+      'Cipactonal',
+      'Coatlicue',
+      'Dahteste',
+      'Ekchuah',
+      'Eueucoyotl',
+      'Hiawatha',
+      'Hokaratcha',
+      'Huacaltzintli',
+      'Huehuecoyotl',
+      'Huitzilin',
+      'Itzcali',
+      'Itzcoatl',
+      'Ixchel',
+      'Kaiah',
+      'Kimimela',
+      'Kumaglak',
+      'Maconaquea',
+      'Mixcoatl',
+      'Mextli',
+      'Nacon',
+      'Nochehuatl',
+      'Ocotlan',
+      'Pakuna',
+      'Panuk',
+      'Papina',
+      'Pebbles',
+      'Pocahontas',
+      'Sakakawea',
+      'Shenandoah',
+      'Tenoch',
+      'Tarkik',
+      'Toklo',
+      'Tayatina',
+      'Teanawesia',
+      'Teotihuacan',
+      'Tlanextic',
+      'Tupelo',
+      'Tupoc',
+      'Ujurak',
+      'Xochipilli',
+      'Yoskolo',
+      'Yotimo',
+      'Yutu',
+      'Xicotencatl',
+      'Zitkala',
+    ];
 
-  const femaleIndian = [
-    'Aastha',
-    'Aishwarya',
-    'Akansha',
-    'Ananya',
-    'Anisha',
-    'Anjali',
-    'Anusha',
-    'Anushri',
-    'Arti',
-    'Aswini',
-    'Ayushi',
-    'Divya',
-    'Diya',
-    'Gayatri',
-    'Indhumathi',
-    'Isha',
-    'Ishita',
-    'Kalyani',
-    'Krithika',
-    'Mahima',
-    'Manisha',
-    'Neha',
-    'Niharika',
-    'Nikita',
-    'Nishi',
-    'Nishita',
-    'Pavithra',
-    'Prachi',
-    'Priya',
-    'Priyanka',
-    'Radhika',
-    'Ramya',
-    'Rishita',
-    'Riya',
-    'Rutuja',
-    'Sakshi',
-    'Sanjana',
-    'Seema',
-    'Shivangi',
-    'Shivani',
-    'Shreya',
-    'Shrinidhi',
-    'Simran',
-    'Siya',
-    'Sneha',
-    'Suhani',
-    'Tanu',
-    'Tanvi',
-    'Vani',
-    'Varsha',
-  ];
+    const maleJapanese = [
+      // Japanese
+      'Aizen',
+      'Ashitaka',
+      'Asahi',
+      'Amatsu',
+      'Bishamon',
+      'Daibosatsu',
+      'Daiki',
+      'Daikoku',
+      'Eita',
+      'Ekibiogami',
+      'Funaki',
+      'Fujiwara',
+      'Fujukin',
+      'Gekka',
+      'Haru',
+      'Haruto',
+      'Hayao',
+      'Hinata',
+      'Isao',
+      'Itsuki',
+      'Jijii',
+      'Jiro',
+      'Jinushigami',
+      'Kaneko',
+      'Kakihara',
+      'Katsushiro',
+      'Koki',
+      'Kukunochi',
+      'Kota',
+      'Minato',
+      'Ohkami',
+      'Ohonamochi',
+      'Reo',
+      'Rikuto',
+      'Ryu',
+      'Saburo',
+      'Shoma',
+      'Sosuki',
+      'Sota',
+      'Suijin',
+      'Taisei',
+      'Takumi',
+      'Takayama',
+      'Tatsuki',
+      'Tenjin',
+      'Touma',
+      'Yabune',
+      'Yamato',
+      'Yoshi',
+      'Yuuto',
+    ];
 
-  const maleEgyptian = [
-    'Aker',
-    'Amenhotep',
-    'Amun',
-    'Anhur',
-    'Anbubis',
-    'Artaxerxes',
-    'Aten',
-    'Atum',
-    'Baal',
-    'Bennu',
-    'Darius',
-    'Dedun',
-    'Djehuti',
-    'Geb',
-    'Hakor',
-    'Hapi',
-    'Harmachis',
-    'Harsiesi',
-    'Horus',
-    'Imhotep',
-    'Ishtar',
-    'Joh',
-    'Khababash',
-    'Khepri',
-    'Khnum',
-    'Khonsu',
-    'Maahes',
-    'Mesta',
-    'Necho',
-    'Neferhotep',
-    'Nefertum',
-    'Nemty',
-    'Neper',
-    'Osiris',
-    'Piankh',
-    'Ptah',
-    'Qebui',
-    'Ra',
-    'Ramesses',
-    'Set',
-    'Shu',
-    'Sobek',
-    'Sopdu',
-    'Takelot',
-    'Tefnakht',
-    'Thoth',
-    'Tuamutef',
-    'Uneg',
-    'Wepwawet',
-    'Xerxes',
-  ];
+    const femaleJapanese = [
+      // Japanese
+      'Akari',
+      'Aoi',
+      'Ayaka',
+      'Chibiusa',
+      'Chihiro',
+      'Haniyasu',
+      'Hina',
+      'Himari',
+      'Hime',
+      'Ichika',
+      'Izanami',
+      'Kaminari',
+      'Kamui',
+      'Kanayama',
+      'Kanna',
+      'Koharu',
+      'Kojin',
+      'Kishi',
+      'Makoto',
+      'Mei',
+      'Michiru',
+      'Mimiko',
+      'Minako',
+      'Misaki',
+      'Miyazu',
+      'Miyu',
+      'Momoka',
+      'Nanami',
+      'Natsuki',
+      'Ria',
+      'Rio',
+      'Ruka',
+      'Sakura',
+      'San',
+      'Satsuki',
+      'Sayori',
+      'Shiori',
+      'Taeko',
+      'Tanabata',
+      'Tatsuta',
+      'Toshio',
+      'Toyouke',
+      'Ukemochi',
+      'Usagi',
+      'Wakahiru',
+      'Yui',
+      'Yuki',
+      'Yume',
+      'Yuna',
+      'Yuri',
+    ];
 
-  const femaleEgyptian = [
-    'Ahti',
-    'Ahmes',
-    'Amunet',
-    'Anuket',
-    'Ankhesenamun',
-    'Astarte',
-    'Bastet',
-    'Bat',
-    'Cleopatra',
-    'Hathor',
-    'Hatmehit',
-    'Hatshepsut',
-    'Heqet',
-    'Hesat',
-    'Iabet',
-    'Iah',
-    'Imi',
-    'Imentet',
-    'Isis',
-    'Kebechet',
-    'Kebehut',
-    'Maat',
-    'Mekhit',
-    'Mehit',
-    'Meritamen',
-    'Mut',
-    'Neferu',
-    'Nefertiti',
-    'Nehmetawy',
-    'Neit',
-    'Nekhbet',
-    'Nephthys',
-    'Nepit',
-    'Nitocris',
-    'Nut',
-    'Pakhet',
-    'Pelican',
-    'Qetesh',
-    'Renenutet',
-    'Satet',
-    'Sekhmet',
-    'Seshat',
-    'Sheshmetet',
-    'Sobekneferu',
-    'Tefnut',
-    'Tenenet',
-    'Tiyi',
-    'Twosret',
-    'Wadjet',
-    'Wosret',
-  ];
 
-  const totalMaleNames = (numlibs * namesinlib);
-  const totalFemaleNames = (numlibs * namesinlib);
+    const maleIslander = [
+      // islander
+      'Aleki',
+      'Aheahe',
+      'Afa',
+      'Akamai',
+      'Akamu',
+      'Akea',
+      'Ainalani',
+      'Akeakamai',
+      'Ao',
+      'Apukohai',
+      'Aputi',
+      'Atea',
+      'Atutahi',
+      'Auraka',
+      'Fetu',
+      'Hawea',
+      'Kahale',
+      'Kahikilani',
+      'Kaiholo',
+      'Kahuna',
+      'Kaikani',
+      'Kaleo',
+      'Kanaloa',
+      'Kamapua\'a',
+      'Keala',
+      'Koa',
+      'Kuahana',
+      'Kulani',
+      'Kukailimoku',
+      'Lahahana',
+      'Lagi',
+      'Loto',
+      'Iosefa',
+      'Ku',
+      'Manaia',
+      'Manuia',
+      'Maru',
+      'Makaio',
+      'Makoa',
+      'Moaalii',
+      'Mokualii',
+      'Ne\'igalomeatiga',
+      'Noelani',
+      'Rangi',
+      'Tamati',
+      'Tamatoa',
+      'Tui',
+      'Ulaulekeahi',
+      'Ukanipo',
+      'Vaea',
+    ];
+
+    const femaleIslander = [
+      // islander
+      'Alalahe',
+      'Alani',
+      'Arihi',
+      'Anuhea',
+      'Asoese',
+      'Elei',
+      'Elikapeka',
+      'Emere',
+      'Faumea',
+      'Fetuilelagi',
+      'Haukea',
+      'Hinakuluiau',
+      'Hokulani',
+      'Iekikia',
+      'Iolana',
+      'Iwalani',
+      'Kakalina',
+      'Kala',
+      'Kalea',
+      'Kapo',
+      'Kiha',
+      'La\'akea',
+      'La\'ei',
+      'Lahela',
+      'Leilani',
+      'Leimomi',
+      'Lalago',
+      'Laka',
+      'Lanuola',
+      'Lakakane',
+      'Lie',
+      'Luana',
+      'Mahealani',
+      'Masina',
+      'Moana',
+      'Natia',
+      'Penina',
+      'Poliahu',
+      'Samaria',
+      'Sefina',
+      'Sina',
+      'Tala',
+      'Taka',
+      'Tama',
+      'Talia',
+      'Tamah',
+      'Tausa\'afia',
+      'Teuila',
+      'Ululani',
+      'Waiola',
+    ];
+
+    const maleAfrican = [
+      'Adebi',
+      'Akida',
+      'Asani',
+      'Barke',
+      'Barongo',
+      'Biko',
+      'Bobo',
+      'Bokamoso',
+      'Chandu',
+      'Djimon',
+      'Haji',
+      'Hami',
+      'Issa',
+      'Fela',
+      'Femi',
+      'Jabali',
+      'Jabori',
+      'Jomo',
+      'Inanna',
+      'Kellan',
+      'Kenyada',
+      'Kolo',
+      'Kimani',
+      'Kito',
+      'Kobe',
+      'Kondo',
+      'Kwame',
+      'Lubanzi',
+      'Maleek',
+      'Morongo',
+      'Mosi',
+      'M\'Baku',
+      'N\'Jobu',
+      'Obi',
+      'Omari',
+      'Samora',
+      'Sefu',
+      'Shaka',
+      'Simba',
+      'Sulley',
+      'Soweto',
+      'Tau',
+      'T\'Chaka',
+      'T\'Challah',
+      'Thimba',
+      'W\'Kabi',
+      'Yaya',
+      'Zain',
+      'Zababa',
+      'Zuberi',
+    ];
+    const femaleAfrican = [
+      'Adea',
+      'Adiah',
+      'Aja',
+      'Aiysha',
+      'Akila',
+      'Akina',
+      'Ama',
+      'Amani',
+      'Amare',
+      'Amina',
+      'Amne',
+      'Atiena',
+      'Ayo',
+      'Behati',
+      'Bishara',
+      'Chiku',
+      'Hediye',
+      'Imani',
+      'Jamila',
+      'Johari',
+      'Joice',
+      'Kichaka',
+      'Luamerava',
+      'Mosiya',
+      'Maha',
+      'Mbali',
+      'Mbwana',
+      'Mukondi',
+      'Naja',
+      'Nalah',
+      'Nakia',
+      'Nea',
+      'Nya',
+      'Nyasha',
+      'Nyimbo',
+      'Nyokabi',
+      'Ode',
+      'Okoye',
+      'Oni',
+      'Oya',
+      'Ramonda',
+      'Sabra',
+      'Shuri',
+      'Sikudhani',
+      'Thabiti',
+      'Thandiwe',
+      'Uma',
+      'Wanja',
+      'Zoya',
+      'Zola',
+    ];
+
+    const maleChinese = [
+      'Bao',
+      'Cheng',
+      'Dashuang',
+      'De',
+      'Dongfang',
+      'Dugu',
+      'Fuxi',
+      'Geng',
+      'Gentsai',
+      'Guo',
+      'Hao',
+      'Huang',
+      'Hoi',
+      'Hsi',
+      'Huaze',
+      'Jin',
+      'Jiang',
+      'Jingshen',
+      'Kang',
+      'Kuan',
+      'Liansheng',
+      'Liang',
+      'Mao',
+      'Mushu',
+      'Naiqi',
+      'Pengfei',
+      'Qing',
+      'Shifu',
+      'Shun',
+      'Si',
+      'Suiren',
+      'Suo',
+      'Sun',
+      'Tianyi',
+      'Tang',
+      'Tzu',
+      'Xiangru',
+      'Xiaoqi',
+      'Xiang',
+      'Yang',
+      'Yao',
+      'Yu',
+      'Yuhuang',
+      'Yun',
+      'Zengxiang',
+      'Zhang',
+      'Zhishen',
+      'Zhi',
+      'Zhongguo',
+      'Zhou',
+    ];
+
+
+    const femaleChinese = [
+      'Ban',
+      'Baobei',
+      'Beibi',
+      'Bingbing',
+      'Chan',
+      'Chin',
+      'Di',
+      'Du',
+      'Fan',
+      'Fangxiao',
+      'Gaowa',
+      'Jia',
+      'Jie',
+      'Jiao',
+      'Jingchu',
+      'Jingnan',
+      'Jinlian',
+      'Jinzhi',
+      'Ke',
+      'Koe',
+      'Li',
+      'Lingyu',
+      'Meitan',
+      'Mu',
+      'Pan',
+      'Qi',
+      'Qiurui',
+      'Qionqying',
+      'Ren',
+      'Ruan',
+      'Sanniang',
+      'Shen',
+      'Shishi',
+      'Shuo',
+      'Siyao',
+      'Tian',
+      'Tie',
+      'Wenji',
+      'Xianghua',
+      'Xiao',
+      'Xiaoyu',
+      'Xiumin',
+      'Xixi',
+      'Xun',
+      'Yan',
+      'Yi Fei',
+      'Yongyan',
+      'Yilin',
+      'Zhao',
+      'Ziyi',
+    ];
+
+    const maleGermanic = [
+      'Benedikt',
+      'Dominik',
+      'Elias',
+      'Felix',
+      'Fritz',
+      'Hannes',
+      'Jakob',
+      'Jan',
+      'Jannik',
+      'Jannis',
+      'Johann',
+      'Johannes',
+      'Jonas',
+      'Jurgen',
+      'Justus',
+      'Karl',
+      'Kilian',
+      'Konstantin',
+      'Lasse',
+      'Lennart',
+      'Lenni',
+      'Lennox',
+      'Levi',
+      'Levin',
+      'Lias',
+      'Linus',
+      'Lio',
+      'Luc',
+      'Luca',
+      'Lukas',
+      'Mads',
+      'Manfred',
+      'Matteo',
+      'Marius',
+      'Mattis',
+      'Maxim',
+      'Mika',
+      'Milan',
+      'Milo',
+      'Moritz',
+      'Niels',
+      'Niklas',
+      'Niko',
+      'Ole',
+      'Oskar',
+      'Theodor',
+      'Till',
+      'Timo',
+      'Tobias',
+      'Valentin',
+    ];
+
+    const femaleGermanic = [
+      'Anni',
+      'Annika',
+      'Elli',
+      'Eva',
+      'Finja',
+      'Franziska',
+      'Frieda',
+      'Hanna',
+      'Ida',
+      'Isabell',
+      'Jana',
+      'Jasmin',
+      'Johanna',
+      'Josefine',
+      'Jule',
+      'Juli',
+      'Juna',
+      'Karla',
+      'Karlotta',
+      'Katharina',
+      'Klara',
+      'Lea',
+      'Lena',
+      'Leni',
+      'Leonie',
+      'Lina',
+      'Lotta',
+      'Lucie',
+      'Luisa',
+      'Luna',
+      'Lya',
+      'Magda',
+      'Maila',
+      'Mara',
+      'Martha',
+      'Matilda',
+      'Merle',
+      'Mila',
+      'Mira',
+      'Neele',
+      'Nora',
+      'Paula',
+      'Ronja',
+      'Sara',
+      'Sofia',
+      'Sofie',
+      'Teresa',
+      'Tilda',
+      'Viktoria',
+      'Zoe',
+    ];
+
+    const maleIndian = [
+      'Abhi',
+      'Abhinav',
+      'Abhishek',
+      'Aditya',
+      'Akash',
+      'Amit',
+      'Anil',
+      'Anish',
+      'Ankit',
+      'Ankur',
+      'Arjun',
+      'Aryan',
+      'Ashish',
+      'Brahma',
+      'Deepak',
+      'Ganapati',
+      'Ganesh',
+      'Krish',
+      'Krishna',
+      'Kumar',
+      'Kunal',
+      'Mahesh',
+      'Manish',
+      'Manoj',
+      'Mayank',
+      'Naveen',
+      'Neeraj',
+      'Nishant',
+      'Nitin',
+      'Pranav',
+      'Prateek',
+      'Raghav',
+      'Rahul',
+      'Raj',
+      'Raju',
+      'Rakesh',
+      'Rishabh',
+      'Rohan',
+      'Rohit',
+      'Sanjay',
+      'Shiva',
+      'Shyam',
+      'Soham',
+      'Vaibhav',
+      'Vikas',
+      'Vinay',
+      'Vishal',
+      'Vishnu',
+      'Vivek',
+      'Yash',
+    ];
+
+    const femaleIndian = [
+      'Aastha',
+      'Aishwarya',
+      'Akansha',
+      'Ananya',
+      'Anisha',
+      'Anjali',
+      'Anusha',
+      'Anushri',
+      'Arti',
+      'Ayushi',
+      'Divya',
+      'Diya',
+      'Gayatri',
+      'Indhumathi',
+      'Isha',
+      'Ishita',
+      'Kalyani',
+      'Laksmhi',
+      'Krithika',
+      'Mahima',
+      'Manisha',
+      'Neha',
+      'Niharika',
+      'Nishi',
+      'Nishita',
+      'Parvati',
+      'Pavithra',
+      'Prachi',
+      'Priya',
+      'Priyanka',
+      'Radhika',
+      'Ramya',
+      'Rishita',
+      'Riya',
+      'Rutuja',
+      'Sakshi',
+      'Sanjana',
+      'Saraswati',
+      'Seema',
+      'Shivani',
+      'Shreya',
+      'Shrinidhi',
+      'Simran',
+      'Siya',
+      'Sneha',
+      'Suhani',
+      'Tanu',
+      'Tanvi',
+      'Vani',
+      'Varsha',
+    ];
+
+    const maleEgyptian = [
+      'Aker',
+      'Amenhotep',
+      'Amun',
+      'Anhur',
+      'Anbubis',
+      'Artaxerxes',
+      'Aten',
+      'Atum',
+      'Baal',
+      'Bennu',
+      'Darius',
+      'Dedun',
+      'Djehuti',
+      'Geb',
+      'Hakor',
+      'Hapi',
+      'Harmachis',
+      'Harsiesi',
+      'Horus',
+      'Imhotep',
+      'Ishtar',
+      'Joh',
+      'Khababash',
+      'Khepri',
+      'Khnum',
+      'Khonsu',
+      'Maahes',
+      'Mesta',
+      'Necho',
+      'Neferhotep',
+      'Nefertum',
+      'Nemty',
+      'Neper',
+      'Osiris',
+      'Piankh',
+      'Ptah',
+      'Qebui',
+      'Ra',
+      'Ramesses',
+      'Set',
+      'Shu',
+      'Sobek',
+      'Sopdu',
+      'Takelot',
+      'Tefnakht',
+      'Thoth',
+      'Tuamutef',
+      'Uneg',
+      'Wepwawet',
+      'Xerxes',
+    ];
+
+    const femaleEgyptian = [
+      'Ahti',
+      'Ahmes',
+      'Amunet',
+      'Anuket',
+      'Ankhesenamun',
+      'Astarte',
+      'Bastet',
+      'Bat',
+      'Cleopatra',
+      'Hathor',
+      'Hatmehit',
+      'Hatshepsut',
+      'Heqet',
+      'Hesat',
+      'Iabet',
+      'Iah',
+      'Imi',
+      'Imentet',
+      'Isis',
+      'Kebechet',
+      'Kebehut',
+      'Maat',
+      'Mekhit',
+      'Mehit',
+      'Meritamen',
+      'Mut',
+      'Neferu',
+      'Nefertiti',
+      'Nehmetawy',
+      'Neit',
+      'Nekhbet',
+      'Nephthys',
+      'Nepit',
+      'Nitocris',
+      'Nut',
+      'Pakhet',
+      'Pelican',
+      'Qetesh',
+      'Renenutet',
+      'Satet',
+      'Sekhmet',
+      'Seshat',
+      'Sheshmetet',
+      'Sobekneferu',
+      'Tefnut',
+      'Tenenet',
+      'Tiyi',
+      'Twosret',
+      'Wadjet',
+      'Wosret',
+    ];
+
+    const maleArabic = [
+      'Adbullah',
+      'Ahmad',
+      'Ahmir',
+      'Akeem',
+      'Ali',
+      'Ameer',
+      'Amir',
+      'Antwan',
+      'Ayaan',
+      'Bilal',
+      'Caspian',
+      'Emir',
+      'Hakeem',
+      'Hamza',
+      'Hassan',
+      'Jad',
+      'Jaleel',
+      'Jamal',
+      'Jamil',
+      'Kabir',
+      'Kairo',
+      'Kareem',
+      'Karim',
+      'Khalid',
+      'Khalil',
+      'Laith',
+      'Mahdi',
+      'Mohsen',
+      'Malik',
+      'Mustafa',
+      'Nasir',
+      'Nazir',
+      'Omar',
+      'Raheem',
+      'Rashad',
+      'Rayan',
+      'Salem',
+      'Samir',
+      'Shaquille',
+      'Tariq',
+      'Urijah',
+      'Xavian',
+      'Yaseen',
+      'Yasir',
+      'Yusef',
+      'Zahir',
+      'Zaid',
+      'Zamir',
+      'Zavian',
+      'Zayd',
+    ];
+
+    const femaleArabic = [
+      'Alia',
+      'Aliyah',
+      'Amaia',
+      'Amara',
+      'Amayah',
+      'Ameera',
+      'Amira',
+      'Ashanti',
+      'Asia',
+      'Azaria',
+      'Caliyah',
+      'Danna',
+      'Emani',
+      'Fatima',
+      'Hafsa',
+      'Halima',
+      'Ilyana',
+      'Janyla',
+      'Kalie',
+      'Kamilah',
+      'Khadija',
+      'Laila',
+      'Latifa',
+      'Layan',
+      'Layla',
+      'Leela',
+      'Leila',
+      'Lyla',
+      'Malak',
+      'Marwa',
+      'Naima',
+      'Noor',
+      'Nylah',
+      'Raniyah',
+      'Safa',
+      'Salma',
+      'Samia',
+      'Samiya',
+      'Saniya',
+      'Soraya',
+      'Yamileth',
+      'Yusra',
+      'Zahara',
+      'Zaianab',
+      'Zaina',
+      'Zaira',
+      'Zara',
+      'Zariah',
+      'Zaynab',
+      'Ziya',
+    ];
+
+    const maleThai = [
+      'A-wut',
+      'Aat',
+      'Ananada',
+      'Anuman',
+      'Anurak',
+      'Aroon',
+      'Asnee',
+      'Atid',
+      'Boon-Mee',
+      'Boon-Nam',
+      'Chai',
+      'Chai Son',
+      'Chaisai',
+      'Chaiya',
+      'Chakan',
+      'Chalerm',
+      'Chalermchai',
+      'Chaloem',
+      'Channarong',
+      'Chuanchen',
+      'Decha',
+      'Erawan',
+      'Kamnan',
+      'Kasem',
+      'Kasemchai',
+      'Khemkhaeng',
+      'Kiet',
+      'Kittibun',
+      'Kittichat',
+      'Kla',
+      'Klaew Kla',
+      'Kob Sook',
+      'Kovit',
+      'Kraisee',
+      'Kriang Krai',
+      'Lamon',
+      'Lek',
+      'Mee Noi',
+      'Mongkut',
+      'Narong',
+      'Niran',
+      'Paitoon',
+      'Phassakorn',
+      'Phichit',
+      'Pravat',
+      'Preed',
+      'Ritthirong',
+      'Sakda',
+      'Songkarn',
+      'Sud',
+    ];
+
+    const femaleThai = [
+      'Achara',
+      'Anong',
+      'Boonsri',
+      'Busarakham',
+      'Daw',
+      'Duangkamol',
+      'Duanphen',
+      'Hom',
+      'Kannika',
+      'Kanok',
+      'Karawek',
+      'Karnchana',
+      'Khun Mae',
+      'Kohsoom',
+      'Kulap',
+      'Kwang',
+      'Lamai',
+      'Lawan',
+      'Lawana',
+      'Madee',
+      'Makok',
+      'Malai',
+      'Malee',
+      'Malivalaya',
+      'Mayuree',
+      'Nin',
+      'Pakpao',
+      'Pensri',
+      'Phaelyn',
+      'Phaibun',
+      'Phailin',
+      'Phairoh',
+      'Phawta',
+      'Phitsamai',
+      'Phueng',
+      'Pimchan',
+      'Prija',
+      'Ratanaporn',
+      'Rochana',
+      'Saengdao',
+      'Samorn',
+      'Sanoh',
+      'Sanouk',
+      'Sirikit',
+      'Siriporn',
+      'Sopa',
+      'Suda',
+      'Sunstra',
+      'Tasanee',
+      'Tida',
+    ];
+
+    const maleRussian = [
+      'Aleksei',
+      'Alexandr',
+      'Alexey',
+      'Anatoly',
+      'Andrei',
+      'Andrey',
+      'Anton',
+      'Arseniy',
+      'Artem',
+      'Arthur',
+      'Bekhan',
+      'Bogdan',
+      'Boris',
+      'Daniil',
+      'Danil',
+      'Dazbog',
+      'Denis',
+      'Dima',
+      'Dmitry',
+      'Egor',
+      'Gleb',
+      'Gosha',
+      'Igor',
+      'Ilya',
+      'Ivan',
+      'Jarilo',
+      'Kirill',
+      'Kolya',
+      'Kostya',
+      'Mikhail',
+      'Misha',
+      'Nikolai',
+      'Nikita',
+      'Oleg',
+      'Pasha',
+      'Pavel',
+      'Roman',
+      'Ruslan',
+      'Sergey',
+      'Slava',
+      'Stanislav',
+      'Svetovid',
+      'Timur',
+      'Vadim',
+      'Vlad',
+      'Vladimir',
+      'Vladislav',
+      'Yaroslav',
+      'Yegor',
+      'Zhenya',
+    ];
+
+    const femaleRussian = [
+      'Albina',
+      'Alena',
+      'Alina',
+      'Alyona',
+      'Anastasia',
+      'Anna',
+      'Anya',
+      'Arina',
+      'Daria',
+      'Darya',
+      'Dasha',
+      'Devana',
+      'Ekaterina',
+      'Elena',
+      'Evgeniya',
+      'Irina',
+      'Karna',
+      'Katya',
+      'Kristina',
+      'Ksenia',
+      'Kseniya',
+      'Ksusha',
+      'Lera',
+      'Liza',
+      'Lyuba',
+      'Masha',
+      'Mokosh',
+      'Nastya',
+      'Natalia',
+      'Natasha',
+      'Oksana',
+      'Olga',
+      'Olya',
+      'Ozwiena',
+      'Polina',
+      'Sasha',
+      'Siwa',
+      'Sonya',
+      'Sveta',
+      'Svetlana',
+      'Tatiana',
+      'Ursula',
+      'Valeria',
+      'Veronika',
+      'Victoria',
+      'Vika',
+      'Yana',
+      'Yulia',
+      'Zorya',
+      'Zenya',
+    ];
+
+
+    const totalMaleNames = (numlibs * namesinlib);
+    const totalFemaleNames = (numlibs * namesinlib);

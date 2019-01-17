@@ -121,14 +121,21 @@ function InfoPanel() {
           cString = c1 +', '+c2+' & '+c3;
         }
       }
-      let eColour = ntc.name(selection.eyeColour)[1];
+      let eString = '';
+      if (selection.eyeColour == selection.eyeColour2 && !selection.albino) {
+        eString = ntc.name(selection.eyeColour)[1];
+      } else if (selection.albino) {
+        eString = 'Albino';
+      } else {
+        eString = 'Heterochromia';
+      }
       // determine width of this box
       let offsetX = 8; // 8 == length of 'positive' and 'negative'
       if (cString.length > offsetX) {
         offsetX = cString.length;
       }
-      if (eColour.length > offsetX) {
-        offsetX = eColour.length;
+      if (eString.length > offsetX) {
+        offsetX = eString.length;
       }
       if (selection.name.length > offsetX) {
         offsetX = selection.name.length;
@@ -150,7 +157,7 @@ function InfoPanel() {
       ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
       ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
       ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 85);
-      ctx.fillText(eColour, -offsetX + (canvasWidth/2) + 100, 140 + 85);
+      ctx.fillText(eString, -offsetX + (canvasWidth/2) + 100, 140 + 85);
       ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 100);
       ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 100);
       ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 115);
@@ -361,6 +368,7 @@ function handleButton(input) {
     case 10:
     if (selection !== null) {
       cloneChibi(copyChibi(selection), experiment);
+      reinitSliders();
       labels[2].visible = false;
       buttons[3].visible = false;
       buttons[4].visible = false;
@@ -551,6 +559,76 @@ function hover() {
       boxes[i].highlighted = false;
     }
   }
+}
+
+/**
+* function to reiit the sliders when you load a new chibi etc
+*/
+function initSliders() {
+  sliders = [];
+  sliders[0] = new Slider(0.5, 1, experiment.thickness, 20, 185, 'thickness');
+  sliders[1] = new Slider(5, 20, experiment.size, 20, 155, 'size');
+  sliders[2] = new Slider(0, 1, experiment.legginess, 20, 215, 'legginess');
+  sliders[3] = new Slider(0, 1, experiment.ears, 20, 245, 'ear width');
+  sliders[4] = new Slider(0, 1, experiment.tailLength, 20, 275, 'tail length');
+  sliders[5] = new Slider(0, 1, experiment.coatMod[0], 20, 305, 'fade');
+  sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 335, 'coat angle');
+
+  sliders[7] = new Slider(0, 2, experiment.bodypartCode[0], 130, 440, 'front foot left');
+  sliders[8] = new Slider(0, 2, experiment.bodypartCode[1], 130, 470, 'front foot right');
+  sliders[9] = new Slider(0, 2, experiment.bodypartCode[7], 130, 500, 'back foot left');
+  sliders[10] = new Slider(0, 2, experiment.bodypartCode[8], 130, 530, 'back foot right');
+
+  sliders[11] = new Slider(0, 2, experiment.bodypartCode[2], 130, 200, 'head');
+  sliders[12] = new Slider(0, 2, experiment.bodypartCode[9], 130, 230, 'jowl left');
+  sliders[13] = new Slider(0, 2, experiment.bodypartCode[10], 130, 260, 'jowl right');
+  sliders[14] = new Slider(0, 2, experiment.bodypartCode[11], 130, 290, 'chin');
+
+  sliders[15] = new Slider(0, 2, experiment.bodypartCode[3], 130, 320, 'ear left');
+  sliders[16] = new Slider(0, 2, experiment.bodypartCode[4], 130, 350, 'right ear');
+  sliders[17] = new Slider(0, 2, experiment.bodypartCode[5], 130, 380, 'body');
+  sliders[18] = new Slider(0, 2, experiment.bodypartCode[6], 130, 410, 'tail');
+
+  sliders[19] = new Slider(0, 1, experiment.nosePos, 20, 365, 'nose height');
+  sliders[20] = new Slider(0, 1, experiment.eyePosX, 20, 395, 'eyes width');
+  sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 425, 'eyes height');
+  sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 485, 'head width');
+  sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 515, 'head height');
+  sliders[24] = new Slider(0, 1, experiment.eyeSize, 20, 455, 'eye size');
+  sliders[25] = new Slider(0, 1, experiment.fangs, 20, 545, 'fang size');
+  sliders[26] = new Slider(0, 4, experiment.pattern, 130, 560, 'pattern');
+  sliders[27] = new Slider(0, 1, experiment.patternAlpha, 130, 590, 'opacity');
+};
+
+function reinitSliders() {
+  sliders[0].currentPos = experiment.thickness;
+  sliders[1].currentPos = experiment.size;
+  sliders[2].currentPos = experiment.legginess;
+  sliders[3].currentPos = experiment.ears;
+  sliders[4].currentPos = experiment.tailLength;
+  sliders[5].currentPos = experiment.coatMod[0];
+  sliders[6].currentPos = experiment.coatMod[1];
+  sliders[7].currentPos = experiment.bodypartCode[0];
+  sliders[8].currentPos = experiment.bodypartCode[1];
+  sliders[9].currentPos = experiment.bodypartCode[7];
+  sliders[10].currentPos = experiment.bodypartCode[8];
+  sliders[11].currentPos = experiment.bodypartCode[2];
+  sliders[12].currentPos = experiment.bodypartCode[9];
+  sliders[13].currentPos = experiment.bodypartCode[10];
+  sliders[14].currentPos = experiment.bodypartCode[11];
+  sliders[15].currentPos = experiment.bodypartCode[3];
+  sliders[16].currentPos = experiment.bodypartCode[4];
+  sliders[17].currentPos = experiment.bodypartCode[5];
+  sliders[18].currentPos = experiment.bodypartCode[6];
+  sliders[19].currentPos = experiment.nosePos;
+  sliders[20].currentPos = experiment.eyePosX;
+  sliders[21].currentPos = experiment.eyePosY;
+  sliders[22].currentPos = experiment.headWidth;
+  sliders[23].currentPos = experiment.headHeight;
+  sliders[24].currentPos = experiment.eyeSize;
+  sliders[25].currentPos = experiment.fangs;
+  sliders[26].currentPos = experiment.pattern;
+  sliders[27].currentPos = experiment.patternAlpha;
 }
 
 /**

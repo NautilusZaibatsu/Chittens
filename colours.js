@@ -33,7 +33,7 @@ function getRandomEyeColour() {
     seedB = seedR;
   } else {
     // browns
-    seedR = 76.5;
+    seedR = 195;
     seedG = Math.floor(Math.random()*seedR);
     seedB = seedG;
   }
@@ -223,6 +223,7 @@ function increaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
+  debugString = 'increaseSaturationHEX';
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
 
@@ -230,6 +231,7 @@ function decreaseSaturationHEX(hex, fraction) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1]/fraction, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
+  debugString = 'decreaseSaturationHEX';
   return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
 }
 /**
@@ -247,6 +249,7 @@ function mixTwoColours(hex1, hex2, prop) {
   combr = Math.round((ri*prop)+(rj*(1-prop)));
   combg = Math.round((gi*prop)+(gj*(1-prop)));
   combb = Math.round((bi*prop)+(bj*(1-prop)));
+  debugString = 'mixTwoColours';
   return rgbToHex(combr, combg, combb);
 }
 

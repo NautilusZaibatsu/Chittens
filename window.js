@@ -1,6 +1,4 @@
-/**
-* mate 0.057
-**/
+let debugString = 'nothing'; // for debugging
 
 // universal physics constants
 const gravity = 0.02; // constant for gravity
@@ -23,8 +21,8 @@ const maxPop = 50*proportion;
 // set the environment start time and other starting values
 d = new Date();
 const startTime = d.getHours();
-const hourOfCreation = Math.floor(startTime * (1000/23));
-const hocLength = 1000/12;
+const hourOfCreation = Math.floor(startTime * (1000/24)) + d.getMinutes();
+console.log('Local time is '+tickerToTime(hourOfCreation));
 secondTimer = 0;
 fps = 0;
 fpsCount = '00';
@@ -109,45 +107,11 @@ experiment.noseColour = skinColourCheck(experiment.firstColour);
 experiment.awake = true;
 experiment.hitBottom = true;
 sliderIndex = 0;
-sliders = [];
-sliders[0] = new Slider(0.5, 1, experiment.thickness, 20, 185, 'thickness');
-sliders[1] = new Slider(5, 20, experiment.size, 20, 155, 'size');
-sliders[2] = new Slider(0, 1, experiment.legginess, 20, 215, 'legginess');
-sliders[3] = new Slider(0, 1, experiment.ears, 20, 245, 'ear width');
-sliders[4] = new Slider(0, 1, experiment.tailLength, 20, 275, 'tail length');
-sliders[5] = new Slider(0, 1, experiment.coatMod[0], 20, 305, 'fade');
-sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 335, 'coat angle');
-
-sliders[7] = new Slider(0, 2, experiment.bodypartCode[0], 130, 440, 'front foot left');
-sliders[8] = new Slider(0, 2, experiment.bodypartCode[1], 130, 470, 'front foot right');
-sliders[9] = new Slider(0, 2, experiment.bodypartCode[7], 130, 500, 'back foot left');
-sliders[10] = new Slider(0, 2, experiment.bodypartCode[8], 130, 530, 'back foot right');
-
-sliders[11] = new Slider(0, 2, experiment.bodypartCode[2], 130, 200, 'head');
-sliders[12] = new Slider(0, 2, experiment.bodypartCode[9], 130, 230, 'jowl left');
-sliders[13] = new Slider(0, 2, experiment.bodypartCode[10], 130, 260, 'jowl right');
-sliders[14] = new Slider(0, 2, experiment.bodypartCode[11], 130, 290, 'chin');
-
-sliders[15] = new Slider(0, 2, experiment.bodypartCode[3], 130, 320, 'ear left');
-sliders[16] = new Slider(0, 2, experiment.bodypartCode[4], 130, 350, 'right ear');
-sliders[17] = new Slider(0, 2, experiment.bodypartCode[5], 130, 380, 'body');
-sliders[18] = new Slider(0, 2, experiment.bodypartCode[6], 130, 410, 'tail');
-
-sliders[19] = new Slider(0, 1, experiment.nosePos, 20, 365, 'nose height');
-sliders[20] = new Slider(0, 1, experiment.eyePosX, 20, 395, 'eyes width');
-sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 425, 'eyes height');
-sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 485, 'head width');
-sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 515, 'head height');
-sliders[24] = new Slider(0, 1, experiment.eyeSize, 20, 455, 'eye size');
-sliders[25] = new Slider(0, 1, experiment.fangs, 20, 545, 'fang size');
-sliders[26] = new Slider(0, 2, experiment.pattern, 130, 560, 'pattern');
-sliders[27] = new Slider(0, 1, experiment.patternAlpha, 130, 590, 'opacity');
-
+initSliders();
 colourBars = new ColourBar(130, 155);
 colourBlock = new ColourPixelBlock();
 
 // font
-let debugString = 'nothing'; // for debugging
 const globalFont = 'Consolas';
 // scaling for rotation
 boxSize = 0;
@@ -186,6 +150,12 @@ const pattern1 = new Image();
 pattern1.src = 'pattern1.png';
 const pattern2 = new Image();
 pattern2.src = 'pattern2.png';
+const pattern3 = new Image();
+pattern3.src = 'pattern3.png';
+const pattern3b = new Image();
+pattern3b.src = 'pattern3b.png';
+const butthole = new Image();
+butthole.src = 'butthole.png';
 
 // flame aura
 const flame = new Image();
@@ -342,11 +312,21 @@ function updateGameArea() {
       let dayR = Math.floor(ri - ((((ri - rj)/250))*timeMod));
       let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
       let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
+      debugString = 'daytimeCounter';
       outputArray[tick] = rgbToHex(dayR, dayG, dayB);
     }
   }
 
-  // countdown timer when choosing from a litter
+  // set up patterns for CHIBIS
+  pat0 = ctx.createPattern(pattern0, 'repeat'); // debug
+  pat1 = ctx.createPattern(pattern1, 'repeat'); // tortoiseshell
+  pat2 = ctx.createPattern(pattern2, 'repeat'); // albino spotting
+  pat3 = ctx.createPattern(pattern3, 'repeat'); // tabby
+  pat3b = ctx.createPattern(pattern3b, 'repeat'); // tabby
+  pat4 = ctx.createRadialGradient(0, 0, 0, 0, 0, 0); // persian face colour gradient
+
+
+  // countdown timer, used when choosing from a litter
   if (!chosenKitten) {
     labels[3].text = parseInt(choiceTimer/50);
     // check the timer
@@ -412,19 +392,9 @@ function updateGameArea() {
 
   // update the fruit
   for (let i = 0; i < fruits.length; i++) {
-    for (let j = 0; fruits[i].eater == null && j < chibis.length; j++) {
-      if (chibis[j].focus == fruits[i] && detectCollision(fruits[i], chibis[j])) {
-        chibis[j].speedX = 0;
-        chibis[j].speedY = 0;
-        chibis[j].energy += 10;
-        seeds.push(new Seed(fruits[i].colour, chibis[j]));
-        fruits[i].parent.fruitCount--;
-        fruits[i].eater = chibis[j];
-      }
-    }
     if (fruits[i].eater !== null) {
       if (fruits[i].eater !== 'X' && fruits[i].eater.hitBottom && fruits[i].eater.nomnomnom == -1) {
-        sendMessage(fruits[i].eater.name+' ate a piece of fruit');
+        // sendMessage(fruits[i].eater.name+' ate a piece of fruit');
         if (Math.random() < 0.1) {
           speech.push(new Speak(fruits[i].eater, happyWord()));
         }
@@ -472,7 +442,7 @@ function updateGameArea() {
       }
       trees.splice(i, 1);
       i--;
-      sendMessage('A tree died');
+      // sendMessage('A tree died');
     }
   }
   // draw the message history
@@ -501,7 +471,7 @@ function updateGameArea() {
   }
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N';
   basicInfo.update();
-  topLabel.text = 'v0.057 FPS '+fps;
+  topLabel.text = 'v0.058 FPS '+fps;
   topLabel.update();
   newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   newestMessage.update();
@@ -535,6 +505,7 @@ function updateGameArea() {
       // increase daytime counter
       if (daytimeCounter == hourOfCreation) {
         day ++;
+        console.log('day up '+daytimeCounter);
       }
     } else {
       daytimeCounter = 1;
@@ -833,7 +804,7 @@ function Seed(colour, owner) {
             && chibis[i].y >= trueBottom-chibis[i].size-chibis[i].limbLength
             && tryToPlantaTree(chibis[i].x, this.colour)) {
               this.planted = true;
-              sendMessage(chibis[i].name+' planted a seed');
+              // sendMessage(chibis[i].name+' planted a seed');
             }
           }
         }
@@ -973,6 +944,7 @@ function Seed(colour, owner) {
       let combr = Math.floor(riGlow - ((((riGlow - rjGlow)/400)))*this.touches);
       let combg = Math.floor(giGlow - ((((giGlow - gjGlow)/400)))*this.touches);
       let combb = Math.floor(biGlow - ((((biGlow - bjGlow)/400)))*this.touches);
+      debugString = 'glow';
       let newC = rgbToHex(combr, combg, combb);
       glow.addColorStop(0, newC);
       glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -1029,9 +1001,7 @@ function Seed(colour, owner) {
       }
     }
     this.update = function() {
-      if (!this.elder) {
-        this.timer -= 0.075;
-      }
+      this.timer -= 0.075;
       if (!this.hitBottom && this.y < trueBottom-(this.size*5)) {
         checkBounceSides(this);
         checkBounceTop(this);
@@ -1048,7 +1018,6 @@ function Seed(colour, owner) {
         this.speedY = 0;
         this.speedX *= 0.9;
       }
-
       ctx.globalAlpha = 0.2+(this.timer/100);
       ctx.drawImage(this.image, this.x-(this.size), this.y+this.size*3, this.size*2, this.size*2);
       ctx.globalAlpha = 1;
@@ -1179,6 +1148,7 @@ function Seed(colour, owner) {
     } else if (energy < 0) {
       energy = 0;
     }
+    debugString = 'colourIndicator';
     return rgbToHex(love, energy, health);
   }
 
@@ -1317,11 +1287,14 @@ function Seed(colour, owner) {
                 chibis[j].speedY = 0;
                 chibis[i].sitting = true;
                 chibis[j].sitting = true;
+                chibis[j].partner = chibis[i];
                 if (Math.random() < 1/3) {
                   speech.push(new Speak(chibis[i], happyWord()));
                 } else if (Math.random() < 2/3) {
                   speech.push(new Speak(chibis[j], happyWord()));
                 }
+                chibis[i].facingForwards = true;
+                chibis[j].facingForwards = true;
                 if (chibis[i].gender == 'Female') {
                   chibis[i].snuggling = 270;
                   chibis[j].snuggling = 250;
@@ -1334,303 +1307,314 @@ function Seed(colour, owner) {
             }
           }
 
-          // calculate angle to focus
-          chibis[i].angleToFocus = Math.atan2(chibis[i].focus.y - chibis[i].y, chibis[i].focus.x - chibis[i].x);
-          diffx = Math.cos(chibis[i].angleToFocus)*4;
-          diffy = Math.sin(chibis[i].angleToFocus)*4;
-
-
-          if ((diffx > 0 && chibis[i].speedX > 0) || (diffx < 0 && chibis[i].speedX < 0)) {
-            // if we are going right and it's to our right
-            // if we are going left and it's to our left
-          } else {
-            chibis[i].speedX *= 0.98;
-          }
-          // limit speedX and speedY
-          applySpeedLimit(chibis[i]);
-
-          // apply gravity and movement
-          chibis[i].x += chibis[i].speedX/4;
-          chibis[i].rotation += chibis[i].spin;
-          chibis[i].spin *= 0.9;
-          while (chibis[i].rotation > 6) {
-            chibis[i].rotation -= 6;
-          }
-          while (chibis[i].rotation < -6) {
-            chibis[i].rotation += 6;
-          }
-
-
-          if (!chibis[i].hitBottom) {
-            let mass = gravity*chibis[i].size*6;
-            chibis[i].speedY += mass;
-            chibis[i].y += chibis[i].speedY/4;
-            if (Math.round(chibis[i].speedY) == 0) {
-              let tmp = ((chibis[i].jumpY*4)+chibis[i].y)/5;
-              chibis[i].jumpY = tmp;
+          if (chibis[i].awake && chibis[i].nomnomnom == -1 && chibis[i].snuggling == -1 && fruits.includes(chibis[i].focus)) {
+            if (detectCollision(chibis[i].focus, chibis[i])) {
+              chibis[i].facingForwards = true;
+              chibis[i].speedX = 0;
+              chibis[i].speedY = 0;
+              chibis[i].energy += 10;
+              seeds.push(new Seed(chibis[i].focus.colour, chibis[i]));
+              chibis[i].focus.parent.fruitCount--;
+              chibis[i].focus.eater = chibis[i];
             }
           }
-          chibis[i].physicsCheck();
-        }
-      }
-    }
-    /**
-    * function to attempt to plant a tree
-    * @param {int} x - the x coordinate where the mate is trying to place a tree
-    * @param {hex} fruitColour - the colour of the fruit
-    * @return {boolean} - whether the tree was planted or not
-    */
-    function tryToPlantaTree(x, fruitColour) {
-      let allow = true;
-      let maxHeight = trueBottom*0.30+(Math.random()*(trueBottom*0.30));
-      let treeWidth = 35 + (Math.random()*45);
-      for (let j = 0; j < trees.length; j++) {
-        if (trees[j].x == x || ( x - (treeWidth/4) < trees[j].x + (trees[j].width/4) && trees[j].x - (trees[j].width/4) < x + (treeWidth/4))) {
-          allow = false;
-        }
-      }
-      if (allow) {
-        trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight, fruitColour));
-        return true;
-      }
-      return false;
-    }
 
+        // calculate angle to focus
+        chibis[i].angleToFocus = Math.atan2(chibis[i].focus.y - chibis[i].y, chibis[i].focus.x - chibis[i].x);
+        diffx = Math.cos(chibis[i].angleToFocus)*4;
+        diffy = Math.sin(chibis[i].angleToFocus)*4;
 
-    /**
-    * function to handle comets
-    */
-    function recalculateComets() {
-      for (let i =0; i < comets.length; i++) {
-        comets[i].x += comets[i].speedX*5;
-        comets[i].y += comets[i].speedY*5;
-        if (comets[i].x < 0 || comets[i].x > canvasWidth || comets[i].y < 0 || comets[i].y > trueBottom) {
-          comets.splice(i, 1);
-          i--;
+        if ((diffx > 0 && chibis[i].speedX > 0) || (diffx < 0 && chibis[i].speedX < 0)) {
+          // if we are going right and it's to our right
+          // if we are going left and it's to our left
         } else {
-          trails.push(new Particle(comets[i].size/2, glowColour, comets[i].x, comets[i].y, comets[i].speedX*15, comets[i].speedY*15));
-          comets[i].update();
+          chibis[i].speedX *= 0.98;
         }
-      }
-    }
+        // limit speedX and speedY
+        applySpeedLimit(chibis[i]);
 
-    /**
-    * function to habndle the decorative starfield
-    */
-    function recalculateStarfield() {
-      // if there is less than the designated amount, add one
-      if (starfield.length < 50*proportion && fps >= 30) {
-        let ranX = Math.floor(Math.random()*(canvasWidth));
-        let ranSize = Math.random()*3;
-        starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, trueBottom, false));
-        // if there is more than the designated amount, remove one
-      } else {
-        if (starfield.length > 100*proportion) {
-          starfield.splice(0, 1);
+        // apply gravity and movement
+        chibis[i].x += chibis[i].speedX/4;
+        chibis[i].rotation += chibis[i].spin;
+        chibis[i].spin *= 0.9;
+        while (chibis[i].rotation > 6) {
+          chibis[i].rotation -= 6;
         }
-      }
-      // moving stars
-      for (let i = 0; i < starfield.length; i++) {
-        starfield[i].y -= Math.abs(0.5*(4-starfield[i].size));
-        // starfield wrapping
-        if (starfield[i].y <= 1) {
-          starfield[i].y = trueBottom;
-          // starfield[i].manmade = false;
+        while (chibis[i].rotation < -6) {
+          chibis[i].rotation += 6;
         }
-      }
-    }
 
 
-    /**
-    * an interactable object that is not alive
-    * @param {int} width - the width of the inert
-    * @param {int} height - the height of the inert
-    * @param {string} colour - the colour of the object
-    * @param {int} x - the x position
-    * @param {int} y - the y position
-    * @param {boolean} manmade - whether it was made at a gravestone by an elder
-    */
-    function Inert(width, height, colour, x, y, manmade) {
-      this.width = width;
-      this.height = height;
-      this.size = width;
-      this.colour = colour;
-      this.manmade = manmade;
-      this.x = x;
-      this.y = y;
-      this.speedX = 0;
-      this.speedY = 0;
-      this.update = function() {
-        if (this.size > 0.5) {
-          this.size *= 0.999;
-        }
-        // draw the thing
-        if (this.manmade) {
-          ctx.globalAlpha = 1;
-        } else {
-          let tmp = this.size/3; // 0 to 1
-          tmp = 1 - tmp;
-          ctx.globalAlpha = tmp*(1-(1/(trueBottom/this.y)));
-        }
-        ctx.fillStyle = this.colour;
-        ctx.fillRect(this.x, this.y, this.size, this.size);
-        ctx.globalAlpha = 1;
-      };
-    }
-    /**
-    * function to create an explosion (graphical only)
-    * @param {int} x - the x position
-    * @param {int} y - the y position
-    * @param {string} colour1 - colour of the outside of the explosion
-    * @param {string} colour2 - colour of the inside of the explosion
-    */
-    function Explosion(x, y, colour1, colour2) {
-      this.x = x;
-      this.y = y;
-      this.colour1 = colour1;
-      this.colour2 = colour2;
-      this.timer = 0;
-      this.update = function() {
-        ctx.fillStyle = this.colour1;
-        ctx.globalAlpha = 0.3*(1-(this.timer/200));
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
-        ctx.fill();
-        let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.timer);
-        glow.addColorStop(0, this.colour2);
-        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = glow;
-        ctx.globalAlpha = 0.2;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
-        ctx.fill();
-      };
-    }
-    /**
-    * function to describe a particle (trail usually);
-    * @param {int} size - the size
-    * @param {string} colour - the colour
-    * @param {int} x - the x position
-    * @param {int} y - the y position
-    * @param {int} speedX - the x speed
-    * @param {int} speedY - the y speed
-    */
-    function Particle(size, colour, x, y, speedX, speedY) {
-      this.size = size;
-      this.colour = colour;
-      this.x = x;
-      this.y = y;
-      this.speedX = speedX/2;
-      this.speedY = speedY/2;
-      this.timer = 5;
-      this.update = function() {
-        // draw the thing
-        // console.log(this.width);
-        ctx.globalAlpha = (this.timer/15);
-        ctx.lineWidth = size;
-        ctx.strokeStyle = this.colour;
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x-this.speedX, this.y-this.speedY);
-        ctx.stroke();
-
-        // ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.globalAlpha = 1;
-      };
-    }
-
-    /**
-    * function to create a glyph
-    * @param {int} x -  the x coordinate
-    * @param {int} y -  the y coordinate
-    * @param {string} colour - the colour
-    * @param {string} symbol - the symbol of the glyph
-    */
-    function createGlyphs(x, y, colour, symbol) {
-      let speed = 2;
-      glyphs.push(new Glyph(x, y, 0, -speed, colour, symbol));
-      glyphs.push(new Glyph(x, y, 0, speed, colour, symbol));
-      glyphs.push(new Glyph(x, y, speed, 0, colour, symbol));
-      glyphs.push(new Glyph(x, y, -speed, 0, colour, symbol));
-      glyphs.push(new Glyph(x, y, speed/1.5, speed/1.5, colour, symbol));
-      glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, colour, symbol));
-      glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, colour, symbol));
-      glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, colour, symbol));
-    }
-
-    /**
-    * function to control glyphs
-    * @param {int} x - the x position
-    * @param {int} y - the y position
-    * @param {int} speedX - the x speed
-    * @param {int} speedY - the y speed
-    * @param {string} colour - the colour
-    * @param {string} symbol - the symbol of the glyph
-    */
-    function Glyph(x, y, speedX, speedY, colour, symbol) {
-      this.speedX = speedX;
-      this.speedY = speedY;
-      this.size = fontWidth;
-      this.timer = glyphTimer;
-      this.x = x;
-      this.y = y;
-      this.spin = 0;
-      this.rotation = 0;
-      this.step = 0.2;
-      this.colour = colour;
-      this.symbol = symbol;
-      this.update = function() {
-        this.speedY += gravity;
-        for (let i = 0; i < glyphs.length; i++) {
-          if (fps > 30 && glyphs[i] !== this && detectCollision(glyphs[i], this)) {
-            collide(this, glyphs[i]);
-            this.timer -= this.step;
-            glyphs[i].timer -= glyphs[i].step;
+        if (!chibis[i].hitBottom) {
+          let mass = gravity*chibis[i].size*6;
+          chibis[i].speedY += mass;
+          chibis[i].y += chibis[i].speedY/4;
+          if (Math.round(chibis[i].speedY) == 0) {
+            let tmp = ((chibis[i].jumpY*4)+chibis[i].y)/5;
+            chibis[i].jumpY = tmp;
           }
         }
-        checkBounceSides(this);
-        checkBounceTop(this);
-        checkBounceBottom(this);
-        applySpeedLimit(this);
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.rotation += this.spin;
-        this.spin *= 0.9;
-        while (this.rotation > 6) {
-          this.rotation -= 6;
-        }
-        while (this.rotation < -6) {
-          this.rotation += 6;
-        }
-        this.timer -= this.step;
-        // draw glyph
-        ctx.globalAlpha = (this.timer/glyphTimer) + 0.000001;
-        ctx.fillStyle = this.colour;
-        ctx.font = '14px' + ' ' + globalFont;
-        ctx.save();
-        ctx.translate(this.x-(this.size/2), this.y+(this.size/2));
-        ctx.rotate(this.rotation);
-        ctx.fillText(this.symbol, 0, 0);
-        ctx.restore();
-      };
+        chibis[i].physicsCheck();
+      }
     }
-
-
-
-
-    /**
-    * function to turn the current ticker in the form of a 24 hour clock
-    * @param {int} counter - the current time of day (0 to 1000)
-    * @return {string} the minutes and seconds
-    */
-    function tickerToTime(counter) {
-      let seconds = (86400/1000)*(counter);
-      let minutes = Math.floor(seconds/60);
-      let hours = Math.floor(minutes/60);
-      hours = ('0' + hours).slice(-2);
-      minutes = Math.floor(minutes - (hours*60));
-      minutes = ('0' + minutes).slice(-2);
-      // seconds = Math.floor(seconds - (minutes*60));
-      // seconds = ('0' + seconds).slice(-2);
-      return (hours+':'+minutes/* +':'+seconds*/);
+  }
+  /**
+  * function to attempt to plant a tree
+  * @param {int} x - the x coordinate where the mate is trying to place a tree
+  * @param {hex} fruitColour - the colour of the fruit
+  * @return {boolean} - whether the tree was planted or not
+  */
+  function tryToPlantaTree(x, fruitColour) {
+    let allow = true;
+    let maxHeight = trueBottom*0.30+(Math.random()*(trueBottom*0.30));
+    let treeWidth = 35 + (Math.random()*45);
+    for (let j = 0; j < trees.length; j++) {
+      if (trees[j].x == x || ( x - (treeWidth/4) < trees[j].x + (trees[j].width/4) && trees[j].x - (trees[j].width/4) < x + (treeWidth/4))) {
+        allow = false;
+      }
     }
+    if (allow) {
+      trees.push(new Tree(x, canvasHeight, treeWidth, 1, maxHeight, fruitColour));
+      return true;
+    }
+    return false;
+  }
+
+
+  /**
+  * function to handle comets
+  */
+  function recalculateComets() {
+    for (let i =0; i < comets.length; i++) {
+      comets[i].x += comets[i].speedX*5;
+      comets[i].y += comets[i].speedY*5;
+      if (comets[i].x < 0 || comets[i].x > canvasWidth || comets[i].y < 0 || comets[i].y > trueBottom) {
+        comets.splice(i, 1);
+        i--;
+      } else {
+        trails.push(new Particle(comets[i].size/2, glowColour, comets[i].x, comets[i].y, comets[i].speedX*15, comets[i].speedY*15));
+        comets[i].update();
+      }
+    }
+  }
+
+  /**
+  * function to habndle the decorative starfield
+  */
+  function recalculateStarfield() {
+    // if there is less than the designated amount, add one
+    if (starfield.length < 50*proportion && fps >= 30) {
+      let ranX = Math.floor(Math.random()*(canvasWidth));
+      let ranSize = Math.random()*3;
+      starfield.push(new Inert(ranSize, ranSize, glowColour, ranX, trueBottom, false));
+      // if there is more than the designated amount, remove one
+    } else {
+      if (starfield.length > 100*proportion) {
+        starfield.splice(0, 1);
+      }
+    }
+    // moving stars
+    for (let i = 0; i < starfield.length; i++) {
+      starfield[i].y -= Math.abs(0.5*(4-starfield[i].size));
+      // starfield wrapping
+      if (starfield[i].y <= 1) {
+        starfield[i].y = trueBottom;
+        // starfield[i].manmade = false;
+      }
+    }
+  }
+
+
+  /**
+  * an interactable object that is not alive
+  * @param {int} width - the width of the inert
+  * @param {int} height - the height of the inert
+  * @param {string} colour - the colour of the object
+  * @param {int} x - the x position
+  * @param {int} y - the y position
+  * @param {boolean} manmade - whether it was made at a gravestone by an elder
+  */
+  function Inert(width, height, colour, x, y, manmade) {
+    this.width = width;
+    this.height = height;
+    this.size = width;
+    this.colour = colour;
+    this.manmade = manmade;
+    this.x = x;
+    this.y = y;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.update = function() {
+      if (this.size > 0.5) {
+        this.size *= 0.999;
+      }
+      // draw the thing
+      if (this.manmade) {
+        ctx.globalAlpha = 1;
+      } else {
+        let tmp = this.size/3; // 0 to 1
+        tmp = 1 - tmp;
+        ctx.globalAlpha = tmp*(1-(1/(trueBottom/this.y)));
+      }
+      ctx.fillStyle = this.colour;
+      ctx.fillRect(this.x, this.y, this.size, this.size);
+      ctx.globalAlpha = 1;
+    };
+  }
+  /**
+  * function to create an explosion (graphical only)
+  * @param {int} x - the x position
+  * @param {int} y - the y position
+  * @param {string} colour1 - colour of the outside of the explosion
+  * @param {string} colour2 - colour of the inside of the explosion
+  */
+  function Explosion(x, y, colour1, colour2) {
+    this.x = x;
+    this.y = y;
+    this.colour1 = colour1;
+    this.colour2 = colour2;
+    this.timer = 0;
+    this.update = function() {
+      ctx.fillStyle = this.colour1;
+      ctx.globalAlpha = 0.3*(1-(this.timer/200));
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
+      ctx.fill();
+      let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.timer);
+      glow.addColorStop(0, this.colour2);
+      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = glow;
+      ctx.globalAlpha = 0.2;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
+      ctx.fill();
+    };
+  }
+  /**
+  * function to describe a particle (trail usually);
+  * @param {int} size - the size
+  * @param {string} colour - the colour
+  * @param {int} x - the x position
+  * @param {int} y - the y position
+  * @param {int} speedX - the x speed
+  * @param {int} speedY - the y speed
+  */
+  function Particle(size, colour, x, y, speedX, speedY) {
+    this.size = size;
+    this.colour = colour;
+    this.x = x;
+    this.y = y;
+    this.speedX = speedX/2;
+    this.speedY = speedY/2;
+    this.timer = 5;
+    this.update = function() {
+      // draw the thing
+      // console.log(this.width);
+      ctx.globalAlpha = (this.timer/15);
+      ctx.lineWidth = size;
+      ctx.strokeStyle = this.colour;
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.x-this.speedX, this.y-this.speedY);
+      ctx.stroke();
+
+      // ctx.fillRect(this.x, this.y, this.width, this.height);
+      ctx.globalAlpha = 1;
+    };
+  }
+
+  /**
+  * function to create a glyph
+  * @param {int} x -  the x coordinate
+  * @param {int} y -  the y coordinate
+  * @param {string} colour - the colour
+  * @param {string} symbol - the symbol of the glyph
+  */
+  function createGlyphs(x, y, colour, symbol) {
+    let speed = 2;
+    glyphs.push(new Glyph(x, y, 0, -speed, colour, symbol));
+    glyphs.push(new Glyph(x, y, 0, speed, colour, symbol));
+    glyphs.push(new Glyph(x, y, speed, 0, colour, symbol));
+    glyphs.push(new Glyph(x, y, -speed, 0, colour, symbol));
+    glyphs.push(new Glyph(x, y, speed/1.5, speed/1.5, colour, symbol));
+    glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, colour, symbol));
+    glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, colour, symbol));
+    glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, colour, symbol));
+  }
+
+  /**
+  * function to control glyphs
+  * @param {int} x - the x position
+  * @param {int} y - the y position
+  * @param {int} speedX - the x speed
+  * @param {int} speedY - the y speed
+  * @param {string} colour - the colour
+  * @param {string} symbol - the symbol of the glyph
+  */
+  function Glyph(x, y, speedX, speedY, colour, symbol) {
+    this.speedX = speedX;
+    this.speedY = speedY;
+    this.size = fontWidth;
+    this.timer = glyphTimer;
+    this.x = x;
+    this.y = y;
+    this.spin = 0;
+    this.rotation = 0;
+    this.step = 0.2;
+    this.colour = colour;
+    this.symbol = symbol;
+    this.update = function() {
+      this.speedY += gravity;
+      for (let i = 0; i < glyphs.length; i++) {
+        if (fps > 30 && glyphs[i] !== this && detectCollision(glyphs[i], this)) {
+          collide(this, glyphs[i]);
+          this.timer -= this.step;
+          glyphs[i].timer -= glyphs[i].step;
+        }
+      }
+      checkBounceSides(this);
+      checkBounceTop(this);
+      checkBounceBottom(this);
+      applySpeedLimit(this);
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.rotation += this.spin;
+      this.spin *= 0.9;
+      while (this.rotation > 6) {
+        this.rotation -= 6;
+      }
+      while (this.rotation < -6) {
+        this.rotation += 6;
+      }
+      this.timer -= this.step;
+      // draw glyph
+      ctx.globalAlpha = (this.timer/glyphTimer) + 0.000001;
+      ctx.fillStyle = this.colour;
+      ctx.font = '14px' + ' ' + globalFont;
+      ctx.save();
+      ctx.translate(this.x-(this.size/2), this.y+(this.size/2));
+      ctx.rotate(this.rotation);
+      ctx.fillText(this.symbol, 0, 0);
+      ctx.restore();
+    };
+  }
+
+
+
+
+  /**
+  * function to turn the current ticker in the form of a 24 hour clock
+  * @param {int} counter - the current time of day (0 to 1000)
+  * @return {string} the minutes and seconds
+  */
+  function tickerToTime(counter) {
+    let seconds = (86400/1000)*(counter);
+    let minutes = Math.floor(seconds/60);
+    let hours = Math.floor(minutes/60);
+    hours = ('0' + hours).slice(-2);
+    minutes = Math.floor(minutes - (hours*60));
+    minutes = ('0' + minutes).slice(-2);
+    // seconds = Math.floor(seconds - (minutes*60));
+    // seconds = ('0' + seconds).slice(-2);
+    return (hours+':'+minutes/* +':'+seconds*/);
+  }

@@ -2,6 +2,18 @@
 
 changelog
 
+17/02/2019 = 0.058
+~ chibis will now face away from the player occasionally
+~ tails of 0 length now appear stunted
+~ added genetic heterochromia (different coloured eyes)
+~ added tabby coats
+~ added Manx, Bobtail, Tabby and Burmese breeds to catteries
+~ gave Siamese cats their distinctive pace pattern
+~ added Russian, Thai and Arabic names
+~ chibis in catteries are now named according to their breed where appropriate
+~ lots of performance fixes
+~ fixed a bug causing obelisks to stick around forever
+
 16/02/2019 = 0.057
 ~ chibis now reach elder status in the last days of their life and then die of old age a day or two later
 ~ the litter selector and cattery boxes are now colour coded
@@ -44,7 +56,7 @@ changelog
 
 24/11/2018 = 0.052
 ~ added speech bubbles
-~ trees now automatically start to drop once they reach their maximum height. This is to stop all the Chibis from starving to death if they can't reach the trees
+~ trees now automatically start to drop once they reach their maximum height
 ~ made the colour range for mutations more diverse
 ~ changed the way Chibis look in nirvana, now it's much more dramatic
 ~ tweaked some appearance values to make the most of the cell shading system
@@ -98,7 +110,6 @@ features
 16/11/2018 = 0.044
 features
 ~ added a Chibi naming system, parents name their children according to their culture
-~ added ability for the player select a mate
 ~ added tails - they wag :3
 ~ made Chibis sit still when on the floor
 ~ improved collision physics algorithms
