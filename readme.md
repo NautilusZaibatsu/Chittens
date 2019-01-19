@@ -2,6 +2,11 @@
 
 changelog
 
+~ known bug - when making cross breed strings, should alphabetise the parent's breeds
+
+= 0.06
+~ fixed a few bugs
+
 19/01/2019 = 0.059
 ~ fireflies no longer just follow the pointer, now they try to find peace in the treetops if they can. If they can't they default back to following the pointer
 ~ you now start with two respawing fireflies

@@ -588,7 +588,7 @@ function initSliders() {
   sliders[13] = new Slider(0, 2, experiment.bodypartCode[10], 130, 260, 'jowl right');
   sliders[14] = new Slider(0, 2, experiment.bodypartCode[11], 130, 290, 'chin');
 
-  sliders[15] = new Slider(0, 2, experiment.bodypartCode[3], 130, 320, 'ear left');
+  sliders[15] = new Slider(0, 2, experiment.bodypartCode[3], 130, 320, 'left ear');
   sliders[16] = new Slider(0, 2, experiment.bodypartCode[4], 130, 350, 'right ear');
   sliders[17] = new Slider(0, 2, experiment.bodypartCode[5], 130, 380, 'body');
   sliders[18] = new Slider(0, 2, experiment.bodypartCode[6], 130, 410, 'tail');

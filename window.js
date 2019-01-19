@@ -80,9 +80,7 @@ speech = [];
 geneEditing = false;
 spliceBox = new CatBox(20, 30, 100, 5);
 experiment = new Chibi(70, 90, 13.5, 10, 'Female');
-while (experiment.name == null) {
-  experiment.name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
-}
+experiment.name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
 randomiseGenetics(experiment);
 experiment.awake = true;
 experiment.hitBottom = true;
@@ -906,7 +904,13 @@ function Seed(colour, owner) {
       // set up an array of option indexes
       let options = [];
       for (let i = 0; i < trees.length; i ++) {
-        if (trees[i] !== this.focus && trees[i].y < trueBottom) {
+        let flagged = false;
+        for (let j = 0; j < fireflies.length; j++) {
+          if (trees[i] == fireflies[j].focus) {
+            flagged = true;
+          }
+        }
+        if (!flagged && trees[i] !== this.focus && trees[i].y < trueBottom) {
           options.push(i);
         }
       }

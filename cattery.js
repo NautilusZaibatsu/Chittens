@@ -642,7 +642,7 @@ function generateBaby(parent1, parent2, specBreed) {
     chibis[chibis.length-1].thirdColour = chibis[chibis.length-1].firstColour;
   }
   let tmpBodypartCode = [];
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < parent1.bodypartCode.length; i++) {
     if (Math.random() < 0.5) {
       tmpBodypartCode.push(parent1.bodypartCode[i]);
     } else {
@@ -921,7 +921,7 @@ function Chibi(x, y, bodySize, maxSize, gender) {
       let tmpY = this.y-fruits[f].y;
       let distance = Math.sqrt((tmpX*tmpX)+(tmpY*tmpY));
       // only jump for fruits within your range
-      if (fruits[f].eaterId == null && fruits[f].y < trueBottom && distance < tmp && fruits[f].y >= trueBottom - (trueBottom - this.jumpY) - this.size) {
+      if (fruits[f].eaterId == null && distance < tmp && fruits[f].y >= trueBottom - (trueBottom - this.jumpY - this.size) && fruits[f].y < trueBottom - this.size) {
         tmp = distance;
         target = fruits[f];
       }
@@ -1355,21 +1355,21 @@ function Chibi(x, y, bodySize, maxSize, gender) {
 
   this.drawBody = function(pat, backendShiftX, backendShiftY, bodyGradient) {
     // body balls
+    let tmp = Math.abs(daytimeCounter-this.birthday);
+    while (tmp > 15 && tmp > 0) {
+      tmp -= 15; // 0 to 30
+    }
+    tmp *= 0.5;
+    tmp = Math.abs(tmp-3.75); // -0 to -3.75 to 0 to 3.75
     // CELL SHADING
     ctx.fillStyle = this.cellShadeLine;
     if (this.sitting && this.awake) {
-      let tmp = Math.abs(daytimeCounter-this.birthday);
-      while (tmp > 15 && tmp > 0) {
-        tmp -= 15; // 0 to 30
-      }
-      tmp *= 0.5;
-      tmp = Math.abs(tmp-3.75); // -0 to -3.75 to 0 to 3.75
       ctx.beginPath();
-      ctx.arc(-tmp+1.875, -this.size, this.cellShadeThickness +(this.thickness*this.size*1.6), 0, 2 * Math.PI);
+      ctx.arc(-tmp+1.875, -this.size, this.cellShadeThickness +(this.thickness*this.size*1.8), 0, 2 * Math.PI);
       ctx.fill();
     } else if (this.awake) {
       ctx.beginPath();
-      ctx.arc(-(this.size/32) - backendShiftX, -backendShiftY, this.cellShadeThickness +(this.thickness*this.size*1.6), 0, 2 * Math.PI);
+      ctx.arc(-(this.size/32) - backendShiftX, -backendShiftY, this.cellShadeThickness +(this.thickness*this.size*1.8), 0, 2 * Math.PI);
       ctx.fill();
     }
     // REAL DRAWING
@@ -1378,14 +1378,8 @@ function Chibi(x, y, bodySize, maxSize, gender) {
     ctx.beginPath();
     if (this.sitting && this.awake) {
       // make it wag
-      let tmp = Math.abs(daytimeCounter-this.birthday);
-      while (tmp > 15 && tmp > 0) {
-        tmp -= 15; // 0 to 30
-      }
-      tmp *= 0.5;
-      tmp = Math.abs(tmp-3.75); // 0 to 15 to 0 to 15
       ctx.beginPath();
-      ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.6, 0, 2 * Math.PI);
+      ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
       ctx.fill();
       if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
@@ -1393,11 +1387,10 @@ function Chibi(x, y, bodySize, maxSize, gender) {
         ctx.beginPath();
         ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
         ctx.fill();
-        ctx.globalAlpha = 1;
 
         if (this.pattern == 6 || this.pattern == 3) { // pattern6
               let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size*3);
-              ctx.globalAlpha = 0.5;
+                ctx.globalAlpha = 0.5;
                 bGradient.addColorStop(0, this.thirdColour);
                 bGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
                 ctx.fillStyle = bGradient;
