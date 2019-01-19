@@ -18,9 +18,9 @@ function initButtons() {
   buttons.push(new Button(396, 0, 'Load'));
 
   // gene editing
-  buttons.push(new Button(60, 560, 'Save Female'));
-  buttons.push(new Button(60, 595, 'Save Male'));
-  buttons.push(new Button(60, 630, 'Close'));
+  buttons.push(new Button(60, 590, 'Save Female'));
+  buttons.push(new Button(60, 625, 'Save Male'));
+  buttons.push(new Button(60, 660, 'Close'));
   buttons[7].visible = false;
   buttons[8].visible = false;
   buttons[9].visible = false;
@@ -140,6 +140,9 @@ function InfoPanel() {
       if (selection.name.length > offsetX) {
         offsetX = selection.name.length;
       }
+      if (selection.breed.length > offsetX) {
+        offsetX = selection.breed.length;
+      }
       offsetX += 11;
       offsetX *= fontWidth/2;
 
@@ -150,18 +153,18 @@ function InfoPanel() {
       ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
       ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
       ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
-      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 40);
-      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 40);
-      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 55);
-      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 55);
-      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 70);
-      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 70);
-      ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 85);
-      ctx.fillText(eString, -offsetX + (canvasWidth/2) + 100, 140 + 85);
-      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 100);
-      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 100);
-      ctx.fillText('Max size ', -offsetX + (canvasWidth/2), 140 + 115);
-      ctx.fillText(Math.round(selection.maxSize), -offsetX + (canvasWidth/2) + 100, 140 + 115);
+      ctx.fillText('Breed ', -offsetX + (canvasWidth/2), 140 + 40);
+      ctx.fillText(selection.breed, -offsetX + (canvasWidth/2) + 100, 140 + 40);
+      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 55);
+      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 55);
+      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 70);
+      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 70);
+      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 85);
+      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 85);
+      ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 100);
+      ctx.fillText(eString, -offsetX + (canvasWidth/2) + 100, 140 + 100);
+      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 115);
+      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 115);
       ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 130);
       ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 130);
       ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 145);
@@ -513,7 +516,7 @@ function clickMouse(e) {
       }
       if (colourBars.selected == 0) {
         experiment.firstColour = colourBlock.pixels[newIndex];
-        experiment.noseColour = skinColourCheck(experiment.firstColour);
+        experiment.skinColour = skinColourCheck(experiment.firstColour);
       } else if (colourBars.selected == 1) {
         experiment.secondColour = colourBlock.pixels[newIndex];
       } else if (colourBars.selected == 2) {
@@ -534,6 +537,7 @@ function unclickMouse(e) {
         if ((i > 6 && i < 18) || i == 26) {
           sliders[i].currentPos = Math.round(sliders[i].currentPos);
         }
+        console.log('exact: '+sliders[i].currentPos);
       }
     }
   }
@@ -569,10 +573,10 @@ function initSliders() {
   sliders[0] = new Slider(0.5, 1, experiment.thickness, 20, 185, 'thickness');
   sliders[1] = new Slider(5, 20, experiment.size, 20, 155, 'size');
   sliders[2] = new Slider(0, 1, experiment.legginess, 20, 215, 'legginess');
-  sliders[3] = new Slider(0, 1, experiment.ears, 20, 245, 'ear width');
-  sliders[4] = new Slider(0, 1, experiment.tailLength, 20, 275, 'tail length');
-  sliders[5] = new Slider(0, 1, experiment.coatMod[0], 20, 305, 'fade');
-  sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 335, 'coat angle');
+  sliders[3] = new Slider(0, 1, experiment.earWidth, 20, 275, 'ear width');
+  sliders[4] = new Slider(0, 1, experiment.tailLength, 20, 305, 'tail length');
+  sliders[5] = new Slider(0, 1, experiment.coatMod[0], 20, 335, 'fade');
+  sliders[6] = new Slider(0, 1, experiment.coatMod[1], 20, 365, 'coat angle');
 
   sliders[7] = new Slider(0, 2, experiment.bodypartCode[0], 130, 440, 'front foot left');
   sliders[8] = new Slider(0, 2, experiment.bodypartCode[1], 130, 470, 'front foot right');
@@ -589,22 +593,23 @@ function initSliders() {
   sliders[17] = new Slider(0, 2, experiment.bodypartCode[5], 130, 380, 'body');
   sliders[18] = new Slider(0, 2, experiment.bodypartCode[6], 130, 410, 'tail');
 
-  sliders[19] = new Slider(0, 1, experiment.nosePos, 20, 365, 'nose height');
-  sliders[20] = new Slider(0, 1, experiment.eyePosX, 20, 395, 'eyes width');
-  sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 425, 'eyes height');
-  sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 485, 'head width');
-  sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 515, 'head height');
-  sliders[24] = new Slider(0, 1, experiment.eyeSize, 20, 455, 'eye size');
-  sliders[25] = new Slider(0, 1, experiment.fangs, 20, 545, 'fang size');
-  sliders[26] = new Slider(0, 4, experiment.pattern, 130, 560, 'pattern');
+  sliders[19] = new Slider(0, 1, experiment.nosePos, 20, 395, 'nose height');
+  sliders[20] = new Slider(0, 1, experiment.eyePosX, 20, 425, 'eyes width');
+  sliders[21] = new Slider(0, 1, experiment.eyePosY, 20, 455, 'eyes height');
+  sliders[22] = new Slider(0, 1, experiment.headWidth, 20, 515, 'head width');
+  sliders[23] = new Slider(0, 1, experiment.headHeight, 20, 545, 'head height');
+  sliders[24] = new Slider(0, 1, experiment.eyeSize, 20, 485, 'eye size');
+  sliders[25] = new Slider(0, 1, experiment.fangs, 20, 575, 'fang size');
+  sliders[26] = new Slider(0, 6, experiment.pattern, 130, 560, 'pattern');
   sliders[27] = new Slider(0, 1, experiment.patternAlpha, 130, 590, 'opacity');
+  sliders[28] = new Slider(0, 1, experiment.earHeight, 20, 245, 'ear height');
 };
 
 function reinitSliders() {
   sliders[0].currentPos = experiment.thickness;
   sliders[1].currentPos = experiment.size;
   sliders[2].currentPos = experiment.legginess;
-  sliders[3].currentPos = experiment.ears;
+  sliders[3].currentPos = experiment.earWidth;
   sliders[4].currentPos = experiment.tailLength;
   sliders[5].currentPos = experiment.coatMod[0];
   sliders[6].currentPos = experiment.coatMod[1];
@@ -629,6 +634,7 @@ function reinitSliders() {
   sliders[25].currentPos = experiment.fangs;
   sliders[26].currentPos = experiment.pattern;
   sliders[27].currentPos = experiment.patternAlpha;
+  sliders[28].currentPos = experiment.earHeight;
 }
 
 /**
@@ -707,7 +713,7 @@ function SliderBar(parent) {
         experiment.legginess = this.parent.currentPos;
         experiment.reinitSizes();
       } else if (this.parent.id == 3) {
-        experiment.ears = this.parent.currentPos;
+        experiment.earWidth = this.parent.currentPos;
       } else if (this.parent.id == 4) {
         experiment.tailLength = this.parent.currentPos;
       } else if (this.parent.id == 5) {
@@ -756,6 +762,8 @@ function SliderBar(parent) {
         experiment.pattern = Math.round(this.parent.currentPos);
       } else if (this.parent.id == 27) {
         experiment.patternAlpha = this.parent.currentPos;
+      } else if (this.parent.id == 28) {
+        experiment.earHeight = this.parent.currentPos;
       }
     } else {
       this.x = this.parent.x + this.parent.relativePosition;

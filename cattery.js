@@ -39,7 +39,7 @@ function initLitter(mParent, fParent) {
   for (let j = 0; j < boxRows; j++) {
     for (let i = 0; i < boxColumns && count < numberInLitter; i++) {
       boxes.push(new CatBox((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize), boxSize, boxThickness));
-      generateBaby(maleParent, femaleParent);
+      generateBaby(maleParent, femaleParent, generateChildBreedText(maleParent, femaleParent));
       thisCatBox = (j*3) + i;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       chibis[thisCatBox+currentChibis].inCatBox = boxes[thisCatBox];
@@ -50,7 +50,7 @@ function initLitter(mParent, fParent) {
       chibis[thisCatBox+currentChibis].x = (canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2);
       chibis[thisCatBox+currentChibis].y = (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2);
       count++;
-      chibis[thisCatBox+currentChibis].noseColour = skinColourCheck(chibis[thisCatBox+currentChibis].firstColour);
+      chibis[thisCatBox+currentChibis].skinColour = skinColourCheck(chibis[thisCatBox+currentChibis].firstColour);
       // setting the box colour
       if (chibis[thisCatBox+currentChibis].gender == 'Female') {
         boxes[thisCatBox].colour = genderPink;
@@ -77,13 +77,13 @@ function initLitter(mParent, fParent) {
   chibis[chibis.length-1].firstColour = mixTwoColours(randomColour(), chibis[chibis.length-1].firstColour, Math.random()*0.3);
   chibis[chibis.length-1].secondColour = mixTwoColours(randomColour(), chibis[chibis.length-1].secondColour, Math.random()*0.3);
   chibis[chibis.length-1].thirdColour = mixTwoColours(randomColour(), chibis[chibis.length-1].thirdColour, Math.random()*0.3);
-  chibis[chibis.length-1].noseColour = skinColourCheck(chibis[chibis.length-1].firstColour);
+  chibis[chibis.length-1].skinColour = skinColourCheck(chibis[chibis.length-1].firstColour);
   boxes[boxes.length-1].text = 'Runt';
 }
 
 function randomiseGenetics(who) {
   who.age = Math.round(Math.random()*5) + maturesAt;
-  who.size = chibis[thisCatBox+currentChibis].maxSize*0.75+ (Math.random()*0.25*chibis[thisCatBox+currentChibis].maxSize);
+  who.size = (who.maxSize*0.75) + (Math.random()*0.25*who.maxSize);
   who.coatMod[0] = Math.random();
   who.coatMod[1] = Math.random();
   who.thickness = (Math.random()*0.5)+0.5;
@@ -106,17 +106,21 @@ function randomiseGenetics(who) {
   who.eyeSize = Math.random();
   who.maxAge = 12 + (Math.random()*8);
   who.fangs = Math.random();
+  who.earHeight = 0.25 + (Math.random()*0.75);
+  who.earLength = 0.25 + (Math.random()*0.75);
   applyBreedTemplate(who);
   who.eyeColour2 = who.eyeColour;
-  mutate(who);
-  who.noseColour = skinColourCheck(who.firstColour);
+  if (who !== experiment) {
+    mutate(who);
+  }
+  who.reinitSizes();
+  who.skinColour = skinColourCheck(who.firstColour);
 }
 
 function initFemaleCattery() {
   initChoiceBoxes();
   buttons[13].visible = true;
   chosenChibiF = false;
-  sendMessage('\u2764 Choose a female Chibi');
   labels[0] = new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'Welcome to the Cattery');
   labels[1] = new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 50, 'Choose a girl');
   buttons[0].visible = true;
@@ -124,7 +128,7 @@ function initFemaleCattery() {
   for (let i = 0; i < boxColumns; i++) {
     for (let j = 0; j < boxRows; j++) {
       boxes.push(new CatBox((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize), boxSize, boxThickness));
-      chibis.push(new Chibi((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2), 6, ((Math.random()*9) + 7)/1.1, 'Female', Math.random()));
+      chibis.push(new Chibi((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2), 6, ((Math.random()*9) + 7)/1.1, 'Female'));
       thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       boxes[thisCatBox].colour = genderPink;
@@ -140,7 +144,6 @@ function initMaleCattery() {
   initChoiceBoxes();
   buttons[13].visible = true;
   chosenChibiM = false;
-  sendMessage('\u2764 Choose a male Chibi');
   labels[0] = new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'Welcome to the Cattery');
   labels[1] = new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 50, 'Choose a boy');
   buttons[0].visible = true;
@@ -148,7 +151,7 @@ function initMaleCattery() {
   for (let i = 0; i < boxColumns; i++) {
     for (let j = 0; j < boxRows; j++) {
       boxes.push(new CatBox((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize), boxSize, boxThickness));
-      chibis.push(new Chibi((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2), 6, ((Math.random()*9) + 7)*1.1, 'Male', Math.random()));
+      chibis.push(new Chibi((canvasWidth/2)-(((boxSize*3)+(boxPadding*2))/2) + (i*boxPadding) + (i*boxSize) + (boxSize/2), (trueBottom/2) - ((boxColumns*(boxSize+boxPadding))/2) + (j*boxPadding) + (j*boxSize) + (boxSize/2), 6, ((Math.random()*9) + 7)*1.1, 'Male'));
       thisCatBox = (i*3) + j;
       boxes[thisCatBox].id = thisCatBox + currentChibis;
       boxes[thisCatBox].colour = genderBlue;
@@ -174,14 +177,17 @@ function CatBox(x, y, size, thickness) {
   this.text = '';
   this.colour = '#000000';
   this.update = function() {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = trueWhite;
     ctx.fillText(this.text, this.x+5, this.y+15);
     ctx.lineWidth = this.thickness;
     if (this.highlighted || this.selected) {
       ctx.strokeStyle = mixTwoColours(this.colour, trueWhite, 0.5);
       if (this.highlighted) {
         ctx.fillText(chibis[this.id].name, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2)+10);
-        ctx.fillText('Age '+ chibis[this.id].age, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 25);
-        ctx.fillText('Gender '+chibis[this.id].gender, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 40);
+        ctx.fillText('Breed '+chibis[this.id].breed, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 25);
+        ctx.fillText('Age '+ chibis[this.id].age, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 40);
+        ctx.fillText('Gender '+chibis[this.id].gender, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 55);
         let cString = '';
         if (chibis[this.id].albino || chibis[this.id].sphynx) {
           if (chibis[this.id].albino) {
@@ -206,7 +212,7 @@ function CatBox(x, y, size, thickness) {
             cString = c1 +', '+c2+' & '+c3;
           }
         }
-        ctx.fillText('Colour '+cString, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 55);
+        ctx.fillText('Colour '+cString, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 70);
         let eString = '';
         if (chibis[this.id].eyeColour == chibis[this.id].eyeColour2 && !chibis[this.id].albino) {
           eString = ntc.name(chibis[this.id].eyeColour)[1];
@@ -215,18 +221,19 @@ function CatBox(x, y, size, thickness) {
         } else {
           eString = 'Heterochromia';
         }
-        ctx.fillText('Eye colour '+eString, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 70);
-        ctx.fillText('Max size '+Math.round((chibis[this.id].maxSize)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 85);
+        ctx.fillText('Eye colour '+eString, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 85);
+        ctx.fillText('Max size '+Math.round((chibis[this.id].maxSize)), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 100);
         let ag = 'Negative';
         if (chibis[this.id].albinoGene) {
           ag = 'Positive';
         }
-        ctx.fillText('Albino Gene '+ag, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 100);
+        ctx.fillText('Albino Gene '+ag, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 115);
         let sg = 'Negative';
         if (chibis[this.id].sphynxGene) {
           sg = 'Positive';
         }
-        ctx.fillText('Sphynx Gene '+sg, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 115);
+        ctx.fillText('Sphynx Gene '+sg, (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 130);
+        ctx.fillText('Name type '+getLibraryName(chibis[this.id].name, chibis[this.id].gender), (canvasWidth/2) + (((boxSize+boxPadding)*3)/2)+10, (trueBottom/2) - (((boxSize+boxPadding)*3)/2) + 145);
       }
     } else {
       ctx.strokeStyle = this.colour;
@@ -286,16 +293,52 @@ function randomGender() {
   }
 }
 
+function generateChildBreedText(parent1, parent2) {
+  // breed logic
+  let specBreed = 'None';
+  if (parent1.breed == parent2.breed) {
+    specBreed = parent1.breed;
+  } else if (parent1.breed !== 'None' && parent2.breed !== 'None') {
+    // check if one of it's parents is a cross breed already, otherwise tag its breed as a cross
+    let p1split = parent1.breed.split(' ');
+    let p2split = parent2.breed.split(' ');
+    // remove the albino tag
+      if (p1split[p1split.length-1] == 'albino' || p1split[p1split.length-1] == 'Albino') {
+        p1split.splice(p1split.length-1, 1);
+      }
+      if (p2split[p2split.length-1] == 'albino' || p2split[p2split.length-1] == 'Albino') {
+        p2split.splice(p2split.length-1, 1);
+      }
+
+    if (!p1split.includes('x') && !p2split.includes('x')) {
+      let p1String = p1split[0];
+      for (let i = 1; i < p1split.length; i++) {
+        p1String += ' '+p1split[i];
+      }
+      let p2String = p2split[0];
+      for (let i = 1; i < p2split.length; i++) {
+        p2String += ' '+p2split[i];
+      }
+
+      if (p1split.length > 0 && p2split.length > 0) {
+        specBreed = p1String + ' x ' +p2String;
+      }
+    }
+  }
+  return specBreed;
+}
+
 /**
 * function to collide two objects using physics
 * @param {object} parent1 - the first parent
 * @param {object} parent2 - the second parent
 * @return {string} the gender of the baby
 */
-function generateBaby(parent1, parent2) {
+function generateBaby(parent1, parent2, specBreed) {
   // male is parent1
   // female is parent2
   let babyGender = randomGender();
+
   // max age logic
   let ageSwitch = Math.round(Math.random()*2); // 0 to 2
   let specMaxAge = 1;
@@ -425,17 +468,28 @@ function generateBaby(parent1, parent2) {
     specHeadH = (parent1.headHeight + parent2.headHeight + ((Math.random()*0.75)+0.25))/3;
   }
 
-  // ear logic
+  // ear Width logic
   let earSwitch = Math.round(Math.random()*2); // 0 to 2
   let babyEars = 1;
   if (earSwitch == 0) {
-    babyEars = ((parent1.ears*9) + Math.random())/10;
+    babyEars = ((parent1.earWidth*9) + Math.random())/10;
   } else if (earSwitch == 1) {
-    babyEars = ((parent2.ears*9) + Math.random())/10;
+    babyEars = ((parent2.earWidth*9) + Math.random())/10;
   } else {
-    babyEars = (parent1.ears + parent2.ears + Math.random())/3;
+    babyEars = (parent1.earWidth + parent2.earWidth + Math.random())/3;
   }
-  chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), specSize/3, specSize, babyGender, babyEars));
+
+  // ear Height logic
+  earSwitch = Math.round(Math.random()*2); // 0 to 2
+  babyEars2 = 1;
+  if (earSwitch == 0) {
+    babyEars2 = ((parent1.earHeight*9) + Math.random())/10;
+  } else if (earSwitch == 1) {
+    babyEars2 = ((parent2.earHeight*9) + Math.random())/10;
+  } else {
+    babyEars2 = (parent1.earHeight + parent2.earHeight + Math.random())/3;
+  }
+  chibis.push(new Chibi(parent1.x + ((parent2.x - parent1.x)/2), parent1.y + ((parent2.y - parent1.y)/2), specSize/3, specSize, babyGender));
   // set the baby's ears
   // set the baby's genetic colour
   let colour1 = 'red'; // for debug
@@ -496,7 +550,6 @@ function generateBaby(parent1, parent2) {
     chibis[chibis.length-1].pattern = parent2.pattern;
   }
 
-
   // coat logic
   let coatSwitch = Math.round(Math.random()*2); // 0 to 2
   if (coatSwitch == 0) {
@@ -527,6 +580,11 @@ function generateBaby(parent1, parent2) {
     chibis[chibis.length-1].pattern = 2;
     if (0.5 <= Math.random()) {
       breedAlbino(chibis[chibis.length-1]);
+      if (chibis[chibis.length-1].breed == 'None') {
+        chibis[chibis.length-1].breed = 'Albino';
+      } else {
+        chibis[chibis.length-1].breed += ' albino';
+      }
     }
   }
 
@@ -544,6 +602,9 @@ function generateBaby(parent1, parent2) {
         chibis[chibis.length-1].sphynx = true;
       }
     }
+  }
+  if (chibis[chibis.length-1].breed == 'Sphynx' && !chibis[chibis.length-1].sphynx) {
+    chibis[chibis.length-1].breed = 'None';
   }
 
   // mixing in a little randomness to the colours
@@ -588,6 +649,7 @@ function generateBaby(parent1, parent2) {
       tmpBodypartCode.push(parent2.bodypartCode[i]);
     }
   }
+  chibis[chibis.length-1].breed = specBreed;
   chibis[chibis.length-1].thickness = specThickness;
   chibis[chibis.length-1].legginess = specLegginess;
   chibis[chibis.length-1].tailLength = specTail;
@@ -601,6 +663,8 @@ function generateBaby(parent1, parent2) {
   chibis[chibis.length-1].maxAge = specMaxAge;
   chibis[chibis.length-1].speedY = -10;
   chibis[chibis.length-1].fangs = specFang;
+  chibis[chibis.length-1].earWidth = babyEars;
+  chibis[chibis.length-1].earHeight = babyEars2;
   return babyGender;
 }
 
@@ -613,9 +677,10 @@ function generateBaby(parent1, parent2) {
 * @param {string} gender - the sex of the mate
 * @param {int} ears - the ear modifier (cat -> fox);
 */
-function Chibi(x, y, bodySize, maxSize, gender, ears) {
+function Chibi(x, y, bodySize, maxSize, gender) {
   this.id = ('0000' + guyID).slice(-4);
   guyID++;
+  this.breed = 'None';
   this.inCatBox = null;
   this.i = ''; // temp for debug
   this.x = x;
@@ -628,7 +693,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.firstColour = trueWhite;
   this.secondColour = trueWhite;
   this.thirdColour = trueWhite;
-  this.noseColour = trueWhite;
+  this.skinColour = trueWhite;
   this.eyeColour = trueWhite;
   this.eyeColour2 = trueWhite;
   this.nosePos = 0;
@@ -642,7 +707,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   this.pattern = 0;
   this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   this.fangs = 0.5; // [style, length]
-  this.ears = ears; // 0.5 is average
+  this.earWidth = 0.5; // 0.5 is average
+  this.earHeight = 0.5;
   this.thickness = 0; // 0.5 is average
   this.legginess = 0;
   this.angleToFocus = 0;
@@ -758,13 +824,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       if (this.supersaiyan > 0 && this.health > superThreshold && this.love > superThreshold) {
         this.sitting = true;
       } else {
+        // deciding what the focus is
         // decide whether to act this frame
         let chanceToAct = Math.random();
         // twice as likely to act if infant
         if (this.age < maturesAt) {
           chanceToAct *= 0.5;
         }
-        if (chanceToAct <= 0.02) {
+        if (chanceToAct <= 0.03) {
           // decide what to target
           let target = null;
           // if not an adult, just follow mother
@@ -793,18 +860,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
               }
             }
           }
-
-
           if (target == null) {
             // default action - jump at firefly
             this.focus = fireflies[this.findClosestFireFly()];
           }
           // actually jumping now
           // one in ten chance of speaking
-          if (Math.random() <= 0.1) {
+          if (Math.random() <= 0.05) {
             speech.push(new Speak(this, neutralWord()));
           }
 
+          // kittens sitting down near their mothers
           if (this.age < maturesAt && this.mother !== null && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size)*4) && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size)*4)) {
             if (this.mother.awake) {
               this.sitting = true;
@@ -816,6 +882,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
               this.facingForwards = true;
             }
           } else {
+            if (this.focus.y <= this.y + this.size) {
             this.speedY = -this.size;
             let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
             this.speedX += Math.cos(targetangle)*40;
@@ -827,17 +894,21 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
               // it doesn't cost kittens energy or health to jump
               this.energy -= 7;
               this.health -= 1;
+              if (this.energy <= 0) {
+                this.facingForwards = false;
+              }
             }
             this.y--;
             this.sitting = false;
-            if (Math.random() < 0.002 || (!this.facingForwards && Math.random() < 0.004)) {
-              this.facingForwards = (this.facingForwards == false);
+            // one in ten jumps is facing backwards
+            if (Math.random() < 1/10) {
+              this.facingForwards = false;
             }
             // this.hitBottom = false;
           }
+        }
         } else {
           this.sitting = true;
-
         }
       }
     }
@@ -918,6 +989,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       this.spin = 0;
     } else {
       this.hitBottom = true;
+      this.facingForwards = true;
       // apply floor forces
       this.speedX *= 0.92;
       this.resetRotation(false);
@@ -961,7 +1033,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     let tailGradient = trueWhite;
     if (this.sphynx) {
       if (this.bodypartCode[6] == 0) {
-        tailGradient = this.noseColour;
+        tailGradient = this.skinColour;
       } else if (this.bodypartCode[6] == 1) {
         tailGradient = skinColourCheck(this.secondColour);
       } else {
@@ -993,7 +1065,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     ctx.arc((this.size*(-tmp+7.5)*this.tailLength/8*this.thickness)-(this.size/32), (this.size/3)-(2*this.tailLength*this.size), (this.size/3*this.thickness*2), 0, Math.PI, true);// Mouth (clockwise)
     ctx.lineTo(-this.size/3, this.size/3);
     ctx.fill();
-    if (this.pattern !== 0 && this.pattern !== 4) {
+    if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
       ctx.fillStyle = pat;
       ctx.globalAlpha = this.patternAlpha;
       ctx.beginPath();
@@ -1019,19 +1091,23 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
   };
 
   this.drawBackLegs = function(pat, backendShiftX, backendShiftY, bodyGradient, sameDirection, legAngle) {
+    let footPat = pat;
+    if (this.pattern == 3) {
+      footPat = pat2;
+    }
     if (this.awake && this.energy > 0) {
       let leftFootColour = trueWhite;
       let rightFootColour = trueWhite;
       if (this.sphynx) {
         if (this.bodypartCode[7] == 0) {
-          leftFootColour = this.noseColour;
+          leftFootColour = this.skinColour;
         } else if (this.bodypartCode[7] ==1 ) {
           leftFootColour = skinColourCheck(this.secondColour);
         } else {
           leftFootColour = skinColourCheck(this.thirdColour);
         }
         if (this.bodypartCode[8] == 0) {
-          rightFootColour = this.noseColour;
+          rightFootColour = this.skinColour;
         } else if (this.bodypartCode[8] ==1 ) {
           rightFootColour = skinColourCheck(this.secondColour);
         } else {
@@ -1144,8 +1220,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc(0, this.limbLength*0.6, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
-        ctx.fillStyle = pat;
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        ctx.fillStyle = footPat;
         ctx.strokeStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1185,8 +1261,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc(0, this.limbLength*0.6, this.size/3.5*this.thickness*2, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
-        ctx.fillStyle = pat;
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        ctx.fillStyle = footPat;
         ctx.strokeStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1273,19 +1349,6 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       }
     }
 
-    // label
-    if ((selection == this || this.inCatBox !== null) && this !== experiment) {
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = colourIndicator(this);
-      ctx.font = '10px' + ' ' + globalFont;
-      let shift = this.name.length*5.6/2;
-      ctx.fillText(this.name, -shift, -(this.size*2));
-      // ctx.fillText(Math.round(this.health)+' '+Math.round(this.love)+' '+Math.round(this.energy)+' '+Math.round(this.hunger), -shift, -(this.size*2));
-    }
-    /* debug label */
-    // ctx.fillStyle = trueWhite;
-    // ctx.font = '10px' + ' ' + globalFont;
-    // ctx.fillText(trueBottom-(this.jumpY), 0, -10 - (this.size*2));
     ctx.globalAlpha = 1;
     ctx.restore(); // 0
   };
@@ -1306,7 +1369,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.fill();
     } else if (this.awake) {
       ctx.beginPath();
-      ctx.arc(-(this.size/32) - (backendShiftX*1/3), -backendShiftY*1/3, this.cellShadeThickness +(this.thickness*this.size*1.6), 0, 2 * Math.PI);
+      ctx.arc(-(this.size/32) - backendShiftX, -backendShiftY, this.cellShadeThickness +(this.thickness*this.size*1.6), 0, 2 * Math.PI);
       ctx.fill();
     }
     // REAL DRAWING
@@ -1324,25 +1387,45 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.6, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
-        ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.6, 0, 2 * Math.PI);
+        ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
+
+        if (this.pattern == 6 || this.pattern == 3) { // pattern6
+              let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size*3);
+              ctx.globalAlpha = 0.5;
+                bGradient.addColorStop(0, this.thirdColour);
+                bGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = bGradient;
+                ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
+                ctx.fill();
+          }
       }
     } else if (this.awake) {
       ctx.beginPath();
-      ctx.arc(-(this.size/32) - (backendShiftX*1/3), -backendShiftY*1/3, this.thickness*this.size*1.6, 0, 2 * Math.PI);
+      ctx.arc(-(this.size/32) - backendShiftX, - backendShiftY, this.thickness*this.size*1.8, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
-        ctx.arc(-(this.size/32) - (backendShiftX*1/3), -backendShiftY*1/3, this.thickness*this.size*1.6, 0, 2 * Math.PI);
+        ctx.arc(-(this.size/32) - backendShiftX, - backendShiftY, this.thickness*this.size*1.8, 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
+
+        if (this.pattern == 6 || this.pattern == 3) { // pattern6
+              let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size*3);
+              ctx.globalAlpha = 0.5;
+                bGradient.addColorStop(0, this.thirdColour);
+                bGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = bGradient;
+                ctx.arc(-(this.size/32) - backendShiftX, - backendShiftY, this.thickness*this.size*1.8, 0, 2 * Math.PI);
+                ctx.fill();
+          }
       }
     }
   };
@@ -1354,17 +1437,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.rotate(-this.rotation);
       ctx.fillStyle = this.cellShadeLine;
       ctx.beginPath();
-      ctx.arc(0 - (backendShiftX*1/3), (this.size/2) - (backendShiftY*1/3), this.size+(this.thickness*this.size/5)+this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.arc(0 - backendShiftX, (this.size/2) - backendShiftY, this.size+(this.thickness*this.size/5)+this.cellShadeThickness, 0, 2 * Math.PI);
       ctx.fill();
       // REAL DRAWING
       ctx.fillStyle = bodyGradient;
       ctx.beginPath();
-      ctx.arc(0 - (backendShiftX*1/3), (this.size/2) - (backendShiftY*1/3), this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
+      ctx.arc(0 - backendShiftX, (this.size/2) - backendShiftY, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
-        ctx.arc(0 - (backendShiftX*1/3), (this.size/2) - (backendShiftY*1/3), this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
+        ctx.arc(0 - backendShiftX, (this.size/2) - backendShiftY, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
       }
@@ -1385,28 +1468,19 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.translate(-this.size, sleepshift);
     }
     oneq = this.size/2;
-    // CELL SHADING
-    ctx.fillStyle = this.cellShadeLine;
-    ctx.beginPath();
-    ctx.moveTo(-this.cellShadeThickness, - this.cellShadeThickness + (this.size/2));
-    ctx.lineTo(-this.cellShadeThickness - (this.ears*8), - this.cellShadeThickness - this.size+(this.size*this.ears/5));
-    ctx.lineTo((oneq*2), - this.cellShadeThickness - (this.size*this.ears)/4);
-    ctx.lineTo(this.cellShadeThickness + (oneq*4)+(this.ears*8), - this.cellShadeThickness - this.size+(this.size*this.ears/5));
-    ctx.lineTo(this.cellShadeThickness + (oneq*4), - this.cellShadeThickness + (this.size/2));
-    ctx.fill();
     // REAL DRAWING
     let leftEarGradient = trueWhite;
     let rightEarGradient = trueWhite;
     if (this.sphynx) {
       if (this.bodypartCode[3] == 0) {
-        leftEarGradient = this.noseColour;
+        leftEarGradient = this.skinColour;
       } else if (this.bodypartCode[3] == 1) {
         leftEarGradient = skinColourCheck(this.secondColour);
       } else {
         leftEarGradient = skinColourCheck(this.thirdColour);
       }
       if (this.bodypartCode[4] == 0) {
-        rightEarGradient = this.noseColour;
+        rightEarGradient = this.skinColour;
       } else if (this.bodypartCode[4] == 1) {
         rightEarGradient = skinColourCheck(this.secondColour);
       } else {
@@ -1414,8 +1488,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       }
     }
     if (!this.albino && !this.sphynx) {
-      leftEarGradient = ctx.createLinearGradient(0, -this.size-(this.size*this.ears/2), 0, this.limbLength/4);
-      rightEarGradient = ctx.createLinearGradient(0, -this.size-(this.size*this.ears/2), 0, this.limbLength/4);
+      leftEarGradient = ctx.createLinearGradient(0, -this.size-(this.size*this.earWidth/2), 0, this.limbLength/4);
+      rightEarGradient = ctx.createLinearGradient(0, -this.size-(this.size*this.earWidth/2), 0, this.limbLength/4);
       if (this.bodypartCode[3] == 0) {
         leftEarGradient.addColorStop(0, this.secondColour);
         leftEarGradient.addColorStop(this.coatMod[0], this.firstColour);
@@ -1446,33 +1520,59 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       leftEarGradient = nosePink;
       rightEarGradient = nosePink;
     }
+    // CELL SHADING
+    ctx.fillStyle = this.cellShadeLine;
+    ctx.beginPath();
+    ctx.moveTo(-this.cellShadeThickness, this.cellShadeThickness + (this.size/2));
+    ctx.lineTo(-this.cellShadeThickness - (this.earWidth*this.size), -(this.thickness*this.size/2) - (this.earHeight * (this.size)) - this.cellShadeThickness);
+    ctx.lineTo(oneq*2, this.cellShadeThickness - ((this.size*this.earWidth)/4));
+    ctx.lineTo(this.cellShadeThickness +(oneq*4)+(this.earWidth*this.size), -(this.thickness*this.size/2) - (this.earHeight * (this.size)) - this.cellShadeThickness);
+    ctx.lineTo(this.cellShadeThickness + (oneq*4), this.cellShadeThickness + (this.size/2));
+    ctx.fill();
+    // real drawing
     ctx.fillStyle = leftEarGradient;
     ctx.beginPath();
     ctx.moveTo(0, +this.size/2);
-    ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/5));
-    ctx.lineTo(oneq*2, -(this.size*this.ears)/4);
+    ctx.lineTo(-(this.earWidth*this.size), -(this.thickness*this.size/2) - this.earHeight * (this.size));
+    ctx.lineTo(oneq*2, -(this.size*this.earWidth)/4);
     ctx.fill();
     ctx.fillStyle = rightEarGradient;
     ctx.beginPath();
-    ctx.moveTo(oneq*2, -(this.size*this.ears)/4);
-    ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/5));
+    ctx.moveTo(oneq*2, -(this.size*this.earWidth)/4);
+    ctx.lineTo((oneq*4)+(this.earWidth*this.size), -(this.thickness*this.size/2) - this.earHeight * (this.size));
     ctx.lineTo(oneq*4, +this.size/2);
     ctx.fill();
-    if (this.pattern !== 0 && this.pattern !== 4) {
+    if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
       ctx.fillStyle = pat;
       ctx.globalAlpha = this.patternAlpha;
       ctx.beginPath();
       ctx.moveTo(0, +this.size/2);
-      ctx.lineTo(0-(this.ears*8), -this.size+(this.size*this.ears/5));
-      ctx.lineTo(oneq*2, -(this.size*this.ears)/4);
-      ctx.lineTo((oneq*4)+(this.ears*8), -this.size+(this.size*this.ears/5));
+      ctx.lineTo(-(this.earWidth*this.size), -(this.thickness*this.size/2) - this.earHeight * (this.size));
+      ctx.lineTo(oneq*2, -(this.size*this.earWidth)/4);
+      ctx.lineTo((oneq*4)+(this.earWidth*this.size), -(this.thickness*this.size/2) - this.earHeight * (this.size));
       ctx.lineTo(oneq*4, +this.size/2);
-      ctx.lineTo(0, +this.size/2);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
+    // skin inside the ear
+    if (this.facingForwards && this.awake) {
+      ctx.fillStyle = this.skinColour;
+      ctx.strokeStyle = this.cellShadeLine;
+      ctx.lineWidth = this.size/10;
+      ctx.beginPath();
+      ctx.moveTo(0, +(this.size/2) + (this.earWidth*this.size/2));
+      ctx.lineTo(-(this.earWidth*this.size*0.5), -(this.thickness*this.size/4) - (this.earHeight * this.size * 0.5));
+      ctx.lineTo(oneq*2, (this.earHeight * this.size * 0.25));
+      ctx.stroke();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(oneq*2, (this.earHeight * this.size * 0.25));
+      ctx.lineTo((oneq*4)+(this.earWidth*this.size*0.5), -(this.thickness*this.size/4) - (this.earHeight * this.size * 0.5));
+      ctx.lineTo(oneq*4, +(this.size/2) + (this.earWidth*this.size/2));
+      ctx.stroke();
+      ctx.fill();
+    }
     ctx.restore(); // 0
-
 
     // head
     if (this.sitting && this.awake) {
@@ -1485,7 +1585,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     let headGradient = trueWhite;
     if (this.sphynx) {
       if (this.bodypartCode[2] == 0) {
-        headGradient = this.noseColour;
+        headGradient = this.skinColour;
       } else if (this.bodypartCode[2] == 1) {
         headGradient = skinColourCheck(this.secondColour);
       } else {
@@ -1534,23 +1634,36 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc(0, 0, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.arc(0, 0, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
-      } else if (this.pattern == 4) {
+      } else if (this.pattern == 4 || this.pattern == 5) {
         let faceGradient = ctx.createRadialGradient(0, 0, this.size/2*this.patternAlpha, 0, 0, this.size*this.patternAlpha);
-        faceGradient.addColorStop(0, this.secondColour);
+        if (this.pattern == 4) {
+          faceGradient.addColorStop(0, this.firstColour);
+        } else {
+          faceGradient.addColorStop(0, nosePink);
+        }
         faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = faceGradient
+        ctx.fillStyle = faceGradient;
         ctx.arc(0, 0, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
         ctx.fill();
+    }
+    if (this.pattern == 6 || this.pattern == 3) { // pattern6
+          let faceGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size*3);
+          ctx.globalAlpha = 0.5;
+            faceGradient.addColorStop(0, this.thirdColour);
+            faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = faceGradient;
+            ctx.arc(0, 0, this.size+(this.thickness*this.size/5), 0, 2 * Math.PI);
+            ctx.fill();
       }
       ctx.restore();
 
-      if (this.facingForwards) {
+      if (this.facingForwards && this.inCatBox == null && this !== experiment) {
         // smile
         if (this.health >= 50 && !this.elder && this.energy > 0) {
           ctx.globalAlpha = this.love/100;
@@ -1576,7 +1689,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc(0, this.limbLength+(this.size*0.6), this.size, 3.15, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1596,19 +1709,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       } else {
         diffy = 0.5;
         ctx.save(); // 0 open
-        // CELL SHADING
-        ctx.fillStyle = this.cellShadeLine;
-        ctx.beginPath();
-        ctx.save(); // 0 open
-        ctx.arc(-(this.size*this.eyePosX*0.3) - this.size/1.5, - (this.size/2) + (this.eyePosY*this.size*0.75), (this.size/2)+this.cellShadeThickness + (this.eyeSize * this.size/6), 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
-        ctx.beginPath();
-        ctx.save(); // 0 open
-        ctx.arc((this.size*this.eyePosX*0.3) + this.size/1.5, - (this.size/2) + (this.eyePosY*this.size*0.75), (this.size/2)+this.cellShadeThickness + (this.eyeSize * this.size/6), 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
         if (this.energy > 0) {
+          let glowingeyes = false;
+          let glowalpha = 0;
+          let closestfly = fireflies[this.findClosestFireFly()];
+          let diffx = Math.abs(this.x - closestfly.x);
+          let diffy = Math.abs(this.y - closestfly.y);
+          if (diffx <= 100 && diffy <= 100) {
+            glowingeyes = true;
+            let absolute = Math.sqrt((diffy*diffy) + (diffx*diffx)); // 0 to 100
+            glowalpha = 0.6*(1 - (absolute/(Math.sqrt(20000))));
+          }
           // REAL DRAWING
           // left eye
           ctx.beginPath();
@@ -1620,9 +1731,15 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           } else {
             ctx.fillStyle = mixTwoColours(trueBlack, albinoRed, 0.5);
           }
+          ctx.strokeStyle = this.cellShadeLine;
+          ctx.lineWidth = this.size/4;
           ctx.translate(-(this.size*this.eyePosX*0.3) - this.size/1.5, - (this.size/2) + (this.eyePosY*this.size*0.75));
           ctx.arc(0, 0, (this.size/2) + (this.eyeSize * this.size/6), 0, 2 * Math.PI);
+          ctx.stroke();
           ctx.fill();
+          if (glowingeyes) {
+            ctx.globalAlpha = 1 - glowalpha;
+          }
           // eye colour
           ctx.lineWidth = this.size / 7;
           if (!this.albino) {
@@ -1641,6 +1758,23 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           ctx.arc(-this.size/7, this.size/5, this.size/12, 0, 2 * Math.PI);
           ctx.fill();
           ctx.rotate(this.rotation);
+          // glowing at night
+          if (glowingeyes) {
+            let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size*this.eyeSize);
+            glow.addColorStop(0, closestfly.firstColour);
+            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.globalAlpha = glowalpha/2;
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+             ctx.arc(0, 0, this.size*this.eyeSize, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = trueWhite;
+            ctx.globalAlpha = glowalpha/1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 0.6*((this.size/2) + (this.eyeSize * this.size/6)), 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
           ctx.restore(); // 0 closed
           // right eye
           ctx.beginPath();
@@ -1652,11 +1786,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           } else {
             ctx.fillStyle = mixTwoColours(trueBlack, albinoRed, 0.5);
           }
+          ctx.strokeStyle = this.cellShadeLine;
+          ctx.lineWidth = this.size/4;
           ctx.save(); // 0 open
           ctx.translate((this.size*this.eyePosX*0.3) + this.size/1.5, - (this.size/2) + (this.eyePosY*this.size*0.75));
           ctx.arc(0, 0, (this.size/2) + (this.eyeSize * this.size/6), 0, 2 * Math.PI);
+          ctx.stroke();
           ctx.fill();
           // eye colour
+          if (glowingeyes) {
+            ctx.globalAlpha = (1 - glowalpha);
+          }
           ctx.lineWidth = this.size / 7;
           if (!this.albino) {
             ctx.strokeStyle = this.eyeColour2;
@@ -1675,6 +1815,24 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           ctx.arc(this.size/6, this.size/5, this.size/12, 0, 2 * Math.PI);
           ctx.fill();
           ctx.rotate(this.rotation);
+
+          // glowing at night
+          if (glowingeyes) {
+            let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size);
+            glow.addColorStop(0, closestfly.firstColour);
+            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.globalAlpha = glowalpha/4;
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+             ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = trueWhite;
+            ctx.globalAlpha = glowalpha/1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 0.6*((this.size/2) + (this.eyeSize * this.size/6)), 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
         }
         ctx.restore(); // 0 closed
       }
@@ -1690,16 +1848,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.fill();
       // real drawing
       ctx.fillStyle = trueWhite;
-      if (this.sphynx) {
+      if ((!this.albino && this.pattern == 5)) {
+        ctx.fillStyle = nosePink;
+      } else if (this.sphynx) {
         if (this.bodypartCode[11] == 0) {
-          ctx.fillStyle = nosePink;
+          ctx.fillStyle = this.skinColour;
         } else if (this.bodypartCode[11] == 1) {
           ctx.fillStyle = skinColourCheck(this.secondColour);
         } else {
           ctx.fillStyle = skinColourCheck(this.thirdColour);
         }
-      }
-      if (!this.albino && !this.sphynx) {
+      } else if (!this.albino && !this.sphynx) {
         if (this.bodypartCode[11] == 0) {
           ctx.fillStyle = this.firstColour;
         } else if (this.bodypartCode[11] == 1) {
@@ -1707,13 +1866,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         } else {
           ctx.fillStyle = this.thirdColour;
         }
-      } else if (this.albino && this.sphynx) {
-        ctx.fillStyle = nosePink;
       }
       ctx.beginPath();
       ctx.arc(0, (this.size*(this.nosePos-0.5)/2) + this.size/1.5, (this.size/3.5), 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = jowlPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1724,15 +1881,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 
       // fangs
       // cellshading
-      ctx.fillStyle = this.cellShadeLine;
-      ctx.beginPath();
-        ctx.moveTo(-(this.size/5) + this.cellShadeThickness, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) - this.cellShadeThickness);
-        ctx.lineTo(-(this.size/4), (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) + this.cellShadeThickness + (this.size*(this.fangs)/2));
-        ctx.lineTo(-(this.size/2.5) - this.cellShadeThickness, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) - this.cellShadeThickness);
-        ctx.moveTo(-(this.size/5) + this.cellShadeThickness, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) - this.cellShadeThickness);
-        ctx.lineTo(+(this.size/4), (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) + this.cellShadeThickness + (this.size*(this.fangs)/2));
-        ctx.lineTo(+(this.size/2.5) + this.cellShadeThickness, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) - this.cellShadeThickness);
-      ctx.fill();
+      ctx.strokeStyle = this.cellShadeLine;
+      ctx.lineWidth = this.size/10;
       // real drawing
       ctx.fillStyle = trueWhite;
       ctx.beginPath();
@@ -1742,6 +1892,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.moveTo(+this.size/5, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45));
       ctx.lineTo(+this.size/4, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45) + (this.size*(this.fangs)/2));
       ctx.lineTo(+this.size/2.5, (this.size*(this.nosePos-0.5)/2) + (this.size/1.45));
+      ctx.stroke();
       ctx.fill();
 
       // jowls
@@ -1754,16 +1905,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 
       // real drawing
       ctx.fillStyle = trueWhite;
-      if (this.sphynx) {
+      if ((!this.albino && this.pattern == 5)) {
+        ctx.fillStyle = nosePink;
+      } else if (this.sphynx) {
         if (this.bodypartCode[9] == 0) {
-          ctx.fillStyle = this.noseColour;
+          ctx.fillStyle = this.skinColour;
         } else if (this.bodypartCode[9] == 1) {
           ctx.fillStyle = skinColourCheck(this.secondColour);
         } else {
           ctx.fillStyle = skinColourCheck(this.thirdColour);
         }
-      }
-      if (!this.albino && !this.sphynx) {
+      } else if (!this.albino && !this.sphynx) {
         if (this.bodypartCode[9] == 0) {
           ctx.fillStyle = this.firstColour;
         } else if (this.bodypartCode[9] == 1) {
@@ -1771,13 +1923,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         } else {
           ctx.fillStyle = this.thirdColour;
         }
-      } else if (this.albino && this.sphynx) {
-        ctx.fillStyle = nosePink;
       }
       ctx.beginPath();
       ctx.arc(-(this.size/4), (this.size*(this.nosePos-0.5)/2) + this.size/2.5, this.size/3.5, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = jowlPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1786,16 +1936,17 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.globalAlpha = 1;
       }
       ctx.fillStyle = trueWhite;
-      if (this.sphynx) {
+      if ((!this.albino && this.pattern == 5)) {
+        ctx.fillStyle = nosePink;
+      } else if (this.sphynx) {
         if (this.bodypartCode[10] == 0) {
-          ctx.fillStyle = this.noseColour;
+          ctx.fillStyle = this.skinColour;
         } else if (this.bodypartCode[10] == 1) {
           ctx.fillStyle = skinColourCheck(this.secondColour);
         } else {
           ctx.fillStyle = skinColourCheck(this.thirdColour);
         }
-      }
-      if (!this.albino && !this.sphynx) {
+      } else if (!this.albino && !this.sphynx) {
         if (this.bodypartCode[10] == 0) {
           ctx.fillStyle = this.firstColour;
         } else if (this.bodypartCode[10] == 1) {
@@ -1803,13 +1954,11 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         } else {
           ctx.fillStyle = this.thirdColour;
         }
-      } else if (this.albino && this.sphynx) {
-        ctx.fillStyle = nosePink;
       }
       ctx.beginPath();
       ctx.arc((this.size/4), (this.size*(this.nosePos-0.5)/2) + this.size/2.5, this.size/3.5, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = jowlPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1825,7 +1974,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.fillRect(-(this.size/12) - this.cellShadeThickness, (this.size*(this.nosePos-0.5)/2) + (this.size/2.5) - (this.size/3) - this.cellShadeThickness, (this.size/6) + (this.cellShadeThickness*2), (this.size/2.5) + (this.cellShadeThickness*2));
       // real drawing
       if (!this.albino) {
-        ctx.fillStyle = this.noseColour;
+        ctx.fillStyle = this.skinColour;
       } else {
         ctx.fillStyle = nosePink;
       }
@@ -1845,14 +1994,14 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     // sphynx
     if (this.sphynx) {
       if (this.bodypartCode[0] == 0) {
-        leftHandGradient = this.noseColour;
+        leftHandGradient = this.skinColour;
       } else if (this.bodypartCode[0] == 1) {
         leftHandGradient = skinColourCheck(this.secondColour);
       } else {
         leftHandGradient = skinColourCheck(this.thirdColour);
       }
       if (this.bodypartCode[1] == 0) {
-        rightHandGradient = this.noseColour;
+        rightHandGradient = this.skinColour;
       } else if (this.bodypartCode[1] == 1) {
         rightHandGradient = skinColourCheck(this.secondColour);
       } else {
@@ -1897,6 +2046,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       leftHandGradient = nosePink;
       rightHandGradient = nosePink;
     }
+
+
     // if we are awake on a floor
     if (this.awake && this.hitBottom) {
       if (!this.facingForwards) {
@@ -1919,7 +2070,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       ctx.beginPath();
       ctx.arc((this.size/1.6), (this.size)+(this.limbLength/2.5), footSize, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4) {
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = footPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1949,7 +2100,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.beginPath();
         ctx.arc(this.focus.x, this.focus.y, footSize, 0, 2 * Math.PI);
         ctx.fill();
-        if (this.pattern !== 0 && this.pattern !== 4) {
+        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.fillStyle = footPat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.beginPath();
@@ -1985,7 +2136,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
         ctx.fill();
-        if (this.pattern !== 0 && this.pattern !== 4) {
+        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.fillStyle = footPat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.beginPath();
@@ -1993,6 +2144,38 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
           ctx.fill();
           ctx.globalAlpha = 1;
         }
+        // jelly beans
+        if (this.facingForwards && this.y > this.focus.y) {
+          // uniformly scale the pads
+          ctx.translate(this.limbLength * Math.cos(this.angleToFocus), (footSize/2) + (this.limbLength * Math.sin(this.angleToFocus)));
+          let scaleY = 1;
+          if (this.y - (this.size*10) < this.focus.y) {
+            scaleY = (this.y - this.focus.y)/this.size/10;
+            ctx.scale(1, scaleY);
+          }
+          ctx.save();
+          ctx.fillStyle = this.skinColour;
+          ctx.strokeStyle = this.cellShadeLine;
+          ctx.lineWidth = this.size/10;
+          ctx.beginPath();
+          ctx.arc(0, -(footSize), footSize/3.5, 0, 2 * Math.PI); // mid
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(-footSize/2, -(footSize), footSize/3.5, 0, 2 * Math.PI); // left
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(footSize/2, -(footSize), footSize/3.5, 0, 2 * Math.PI); // right
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, footSize/8, footSize/2.1, 0, 3 * Math.PI); // main
+          ctx.stroke();
+          ctx.fill();
+          ctx.restore();
+        }
+
         ctx.restore(); // closed
 
         // right arm
@@ -2002,13 +2185,44 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.beginPath();
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
         ctx.fill();
-        if (this.pattern !== 0 && this.pattern !== 4) {
+        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.fillStyle = footPat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.beginPath();
           ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
           ctx.fill();
           ctx.globalAlpha = 1;
+        }
+        // jelly beans
+        if (this.facingForwards && this.y > this.focus.y) {
+          // uniformly scale the pads
+          ctx.translate(this.limbLength * Math.cos(this.angleToFocus), (footSize/2) + (this.limbLength * Math.sin(this.angleToFocus)));
+          let scaleY = 1;
+          if (this.y - (this.size*10) < this.focus.y) {
+            scaleY = (this.y - this.focus.y)/this.size/10;
+            ctx.scale(1, scaleY);
+          }
+          ctx.save();
+          ctx.fillStyle = this.skinColour;
+          ctx.strokeStyle = this.cellShadeLine;
+          ctx.lineWidth = this.size/10;
+          ctx.beginPath();
+          ctx.arc(0, -(footSize), footSize/3.5, 0, 2 * Math.PI); // mid
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(-footSize/2, -(footSize), footSize/3.5, 0, 2 * Math.PI); // left
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(footSize/2, -(footSize), footSize/3.5, 0, 2 * Math.PI); // right
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, footSize/8, footSize/2.1, 0, 3 * Math.PI); // main
+          ctx.stroke();
+          ctx.fill();
+          ctx.restore();
         }
         ctx.restore(); // closed
       }
@@ -2059,7 +2273,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.restore();
         ctx.lineTo(this.focus.x, this.focus.y);
         ctx.stroke();
-        if (this.pattern !== 0 && this.pattern !== 4) {
+        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.strokeStyle = pat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.save(); // 0 open
@@ -2133,7 +2347,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
         ctx.restore(); // closed
-        if (this.pattern !== 0 && this.pattern !== 4) {
+        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.strokeStyle = pat;
           ctx.globalAlpha = this.patternAlpha;
           // left arm
@@ -2173,6 +2387,8 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       pat = pat2;
     } else if (this.pattern == 3) {
       pat = pat3;
+    } else if (this.pattern == 6) {
+      pat = pat6;
     }
     ctx.setTransform(100/this.size, 0, 0, 100/this.size, 0, 0);
     ctx.restore();
@@ -2183,7 +2399,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     // sphynx
     if (this.sphynx) {
       if (this.bodypartCode[5] == 0) {
-        bodyGradient = this.noseColour;
+        bodyGradient = this.skinColour;
       } else if (this.bodypartCode[5] == 1) {
         bodyGradient = skinColourCheck(this.secondColour);
       } else {
@@ -2194,10 +2410,10 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       let s = this.size*6;
       let maxWidth = Math.sqrt(s * s + s * s) / 2;
       bodyGradient = ctx.createLinearGradient(
-        + Math.cos(this.coatMod[1]*6.3) * maxWidth, // start pos
-        + Math.sin(this.coatMod[1]*6.3) * maxWidth,
-        - Math.cos(this.coatMod[1]*6.3) * maxWidth, // end pos
-        - Math.sin(this.coatMod[1]*6.3) * maxWidth
+        + Math.cos(this.coatMod[1]*6) * maxWidth, // start pos
+        + Math.sin(this.coatMod[1]*6) * maxWidth,
+        - Math.cos(this.coatMod[1]*6) * maxWidth, // end pos
+        - Math.sin(this.coatMod[1]*6) * maxWidth
       );
       if (this.bodypartCode[5] == 0) {
         bodyGradient.addColorStop(0, this.secondColour);
@@ -2230,7 +2446,7 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     this.hitFocus = detectCollision(this, this.focus);
     if (this.albino && !this.sphynx) {
       this.cellShadeLine = mixTwoColours(trueWhite, trueBlack, 0.7);
-    } else if (this.sphynx) {
+    } else if (this.sphynx || this.pattern == 5) {
       this.cellShadeLine = mixTwoColours(nosePink, noseBlack, 0.5);
     } else if (this.supersaiyan > 0) {
       this.cellShadeLine = mixTwoColours(glowColour, mixThreeColours(this.firstColour, this.secondColour, this.thirdColour), this.supersaiyan/100);
@@ -2257,21 +2473,20 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
     if (this.inCatBox == null && this.awake && this.mother !== null && this.age < maturesAt && this.hitBottom && this.mother.snuggling == -1 && detectCollision(this, this.mother)) {
       this.speedX = 0;
       this.speedY = 0;
-      if (this.mother.awake && this.nomnomnom == -1) {
+      if (this.mother.awake && this.nomnomnom == -1 && this.health < 50) {
         this.mother.energy -= 5;
         this.mother.love += 5;
         this.mother.speedX = 0;
         this.mother.speedY = 0;
         this.mother.sitting = true;
         this.nomnomnom = 50;
-        this.facingForwards = true;
         this.mother.facingForwards = true;
         // sendMessage(this.mother.name + ' fed '+ this.name);
         gainMeter(this);
       }
     }
     for (let f = 0; f < fireflies.length; f++) {
-      if (this.snuggling <= 0 && !this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && detectCollision(this, fireflies[f])) {
+      if (this.focus == fireflies[f] && !this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && this.snuggling == -1 && this.nomnomnom == -1 && detectCollision(this, fireflies[f])) {
         fireflies[f].touchedThisFrame = true;
         this.resetRotation(true);
         fireflies[f].speedX += (this.speedX*this.size)/1500;
@@ -2381,6 +2596,20 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
       this.drawNeck(pat, backendShiftX, backendShiftY, bodyGradient);
     }
     ctx.rotate(-this.rotation);
+    // label
+    if ((selection == this || this.inCatBox !== null) && this !== experiment) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = colourIndicator(this);
+      ctx.font = '12px' + ' ' + globalFont;
+      let shift = this.name.length*6.72/2;
+      ctx.fillText(this.name, -shift, -(this.size*3));
+      // ctx.fillText(Math.round(this.health)+' '+Math.round(this.love)+' '+Math.round(this.energy)+' '+Math.round(this.hunger), -shift, -(this.size*2));
+    }
+    /* debug label */
+    // ctx.fillStyle = trueWhite;
+    // ctx.font = '10px' + ' ' + globalFont;
+    // ctx.fillText(trueBottom-(this.jumpY), 0, -10 - (this.size*2));
+
     if (!this.facingForwards) {
       ctx.translate(-this.x, -this.y);
       this.drawBackLegs(pat, backendShiftX, backendShiftY, bodyGradient, sameDirection, legAngle);
@@ -2403,13 +2632,13 @@ function Chibi(x, y, bodySize, maxSize, gender, ears) {
 */
 gainMeter = function(who) {
   if (who.energy < 100) {
-    who.energy += 0.6;
+    who.energy += 1;
   }
   if (who.love < 100) {
-    who.love += 2;
+    who.love += 3;
   }
   if (who.health < 100) {
-    who.health += 4;
+    who.health += 3;
   }
 };
 
@@ -2465,9 +2694,19 @@ applyBreedTemplate = function(who) {
     breedTabby(who);
   } else if (breedSwitch < 0.5) {
     breedBobtail(who);
-  } else if ((who.gender !== 'Male' && breedSwitch < 0.55) || (who.gender == 'Male' && Math.random() < 1/3000)) {
+  } else if (breedSwitch < 0.55) {
+    breedScottishFold(who);
+  } else if (breedSwitch < 0.6) {
+    breedLykoi(who);
+  } else if (breedSwitch < 0.65) {
+    breedSphynx(who);
+  } else if (breedSwitch < 0.7) {
+    breedBengal(who);
+  } else if (breedSwitch < 0.75) {
+    breedEgyptianMau(who);
+  } else if ((who.gender !== 'Male' && breedSwitch < 0.8) || (who.gender == 'Male' && Math.random() < 1/3000)) {
     breedCalico(who);
-  } else if ((who.gender !== 'Male' && breedSwitch < 0.6) || (who.gender == 'Male' && Math.random() < 1/3000)) {
+  } else if ((who.gender !== 'Male' && breedSwitch < 0.85) || (who.gender == 'Male' && Math.random() < 1/3000)) {
     breedTortoiseShell(who);
   }
 };
@@ -2491,13 +2730,11 @@ mutate = function(who) {
   if (sphynxChance <= 0.04) {
     who.sphynxGene = true;
   }
-  if (who.sphynx || (who.sphynxGene && 0.5 < Math.random())) {
-    breedSphynx(who);
-  }
-  who.noseColour = skinColourCheck(who.firstColour);
-  if (!who.albino && who.eyeColour == who.eyeColour2) {
-    breedHeteroChromia(who, Math.random());
-  }
+
+who.skinColour = skinColourCheck(who.firstColour);
+if (!who.albino && who.eyeColour == who.eyeColour2) {
+  breedHeteroChromia(who, Math.random());
+}
 };
 
 skinColourCheck = function(theColour) {

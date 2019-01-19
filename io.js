@@ -10,7 +10,7 @@ function copyChibi(chibi) {
   chibi.firstColour+'*'+
   chibi.coatMod[0]+'*'+
   chibi.coatMod[1]+'*'+
-  chibi.ears+'*'+
+  chibi.earWidth+'*'+
   chibi.thickness+'*'+
   chibi.legginess+'*'+
   chibi.size+'*'+
@@ -50,7 +50,9 @@ function copyChibi(chibi) {
   chibi.sphynxGene+'*'+
   chibi.patternAlpha+'*'+
   chibi.pattern+'*'+
-  chibi.eyeColour2;
+  chibi.eyeColour2+'*'+
+  chibi.earWidth+'*'+
+  chibi.breed;
   // console.log(outputbuffer);
   return outputbuffer;
 }
@@ -74,7 +76,7 @@ function cloneChibi(outputbuffer, who) {
   who.tailLength = parseFloat(attributeArray[16]);
   who.albino = (attributeArray[17] == 'true');
   who.albinoGene = (attributeArray[18] == 'true');
-  who.noseColour = skinColourCheck(who.firstColour);
+  who.skinColour = skinColourCheck(who.firstColour);
   for (let i = 0; i < 12; i ++) {
     who.bodypartCode[i] = parseInt(attributeArray[i+19]);
   }
@@ -93,6 +95,9 @@ function cloneChibi(outputbuffer, who) {
   who.patternAlpha = parseFloat(attributeArray[43]);
   who.pattern = parseFloat(attributeArray[44]);
   who.eyeColour2 = attributeArray[45];
+  who.earWidth = parseFloat(attributeArray[5]);
+  who.earHeight = parseFloat(attributeArray[46]);
+  who.breed = attributeArray[47];
 }
 
 /**
@@ -101,12 +106,12 @@ function cloneChibi(outputbuffer, who) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 46) {
+  if (attributeArray.length !== 48) {
     sendMessage('Old filetype detected');
-  } if (attributeArray.length !== 46) {
+  } if (attributeArray.length !== 48) {
     alert('Failed to load file');
   } else {
-    chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0], parseFloat(attributeArray[5])));
+    chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0]));
     cloneChibi(outputbuffer, chibis[chibis.length-1]);
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));

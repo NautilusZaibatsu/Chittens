@@ -2,8 +2,22 @@
 
 changelog
 
-17/02/2019 = 0.058
-~ chibis will now face away from the player occasionally
+19/01/2019 = 0.059
+~ fireflies no longer just follow the pointer, now they try to find peace in the treetops if they can. If they can't they default back to following the pointer
+~ you now start with two respawing fireflies
+~ added toe pads, aka jellybeans to Chibis
+~ Chibis eyes now glow when being lit by a firefly
+@ fireflies now enter from the side when not being spawned by a ghost
+~ added ear height variable to compliment ear width
+~ added a patch skin on the inside of Chibi's ears
+~ rewrote the way the name library works to make it more efficient, and easier to add new libraries
+~ added fictional names to library
+~ added Lykoi, Scottish Folds, Bengals and Egyptian Mau to catteries
+~ balance updates
+~ fixed Siamese and Burmese breed's nose colours
+
+17/01/2019 = 0.058
+~ chibis will now face away from the player occasionally when jumping
 ~ tails of 0 length now appear stunted
 ~ added genetic heterochromia (different coloured eyes)
 ~ added tabby coats
@@ -14,7 +28,7 @@ changelog
 ~ lots of performance fixes
 ~ fixed a bug causing obelisks to stick around forever
 
-16/02/2019 = 0.057
+16/01/2019 = 0.057
 ~ chibis now reach elder status in the last days of their life and then die of old age a day or two later
 ~ the litter selector and cattery boxes are now colour coded
 ~ selecting a chibi and then clicking Create now lets you use that chibi as a template
@@ -27,7 +41,7 @@ changelog
 ~ fixed a bug causing front paws to disconnect from the front arms
 ~ loads more bug fixes
 
-12/02/2019 = 0.056
+12/01/2019 = 0.056
 ~ alpha gene editor implemented, use it to spawn a chibi of your design. Access it through the editor tab
 ~ added eye colours and eye size variation
 ~ added buttons for loading and both catteries to top menu
