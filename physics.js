@@ -1,4 +1,24 @@
 /**
+* function to describe the pointer, for calculating the speed.
+*/
+function DummyPointer() {
+  this.x = pointerPos.x;
+  this.y = pointerPos.y;
+  this.lastX = pointerPos.x;
+  this.lastY = pointerPos.y;
+  this.speedX = 0;
+  this.speedY = 0;
+  this.update = function() {
+    this.x = pointerPos.x;
+    this.x = pointerPos.y;
+    this.speedX = this.lastX - this.x;
+    this.speedY = this.lastY - this.y;
+    this.lastX = this.x;
+    this.lastY = this.y;
+  };
+}
+
+/**
 * function to limit the speed of an object
 * @param {object} what - the object
 */
@@ -37,8 +57,10 @@ function checkBounceSides(what) {
     what.spin += elasticity*targetangle/10;
     if (what.x < what.size) {
       what.x = what.size;
+      return true;
     } else {
       what.x = canvasWidth-what.size;
+      return true;
     }
   }
 };
@@ -50,6 +72,7 @@ function checkBounceTop(what) {
   if (what.y < what.size) {
     what.speedY *= -0.99;
     what.y = what.size;
+    return true;
   }
 };
 
@@ -61,6 +84,7 @@ function checkBounceBottom(what) {
   if (what.y > trueBottom-what.size) {
     what.speedY *= -0.99;
     what.y = trueBottom-what.size;
+    return true;
   }
 }
 /**

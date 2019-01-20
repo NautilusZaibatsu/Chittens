@@ -2,17 +2,23 @@
 
 changelog
 
-~ known bug - when making cross breed strings, should alphabetise the parent's breeds
-
-= 0.06
-~ fixed a few bugs
+20/01/2019= 0.06
+~ chibis can now be picked up and dropped
+~ fireflies now go for specific fruit instead of a tree, they will eat fruit and eventually produce offspring if successful enough
+~ changed the way cross breed names are created and handled
+~ glyphs are now all black
+~ added gender glyph to selected Chibi's label
+~ changed the skybox colours and the way stars are drawn
+~ glyphs no longer collide with each other, instead they start with randomised spin and speed and last twice as long. colliding with a wall causes their life to shorten
+~ removed nirvana state
+~ performance upgrades
+~ bug fixes
 
 19/01/2019 = 0.059
 ~ fireflies no longer just follow the pointer, now they try to find peace in the treetops if they can. If they can't they default back to following the pointer
-~ you now start with two respawing fireflies
 ~ added toe pads, aka jellybeans to Chibis
 ~ Chibis eyes now glow when being lit by a firefly
-@ fireflies now enter from the side when not being spawned by a ghost
+~ fireflies now enter from the side when not being spawned by a ghost
 ~ added ear height variable to compliment ear width
 ~ added a patch skin on the inside of Chibi's ears
 ~ rewrote the way the name library works to make it more efficient, and easier to add new libraries

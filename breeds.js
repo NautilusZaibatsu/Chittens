@@ -336,7 +336,6 @@ function breedSiamese(who) {
   who.nosePos = 0.5;
   who.earWidth = 0.5;
   who.earHeight = 0.6;
-  who.reinitSizes();
   if (Math.random() < 0.5) {
     who.firstColour = decreaseSaturationHEX(who.firstColour, 1 + (Math.random()*9));
     who.secondColour = decreaseSaturationHEX(who.secondColour, 1 + (Math.random()*9));
@@ -372,7 +371,6 @@ function breedBurmese(who) {
   who.nosePos = 0.6;
   who.earWidth = 0.5;
   who.earHeight = 0.6;
-  who.reinitSizes();
   if (Math.random() < 0.5) {
     who.firstColour = decreaseSaturationHEX(who.firstColour, 1 + (Math.random()*9));
     who.secondColour = decreaseSaturationHEX(who.secondColour, 1 + (Math.random()*9));

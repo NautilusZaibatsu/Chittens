@@ -34,12 +34,10 @@ function initButtons() {
 
   labels.push(new Button(canvasWidth/2, 10, 'Welcome message'));
   labels.push(new Button(canvasWidth/2, 45, 'Choose a ....'));
-  labels.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) - 30, 'Selection'));
   labels.push(new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'X'));
   labels[0].visible = false;
   labels[1].visible = false;
   labels[2].visible = false;
-  labels[3].visible = false;
   selectionInfo = new InfoPanel();
 }
 
@@ -203,97 +201,102 @@ function handleButton(input) {
     }
     break;
     case 1:
-    labels[3].visible = false;
-    if (!chosenChibiF) {
-      chosenChibiF = true;
-      for (let i = currentChibis; i < chibis.length; i++) {
-        if (chibis[i] !== selection) {
-          chibis.splice(i, 1);
-          i--;
+    if (selection !== null) {
+      labels[2].visible = false;
+      if (!chosenChibiF) {
+        chosenChibiF = true;
+        for (let i = currentChibis; i < chibis.length; i++) {
+          if (chibis[i] !== selection) {
+            chibis.splice(i, 1);
+            i--;
+          }
         }
-      }
-      sendMessage(selection.name+' was adopted');
-      speech.push(new Speak(selection, neutralWord()));
-      selection.sitting = false;
-      createGlyphs(selection.x, selection.y, mixThreeColours(selection.firstColour, selection.secondColour, selection.thirdColour), '\u2764');
-      seeds.push(new Seed(randomColourFruity(), selection));
-      seeds.push(new Seed(randomColourFruity(), selection));
-      seeds[seeds.length-1].timer = 750;
-      boxes = [];
-      buttons[0].visible = false;
-      buttons[1].visible = false;
-      buttons[2].visible = false;
-      labels[0].visible = false;
-      labels[1].visible = false;
-      selection.inCatBox = null;
-      buttons[10].available = true;
-      buttons[11].available = true;
-      buttons[12].available = true;
-      buttons[6].available = true;
-      buttons[13].visible = false;
-      choosingChibi = false;
-      selection = null;
-    } else if (!chosenChibiM) {
-      chosenChibiM = true;
-      for (let i = currentChibis; i < chibis.length; i++) {
-        if (chibis[i] !== selection) {
-          chibis.splice(i, 1);
-          i--;
+        sendMessage(selection.name+' was adopted');
+        selection.love = 100;
+        speech.push(new Speak(selection, neutralWord()));
+        selection.sitting = false;
+        createGlyphs(selection.x, selection.y, '\u2764');
+        seeds.push(new Seed(randomColourFruity(), selection));
+        seeds.push(new Seed(randomColourFruity(), selection));
+        seeds[seeds.length-1].timer = 750;
+        boxes = [];
+        buttons[0].visible = false;
+        buttons[1].visible = false;
+        buttons[2].visible = false;
+        labels[0].visible = false;
+        labels[1].visible = false;
+        selection.inCatBox = null;
+        buttons[10].available = true;
+        buttons[11].available = true;
+        buttons[12].available = true;
+        buttons[6].available = true;
+        buttons[13].visible = false;
+        choosingChibi = false;
+        selection = null;
+      } else if (!chosenChibiM) {
+        chosenChibiM = true;
+        for (let i = currentChibis; i < chibis.length; i++) {
+          if (chibis[i] !== selection) {
+            chibis.splice(i, 1);
+            i--;
+          }
         }
-      }
-      sendMessage(selection.name+' was adopted');
-      speech.push(new Speak(selection, neutralWord()));
-      selection.sitting = false;
-      createGlyphs(selection.x, selection.y, mixThreeColours(selection.firstColour, selection.secondColour, selection.thirdColour), '\u2764');
-      seeds.push(new Seed(randomColourFruity(), selection));
-      seeds.push(new Seed(randomColourFruity(), selection));
-      seeds[seeds.length-1].timer = 750;
-      boxes = [];
-      buttons[0].visible = false;
-      buttons[1].visible = false;
-      buttons[3].visible = false;
-      labels[0].visible = false;
-      labels[1].visible = false;
-      selection.inCatBox = null;
-      buttons[10].available = true;
-      buttons[11].available = true;
-      buttons[12].available = true;
-      buttons[6].available = true;
-      buttons[13].visible = false;
-      choosingChibi = false;
-      selection = null;
-    } else if (!chosenKitten) {
-      chosenKitten = true;
-      for (let i = currentChibis; i < chibis.length; i++) {
-        if (chibis[i] !== selection) {
-          chibis.splice(i, 1);
-          i--;
+        sendMessage(selection.name+' was adopted');
+        selection.love = 100;
+        speech.push(new Speak(selection, neutralWord()));
+        selection.sitting = false;
+        createGlyphs(selection.x, selection.y, '\u2764');
+        seeds.push(new Seed(randomColourFruity(), selection));
+        seeds.push(new Seed(randomColourFruity(), selection));
+        seeds[seeds.length-1].timer = 750;
+        boxes = [];
+        buttons[0].visible = false;
+        buttons[1].visible = false;
+        buttons[3].visible = false;
+        labels[0].visible = false;
+        labels[1].visible = false;
+        selection.inCatBox = null;
+        buttons[10].available = true;
+        buttons[11].available = true;
+        buttons[12].available = true;
+        buttons[6].available = true;
+        buttons[13].visible = false;
+        choosingChibi = false;
+        selection = null;
+      } else if (!chosenKitten) {
+        chosenKitten = true;
+        for (let i = currentChibis; i < chibis.length; i++) {
+          if (chibis[i] !== selection) {
+            chibis.splice(i, 1);
+            i--;
+          }
         }
+        sendMessage(selection.name+' joined the family');
+        selection.love = 100;
+        speech.push(new Speak(selection, neutralWord()));
+        selection.size *= 0.5;
+        selection.reinitSizeAndColour();
+        selection.sitting = false;
+        createGlyphs(selection.x, selection.y, '\u2764');
+        selection.reinitSizeAndColour;
+        boxes = [];
+        buttons[0].visible = false;
+        buttons[1].visible = false;
+        buttons[2].visible = false;
+        labels[0].visible = false;
+        labels[1].visible = false;
+        buttons[10].available = true;
+        buttons[11].available = true;
+        buttons[12].available = true;
+        buttons[6].available = true;
+        selection.inCatBox = null;
+        choosingChibi = false;
+        selection = null;
       }
-      sendMessage(selection.name+' joined the family');
-      speech.push(new Speak(selection, neutralWord()));
-      selection.size *= 0.5;
-      selection.reinitSizes();
-      selection.sitting = false;
-      createGlyphs(selection.x, selection.y, mixThreeColours(selection.firstColour, selection.secondColour, selection.thirdColour), '\u2764');
-      selection.reinitSizes;
-      boxes = [];
-      buttons[0].visible = false;
-      buttons[1].visible = false;
-      buttons[2].visible = false;
-      labels[0].visible = false;
-      labels[1].visible = false;
-      buttons[10].available = true;
-      buttons[11].available = true;
-      buttons[12].available = true;
-      buttons[6].available = true;
-      selection.inCatBox = null;
-      choosingChibi = false;
-      selection = null;
     }
     break;
     case 2:
-    labels[3].visible = false;
+    labels[2].visible = false;
     chosenKitten = true;
     for (let i = currentChibis; i < chibis.length; i++) {
       chibis.splice(currentChibis, chibis.length - currentChibis);
@@ -316,7 +319,6 @@ function handleButton(input) {
     sendMessage(selection.name+' went to live with someone else');
     speech.push(new Speak(selection, angryWord()));
     selectionInfo.visible = false;
-    labels[2].visible = false;
     buttons[3].visible = false;
     buttons[4].visible = false;
     buttons[5].visible = false;
@@ -324,15 +326,13 @@ function handleButton(input) {
       if (chibis[i] == selection) {
         stop = true;
         graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
-        removeRelationships(selection);
-        chibis.splice(i, 1);
+        chibis[i].kill();
       }
     }
     selection = null;
     break;
     case 4:
     selectionInfo.visible = false;
-    labels[2].visible = false;
     buttons[3].visible = false;
     buttons[4].visible = false;
     buttons[5].visible = false;
@@ -344,7 +344,6 @@ function handleButton(input) {
     buttons[3].visible = false;
     buttons[4].visible = false;
     buttons[5].visible = false;
-    labels[2].visible = false;
     openUploadDialog();
     break;
     case 7:
@@ -372,7 +371,6 @@ function handleButton(input) {
     if (selection !== null) {
       cloneChibi(copyChibi(selection), experiment);
       reinitSliders();
-      labels[2].visible = false;
       buttons[3].visible = false;
       buttons[4].visible = false;
       buttons[5].visible = false;
@@ -467,12 +465,11 @@ function clickMouse(e) {
   }
   // now select Chibis
   if (!clickedSomething && !choosingChibi) {
-    for (let i = chibis.length-1; i >= 0; i--) {
+    for (let i = chibis.length-1; i >= 0 && !clickedSomething; i--) {
       if (detectCollision(pointerPos, chibis[i])) {
+        clickedSomething = true;
         selection = chibis[i];
-        labels[2].visible = true;
-        labels[2].text = selection.name;
-        labels[2].reinitSizes();
+        selection.dragging = true;
         selectionInfo.visible = true;
         buttons[3].visible = true;
         buttons[4].visible = true;
@@ -483,7 +480,6 @@ function clickMouse(e) {
 
   // if we are gene editing, turn on click checkers
   if (geneEditing) {
-
     // now check sliders
     for (let i = 0; i < sliders.length; i++) {
       if (detectCollision(sliders[i].sBar, pointerPos)) {
@@ -500,7 +496,7 @@ function clickMouse(e) {
         colourBars.selected = 0;
       } else if (pointerPos.x - colourBars.x < 50) {
         colourBars.selected = 1;
-      } else if (pointerPos.x - colourBars.x < 75){
+      } else if (pointerPos.x - colourBars.x < 75) {
         colourBars.selected = 2;
       } else {
         colourBars.selected = 3;
@@ -516,7 +512,6 @@ function clickMouse(e) {
       }
       if (colourBars.selected == 0) {
         experiment.firstColour = colourBlock.pixels[newIndex];
-        experiment.skinColour = skinColourCheck(experiment.firstColour);
       } else if (colourBars.selected == 1) {
         experiment.secondColour = colourBlock.pixels[newIndex];
       } else if (colourBars.selected == 2) {
@@ -526,9 +521,23 @@ function clickMouse(e) {
       }
     }
   }
+  if (!clickedSomething && chibis.includes(selection)) {
+    selection = null;
+    selectionInfo.visible = true;
+    buttons[3].visible = false;
+    buttons[4].visible = false;
+    buttons[5].visible = false;
+  }
 }
 
 function unclickMouse(e) {
+  if (chibis.includes(selection) && selection.dragging) {
+    selection.dragging = false;
+    selection.focus = selection.findClosestFireFly();
+    // selection.speedX = dummypointerPos.speedX;
+    // selection.speedY = dummypointerPos.speedY;
+    // console.log('let go. speedX was '+dummypointerPos.speedX);
+  }
   if (geneEditing) {
     // check sliders
     for (let i = 0; i < sliders.length; i++) {
@@ -708,10 +717,8 @@ function SliderBar(parent) {
       } else if (this.parent.id == 1) {
         experiment.maxSize = this.parent.currentPos;
         experiment.size = experiment.maxSize;
-        experiment.reinitSizes();
       } else if (this.parent.id == 2) {
         experiment.legginess = this.parent.currentPos;
-        experiment.reinitSizes();
       } else if (this.parent.id == 3) {
         experiment.earWidth = this.parent.currentPos;
       } else if (this.parent.id == 4) {
@@ -765,6 +772,7 @@ function SliderBar(parent) {
       } else if (this.parent.id == 28) {
         experiment.earHeight = this.parent.currentPos;
       }
+      experiment.reinitSizeAndColour();
     } else {
       this.x = this.parent.x + this.parent.relativePosition;
     }
