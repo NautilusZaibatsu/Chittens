@@ -35,8 +35,8 @@ function breedBengal(who) {
   who.earHeight = 0.9;
   who.earWidth = 0.63;
   who.bodypartCode = [3, 3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3];
-  who.coatMod[1] = 0.74;
   who.coatMod[0] = 0.6 + (Math.random()*0.16);
+  who.coatMod[1] = 0.74;
   who.legginess = 0.9;
   who.nosePos = 0.7;
   who.breed = 'Bengal';
@@ -161,24 +161,29 @@ function breedLykoi(who) {
 function breedTabby(who) {
   who.fangs = 0.4 + Math.random()*0.3;
   who.pattern = 3;
-  who.patternAlpha = 0.25 + (Math.random()*0.75);
+  who.patternAlpha = 0.5 + (Math.random()*0.5);
   who.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   who.firstColour = trueWhite;
+  who.coatMod[1] = 0.74;
+  who.size = 13 + (Math.random()*4);
+  who.maxSize = 18;
   let coatSwitch = Math.random();
   if (coatSwitch < 1/3) {
     // orange
-    who.secondColour = mixTwoColours('#f78411', '#dab896', Math.random());
-    who.firstColour = mixTwoColours(trueWhite, who.secondColour, Math.random());
+    who.firstColour = mixTwoColours('#f78411', '#eac8a6', Math.random());
+    who.secondColour = mixTwoColours(trueBlack, '#291003', Math.random());
+    who.thirdColour = trueWhite;
   } else if (coatSwitch < 2/3) {
     // brown
-    who.firstColour = mixTwoColours(trueWhite, mixTwoColours('#1c0f02', '#d3c16f', Math.random()), Math.random());
-    who.secondColour = mixTwoColours(who.firstColour, '#1c0f02', Math.random());
+    who.firstColour = mixTwoColours('#876d4f', '#a09654', Math.random());
+    who.secondColour = mixTwoColours(trueBlack, '#2c1f02', Math.random());
+    who.thirdColour = trueWhite;
   } else {
     // greys
-    who.secondColour = mixTwoColours(mixTwoColours(trueWhite, trueBlack, Math.random()), '#2c2f44', Math.random());
-    who.firstColour = mixTwoColours(trueWhite, who.secondColour, Math.random());
+    who.firstColour = mixTwoColours(mixTwoColours(trueWhite, trueBlack, Math.random()), '#9cb4ca', Math.random());
+    who.secondColour = mixTwoColours(trueBlack, '#160730', Math.random());
+    who.thirdColour = trueWhite;
   }
-  who.thirdColour = trueBlack;
   who.breed = 'Tabby';
 }
 
@@ -358,6 +363,7 @@ function breedBurmese(who) {
   who.thickness = 0.5 + (Math.random()*0.2);
   who.fangs = Math.random()*0.5;
   who.bodypartCode = [1, 1, 1, 2, 2, 1, 1, 1, 1, 2, 2, 0];
+  who.coatMod[0] = 0.6 + (Math.random()*0.4);
   who.coatMod[1] = 0.21;
   who.legginess = 0.8 + (Math.random()*0.2);
   who.firstColour = mixTwoColours('#0e0b0b', '#3e2d14', cSway);
@@ -367,7 +373,6 @@ function breedBurmese(who) {
   who.eyeSize = 0.25;
   who.eyePosX = 0.2;
   who.eyePosY = 0.5;
-  who.coatMod[0] = 0.6 + (Math.random()*0.2);
   who.nosePos = 0.6;
   who.earWidth = 0.5;
   who.earHeight = 0.6;

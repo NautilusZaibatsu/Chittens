@@ -2,43 +2,40 @@
 * function to initialise all the buttons
 */
 function initButtons() {
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 65, 'Show me more'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Choose this Chibi'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 85, 'Give them all away'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 65, 'Show me more', 'Generate another 9 Chibis'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Adopt this Chibi', 'Add the selected Chibi to your game'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 85, 'Give them all away', 'Rehome the entire litter'));
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(canvasWidth/2, 335, 'Give away'));
-  buttons.push(new Button(canvasWidth/2, 370, 'Close'));
-  buttons.push(new Button(canvasWidth/2, 405, 'Save as .chi file'));
-  buttons[3].visible = false;
+  buttons.push(new Button(195, 0, '\u2608', 'Rehome the selected Chibi'));
+  buttons.push(new Button(canvasWidth/2, 370, 'DUMMY', 'DUMMY')); // not being used
   buttons[4].visible = false;
-  buttons[5].visible = false;
   // menu shit
-  buttons.push(new Button(396, 0, 'Load'));
+  buttons.push(new Button(164, 0, '\u21E9', 'Download the selected Chibi to your device'));
+  buttons.push(new Button(133, 0, '\u21E7', 'Upload a Chibi from your device'));
 
   // gene editing
-  buttons.push(new Button(60, 590, 'Save Female'));
-  buttons.push(new Button(60, 625, 'Save Male'));
-  buttons.push(new Button(60, 660, 'Close'));
+  buttons.push(new Button(60, 595, 'Save Female', 'Save a Female clone of this Chibi'));
+  buttons.push(new Button(60, 630, 'Save Male', 'Save a Male clone of this Chibi'));
+  buttons.push(new Button(60, 665, 'Close', 'Close the genetic editor'));
   buttons[7].visible = false;
   buttons[8].visible = false;
   buttons[9].visible = false;
   // menu shit
-  buttons.push(new Button(160, 0, 'Create'));
-  buttons.push(new Button(240, 0, 'Adopt F'));
-  buttons.push(new Button(324, 0, 'Adopt M'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 100, 'Close'));
+  buttons.push(new Button(231, 0, '&!', 'Dev mode - open genetic editor'));
+  buttons.push(new Button(59, 0, '+\u2640', 'Adopt a female Chibi'));
+  buttons.push(new Button(98, 0, '+\u2642', 'Adopt a male Chibi'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 100, 'Close', 'Close the cattery'));
   buttons[13].visible = false;
+  buttons.push(new Button(20, 0, '\u275A\u275A', 'Pause the simulation'));
 
-
-  labels.push(new Button(canvasWidth/2, 10, 'Welcome message'));
-  labels.push(new Button(canvasWidth/2, 45, 'Choose a ....'));
-  labels.push(new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'X'));
+  labels.push(new Button(canvasWidth/2, 10, 'Welcome message', ''));
+  labels.push(new Button(canvasWidth/2, 45, 'Choose a ....', ''));
+  labels.push(new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'X', ''));
   labels[0].visible = false;
   labels[1].visible = false;
   labels[2].visible = false;
-  selectionInfo = new InfoPanel();
 }
 
 /**
@@ -47,7 +44,7 @@ function initButtons() {
 * @param {int} y - the y coordinate of the top of the button
 * @param {string} text - text on the button
 */
-function Button(x, y, text) {
+function Button(x, y, text, toolTip) {
   this.x = x;
   this.y = y;
   this.text = text;
@@ -57,11 +54,21 @@ function Button(x, y, text) {
   this.visible = true;
   this.available = true;
   this.highlighted = false;
+  this.toolTip = toolTip;
+  this.toolTipWidth = (toolTip.length*fontWidth)+20;
   this.reinitSizes = function() {
+    this.toolTipWidth = (toolTip.length*fontWidth)+20;
     this.width = (this.text.length*fontWidth)+20;
     this.size = ((this.text.length*fontWidth)+20);
   };
   this.update = function() {
+    if (this == buttons[5] || this == buttons[3]) {
+      if (selection == null || selection.inCatBox !== null) {
+        this.available = false;
+      } else {
+        this.available = true;
+      }
+    }
     if (this.visible) {
       ctx.save();
       ctx.translate(this.x -(this.width/2), this.y);
@@ -81,104 +88,11 @@ function Button(x, y, text) {
       ctx.fillText(this.text, 10, 18);
       ctx.restore();
     }
-  };
-}
-/**
-* function to describe the information panel
-*/
-function InfoPanel() {
-  this.visible = false;
-  this.update = function() {
-    if (this.visible) {
-      if (selection.snuggling > 0) {
-        buttons[3].available = false;
-      } else {
-        buttons[3].available = true;
-      }
-      let cString = '';
-      if (selection.albino || selection.sphynx) {
-        if (selection.albino) {
-          cString = 'Albino ';
-        }
-        if (selection.sphynx) {
-          cString += 'Sphynx';
-        }
-      } else {
-        let c1 = ntc.name(selection.firstColour)[1];
-        let c2 = ntc.name(selection.secondColour)[1];
-        let c3 = ntc.name(selection.thirdColour)[1];
-        if (c1 == c2 & c1 == c3) {
-          cString = c1;
-        } else if (c1 == c2) {
-          cString = c1 + ' & '+ c3;
-        } else if (c1 == c3) {
-          cString = c1 + ' & '+ c2;
-        } else if (c2 == c3) {
-          cString = c1 + ' & '+ c2;
-        } else {
-          cString = c1 +', '+c2+' & '+c3;
-        }
-      }
-      let eString = '';
-      if (selection.eyeColour == selection.eyeColour2 && !selection.albino) {
-        eString = ntc.name(selection.eyeColour)[1];
-      } else if (selection.albino) {
-        eString = 'Albino';
-      } else {
-        eString = 'Heterochromia';
-      }
-      // determine width of this box
-      let offsetX = 8; // 8 == length of 'positive' and 'negative'
-      if (cString.length > offsetX) {
-        offsetX = cString.length;
-      }
-      if (eString.length > offsetX) {
-        offsetX = eString.length;
-      }
-      if (selection.name.length > offsetX) {
-        offsetX = selection.name.length;
-      }
-      if (selection.breed.length > offsetX) {
-        offsetX = selection.breed.length;
-      }
-      offsetX += 11;
-      offsetX *= fontWidth/2;
-
-      ctx.fillStyle = mixTwoColours(outputArray[2], trueWhite);
-      ctx.fillRect(-offsetX - 20 + (canvasWidth/2), 125, (offsetX*2) + 40, 205 );
-      ctx.fillStyle = outputArray[2];
-      ctx.fillText('Name', -offsetX + (canvasWidth/2), 140 + 10);
-      ctx.fillText(selection.name, -offsetX + (canvasWidth/2) + 100, 140 + 10);
-      ctx.fillText('ID', -offsetX + (canvasWidth/2), 140 + 25);
-      ctx.fillText(selection.id, -offsetX + (canvasWidth/2) + 100, 140 + 25);
-      ctx.fillText('Breed ', -offsetX + (canvasWidth/2), 140 + 40);
-      ctx.fillText(selection.breed, -offsetX + (canvasWidth/2) + 100, 140 + 40);
-      ctx.fillText('Age ', -offsetX + (canvasWidth/2), 140 + 55);
-      ctx.fillText(selection.age, -offsetX + (canvasWidth/2) + 100, 140 + 55);
-      ctx.fillText('Gender ', -offsetX + (canvasWidth/2), 140 + 70);
-      ctx.fillText(selection.gender, -offsetX + (canvasWidth/2) + 100, 140 + 70);
-      ctx.fillText('Colour ', -offsetX + (canvasWidth/2), 140 + 85);
-      ctx.fillText(cString, -offsetX + (canvasWidth/2) + 100, 140 + 85);
-      ctx.fillText('Eye colour ', -offsetX + (canvasWidth/2), 140 + 100);
-      ctx.fillText(eString, -offsetX + (canvasWidth/2) + 100, 140 + 100);
-      ctx.fillText('Size ', -offsetX + (canvasWidth/2), 140 + 115);
-      ctx.fillText(Math.round(selection.size), -offsetX + (canvasWidth/2) + 100, 140 + 115);
-      ctx.fillText('Birthhour ', -offsetX + (canvasWidth/2), 140 + 130);
-      ctx.fillText(tickerToTime(Math.round(selection.birthday)), -offsetX + (canvasWidth/2) + 100, 140 + 130);
-      ctx.fillText('Litters ', -offsetX + (canvasWidth/2), 140 + 145);
-      ctx.fillText(selection.litters, -offsetX + (canvasWidth/2) + 100, 140 + 145);
-      ctx.fillText('Albino Gene ', -offsetX + (canvasWidth/2), 140 + 160);
-      let ag = 'Negative';
-      if (selection.albinoGene) {
-        ag = 'Positive';
-      }
-      ctx.fillText(ag, -offsetX + (canvasWidth/2) + 100, 140 + 160);
-      ctx.fillText('Sphynx Gene ', -offsetX + (canvasWidth/2), 140 + 175);
-      let sg = 'Negative';
-      if (selection.sphynxGene) {
-        sg = 'Positive';
-      }
-      ctx.fillText(sg, -offsetX + (canvasWidth/2) + 100, 140 + 175);
+    if (this.highlighted && this.toolTip.length > 0) {
+      ctx.fillStyle = mixTwoColours(outputArray[3], trueBlack, 0.5);
+      ctx.fillRect(pointerPos.x, pointerPos.y + 20, this.toolTipWidth, 20);
+      ctx.fillStyle = trueWhite;
+      ctx.fillText(this.toolTip, pointerPos.x + 12.5, pointerPos.y + 35);
     }
   };
 }
@@ -252,7 +166,6 @@ function handleButton(input) {
         boxes = [];
         buttons[0].visible = false;
         buttons[1].visible = false;
-        buttons[3].visible = false;
         labels[0].visible = false;
         labels[1].visible = false;
         selection.inCatBox = null;
@@ -264,6 +177,14 @@ function handleButton(input) {
         choosingChibi = false;
         selection = null;
       } else if (!chosenKitten) {
+        for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
+          for (let j = 0; j < chibis.length && !found; j++) {
+            if (chibis[j].inCatBox == parentBoxes[i]) {
+              chibis[j].inCatBox = null;
+            }
+          }
+        }
+        parentBoxes = [];
         chosenKitten = true;
         for (let i = currentChibis; i < chibis.length; i++) {
           if (chibis[i] !== selection) {
@@ -296,6 +217,14 @@ function handleButton(input) {
     }
     break;
     case 2:
+    for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
+      for (let j = 0; j < chibis.length && !found; j++) {
+        if (chibis[j].inCatBox == parentBoxes[i]) {
+          chibis[j].inCatBox = null;
+        }
+      }
+    }
+    parentBoxes = [];
     labels[2].visible = false;
     chosenKitten = true;
     for (let i = currentChibis; i < chibis.length; i++) {
@@ -318,10 +247,6 @@ function handleButton(input) {
     case 3:
     sendMessage(selection.name+' went to live with someone else');
     speech.push(new Speak(selection, angryWord()));
-    selectionInfo.visible = false;
-    buttons[3].visible = false;
-    buttons[4].visible = false;
-    buttons[5].visible = false;
     for (let i = 0, stop = false; i < chibis.length && !stop; i++) {
       if (chibis[i] == selection) {
         stop = true;
@@ -332,18 +257,12 @@ function handleButton(input) {
     selection = null;
     break;
     case 4:
-    selectionInfo.visible = false;
-    buttons[3].visible = false;
-    buttons[4].visible = false;
-    buttons[5].visible = false;
+    // DUMMY
     break;
     case 5:
     saveToFile(selection);
     break;
     case 6:
-    buttons[3].visible = false;
-    buttons[4].visible = false;
-    buttons[5].visible = false;
     openUploadDialog();
     break;
     case 7:
@@ -371,9 +290,6 @@ function handleButton(input) {
     if (selection !== null) {
       cloneChibi(copyChibi(selection), experiment);
       reinitSliders();
-      buttons[3].visible = false;
-      buttons[4].visible = false;
-      buttons[5].visible = false;
     }
     geneEditing = true;
     buttons[7].visible = true;
@@ -415,11 +331,59 @@ function handleButton(input) {
     labels[0].visible = false;
     labels[1].visible = false;
     buttons[13].visible = false;
+
     buttons[10].available = true;
     buttons[11].available = true;
     buttons[12].available = true;
     buttons[6].available = true;
     break;
+    case 14:
+    // pause button
+    if (!paused) {
+      paused = true;
+      buttons[6].available = false;
+      buttons[10].available = false;
+      buttons[11].available = false;
+      buttons[12].available = false;
+      buttons[0].available = false;
+      buttons[1].available = false;
+      buttons[2].available = false;
+      if (selection!== null && selection.dragging) {
+        selection.dragging = false;
+        selection.findClosestFireFly();
+      }
+    } else {
+      paused = false;
+      buttons[6].available = true;
+      buttons[10].available = true;
+      buttons[11].available = true;
+      buttons[12].available = true;
+      buttons[0].available = true;
+      buttons[1].available = true;
+      buttons[2].available = true;
+    }
+  }
+}
+
+function tapOn() {
+  touchOnorOffThisFrame = true;
+  click();
+}
+
+function tapOff() {
+  touchOnorOffThisFrame = true;
+  unclick();
+}
+
+function mouseOn() {
+  if (!touchOnorOffThisFrame) {
+    click();
+  }
+}
+
+function mouseOff() {
+  if (!touchOnorOffThisFrame) {
+    unclick();
   }
 }
 
@@ -427,7 +391,7 @@ function handleButton(input) {
 * function to be called when user clicks on the game area
 * @param {event} e - the clicking event
 */
-function clickMouse(e) {
+function click() {
   let clickedSomething = false;
   for (let i = 0; i < boxes.length; i++) {
     if (!clickedSomething && detectCollision(pointerPos, boxes[i])) {
@@ -470,10 +434,6 @@ function clickMouse(e) {
         clickedSomething = true;
         selection = chibis[i];
         selection.dragging = true;
-        selectionInfo.visible = true;
-        buttons[3].visible = true;
-        buttons[4].visible = true;
-        buttons[5].visible = true;
       }
     }
   }
@@ -503,34 +463,17 @@ function clickMouse(e) {
       }
     }
     // colour picker
-    if (pointerPos.x >= colourBlock.x && pointerPos.x <= colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y <= colourBlock.y + 100) {
-      let xCoord = Math.round((pointerPos.x - colourBlock.x)/colourBlock.pixelSize);
-      let yCoord = Math.round((pointerPos.y - colourBlock.y)/colourBlock.pixelSize);
-      let newIndex = (yCoord*colourBlock.pixelColumns) + xCoord;
-      if (newIndex > 624) {
-        newIndex = 624;
-      }
-      if (colourBars.selected == 0) {
-        experiment.firstColour = colourBlock.pixels[newIndex];
-      } else if (colourBars.selected == 1) {
-        experiment.secondColour = colourBlock.pixels[newIndex];
-      } else if (colourBars.selected == 2) {
-        experiment.thirdColour = colourBlock.pixels[newIndex];
-      } else {
-        experiment.eyeColour = colourBlock.pixels[newIndex];
-      }
+    if (pointerPos.x >= colourBlock.x && pointerPos.x < colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y < colourBlock.y + 100) {
+      colourBlock.dragging = true;
+      colourBlock.updateHoverColour();
     }
   }
   if (!clickedSomething && chibis.includes(selection)) {
     selection = null;
-    selectionInfo.visible = true;
-    buttons[3].visible = false;
-    buttons[4].visible = false;
-    buttons[5].visible = false;
   }
 }
 
-function unclickMouse(e) {
+function unclick() {
   if (chibis.includes(selection) && selection.dragging) {
     selection.dragging = false;
     selection.focus = selection.findClosestFireFly();
@@ -548,6 +491,9 @@ function unclickMouse(e) {
         }
         console.log('exact: '+sliders[i].currentPos);
       }
+    }
+    if (colourBlock.dragging) {
+      colourBlock.dragging = false;
     }
   }
 }
@@ -572,6 +518,13 @@ function hover() {
       boxes[i].highlighted = false;
     }
   }
+  // colour picker
+  if (colourBlock.dragging && pointerPos.x >= colourBlock.x && pointerPos.x < colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y < colourBlock.y + 100) {
+    colourBlock.updateHoverColour();
+  } else if (colourBlock.dragging && pointerPos.x < colourBlock.x && pointerPos.x >= colourBlock.x + 100 && pointerPos.y < colourBlock.y && pointerPos.y >= colourBlock.y + 100) {
+    colourBlock.dragging = false;
+  }
+
 }
 
 /**
@@ -818,48 +771,48 @@ function ColourPixelBlock() {
   this.y = 30;
   this.pixelSize = 4;
   this.huePixels = [];
-  this.pixelRows = 25;
+  this.pixelRows = 24;
   this.pixelColumns = 25;
+  this.dragging = false;
   // convert x axis
-  let lrInterval = (256*6)/this.pixelColumns; // 71.68
+  let lrInterval = (255*6)/this.pixelColumns; // 71.68
   // generate hue gradient
-  for (let i = 0; i < this.pixelColumns; i++) {
+  for (let i = 0; i < this.pixelColumns-1; i++) {
     this.huePixels.push((i * lrInterval)+(lrInterval/2));
   }
   // convert gradient positions to hex values
   for (let i = 0; i < this.huePixels.length; i ++) {
-    if (this.huePixels[i] < 256) {
+    if (this.huePixels[i] < 255) {
       let tmp = [255, 0, Math.round(this.huePixels[i])];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 256*2) {
+    } else if (this.huePixels[i] < 255*2) {
       let tmp = [255 + 256 - Math.round(this.huePixels[i]), 0, 255];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 256*3) {
+    } else if (this.huePixels[i] < 255*3) {
       let tmp = [0, Math.round(this.huePixels[i] - (256*2)), 255];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 256*4) {
-      let tmp = [0, 255, 255 + (256*3) - Math.round(this.huePixels[i])];
+    } else if (this.huePixels[i] < 255*4) {
+      let tmp = [0, 255, 255 + (255*3) - Math.round(this.huePixels[i])];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 256*5) {
+    } else if (this.huePixels[i] < 255*5) {
       let tmp = [Math.round(this.huePixels[i]) - (256*4), 255, 0];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 256*6) {
-      let tmp = [255, 255 + (256*5) - Math.round(this.huePixels[i]), 0];
+    } else if (this.huePixels[i] < 255*6) {
+      let tmp = [255, 255 + (255*5) - Math.round(this.huePixels[i]), 0];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
     }
   }
-
   let outputPixels = [];
   // create all rows and populate white - transparent - black fade
   let tmpPix = [];
   for (let i = 0; i < this.pixelRows; i ++) {
     if (i < this.pixelRows/2) {
-      for (let j = 0; j < this.pixelRows; j++) {
+      for (let j = 0; j < this.pixelColumns-1; j++) {
         tmpPix[j] = mixTwoColours('#FFFFFF', this.huePixels[j], 1 - (i/this.pixelRows*2));
       }
       outputPixels = outputPixels.concat(tmpPix);
     } else if (i > this.pixelRows/2) {
-      for (let j = 0; j < this.pixelRows; j++) {
+      for (let j = 0; j < this.pixelColumns-1; j++) {
         tmpPix[j] = mixTwoColours('#000000', this.huePixels[j], (i - (this.pixelRows/2))/this.pixelRows*2);
       }
       outputPixels = outputPixels.concat(tmpPix);
@@ -867,13 +820,66 @@ function ColourPixelBlock() {
       outputPixels = outputPixels.concat(this.huePixels);
     }
   }
+
+  // make a set of pixels that are greys (black to white)
+  let factor = 256/this.pixelColumns;
+  for (let i = 0; i < this.pixelColumns; i++) {
+    let tmp = Math.round(i * factor);
+    outputPixels.push(rgbToHex(tmp, tmp, tmp));
+  }
+
   this.pixels = outputPixels;
 
+  this.updateHoverColour = function() {
+    let xPoint = pointerPos.x - this.x;
+    let yPoint = pointerPos.y - this.y;
+    let xCoord = Math.round(xPoint/this.pixelSize);
+    let yCoord = Math.round(yPoint/this.pixelSize);
+    let newIndex = (yCoord*this.pixelRows+1) + xCoord;
+    if (newIndex < this.pixels.length) {
+      let midPointX = xCoord + (this.pixelSize/2);
+      let midPointY = yCoord + (this.pixelSize/2);
+      let perfectColour = this.pixels[newIndex];
+      let diffx = midPointX - xPoint; // 0 to pixelSize/2
+      let diffy = midPointY - yPoint;
+
+      // now get the exact colour by combining boxes
+      let newC1 = perfectColour;
+      let newC2 = perfectColour;
+      if (diffx < 0 && xCoord > 0 && xCoord < this.pixelColumns) {
+        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex-1], Math.abs((this.pixelSize/2)/diffx));
+      } else if (diffx > 0 && xCoord > 0 && xCoord < this.pixelColumns) {
+        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex+1], Math.abs((this.pixelSize/2)/diffx));
+      }
+
+      if (diffy < 0 && yCoord > 0 && yCoord < this.pixelRows-1) {
+        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex - this.pixelRows], Math.abs((this.pixelSize/2)/diffy));
+      } else if (diffy > 0 && yCoord > 0 && yCoord < this.pixelRows-1) {
+        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex + this.pixelRows], Math.abs((this.pixelSize/2)/diffy));
+      }
+      perfectColour = mixTwoColours(newC1, newC2, 0.5);
+
+      if (colourBars.selected == 0) {
+        experiment.firstColour = perfectColour;
+      } else if (colourBars.selected == 1) {
+        experiment.secondColour = perfectColour;
+      } else if (colourBars.selected == 2) {
+        experiment.thirdColour = perfectColour;
+      } else {
+        experiment.eyeColour = perfectColour;
+        experiment.eyeColour2 = perfectColour;
+      }
+      experiment.reinitSizeAndColour();
+    }
+  };
   this.update = function() {
+    ctx.strokeStyle = outputArray[3];
+    ctx.strokeRect(this.x, this.y, this.pixelSize*this.pixelRows, this.pixelSize*this.pixelColumns);
+
     for (let i = 0; i < outputPixels.length; i ++) {
       let row = Math.floor(i/this.pixelRows);
       ctx.fillStyle = this.pixels[i];
-      ctx.fillRect(this.x + (i * this.pixelSize) - (row * this.pixelSize * this.pixelColumns), this.y + (row * this.pixelSize), this.pixelSize, this.pixelSize);
+      ctx.fillRect(this.x + (i * this.pixelSize) - (row * this.pixelSize * this.pixelRows), this.y + (row * this.pixelSize), this.pixelSize, this.pixelSize);
     }
   };
 }

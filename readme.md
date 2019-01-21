@@ -2,7 +2,18 @@
 
 changelog
 
-20/01/2019= 0.06
+21/01/2019 = 0.061
+~ added pause functionality to game
+~ added tooltips to all buttons
+~ added touch controls. You can do everything with a touch that you could previously do with a mouse click, including dragging Chibis
+~ you can now drag around the colour picker and the colour choice is now much wider
+~ the parents are now displayed in boxes on the litter picking screen to make selective breeding easier to manage
+~ added scrolling clouds to the background and changed the motion of stars
+~ reorganised UI to make it more compact and user friendly
+~ updated tabby appearance to be more realistic
+
+
+20/01/2019 = 0.06
 ~ chibis can now be picked up and dropped
 ~ fireflies now go for specific fruit instead of a tree, they will eat fruit and eventually produce offspring if successful enough
 ~ changed the way cross breed names are created and handled

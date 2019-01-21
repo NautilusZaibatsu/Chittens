@@ -57,6 +57,7 @@ function copyChibi(chibi) {
   return outputbuffer;
 }
 
+// outputbuffer is array from copyChibi. Who is target chibi to splice over
 function cloneChibi(outputbuffer, who) {
   let attributeArray = outputbuffer.split('*');
   selection = null;
@@ -98,6 +99,7 @@ function cloneChibi(outputbuffer, who) {
   who.earWidth = parseFloat(attributeArray[5]);
   who.earHeight = parseFloat(attributeArray[46]);
   who.breed = attributeArray[47];
+  who.reinitSizeAndColour();
 }
 
 /**
