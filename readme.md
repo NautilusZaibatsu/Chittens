@@ -2,6 +2,12 @@
 
 changelog
 
+23/01/2019 = 0.062
+~ added another body piece; the chest/torso section
+~ changed ui colours
+~ chibis now get slightly more tired between midnight and 3am
+~ updated cloud textures and movement
+
 21/01/2019 = 0.061
 ~ added pause functionality to game
 ~ added tooltips to all buttons

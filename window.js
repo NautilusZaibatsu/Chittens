@@ -113,15 +113,15 @@ choosingChibi = false;
 // landscape
 const newtree = new Image();
 newtree.src = 'newtree.png';
-let ph = newtree.height;
 const acacia = new Image();
 acacia.src = 'acacia.png';
 const clouds = new Image();
-clouds.onload = function() {
+clouds.src = 'clouds.png';
+const clouds2 = new Image();
+clouds2.onload = function() {
   console.log('Images buffered succesfully');
 };
-clouds.src = 'clouds.png';
-
+clouds2.src = 'clouds2.png';
 
 // for my guys
 const smile = new Image();
@@ -185,9 +185,6 @@ outputArray = [];
 
 
 // UI and messaging
-basicInfo = new TextElement(fontSize+'px', trueWhite, 10, canvasHeight - 10);
-newestMessage = new TextElement(fontSize+'px', trueWhite, 10, canvasHeight - 30);
-topLabel = new TextElement(fontSize+'px', trueWhite, canvasWidth - 115, 20);
 let messagesToSave = canvasHeight/20;
 
 /**
@@ -269,17 +266,25 @@ let myGameArea = {
 function updateGameArea() {
   myGameArea.clear();
   ctx = myGameArea.context;
-  c = document.getElementById("myCanvas");
+  //c = document.getElementById('myCanvas');
   myGameArea.frameNo += 1;
   touchOnorOffThisFrame = false;
   if (myGameArea.frameNo == 1 || everyinterval(3)) {
     // fire a comet
-    if (fps >= 30 && Math.random() < 0.005) {
+    if (fps >= 30 && Math.random() < 0.005 && (daytimeCounter <= 250 || daytimeCounter >= 750)) {
       ranX = Math.floor(Math.random()*(canvasWidth));
-      ranY = Math.floor(Math.random()*(trueBottom/2));
+      if (Math.random() < 0.5) {
+        ranY = 0;
+      } else {
+        ranY = canvasWidth;
+      }
       comets.push(new Inert(2, 2, trueWhite, ranX, ranY));
-      comets[comets.length-1].speedX = (Math.random()*2)-1;
-      comets[comets.length-1].speedY = -(Math.random()+0.1);
+      if (ranY == 0) {
+        comets[comets.length-1].speedX = Math.random();
+      } else {
+        comets[comets.length-1].speedX = -Math.random();
+      }
+      comets[comets.length-1].speedY = - Math.random() + 0.1;
     }
     // change the colour by time of day
     for (let tick = 0; tick < nightcolour.length; tick++) {
@@ -389,20 +394,24 @@ function updateGameArea() {
   // background
   // draw the clouds - disappear at nighttime
   ctx.globalAlpha = 0.3;
-    if (daytimeCounter <= 250) {
-      ctx.globalAlpha = 0.3 - (0.2*((250 - daytimeCounter)/250));
-    } else if (daytimeCounter > 750) {
-      ctx.globalAlpha = 0.3 - (0.2*((daytimeCounter-750)/250));
-    }
+  if (daytimeCounter <= 250) {
+    ctx.globalAlpha = 0.3 - (0.2*((250 - daytimeCounter)/250));
+  } else if (daytimeCounter > 750) {
+    ctx.globalAlpha = 0.3 - (0.2*((daytimeCounter-750)/250));
+  }
   if (ctx.globalAlpha < 0) {
     ctx.globalAlpha = 0;
   }
-
   let offsetX = (canvasHeight/540*2160)/10000*(daytimeCounter);
-  ctx.drawImage(clouds, 0 - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+  ctx.drawImage(clouds, 0 - offsetX/10, 0, (canvasHeight/540*2160), canvasHeight);
   if (offsetX > 2160) {
-    ctx.drawImage(clouds, (canvasHeight/540*2160) - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+    ctx.drawImage(clouds, (canvasHeight/540*2160) - (offsetX/10), 0, (canvasHeight/540*2160), canvasHeight);
   }
+  ctx.drawImage(clouds2, - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+  if (offsetX > 2160) {
+    ctx.drawImage(clouds2, (canvasHeight/540*2160) - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+  }
+
   ctx.globalAlpha = 1;
 
   // draw the tree
@@ -480,16 +489,16 @@ function updateGameArea() {
   // draw the message history
   if (pointerPos.y > canvasHeight - muckLevel - 5) {
     let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
-    let rMessage = Math.round((255+(hexToRgb(outputArray[2]).r))/2);
-    let gMessage = Math.round((255+(hexToRgb(outputArray[2]).g))/2);
-    let bMessage = Math.round((255+(hexToRgb(outputArray[2]).b))/2);
+    let rMessage = Math.round(hexToRgb(outputArray[2]).r);
+    let gMessage = Math.round(hexToRgb(outputArray[2]).g);
+    let bMessage = Math.round(hexToRgb(outputArray[2]).b);
     fade.addColorStop(0, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.05)');
     fade.addColorStop(1, 'rgba('+rMessage+', '+gMessage+', '+bMessage+', 0.3)');
     // Fill with gradient
     ctx.fillStyle = fade;
     ctx.font = fontSize+'px' + ' ' + globalFont;
     for (let i = messageBuffer.length-2; i >= 0; i--) {
-      ctx.fillText(messageBuffer[i].timeStamp+' '+messageBuffer[i].text, 10, 35+trueBottom-(20*(messageBuffer.length-i)));
+      ctx.fillText(messageBuffer[i].timeStamp +' '+ messageBuffer[i].text, 10, 30 + trueBottom - (20*(messageBuffer.length-i)));
     }
   }
   // update the text
@@ -731,11 +740,13 @@ function updateGameArea() {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.globalAlpha = 1;
   }
-
+  basicInfo = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 5);
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chibis.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
   basicInfo.update();
-  topLabel.text = 'v0.061 FPS '+fps;
+  topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 20);
+  topLabel.text = 'v0.062 FPS '+fps;
   topLabel.update();
+  newestMessage = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 25);
   if (!paused) {
     newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   } else {
@@ -775,7 +786,12 @@ function updateGameArea() {
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].update();
   }
-
+  for (let i = 0; i < buttons.length; i++) {
+    // tool tip - draw on top of buttons and labels
+    if (buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+      buttons[i].drawToolTip();
+    }
+  }
 }
 
 /**
@@ -1350,6 +1366,10 @@ function Seed(colour, owner) {
           if (chibis[i].speedY < 0) {
             chibis[i].health -= 0.1;
           }
+          // get more tired between midnight and 3am
+          if (chibis[i].awake && daytimeCounter <= 250) {
+            chibis[i].energy -= 0.03125;
+          }
           // if asleep, gain energy and a little health
           if (!chibis[i].awake) {
             chibis[i].energy += 0.125;
@@ -1568,11 +1588,11 @@ function Seed(colour, owner) {
             glowalpha = (1 - (1/(canvasHeight)*this.y)) * ((daytimeCounter-750)/250);
           }
         }
-          if (glowalpha > 0 && glowalpha < 1) {
-            ctx.globalAlpha = glowalpha/2;
-          } else {
-            ctx.globalAlpha = 0;
-          }
+        if (glowalpha > 0 && glowalpha < 1) {
+          ctx.globalAlpha = glowalpha/2;
+        } else {
+          ctx.globalAlpha = 0;
+        }
 
         // draw the thing
         ctx.fillStyle = this.colour;

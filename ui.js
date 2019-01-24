@@ -61,6 +61,12 @@ function Button(x, y, text, toolTip) {
     this.width = (this.text.length*fontWidth)+20;
     this.size = ((this.text.length*fontWidth)+20);
   };
+  this.drawToolTip = function() {
+    ctx.fillStyle = mixTwoColours(outputArray[3], trueBlack, 0.5);
+    ctx.fillRect(pointerPos.x, pointerPos.y + 20, this.toolTipWidth, 20);
+    ctx.fillStyle = trueWhite;
+    ctx.fillText(this.toolTip, pointerPos.x + 12.5, pointerPos.y + 35);
+  };
   this.update = function() {
     if (this == buttons[5] || this == buttons[3]) {
       if (selection == null || selection.inCatBox !== null) {
@@ -70,29 +76,30 @@ function Button(x, y, text, toolTip) {
       }
     }
     if (this.visible) {
+      // box
       ctx.save();
       ctx.translate(this.x -(this.width/2), this.y);
+      ctx.globalAlpha = 0.25;
       if (this.highlighted) {
-        ctx.fillStyle = outputArray[2];
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = mixTwoColours(trueWhite, outputArray[2]);
       } else if (!this.available) {
         ctx.fillStyle = outputArray[3];
       } else {
-        ctx.fillStyle = mixTwoColours(trueWhite, outputArray[2]);
+        ctx.fillStyle = outputArray[2];
       }
       ctx.fillRect(0, 0, this.width, this.height);
+      // label
+      ctx.globalAlpha = 1;
       if (this.highlighted) {
-        ctx.fillStyle = mixTwoColours(trueWhite, outputArray[2]);
-      } else {
+        ctx.fillStyle = outputArray[3];
+      } else if (!this.available) {
         ctx.fillStyle = outputArray[2];
+      } else {
+        ctx.fillStyle = trueWhite;
       }
       ctx.fillText(this.text, 10, 18);
       ctx.restore();
-    }
-    if (this.highlighted && this.toolTip.length > 0) {
-      ctx.fillStyle = mixTwoColours(outputArray[3], trueBlack, 0.5);
-      ctx.fillRect(pointerPos.x, pointerPos.y + 20, this.toolTipWidth, 20);
-      ctx.fillStyle = trueWhite;
-      ctx.fillText(this.toolTip, pointerPos.x + 12.5, pointerPos.y + 35);
     }
   };
 }
@@ -503,7 +510,9 @@ function unclick() {
 */
 function hover() {
   let hovered = false;
+  // highlighting buttons
   for (let i = 0; i < buttons.length; i++) {
+    // tooltip creation on hover is handled in window.js
     if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
       buttons[i].highlighted = true;
       hovered = true;
@@ -511,6 +520,7 @@ function hover() {
       buttons[i].highlighted = false;
     }
   }
+  // highlighting catboxes
   for (let i = 0; !hovered && i < boxes.length; i++) {
     if (pointerPos.x < boxes[i].x + boxes[i].size && pointerPos.x > boxes[i].x && pointerPos.y < boxes[i].y + boxes[i].size && pointerPos.y > boxes[i].y) {
       boxes[i].highlighted = true;
@@ -524,7 +534,6 @@ function hover() {
   } else if (colourBlock.dragging && pointerPos.x < colourBlock.x && pointerPos.x >= colourBlock.x + 100 && pointerPos.y < colourBlock.y && pointerPos.y >= colourBlock.y + 100) {
     colourBlock.dragging = false;
   }
-
 }
 
 /**

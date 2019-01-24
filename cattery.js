@@ -1538,17 +1538,30 @@ function Chibi(x, y, bodySize, maxSize, gender) {
     ctx.lineWidth = 2*this.cellShadeThickness;
     ctx.beginPath();
     if (this.sitting && this.awake) {
-      // make it wag
+      // make the butt wag
       ctx.beginPath();
       ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
+      // chest piece
+      ctx.beginPath();
+      ctx.arc(-backendShiftX/4, -this.size - this.backendShiftY/4, this.thickness*this.size*1.8, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+
+
       if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
+        // butt
         ctx.beginPath();
         ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
         ctx.fill();
+        // chest
+        ctx.beginPath();
+        ctx.arc(-backendShiftX/4, -this.size - this.backendShiftY/4, this.thickness*this.size*1.8, 0, 2 * Math.PI);
+        ctx.fill();
+
         if (this.pattern == 3) {
           let fadeGrad = ctx.createLinearGradient(0, -this.thickness*this.size*1.8/2, 0, this.thickness*this.size*1.8);
           fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
@@ -1564,22 +1577,32 @@ function Chibi(x, y, bodySize, maxSize, gender) {
           bGradient.addColorStop(0, this.thirdColour);
           bGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = bGradient;
+          ctx.arc(-backendShiftX/4, -this.size - this.backendShiftY/4, this.thickness*this.size*1.8, 0, 2 * Math.PI);
           ctx.arc(-tmp+1.875, -this.size, this.thickness*this.size*1.8, 0, 2 * Math.PI);
           ctx.fill();
         }
       }
     } else if (this.awake) {
+      // butt
       ctx.beginPath();
       ctx.arc(-(this.size/32) - backendShiftX, - backendShiftY, this.thickness*this.size*1.8, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
+      // chest piece
+      ctx.beginPath();
+      ctx.arc(-(this.size/32) - backendShiftX/4, - backendShiftY/4, this.thickness*this.size*1.8, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+
       if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
+        ctx.arc(-(this.size/32) - backendShiftX/4, - backendShiftY/4, this.thickness*this.size*1.8, 0, 2 * Math.PI);
         ctx.arc(-(this.size/32) - backendShiftX, - backendShiftY, this.thickness*this.size*1.8, 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
+
         if (this.pattern == 3) {
           let fadeGrad = ctx.createLinearGradient(0, -this.thickness*this.size*1.8/2, 0, this.thickness*this.size*1.8);
           fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
@@ -1604,6 +1627,7 @@ function Chibi(x, y, bodySize, maxSize, gender) {
 
   this.drawNeck = function(pat, backendShiftX, backendShiftY, bodyGradient) {
     if (this.awake && !this.sitting) {
+      ctx.globalAlpha = 1;
       // NECK
       // REAL DRAWING
       ctx.fillStyle = bodyGradient;
@@ -2262,15 +2286,6 @@ function Chibi(x, y, bodySize, maxSize, gender) {
       } else if (this.awake && this.energy > 0) {
         // CELL SHADING
         ctx.fillStyle = this.cellShadeLine;
-        // left arm
-        ctx.save();
-        ctx.translate(this.x-this.size+(this.size/3), this.y + (this.size/1.5) - (footSize/2));
-        ctx.restore(); // closed
-        // right arm
-        ctx.save();
-        ctx.translate(this.x+this.size-(this.size/3), this.y + (this.size/1.5) - (footSize/2));
-        ctx.restore(); // closed
-        ctx.lineWidth -= this.cellShadeThickness;
         // REAL DRAWING
         // left arm
         ctx.fillStyle = leftHandGradient;
@@ -2622,7 +2637,7 @@ function Chibi(x, y, bodySize, maxSize, gender) {
       }
     }
     for (let f = 0; f < fireflies.length; f++) {
-      if (this.focus == fireflies[f] && !this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && this.snuggling == -1 && this.nomnomnom == -1 && detectCollision(this, fireflies[f])) {
+      if (this.inCatBox == null && this.focus == fireflies[f] && !this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && this.snuggling == -1 && this.nomnomnom == -1 && detectCollision(this, fireflies[f])) {
         fireflies[f].touchedThisFrame = true;
         this.resetRotation(true);
         fireflies[f].speedX += (this.speedX*this.size)/1500;

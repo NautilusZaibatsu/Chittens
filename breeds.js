@@ -167,6 +167,7 @@ function breedTabby(who) {
   who.coatMod[1] = 0.74;
   who.size = 13 + (Math.random()*4);
   who.maxSize = 18;
+  who.legginess = 0.5 + Math.random()*0.3;
   let coatSwitch = Math.random();
   if (coatSwitch < 1/3) {
     // orange
