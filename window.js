@@ -2,7 +2,7 @@ let debugString = 'nothing'; // for debugging
 
 // universal physics constants
 const gravity = 0.02; // constant for gravity
-const elasticity = 0.2; // bounciness of chibis
+const elasticity = 0.5; // bounciness of chibis
 const speedLimit = 100; // maximum X or Y speed
 const maturesAt = 1; // age the chibis turn into adults at
 // canvas
@@ -214,7 +214,6 @@ function startGame() {
   // start the game
   sendMessage('Starting simulation');
   myGameArea.start();
-
 }
 
 let myGameArea = {
@@ -266,7 +265,6 @@ let myGameArea = {
 function updateGameArea() {
   myGameArea.clear();
   ctx = myGameArea.context;
-  //c = document.getElementById('myCanvas');
   myGameArea.frameNo += 1;
   touchOnorOffThisFrame = false;
   if (myGameArea.frameNo == 1 || everyinterval(3)) {
@@ -402,14 +400,15 @@ function updateGameArea() {
   if (ctx.globalAlpha < 0) {
     ctx.globalAlpha = 0;
   }
-  let offsetX = (canvasHeight/540*2160)/10000*(daytimeCounter);
-  ctx.drawImage(clouds, 0 - offsetX/10, 0, (canvasHeight/540*2160), canvasHeight);
-  if (offsetX > 2160) {
-    ctx.drawImage(clouds, (canvasHeight/540*2160) - (offsetX/10), 0, (canvasHeight/540*2160), canvasHeight);
+  let offsetX = (canvasHeight/540*2160)/1000*(daytimeCounter)/5;
+  ctx.drawImage(clouds, 0 - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+  if (offsetX > canvasWidth) {
+    ctx.drawImage(clouds, (canvasHeight/540*2160) - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
   }
-  ctx.drawImage(clouds2, - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
-  if (offsetX > 2160) {
-    ctx.drawImage(clouds2, (canvasHeight/540*2160) - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+  offsetX = (canvasHeight/500*1720)/1000*(daytimeCounter)/10;
+  ctx.drawImage(clouds2, - offsetX, 0, (canvasHeight/540*2000), canvasHeight);
+  if (offsetX > canvasWidth) {
+    ctx.drawImage(clouds2, (canvasHeight/540*1720) - offsetX, 0, (canvasHeight/540*1720), canvasHeight);
   }
 
   ctx.globalAlpha = 1;
@@ -602,6 +601,7 @@ function updateGameArea() {
   //   }
   // }
 
+
   // firefly logic
   for (let f = 0; f < fireflies.length; f++) {
     fireflies[f].touchedThisFrame = false;
@@ -658,6 +658,12 @@ function updateGameArea() {
     }
   }
 
+  // draw the fruit that should appear IN FRONT OF chibis
+  for (let i = 0; i < fruits.length; i++) {
+    if (fruits[i].eater !== null) {
+      fruits[i].update();
+    }
+  }
   for (let i = 0; i < speech.length; i++) {
     for (let j = i+1; j < speech.length; j++) {
       if (speech[i].who == speech[j].who) {
@@ -670,15 +676,6 @@ function updateGameArea() {
       speech.splice(i, 1);
     }
   }
-
-  // draw the fruit that should appear IN FRONT OF chibis
-  for (let i = 0; i < fruits.length; i++) {
-    if (fruits[i].eater !== null) {
-      fruits[i].update();
-    }
-  }
-
-
   // setting focus for fireflies
   for (let f = 0; f < fireflies.length; f++) {
     if (!fruits.includes(fireflies[f].focus)) {
@@ -719,20 +716,7 @@ function updateGameArea() {
     }
     fireflies[f].update();
   }
-  // filter
-  // more opaque at night time
-  if (daytimeCounter <= 100 || daytimeCounter >= 900) {
-    let glowalpha = ((100 - daytimeCounter)/100)/3;
-    if (daytimeCounter > 900) {
-      glowalpha = ((daytimeCounter-900)/100)/3;
-    }
-    if (glowalpha > 0) {
-      ctx.globalAlpha = glowalpha;
-      ctx.fillStyle = outputArray[2];
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-      ctx.globalAlpha = 1;
-    }
-  }
+
   // pause blacking out
   if (paused) {
     ctx.globalAlpha = 0.5;
@@ -744,7 +728,7 @@ function updateGameArea() {
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chibis.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
   basicInfo.update();
   topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 20);
-  topLabel.text = 'v0.062 FPS '+fps;
+  topLabel.text = 'v0.063 FPS '+fps;
   topLabel.update();
   newestMessage = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 25);
   if (!paused) {

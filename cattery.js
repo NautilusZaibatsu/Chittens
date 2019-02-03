@@ -1079,7 +1079,7 @@ function Chibi(x, y, bodySize, maxSize, gender) {
             // this.hitBottom = false;
           }
         }
-      } else {
+      } else if (chanceToAct < 0.06) {
         this.sitting = true;
       }
     }
@@ -1140,15 +1140,15 @@ function Chibi(x, y, bodySize, maxSize, gender) {
     checkBounceSides(this);
     checkBounceTop(this);
     if (choosingChibi) {
-    for (let i = 0; i < boxes.length; i++) {
-      boxes[i].checkBounce(this);
+      for (let i = 0; i < boxes.length; i++) {
+        boxes[i].checkBounce(this);
+      }
+      if (!chosenKitten) {
+        for (let i = 0; i < parentBoxes.length; i++) {
+          parentBoxes[i].checkBounce(this);
+        }
+      }
     }
-    if (!chosenKitten) {
-    for (let i = 0; i < parentBoxes.length; i++) {
-      parentBoxes[i].checkBounce(this);
-    }
-    }
-  }
 
     // check if chibi hit the floor, come to a rest if so
     if (!this.hitBottom && this.y >= trueBottom-(this.size)-(this.limbLength/2.5)) {
@@ -2395,8 +2395,45 @@ function Chibi(x, y, bodySize, maxSize, gender) {
     // front legs
     ctx.lineWidth = (this.size/2.5)*this.thickness*2;
     // if we are awake on a floor
-    if (this.awake && this.hitBottom) {
-
+    if (this.awake && this.hitBottom && !this.sitting) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      // cell shading
+      ctx.strokeStyle = this.cellShadeLine;
+      ctx.lineWidth += this.cellShadeThickness;
+      ctx.beginPath();
+      ctx.moveTo(-this.size*1/2, (this.size/4));
+      ctx.lineTo(-this.size*1/2, this.limbLength - footSize/2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(this.size*1/2, (this.size/4));
+      ctx.lineTo(this.size*1/2, this.limbLength - footSize/2);
+      ctx.stroke();
+      // real drawing
+      ctx.lineWidth -= this.cellShadeThickness;
+      ctx.strokeStyle = bodyGradient;
+      ctx.beginPath();
+      ctx.moveTo(-this.size*1/2, (this.size/4));
+      ctx.lineTo(-this.size*1/2, this.limbLength - footSize/2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(this.size*1/2, (this.size/4));
+      ctx.lineTo(this.size*1/2, this.limbLength - footSize/2);
+      ctx.stroke();
+      // pattern
+      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        ctx.strokeStyle = pat;
+        ctx.globalAlpha = this.patternAlpha;
+        ctx.beginPath();
+        ctx.moveTo(-this.size*1/2, (this.size/4));
+        ctx.lineTo(-this.size*1/2, this.limbLength - footSize/2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(this.size*1/2, (this.size/4));
+        ctx.lineTo(this.size*1/2, this.limbLength - footSize/2);
+        ctx.stroke();
+      }
+      ctx.restore();
     } else if (!this.awake || !this.hitBottom) {
       // if we are holding something
       if (this.awake && this.hitFocus) {

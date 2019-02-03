@@ -107,28 +107,29 @@ function randomColourFruity() {
   let seedB = 0;
   let colour = 'red'; // for debug
   let randSeed = Math.random();
-  if (randSeed <= 1/3) {
-    // organge
+  if (randSeed <= 1/4) {
+    // orange - yellow
     seedR = Math.floor(Math.random()*100) + 155;
-    seedG = Math.floor(Math.random()*108) + 100;
+    seedG = Math.floor(Math.random()*100) + 150;
     seedB = Math.floor(Math.random()*100) + 50;
-    colour = rgbToHex(seedR, seedG, seedB);
-    return colour;
-  } else if (randSeed <= 2/3) {
-    //blue
+  } else if (randSeed <= 2/4) {
+    // red
     seedR = Math.floor(Math.random()*100) + 155;
     seedG = Math.floor(Math.random()*50) + 80;
     seedB = Math.floor(Math.random()*50) + 80;
-    colour = rgbToHex(seedR, seedG, seedB);
-    return colour;
-  } else {
+  } else if (randSeed <= 3/4) {
     // green
     seedR = Math.floor(Math.random()*60) + 100;
     seedG = Math.floor(Math.random()*100) + 155;
     seedB = Math.floor(Math.random()*50) + 80;
-    colour = rgbToHex(seedR, seedG, seedB);
-    return colour;
+  } else {
+    // blue
+    seedB = Math.floor(Math.random()*80) + 75;
+    seedR = Math.random()*seedB/2;
+    seedG = Math.random()*seedB/2;
   }
+  colour = rgbToHex(seedR, seedG, seedB);
+  return colour;
 }
 
 /**

@@ -2,6 +2,12 @@
 
 changelog
 
+03/02/2019 = 0.063
+~ updated collision physics
+~ updated tortoiseshell breed
+~ tweaked fruit colours
+~ changed how often Chibis sit down, and redrew front legs when standing
+
 23/01/2019 = 0.062
 ~ added another body piece; the chest/torso section
 ~ changed ui colours

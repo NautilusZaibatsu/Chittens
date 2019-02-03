@@ -133,6 +133,7 @@ function handleButton(input) {
           }
         }
         sendMessage(selection.name+' was adopted');
+        selection.hitBottom = false;
         selection.love = 100;
         speech.push(new Speak(selection, neutralWord()));
         selection.sitting = false;
@@ -163,6 +164,7 @@ function handleButton(input) {
           }
         }
         sendMessage(selection.name+' was adopted');
+        selection.hitBottom = false;
         selection.love = 100;
         speech.push(new Speak(selection, neutralWord()));
         selection.sitting = false;
@@ -188,6 +190,7 @@ function handleButton(input) {
           for (let j = 0; j < chibis.length && !found; j++) {
             if (chibis[j].inCatBox == parentBoxes[i]) {
               chibis[j].inCatBox = null;
+              chibis[j].hitBottom = false;
             }
           }
         }
@@ -200,6 +203,7 @@ function handleButton(input) {
           }
         }
         sendMessage(selection.name+' joined the family');
+        selection.hitBottom = false;
         selection.love = 100;
         speech.push(new Speak(selection, neutralWord()));
         selection.size *= 0.5;

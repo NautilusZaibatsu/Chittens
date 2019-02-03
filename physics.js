@@ -197,34 +197,26 @@ function detectCollision(thisobj, otherobj) {
 * @param {object} obj2 - the second object
 */
 function collide(obj1, obj2) {
-  // fix the distance between the objects
-  let diffx = Math.abs(obj1.x - obj2.x);
-  let diffy = Math.abs(obj1.y - obj2.y);
-  let currenth = Math.sqrt((diffx*diffx)+(diffy*diffy));
-  let targeth = obj1.size + obj2.size;
-  let newprop = targeth/currenth;
-  if (diffx == 0 && diffy == 0) {
-    newprop = 1;
-  }
-  obj1.x += (obj1.x - obj2.x)*newprop/obj1.size;
-  obj2.x -= (obj1.x - obj2.x)*newprop/obj2.size;
-  // detect if one of the guys is touching the floor
-  if (!obj1.hitBottom && !obj2.hitBottom) {
-    obj1.y += (obj1.y - obj2.y)*newprop/obj1.size;
-    obj2.y -= (obj1.y - obj2.y)*newprop/obj2.size;
-  }
-  // calculate transfer of energy
-  // energy = mass X velocity
-  let myEnergy = obj1.speedX*obj1.size;
-  let theirEnergy = obj2.speedX*obj2.size;
-  let energyTransfer = elasticity*(myEnergy-theirEnergy)/(obj1.size+obj2.size);
-  obj1.speedX += energyTransfer;
-  obj2.speedX += energyTransfer;
-  myEnergy = obj1.speedY*obj1.size;
-  theirEnergy = obj2.speedY*obj2.size;
-  energyTransfer = elasticity*(myEnergy-theirEnergy)/(obj1.size+obj2.size);
-  obj1.speedY += energyTransfer;
-  obj2.speedY += energyTransfer;
+  // pythagoras
+  let distX = obj1.x - obj2.x;
+  let distY = obj1.y - obj2.y;
+  let d = Math.sqrt((distX) * (distX) + (distY) * (distY));
+  let nx = (obj2.x - obj1.x) / d;
+  let ny = (obj2.y - obj1.y) / d;
+  let p = 2 * (obj1.speedX * nx + obj1.speedY * ny - obj2.speedX * nx - obj2.speedY * ny) / (obj1.size + obj2.size);
+  // calulating the point of collision
+  let colPointX = ((obj1.x * obj2.size) + (obj2.x * obj1.size)) / (obj1.size + obj2.size);
+  let colPointY = ((obj1.y * obj2.size) + (obj2.y * obj1.size)) / (obj1.size + obj2.size);
+  // stopping overlaps
+  obj1.x = colPointX + obj1.size * (obj1.x - obj2.x) / d;
+  obj1.y = colPointY + obj1.size * (obj1.y - obj2.y) / d;
+  obj2.x = colPointX + obj2.size * (obj2.x - obj1.x) / d;
+  obj2.y = colPointY + obj2.size * (obj2.y - obj1.y) / d;
+  // updating velocity to reflect collision
+  obj1.speedX -= p * obj1.size * nx * elasticity;
+  obj1.speedY -= p * obj1.size * ny * elasticity;
+  obj2.speedX += p * obj2.size * nx * elasticity;
+  obj2.speedY += p * obj2.size * ny * elasticity;
   // calculate rotation on collision
   let targetangle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
   if (!obj1.hitBottom) {
