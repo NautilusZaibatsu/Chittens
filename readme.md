@@ -2,6 +2,10 @@
 
 changelog
 
+ = 0.064
+~ fixed a bug in the way that clouds scroll
+~ glyphs now will not spawn and will be culled when fps is below 30
+
 03/02/2019 = 0.063
 ~ updated collision physics
 ~ updated tortoiseshell breed

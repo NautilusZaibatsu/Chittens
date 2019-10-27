@@ -17,9 +17,6 @@ const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
-// set the environment start time and other starting values
-d = new Date();
-const startTime = d.getHours();
 const hourOfCreation = 250;
 console.log('Local time is '+tickerToTime(hourOfCreation));
 secondTimer = 0;
@@ -117,11 +114,9 @@ const acacia = new Image();
 acacia.src = 'acacia.png';
 const clouds = new Image();
 clouds.src = 'clouds.png';
-const clouds2 = new Image();
-clouds2.onload = function() {
+clouds.onload = function() {
   console.log('Images buffered succesfully');
 };
-clouds2.src = 'clouds2.png';
 
 // for my guys
 const smile = new Image();
@@ -390,30 +385,22 @@ function updateGameArea() {
   }
 
   // background
-  // draw the clouds - disappear at nighttime
+  // draw the clouds - disappearring at nighttime
   ctx.globalAlpha = 0.3;
-  if (daytimeCounter <= 250) {
-    ctx.globalAlpha = 0.3 - (0.2*((250 - daytimeCounter)/250));
-  } else if (daytimeCounter > 750) {
-    ctx.globalAlpha = 0.3 - (0.2*((daytimeCounter-750)/250));
+  if (daytimeCounter <= 300) {
+    ctx.globalAlpha = 0.3 - (0.3*((300 - daytimeCounter)/300));
+  } else if (daytimeCounter > 700) {
+    ctx.globalAlpha = 0.3 - (0.3*((daytimeCounter-700)/300));
   }
-  if (ctx.globalAlpha < 0) {
-    ctx.globalAlpha = 0;
-  }
-  let offsetX = (canvasHeight/540*2160)/1000*(daytimeCounter)/5;
-  ctx.drawImage(clouds, 0 - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
+  let offsetX = daytimeCounter*(canvasHeight/540*2160)/1000;
+  ctx.drawImage(clouds, - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
   if (offsetX > canvasWidth) {
     ctx.drawImage(clouds, (canvasHeight/540*2160) - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
-  }
-  offsetX = (canvasHeight/500*1720)/1000*(daytimeCounter)/10;
-  ctx.drawImage(clouds2, - offsetX, 0, (canvasHeight/540*2000), canvasHeight);
-  if (offsetX > canvasWidth) {
-    ctx.drawImage(clouds2, (canvasHeight/540*1720) - offsetX, 0, (canvasHeight/540*1720), canvasHeight);
   }
 
   ctx.globalAlpha = 1;
 
-  // draw the tree
+  // draw the background
   // center and translate the image
   ctx.save();
   ctx.translate((canvasWidth-idealX)/2, (canvasHeight-idealY)/2);
@@ -525,7 +512,7 @@ function updateGameArea() {
   // glyphs
   for (i = glyphs.length-1; i >= 0; i--) {
     glyphs[i].update();
-    if (glyphs[i].timer < 0) {
+    if (glyphs[i].timer < 0 || fps < 30) {
       glyphs.splice(i, 1);
       i --;
     }
@@ -678,20 +665,25 @@ function updateGameArea() {
   }
   // setting focus for fireflies
   for (let f = 0; f < fireflies.length; f++) {
-    if (!fruits.includes(fireflies[f].focus)) {
+    if (!fireflies[f].justAte && !fruits.includes(fireflies[f].focus)) {
       fireflies[f].chooseNewTarget();
+    } else if (fireflies[f].focus.y > trueBottom - fireflies[f].focus.size) {
+      fireflies[f].chooseNewTarget();
+    } else if (Math.random() > 0.995) {
+      fireflies[f].chooseNewTarget()
     } else {
-      if (Math.abs(fireflies[f].speedX) <= 1 && Math.abs(fireflies[f].speedY) <= 1) {
-        if (fruits.includes(fireflies[f].focus) && detectCollision(fireflies[f], fireflies[f].focus)) {
+      if ((Math.abs(fireflies[f].speedX)+(fireflies[f].speedY))/2 < 1) {
+        if (detectCollision(fireflies[f], fireflies[f].focus)) {
           fireflies[f].speedX *= 0.5;
           fireflies[f].speedY *= 0.5;
           fireflies[f].stomach ++;
+          fireflies[f].justAte = true;
           if (fireflies[f].stomach >= 10) {
             fireflies[f].stomach = 0;
             sendMessage('A new firefly appeared');
             fireflies.push(new FireFly(fireflies[f].focus.x, fireflies[f].focus.y, fireflies[f].focus, 0.5, fireflies[f].firstColour));
             fireflies[fireflies.length-1].chooseNewTarget();
-            fireflies[fireflies.length-1].touches = 400;
+            fireflies[fireflies.length-1].touches = 250;
           }
           let victimIndex = findIndex(fireflies[f].focus, fruits);
           removeFocusFrom(fireflies[f].focus);
@@ -728,7 +720,7 @@ function updateGameArea() {
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chibis.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
   basicInfo.update();
   topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 20);
-  topLabel.text = 'v0.063 FPS '+fps;
+  topLabel.text = 'v0.064 FPS '+fps;
   topLabel.update();
   newestMessage = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 25);
   if (!paused) {
@@ -1001,45 +993,50 @@ function Seed(colour, owner) {
     this.touchedThisFrame = false;
     this.firstColour = firstColour;
     this.stomach = 0;
+    this.justAte = false;
     createGlyphs(this.x, this.y, '\u25EF');
     this.chooseNewTarget = function() {
-      // set up an array of option indexes
-      let options = [];
-      for (let i = 0; i < fruits.length; i ++) {
-        let flagged = false;
-        // don't pick a fruit from the same tree
-        if (fruits[i].parent == this.focus.parent) {
-          flagged = true;
-        } else {
-          for (let j = 0; j < fireflies.length; j++) {
-            if (fruits[i] == fireflies[j].focus) {
-              flagged = true;
+      if (this.justAte) {
+        this.focus = pointerPos;
+      } else {
+        // set up an array of option indexes
+        let options = [];
+        for (let i = 0; i < fruits.length; i ++) {
+          let flagged = false;
+          // don't pick a fruit from the same tree
+          if (fruits[i].parent == this.focus.parent) {
+            flagged = true;
+          } else {
+            for (let j = 0; j < fireflies.length; j++) {
+              if (fruits[i] == fireflies[j].focus) {
+                flagged = true;
+              }
             }
           }
-        }
-        if (!flagged && fruits[i] !== this.focus && fruits[i].y < trueBottom) {
-          options.push(i);
-        }
-      }
-      let diffx = 0;
-      let diffy = 0;
-      let absolute = 0;
-      let smallAbs = canvasWidth * canvasHeight;
-      let target = 0;
-      if (options.length > 0) {
-        for (let i = 0; i < options.length; i ++) {
-          diffx = Math.abs(this.x - fruits[options[i]].x);
-          diffy = Math.abs(this.x - fruits[options[i]].y);
-          absolute = Math.sqrt((diffy*diffy) + (diffx*diffx));
-          if (absolute < smallAbs) {
-            smallAbs = absolute;
-            target = options[i];
+          if (!flagged && fruits[i] !== this.focus && fruits[i].y < trueBottom) {
+            options.push(i);
           }
         }
-        this.focus = fruits[target];
-      } else if (options.length == 0) {
-        // no valid targets
-        this.focus = pointerPos;
+        let diffx = 0;
+        let diffy = 0;
+        let absolute = 0;
+        let smallAbs = canvasWidth * canvasHeight;
+        let target = 0;
+        if (options.length > 0) {
+          for (let i = 0; i < options.length; i ++) {
+            diffx = Math.abs(this.x - fruits[options[i]].x);
+            diffy = Math.abs(this.x - fruits[options[i]].y);
+            absolute = Math.sqrt((diffy*diffy) + (diffx*diffx));
+            if (absolute < smallAbs) {
+              smallAbs = absolute;
+              target = options[i];
+            }
+          }
+          this.focus = fruits[target];
+        } else if (options.length == 0) {
+          // no valid targets
+          this.focus = pointerPos;
+        }
       }
     };
     this.update = function() {
@@ -1057,6 +1054,9 @@ function Seed(colour, owner) {
       //   ctx.fillText('SLO', this.x, this.y - 10);
       // }
       if (!paused) {
+        if (this.justAte && Math.random() < 0.995) {
+          this.justAte = false;
+        }
         if (this.x < 0 || this.x > canvasWidth) {
           this.speedX *= -0.98;
           if (this.x < 0) {
@@ -1100,7 +1100,6 @@ function Seed(colour, owner) {
         }
         this.speedX += 0.05*Math.cos(targetangle);
         this.speedY += 0.05*Math.sin(targetangle);
-
         applySpeedLimit(this);
         this.x += this.speedX;
         this.y += this.speedY;
@@ -1599,7 +1598,7 @@ function Seed(colour, owner) {
       this.timer = 0;
       this.update = function() {
         ctx.fillStyle = this.colour1;
-        ctx.globalAlpha = 0.3*(1-(this.timer/200));
+        ctx.globalAlpha = 0.15*(1-(this.timer/200));
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.timer, 0, 2 * Math.PI);
         ctx.fill();
@@ -1653,15 +1652,17 @@ function Seed(colour, owner) {
     * @param {string} symbol - the symbol of the glyph
     */
     function createGlyphs(x, y, symbol) {
-      let speed = 2;
-      glyphs.push(new Glyph(x, y, 0, -speed, symbol));
-      glyphs.push(new Glyph(x, y, 0, speed, symbol));
-      glyphs.push(new Glyph(x, y, speed, 0, symbol));
-      glyphs.push(new Glyph(x, y, -speed, 0, symbol));
-      glyphs.push(new Glyph(x, y, speed/1.5, speed/1.5, symbol));
-      glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, symbol));
-      glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, symbol));
-      glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, symbol));
+      if (fps >= 30) {
+        let speed = 1;
+        glyphs.push(new Glyph(x, y, 0, -speed, symbol));
+        glyphs.push(new Glyph(x, y, 0, speed, symbol));
+        glyphs.push(new Glyph(x, y, speed, 0, symbol));
+        glyphs.push(new Glyph(x, y, -speed, 0, symbol));
+        glyphs.push(new Glyph(x, y, speed/1.5, speed/1.5, symbol));
+        glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, symbol));
+        glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, symbol));
+        glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, symbol));
+      }
     }
 
     /**
@@ -1689,15 +1690,15 @@ function Seed(colour, owner) {
       this.speedY += (Math.random()*2) - 1;
       this.update = function() {
         if (!paused) {
-          this.speedY += gravity;
+          this.speedY += gravity/2;
           if (checkBounceSides(this) || checkBounceTop(this) || checkBounceBottom(this)) {
             this.timer -= 1;
           }
           // drift to middle (hopefully not enough to counteract gravity);
           if (this.y > trueBottom/2) {
-            this.speedY -= 0.025;
+            this.speedY -= 0.0125;
           } else if (this.y < trueBottom/2) {
-            this.speedY += 0.025;
+            this.speedY += 0.0125;
           }
           applySpeedLimit(this);
           this.x += this.speedX;

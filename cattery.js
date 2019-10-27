@@ -886,7 +886,7 @@ function Chibi(x, y, bodySize, maxSize, gender) {
   this.hunger = 1000;
   this.snuggling = -1; // start at -1 so they dont try to give birth when they are not truly snuggling
   this.nomnomnom = -1; // as above
-  this.awake = 0;
+  this.awake = true;
   this.litters = 0;
   this.birthday = daytimeCounter;
   this.age = 0;
@@ -1459,6 +1459,12 @@ function Chibi(x, y, bodySize, maxSize, gender) {
     ctx.translate(this.x, this.y);
     // zzzzs
     if (!this.awake) {
+      if (Math.random() >= 0.975) {
+        glyphs.push(new Glyph(this.x, this.y, 0, -1, 'Z'));
+        glyphs[glyphs.length-1].timer = glyphTimer/4;
+        glyphs[glyphs.length-1].size = this.size/5;
+      }
+
       ctx.fillStyle = trueWhite;
       ctx.font = '10px' + ' ' + globalFont;
       let amntToMove = this.energy; // 0 to 10
