@@ -1051,7 +1051,6 @@ function Seed(colour, owner) {
     this.firstColour = firstColour;
     this.stomach = 0;
     this.justAte = false;
-    createGlyphs(this.x, this.y, '\u25EF');
     this.chooseNewTarget = function() {
       if (this.justAte) {
         this.focus = pointerPos;

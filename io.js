@@ -61,7 +61,7 @@ function copyChibi(chibi) {
 function cloneChibi(outputbuffer, who) {
   let attributeArray = outputbuffer.split('*');
   selection = null;
-  who.age = 12;
+  who.age = 3;
   who.elder = false;
   who.reachedNirvana = false;
   who.secondColour = attributeArray[1];
