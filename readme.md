@@ -2,7 +2,16 @@
 
 changelog
 
- = 0.064
+
+10/12/2019 = 0.065
+~ added seasons, the season changes each day. Chibis get more tired in winter, less tired and more amorous in spring and have more energy in summer
+~ added rudimentary temperature system
+~ day of thr week is now tracked
+~ the simulation now starts with a small number of young trees of a random species
+~ increased number of starting fireflies to two
+~ improved efficiency of the pattern system
+
+27/10/2019 = 0.064
 ~ fixed a bug in the way that clouds scroll
 ~ glyphs now will not spawn and will be culled when fps is below 30
 

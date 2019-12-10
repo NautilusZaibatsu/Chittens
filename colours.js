@@ -241,6 +241,11 @@ function decreaseSaturationHEX(hex, fraction) {
 * @param {int} prop - the proportion of hex1 to hex2 (0 to 1);
 */
 function mixTwoColours(hex1, hex2, prop) {
+  if (prop > 1) {
+    prop = 1;
+  } else if (prop < 0) {
+    prop = 0;
+  }
   ri = hexToRgb(hex1).r;
   gi = hexToRgb(hex1).g;
   bi = hexToRgb(hex1).b;

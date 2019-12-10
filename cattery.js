@@ -1023,7 +1023,7 @@ function Chibi(x, y, bodySize, maxSize, gender) {
         if (target == null && !choosingChibi && !this.elder && this.gender == 'Male' && this.age >= maturesAt && chibis.length <= maxPop && this.health >= 50
         && this.energy >= 50) {
           for (let j = 0; j < chibis.length && target == null; j++) {
-            if (this !== chibis[j] && chibis[j].awake && this.love + chibis[j].love >= 100 && !chibis[j].elder && chibis[j].gender == 'Female'
+            if (this !== chibis[j] && chibis[j].snuggling == -1 && chibis[j].awake && this.love + chibis[j].love >= 100 && !chibis[j].elder && chibis[j].gender == 'Female'
             && chibis[j].age >= maturesAt && chibis[j].health >= 50
             && chibis[j].energy >= 50) {
               this.partner = chibis[j];

@@ -1,5 +1,3 @@
-let debugString = 'nothing'; // for debugging
-
 // universal physics constants
 const gravity = 0.02; // constant for gravity
 const elasticity = 0.5; // bounciness of chibis
@@ -11,20 +9,33 @@ const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
 const maxDistance = canvasWidth*canvasHeight;
 const muckLevel = 45;
 const trueBottom = canvasHeight - muckLevel;
+// UI and messaging
+let messagesToSave = canvasHeight/20;
+
 // global scaling values
 idealX = 1920 - 20;
 const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
-const hourOfCreation = 250;
-console.log('Local time is '+tickerToTime(hourOfCreation));
+
 secondTimer = 0;
 fps = 0;
 fpsCount = '00';
-daytimeCounter = hourOfCreation;
+daytimeCounter = 0;
 timeMod = daytimeCounter;
 day = 0;
+today = day;
+dayNames = [];
+dayNames[0] = 'Monday';
+dayNames[1] = 'Tuesday';
+dayNames[2] = 'Wednesday';
+dayNames[3] = 'Thursday';
+dayNames[4] = 'Friday';
+dayNames[5] = 'Saturday';
+dayNames[6] = 'Sunday';
+season = 1; // spring
+seasonNext = 2; // summer
 paused = false;
 chosenChibiM = true;
 chosenChibiF = true;
@@ -178,9 +189,18 @@ midnightcolour[2] = '#020e2b';
 midnightcolour[3] = '#010005';
 outputArray = [];
 
-
-// UI and messaging
-let messagesToSave = canvasHeight/20;
+// set seasonal colours and temperatures
+seasonText = 'Spring';
+seasonColour = [];
+seasonColour[0] = '#ee7f17'; // autumn
+seasonColour[1] = '#5ec3ed'; // winter
+seasonColour[2] = '#73bf4f'; // spring
+seasonColour[3] = '#fae10b'; // summer
+temperature = 30;
+tempSpring = 15;
+tempSummer = 30;
+tempAutumn = 10;
+tempWinter = 0;
 
 /**
 * function to start the simulation
@@ -191,11 +211,20 @@ function startGame() {
   initButtons();
   sendMessage('Checking integrity of names database');
   console.log(reportNames());
-  // initial fireflies etc
-  if (Math.random() < 0.5) {
-    fireflies.push(new FireFly(0, Math.random()*trueBottom, pointerPos, 1, glowColour));
-  } else {
-    fireflies.push(new FireFly(canvasWidth, Math.random()*trueBottom, pointerPos, 1, glowColour));
+  // initial fireflies, trees etc
+  for (let i = 0; i < 2; i++) {
+    if (Math.random() < 0.5) {
+      fireflies.push(new FireFly(0, Math.random()*trueBottom, pointerPos, 1, glowColour));
+    } else {
+      fireflies.push(new FireFly(canvasWidth, Math.random()*trueBottom, pointerPos, 1, glowColour));
+    }
+  }
+  // plant trees to begin with
+  let defaultTreeNumber = canvasWidth/250;
+  let defaultFruitColour = randomColourFruity();
+  for (let i = 0; i < defaultTreeNumber; i++) {
+    tryToPlantaTree(Math.abs(Math.random()*canvasWidth), defaultFruitColour);
+    trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * Math.random() * 0.33);
   }
   // gene editing
   experiment = new Chibi(70, 90, 13.5, 10, 'Female');
@@ -205,10 +234,20 @@ function startGame() {
   experiment.hitBottom = true;
   initSliders();
 
-
   // start the game
   sendMessage('Starting simulation');
+  recalcSeasonVariables();
   myGameArea.start();
+  // set up patterns for CHIBIS
+  ctx = myGameArea.context;
+  pat0 = ctx.createPattern(pattern0, 'repeat'); // debug
+  pat1 = ctx.createPattern(pattern1, 'repeat'); // tortoiseshell
+  pat2 = ctx.createPattern(pattern2, 'repeat'); // albino spotting
+  pat3 = ctx.createPattern(pattern3, 'repeat'); // tabby
+  pat4 = ctx.createRadialGradient(0, 0, 0, 0, 0, 0); // persian face colour gradient
+  // pat5 = Lykoi
+  pat6 = ctx.createPattern(pattern6, 'repeat'); // tabby
+
 }
 
 let myGameArea = {
@@ -225,7 +264,6 @@ let myGameArea = {
     this.canvas.addEventListener('mousemove', function(event) {
       pointerPos = trackMouse(event);
     });
-
 
     // add listener for touch
     this.canvas.addEventListener('touchmove', function(event) {
@@ -324,18 +362,31 @@ function updateGameArea() {
       let dayG = Math.floor(gi - ((((gi - gj)/250))*timeMod));
       let dayB = Math.floor(bi - ((((bi - bj)/250))*timeMod));
       debugString = 'daytimeCounter' + daytimeCounter;
-      outputArray[tick] = rgbToHex(dayR, dayG, dayB);
-    }
-  }
 
-  // set up patterns for CHIBIS
-  pat0 = ctx.createPattern(pattern0, 'repeat'); // debug
-  pat1 = ctx.createPattern(pattern1, 'repeat'); // tortoiseshell
-  pat2 = ctx.createPattern(pattern2, 'repeat'); // albino spotting
-  pat3 = ctx.createPattern(pattern3, 'repeat'); // tabby
-  pat4 = ctx.createRadialGradient(0, 0, 0, 0, 0, 0); // persian face colour gradient
-  // pat5 = Lykoi
-  pat6 = ctx.createPattern(pattern6, 'repeat'); // tabby
+      // create seasonal colour shading
+      let tempColour = mixTwoColours(seasonColour[seasonNext], seasonColour[season], daytimeCounter/1000);
+      // shade backgrouund
+      outputArray[tick] = mixTwoColours(rgbToHex(dayR, dayG, dayB), tempColour, 0.75);
+    }
+    // detect temperature
+    let temp1 = 0;
+    let temp2 = 0;
+    if (season == 0) {
+      temp1 = tempAutumn;
+      temp2 = tempWinter;
+    } else if (season == 1) {
+      temp1 = tempWinter;
+      temp2 = tempSpring;
+    } else if (season == 2) {
+      temp1 = tempSpring;
+      temp2 = tempSummer;
+    } else if (season == 3) {
+      temp1 = tempSummer;
+      temp2 = tempAutumn;
+    }
+    temperature = (temp2*(daytimeCounter/1000))+(temp1*(1-(daytimeCounter/1000)));
+    temperature = ('0' + Math.round(temperature)).slice(-2);
+  }
 
 
   // countdown timer, used when choosing from a litter
@@ -498,14 +549,19 @@ function updateGameArea() {
   }
 
   if (!paused) {
-    if (daytimeCounter < 1000) {
-      daytimeCounter += 0.25;
-      // increase daytime counter
-      if (daytimeCounter == hourOfCreation) {
-        day ++;
-      }
-    } else {
+    // increase daytime counter and make seasons rotate
+    daytimeCounter += 0.25;
+    if (daytimeCounter >= 1000) {
       daytimeCounter = 1;
+      day ++;
+      // calculate the count (array position) of the day of the week
+      let tempDay = day;
+      while (tempDay > 6) {
+        tempDay -= 7;
+      }
+      today = tempDay;
+      season ++;
+      recalcSeasonVariables();
     }
   }
 
@@ -593,7 +649,6 @@ function updateGameArea() {
   for (let f = 0; f < fireflies.length; f++) {
     fireflies[f].touchedThisFrame = false;
     if (fireflies[f].touches >= 500) {
-      sendMessage('A FireFly exploded');
       // create the explosion
       explosions.push(new Explosion(fireflies[f].x, fireflies[f].y, '#FF2288', glowColour));
       produceExplosion(fireflies[f].x, fireflies[f].y);
@@ -680,7 +735,6 @@ function updateGameArea() {
           fireflies[f].justAte = true;
           if (fireflies[f].stomach >= 10) {
             fireflies[f].stomach = 0;
-            sendMessage('A new firefly appeared');
             fireflies.push(new FireFly(fireflies[f].focus.x, fireflies[f].focus.y, fireflies[f].focus, 0.5, fireflies[f].firstColour));
             fireflies[fireflies.length-1].chooseNewTarget();
             fireflies[fireflies.length-1].touches = 250;
@@ -700,7 +754,6 @@ function updateGameArea() {
         if (Math.random() < 0.5) {
           x = canvasWidth;
         }
-        sendMessage('A new firefly arrived');
         fireflies.push(new FireFly(x, Math.random()*trueBottom, pointerPos, 1, glowColour));
       }
       fireflies[f].touches += 1;
@@ -719,9 +772,13 @@ function updateGameArea() {
   basicInfo = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 5);
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chibis.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
   basicInfo.update();
-  topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 20);
-  topLabel.text = 'v0.064 FPS '+fps;
+  topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 17);
+  topLabel.text = 'v0.065 FPS '+fps;
   topLabel.update();
+  // day of the week and the season
+  leftLabel = new TextElement(fontSize+'px', outputArray[2], 255, 17);
+  leftLabel.text = dayNames[today]+', '+seasonText+ ' '+temperature+'\u00B0';
+  leftLabel.update();
   newestMessage = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 25);
   if (!paused) {
     newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
@@ -1349,6 +1406,17 @@ function Seed(colour, owner) {
           if (chibis[i].speedY < 0) {
             chibis[i].health -= 0.1;
           }
+
+          // tiredness linked to temperature (30 is max temp)
+          chibis[i].energy -= 0.01325-(0.01325/30*temperature)
+          if (season == 1) {
+            // get less tired and more amorous in spring
+            chibis[i].energy += 0.07;
+            chibis[i].love += 1.5;
+          } else if (season == 2) {
+            // get more energy in summer
+            chibis[i].energy += 0.04;
+          }
           // get more tired between midnight and 3am
           if (chibis[i].awake && daytimeCounter <= 250) {
             chibis[i].energy -= 0.03125;
@@ -1408,7 +1476,6 @@ function Seed(colour, owner) {
                   chibis[j].speedY = 0;
                   chibis[i].sitting = true;
                   chibis[j].sitting = true;
-                  chibis[j].partner = chibis[i];
                   if (Math.random() < 1/3) {
                     speech.push(new Speak(chibis[i], happyWord()));
                   } else if (Math.random() < 2/3) {
@@ -1416,13 +1483,8 @@ function Seed(colour, owner) {
                   }
                   chibis[i].facingForwards = true;
                   chibis[j].facingForwards = true;
-                  if (chibis[i].gender == 'Female') {
-                    chibis[i].snuggling = 270;
-                    chibis[j].snuggling = 250;
-                  } else if (chibis[i].gender == 'Male') {
-                    chibis[i].snuggling = 250;
-                    chibis[j].snuggling = 270;
-                  }
+                  chibis[i].snuggling = 250;
+                  chibis[j].snuggling = 260;
                   sendMessage(chibis[j].name+' and '+chibis[i].name+' had a snuggle');
                 }
               }
@@ -1740,4 +1802,35 @@ function Seed(colour, owner) {
       // seconds = Math.floor(seconds - (minutes*60));
       // seconds = ('0' + seconds).slice(-2);
       return (hours+':'+minutes/* +':'+seconds*/);
+    }
+
+    /**
+    * function to calculate the season colours
+    */
+    function recalcSeasonVariables() {
+      seasonText = 'Autumn';
+      let glyph = '\u2EDA';
+      if (season > 3) {
+        season = 0;
+        glyph = '\u2744';
+        seasonText = 'Winter';
+      } else if (season == 1) {
+        glyph = '\u2606';
+        seasonText = 'Spring';
+      } else if (season == 2) {
+        glyph = '\u263C';
+        seasonText = 'Summer';
+      }
+      if (season == 3) {
+        seasonNext = 0;
+      } else {
+        seasonNext = season + 1;
+      }
+      // trees spawn glyphs
+      for (let i = 0; i < trees.length && i < canvasWidth/250; i++) {
+        if (Math.random() < 0.5) {
+          createGlyphs(trees[i].x, trees[i].y, glyph);
+          //glyphs[glyphs.length-1].timer *= 1 + (Math.random()*2);
+        }
+      }
     }
