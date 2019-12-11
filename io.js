@@ -52,7 +52,9 @@ function copyChibi(chibi) {
   chibi.pattern+'*'+
   chibi.eyeColour2+'*'+
   chibi.earWidth+'*'+
-  chibi.breed;
+  chibi.breed+'*'+
+  chibi.bodypartCode[12];
+;
   // console.log(outputbuffer);
   return outputbuffer;
 }
@@ -81,6 +83,7 @@ function cloneChibi(outputbuffer, who) {
   for (let i = 0; i < 12; i ++) {
     who.bodypartCode[i] = parseInt(attributeArray[i+19]);
   }
+  who.bodypartCode[12] = parseInt(attributeArray[48]);
   who.thirdColour = attributeArray[31];
   who.nosePos = parseFloat(attributeArray[32]);
   who.eyePosX = parseFloat(attributeArray[33]);
@@ -108,18 +111,16 @@ function cloneChibi(outputbuffer, who) {
 */
 function pasteChibi(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 48) {
-    sendMessage('Old filetype detected');
-  } if (attributeArray.length !== 48) {
-    alert('Failed to load file');
+  if (attributeArray.length !== 49) {
+    alert('Old filetype detected');
   } else {
+    // push a new chibi
     chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0]));
+    // overwrite it
     cloneChibi(outputbuffer, chibis[chibis.length-1]);
     seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
-    seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
-    seeds[seeds.length-1].timer = 750;
     speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
-    sendMessage(chibis[chibis.length-1].name+' arrived');
+    sendMessage(chibis[chibis.length-1].name + ' arrived');
     selection = null;
   }
 }
@@ -176,7 +177,6 @@ function openUploadDialog() {
     if (file.name.match(/\.(chi)$/)) {
       let reader = new FileReader();
       reader.onload = function() {
-        //console.log(reader.result);
         pasteChibi(reader.result);
       };
       reader.readAsText(file);

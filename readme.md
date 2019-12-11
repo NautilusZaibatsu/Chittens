@@ -2,13 +2,17 @@
 
 changelog
 
+11/12/2019 = 0.066
+~ added a chest piece to the chibis, so that coloured bellies are possible
+~ added the black and white shorthair breed
+~ made improvements to the Siamese and Burmese breeds.
+~ improved efficiency of albino colour variation
 
 10/12/2019 = 0.065
 ~ added seasons, the season changes each day. Chibis get more tired in winter, less tired and more amorous in spring and have more energy in summer
 ~ added rudimentary temperature system
-~ day of thr week is now tracked
+~ day of the week is now tracked
 ~ the simulation now starts with a small number of young trees of a random species
-~ increased number of starting fireflies to two
 ~ improved efficiency of the pattern system
 
 27/10/2019 = 0.064

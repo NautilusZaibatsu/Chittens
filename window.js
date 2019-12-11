@@ -2,7 +2,7 @@
 const gravity = 0.02; // constant for gravity
 const elasticity = 0.5; // bounciness of chibis
 const speedLimit = 100; // maximum X or Y speed
-const maturesAt = 1; // age the chibis turn into adults at
+const maturesAt = 2; // age the chibis turn into adults at
 // canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
 const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
@@ -20,8 +20,7 @@ const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
 
 secondTimer = 0;
-fps = 0;
-fpsCount = '00';
+fps = 30;
 daytimeCounter = 0;
 timeMod = daytimeCounter;
 day = 0;
@@ -211,20 +210,23 @@ function startGame() {
   initButtons();
   sendMessage('Checking integrity of names database');
   console.log(reportNames());
-  // initial fireflies, trees etc
-  for (let i = 0; i < 2; i++) {
+  // initial firefly, trees etc
     if (Math.random() < 0.5) {
       fireflies.push(new FireFly(0, Math.random()*trueBottom, pointerPos, 1, glowColour));
     } else {
       fireflies.push(new FireFly(canvasWidth, Math.random()*trueBottom, pointerPos, 1, glowColour));
     }
-  }
   // plant trees to begin with
   let defaultTreeNumber = canvasWidth/250;
   let defaultFruitColour = randomColourFruity();
   for (let i = 0; i < defaultTreeNumber; i++) {
     tryToPlantaTree(Math.abs(Math.random()*canvasWidth), defaultFruitColour);
     trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * Math.random() * 0.33);
+    trees[trees.length - 1].birthday = Math.round(Math.random()*1000);
+    let numFruit = Math.round(Math.random()*3);
+    for (let i = 0; i < numFruit; i++) {
+      trees[trees.length - 1].spawnFruit();
+    }
   }
   // gene editing
   experiment = new Chibi(70, 90, 13.5, 10, 'Female');
@@ -438,11 +440,11 @@ function updateGameArea() {
   // background
   // draw the clouds - disappearring at nighttime
   ctx.globalAlpha = 0.3;
-  if (daytimeCounter <= 300) {
-    ctx.globalAlpha = 0.3 - (0.3*((300 - daytimeCounter)/300));
-  } else if (daytimeCounter > 700) {
-    ctx.globalAlpha = 0.3 - (0.3*((daytimeCounter-700)/300));
-  }
+  // if (daytimeCounter <= 300) {
+  //   ctx.globalAlpha = 0.3 - (0.3*((300 - daytimeCounter)/300));
+  // } else if (daytimeCounter > 700) {
+  //   ctx.globalAlpha = 0.3 - (0.3*((daytimeCounter-700)/300));
+  // }
   let offsetX = daytimeCounter*(canvasHeight/540*2160)/1000;
   ctx.drawImage(clouds, - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
   if (offsetX > canvasWidth) {
@@ -538,15 +540,6 @@ function updateGameArea() {
       ctx.fillText(messageBuffer[i].timeStamp +' '+ messageBuffer[i].text, 10, 30 + trueBottom - (20*(messageBuffer.length-i)));
     }
   }
-  // update the text
-  d = new Date();
-  if (d.getSeconds() !== secondTimer) {
-    secondTimer = d.getSeconds();
-    fps = fpsCount;
-    fpsCount = 0;
-  } else {
-    fpsCount ++;
-  }
 
   if (!paused) {
     // increase daytime counter and make seasons rotate
@@ -568,7 +561,10 @@ function updateGameArea() {
   // glyphs
   for (i = glyphs.length-1; i >= 0; i--) {
     glyphs[i].update();
-    if (glyphs[i].timer < 0 || fps < 30) {
+    if (fps < 30) {
+      glyphs[i].timer -= 1;
+    }
+    if (glyphs[i].timer < 0) {
       glyphs.splice(i, 1);
       i --;
     }
@@ -725,17 +721,18 @@ function updateGameArea() {
     } else if (fireflies[f].focus.y > trueBottom - fireflies[f].focus.size) {
       fireflies[f].chooseNewTarget();
     } else if (Math.random() > 0.995) {
-      fireflies[f].chooseNewTarget()
+      fireflies[f].chooseNewTarget();
     } else {
       if ((Math.abs(fireflies[f].speedX)+(fireflies[f].speedY))/2 < 1) {
+        // fireflies eating
         if (detectCollision(fireflies[f], fireflies[f].focus)) {
           fireflies[f].speedX *= 0.5;
           fireflies[f].speedY *= 0.5;
           fireflies[f].stomach ++;
           fireflies[f].justAte = true;
-          if (fireflies[f].stomach >= 10) {
+          if (fireflies[f].stomach >= 25 && fireflies.length <= 6) {
             fireflies[f].stomach = 0;
-            fireflies.push(new FireFly(fireflies[f].focus.x, fireflies[f].focus.y, fireflies[f].focus, 0.5, fireflies[f].firstColour));
+            fireflies.push(new FireFly(fireflies[f].focus.x, fireflies[f].focus.y, fireflies[f].focus, 0.8, fireflies[f].firstColour));
             fireflies[fireflies.length-1].chooseNewTarget();
             fireflies[fireflies.length-1].touches = 250;
           }
@@ -743,18 +740,25 @@ function updateGameArea() {
           removeFocusFrom(fireflies[f].focus);
           fireflies[f].chooseNewTarget();
           fruits.splice(victimIndex, 1);
+          if (createGlyphs(fireflies[f].x, fireflies[f].y, '.')) {
+            for (let i = 1; i < 9; i++) {
+              glyphs[glyphs.length-i].colour = trueWhite;
+              glyphs[glyphs.length-i].timer *= 0.25;
+            }
+          }
         }
       }
     }
     // draw their trails, log touches, then update
     trails.push(new Particle(fireflies[f].size/10, glowColour, fireflies[f].x, fireflies[f].y, fireflies[f].speedX, fireflies[f].speedY));
     if (fireflies[f].touchedThisFrame) {
-      if (f == 0 && fireflies[f].touches == 400) {
+      // spawn a new firefly if there is only one, and it is nearly consumed
+      if (fireflies[f].touches == 400 && fireflies.length == 1) {
         let x = 0;
         if (Math.random() < 0.5) {
           x = canvasWidth;
         }
-        fireflies.push(new FireFly(x, Math.random()*trueBottom, pointerPos, 1, glowColour));
+          fireflies.push(new FireFly(x, Math.random()*trueBottom, pointerPos, 1, glowColour));
       }
       fireflies[f].touches += 1;
       fireflies[f].chooseNewTarget();
@@ -773,7 +777,7 @@ function updateGameArea() {
   basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chibis.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
   basicInfo.update();
   topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 17);
-  topLabel.text = 'v0.065 FPS '+fps;
+  topLabel.text = 'v0.066 FPS '+fps;
   topLabel.update();
   // day of the week and the season
   leftLabel = new TextElement(fontSize+'px', outputArray[2], 255, 17);
@@ -1113,6 +1117,7 @@ function Seed(colour, owner) {
         if (this.justAte && Math.random() < 0.995) {
           this.justAte = false;
         }
+        let bounced = false;
         if (this.x < 0 || this.x > canvasWidth) {
           this.speedX *= -0.98;
           if (this.x < 0) {
@@ -1120,6 +1125,7 @@ function Seed(colour, owner) {
           } else {
             this.x = canvasWidth - ((2.5*this.size)/20);
           }
+          bounced = true;
         }
         if (this.y < 0 || this.y > trueBottom) {
           this.speedY *= -0.99;
@@ -1128,7 +1134,9 @@ function Seed(colour, owner) {
           } else {
             this.y += (2.5*this.size)/20;
           }
+          bounced = true;
         }
+        if (!bounced) {
         let diffx;
         let diffy;
         let targetangle;
@@ -1146,13 +1154,13 @@ function Seed(colour, owner) {
           // if we are going right and it's to our right
           // if we are going left and it's to our left
         } else {
-          this.speedX *= 0.99;
+          this.speedX *= 0.95;
         }
         if ((diffy > 0 && this.speedY > 0) || (diffy < 0 && this.speedY < 0)) {
           // if we are going up and it's above
           // if we are going down and it's below
         } else {
-          this.speedY *= 0.99;
+          this.speedY *= 0.95;
         }
         this.speedX += 0.05*Math.cos(targetangle);
         this.speedY += 0.05*Math.sin(targetangle);
@@ -1160,6 +1168,7 @@ function Seed(colour, owner) {
         this.x += this.speedX;
         this.y += this.speedY;
       }
+    }
 
       let glow = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, 100);
       glow.addColorStop(0, this.firstColour);
@@ -1348,13 +1357,19 @@ function Seed(colour, owner) {
           // maturing to adult
           if (chibis[i].age == maturesAt) {
             sendMessage(chibis[i].name+' reached adulthood');
+            if (createGlyphs(chibis[i].x, chibis[i].y, '\u2764')) {
+              for (let i = 1; i < 9; i++) {
+                glyphs[glyphs.length-i].timer *= 1 + (Math.random()*1);
+              }
+            } else {
+              failed = true;
+            }
             if (chibis[i].energy < 50) {
               chibis[i].energy += 50;
             } else {
               (chibis[i].energy = 100);
             }
             chibis[i].love += 25;
-            createGlyphs(chibis[i].x, chibis[i].y, '\u274b');
             // reaching old age
           } else if (chibis[i].age >= chibis[i].maxAge-1 && !chibis[i].elder) {
             chibis[i].elder = true;
@@ -1723,6 +1738,9 @@ function Seed(colour, owner) {
         glyphs.push(new Glyph(x, y, speed/1.5, -speed/1.5, symbol));
         glyphs.push(new Glyph(x, y, -speed/1.5, speed/1.5, symbol));
         glyphs.push(new Glyph(x, y, -speed/1.5, -speed/1.5, symbol));
+        return true;
+      } else {
+        return false;
       }
     }
 
@@ -1825,11 +1843,23 @@ function Seed(colour, owner) {
       } else {
         seasonNext = season + 1;
       }
+      sendMessage(seasonText + ' began');
       // trees spawn glyphs
-      for (let i = 0; i < trees.length && i < canvasWidth/250; i++) {
-        if (Math.random() < 0.5) {
-          createGlyphs(trees[i].x, trees[i].y, glyph);
-          //glyphs[glyphs.length-1].timer *= 1 + (Math.random()*2);
+
+      let failed = false;
+      for (let i = 0; !failed && i < trees.length && i < canvasWidth/150; i++) {
+        if (!failed && Math.random() < 0.5) {
+          if (createGlyphs(trees[i].x, trees[i].y, glyph)) {
+            for (let i = 1; !failed && i < 9; i++) {
+              // white glyphs in winter
+              if (season == 0) {
+                glyphs[glyphs.length-i].colour = mixTwoColours(trueWhite, seasonColour[seasonNext], 0.5);
+              }
+              glyphs[glyphs.length-i].timer *= 2 + (Math.random()*2.5);
+            }
+          } else {
+            failed = true;
+          }
         }
       }
     }

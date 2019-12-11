@@ -132,6 +132,7 @@ function handleButton(input) {
             i--;
           }
         }
+
         sendMessage(selection.name+' was adopted');
         selection.hitBottom = false;
         selection.love = 100;
@@ -262,6 +263,7 @@ function handleButton(input) {
       if (chibis[i] == selection) {
         stop = true;
         graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
+        removeRelationships(selection);
         chibis[i].kill();
       }
     }
@@ -278,6 +280,11 @@ function handleButton(input) {
     break;
     case 7:
     pasteChibi(copyChibi(experiment));
+    chibis[chibis.length-1].gender = 'Female';
+    chibis[chibis.length-1].name = null;
+    while (chibis[chibis.length-1].name == null) {
+      chibis[chibis.length-1].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
+    }
     break;
     case 8:
     pasteChibi(copyChibi(experiment));
@@ -497,8 +504,9 @@ function unclick() {
     for (let i = 0; i < sliders.length; i++) {
       if (sliders[i].sBar.dragging) {
         sliders[i].sBar.dragging = false;
-        if ((i > 6 && i < 18) || i == 26) {
+        if ((i > 6 && i < 18) || i == 26 || i == 29) {
           sliders[i].currentPos = Math.round(sliders[i].currentPos);
+            sendMessage(experiment.bodypartCode[12]);
         }
         console.log('exact: '+sliders[i].currentPos);
       }
@@ -578,6 +586,7 @@ function initSliders() {
   sliders[26] = new Slider(0, 6, experiment.pattern, 130, 560, 'pattern');
   sliders[27] = new Slider(0, 1, experiment.patternAlpha, 130, 590, 'opacity');
   sliders[28] = new Slider(0, 1, experiment.earHeight, 20, 245, 'ear height');
+  sliders[29] = new Slider(0, 2, experiment.bodypartCode[12], 130, 610, 'chest');
 };
 
 function reinitSliders() {
@@ -610,6 +619,7 @@ function reinitSliders() {
   sliders[26].currentPos = experiment.pattern;
   sliders[27].currentPos = experiment.patternAlpha;
   sliders[28].currentPos = experiment.earHeight;
+  sliders[29].currentPos = experiment.bodypartCode[12];
 }
 
 /**
@@ -658,15 +668,6 @@ function SliderBar(parent) {
   this.y = this.parent.y;
   this.size = 10;
   this.update = function() {
-    // if (this.colour == trueWhite || !this.dragging) {
-    //   if (this.parent.currentPos == 0) {
-    //     this.parent.sBar.colour = experiment.firstColour;
-    //   } else if (this.parent.currentPos == 1) {
-    //     this.parent.sBar.colour = experiment.secondColour;
-    //   } else if (this.parent.currentPos == 2) {
-    //     this.parent.sBar.colour = experiment.thirdColour;
-    //   }
-    // }
     if (this.dragging) {
       let correctMouseX = pointerPos.x;
       if (correctMouseX < this.parent.x) {
@@ -737,6 +738,8 @@ function SliderBar(parent) {
         experiment.patternAlpha = this.parent.currentPos;
       } else if (this.parent.id == 28) {
         experiment.earHeight = this.parent.currentPos;
+      } else if (this.parent.id == 29) {
+        experiment.bodypartCode[12] = Math.round(this.parent.currentPos);
       }
       experiment.reinitSizeAndColour();
     } else {
