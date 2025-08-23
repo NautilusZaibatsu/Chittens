@@ -28,9 +28,9 @@ function Message(text, timeStamp) {
 }
 
 /**
- * function for instances of chibi speech
- * @param {Chibi} who - which chibi is mewing
- * @param {string} mew - the text the chibi is saying
+ * function for instances of chitten speech
+ * @param {Chitten} who - which chitten is mewing
+ * @param {string} mew - the text the chitten is saying
  */
  function Speak(who, mew) {
    this.x = who.x;

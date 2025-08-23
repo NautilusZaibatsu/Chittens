@@ -1,66 +1,67 @@
 /**
-* function to copy all of a chibi's parameters into a string for saving or cloning
-* @param {object} chibi -the chibi to be cloned
-* @return {string} outputbuffer - all the chibi's parameters stored as a string
+* function to copy all of a chitten's parameters into a string for saving or cloning
+* @param {object} chitten -the chitten to be cloned
+* @return {string} outputbuffer - all the chitten's parameters stored as a string
 */
-function copyChibi(chibi) {
+function copyChitten(chitten) {
   let outputbuffer =
-  chibi.gender+'*'+
-  chibi.secondColour+'*'+
-  chibi.firstColour+'*'+
-  chibi.coatMod[0]+'*'+
-  chibi.coatMod[1]+'*'+
-  chibi.earWidth+'*'+
-  chibi.thickness+'*'+
-  chibi.legginess+'*'+
-  chibi.size+'*'+
-  chibi.limbLength+'*'+
-  chibi.maxSize+'*'+
-  chibi.birthday+'*'+
-  chibi.age+'*'+
-  chibi.name+'*'+
-  chibi.elder+'*'+
-  chibi.reachedNirvana+'*'+
-  chibi.tailLength+'*'+
-  chibi.albino+'*'+
-  chibi.albinoGene+'*'+
-  chibi.bodypartCode[0]+'*'+
-  chibi.bodypartCode[1]+'*'+
-  chibi.bodypartCode[2]+'*'+
-  chibi.bodypartCode[3]+'*'+
-  chibi.bodypartCode[4]+'*'+
-  chibi.bodypartCode[5]+'*'+
-  chibi.bodypartCode[6]+'*'+
-  chibi.bodypartCode[7]+'*'+
-  chibi.bodypartCode[8]+'*'+
-  chibi.bodypartCode[9]+'*'+
-  chibi.bodypartCode[10]+'*'+
-  chibi.bodypartCode[11]+'*'+
-  chibi.thirdColour+'*'+
-  chibi.nosePos+'*'+
-  chibi.eyePosX+'*'+
-  chibi.eyePosY+'*'+
-  chibi.headWidth+'*'+
-  chibi.headHeight+'*'+
-  chibi.eyeColour+'*'+
-  chibi.eyeSize+'*'+
-  chibi.maxAge+'*'+
-  chibi.fangs+'*'+
-  chibi.sphynx+'*'+
-  chibi.sphynxGene+'*'+
-  chibi.patternAlpha+'*'+
-  chibi.pattern+'*'+
-  chibi.eyeColour2+'*'+
-  chibi.earWidth+'*'+
-  chibi.breed+'*'+
-  chibi.bodypartCode[12];
+  chitten.gender+'*'+
+  chitten.secondColour+'*'+
+  chitten.firstColour+'*'+
+  chitten.coatMod[0]+'*'+
+  chitten.coatMod[1]+'*'+
+  chitten.earWidth+'*'+
+  chitten.thickness+'*'+
+  chitten.legginess+'*'+
+  chitten.size+'*'+
+  chitten.limbLength+'*'+
+  chitten.maxSize+'*'+
+  chitten.birthday+'*'+
+  chitten.age+'*'+
+  chitten.name+'*'+
+  chitten.elder+'*'+
+  chitten.reachedNirvana+'*'+
+  chitten.tailLength+'*'+
+  chitten.albino+'*'+
+  chitten.albinoGene+'*'+
+  chitten.bodypartCode[0]+'*'+
+  chitten.bodypartCode[1]+'*'+
+  chitten.bodypartCode[2]+'*'+
+  chitten.bodypartCode[3]+'*'+
+  chitten.bodypartCode[4]+'*'+
+  chitten.bodypartCode[5]+'*'+
+  chitten.bodypartCode[6]+'*'+
+  chitten.bodypartCode[7]+'*'+
+  chitten.bodypartCode[8]+'*'+
+  chitten.bodypartCode[9]+'*'+
+  chitten.bodypartCode[10]+'*'+
+  chitten.bodypartCode[11]+'*'+
+  chitten.thirdColour+'*'+
+  chitten.nosePos+'*'+
+  chitten.eyePosX+'*'+
+  chitten.eyePosY+'*'+
+  chitten.headWidth+'*'+
+  chitten.headHeight+'*'+
+  chitten.eyeColour+'*'+
+  chitten.eyeSize+'*'+
+  chitten.maxAge+'*'+
+  chitten.fangs+'*'+
+  chitten.hairlessGene+'*'+
+  chitten.hairless+'*'+
+  chitten.heterochromicGene+'*'+
+  chitten.patternAlpha+'*'+
+  chitten.pattern+'*'+
+  chitten.eyeColour2+'*'+
+  chitten.earHeight+'*'+
+  chitten.breed+'*'+
+  chitten.bodypartCode[12];
 ;
   // console.log(outputbuffer);
   return outputbuffer;
 }
 
-// outputbuffer is array from copyChibi. Who is target chibi to splice over
-function cloneChibi(outputbuffer, who) {
+// outputbuffer is array from copyChitten. Who is target chitten to splice over
+function cloneChitten(outputbuffer, who) {
   let attributeArray = outputbuffer.split('*');
   selection = null;
   who.age = 3;
@@ -94,14 +95,15 @@ function cloneChibi(outputbuffer, who) {
   who.eyeSize = parseFloat(attributeArray[38]);
   who.maxAge = parseFloat(attributeArray[39]);
   who.fangs = parseFloat(attributeArray[40]);
-  who.sphynx = (attributeArray[41] == 'true');
-  who.sphynxGene = (attributeArray[42] == 'true');
-  who.patternAlpha = parseFloat(attributeArray[43]);
-  who.pattern = parseFloat(attributeArray[44]);
-  who.eyeColour2 = attributeArray[45];
+  who.hairlessGene = (attributeArray[41] == 'true');
+  who.hairless = (attributeArray[42] == 'true');
+  who.heterochromicGene = (attributeArray[43] == 'true');
+  who.patternAlpha = parseFloat(attributeArray[44]);
+  who.pattern = parseFloat(attributeArray[45]);
+  who.eyeColour2 = attributeArray[46];
   who.earWidth = parseFloat(attributeArray[5]);
-  who.earHeight = parseFloat(attributeArray[46]);
-  who.breed = attributeArray[47];
+  who.earHeight = parseFloat(attributeArray[47]);
+  who.breed = attributeArray[48];
   who.reinitSizeAndColour();
 }
 
@@ -109,24 +111,24 @@ function cloneChibi(outputbuffer, who) {
 * function to read a lifeforms's parameter string and return a valid lifeform object to be instantiated in the pool
 * @param {string} outputbuffer - the lifeforms' parameter string
 */
-function pasteChibi(outputbuffer) {
+function pasteChitten(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
   if (attributeArray.length !== 49) {
     alert('Old filetype detected');
   } else {
-    // push a new chibi
-    chibis.push(new Chibi(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0]));
+    // push a new chitten
+    chittens.push(new Chitten(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0]));
     // overwrite it
-    cloneChibi(outputbuffer, chibis[chibis.length-1]);
-    seeds.push(new Seed(randomColourFruity(), chibis[chibis.length-1]));
-    speech.push(new Speak(chibis[chibis.length-1], neutralWord()));
-    sendMessage(chibis[chibis.length-1].name + ' arrived');
+    cloneChitten(outputbuffer, chittens[chittens.length-1]);
+    seeds.push(new Seed(randomColourFruity(), chittens[chittens.length-1]));
+    speech.push(new Speak(chittens[chittens.length-1], neutralWord()));
+    sendMessage(chittens[chittens.length-1].name + ' arrived');
     selection = null;
   }
 }
 
 /**
-* function to save the selected chibis's parameter string as a file on the users device
+* function to save the selected chittens's parameter string as a file on the users device
 */
 function saveToFile() {
   let txt = '';
@@ -135,7 +137,7 @@ function saveToFile() {
   if (chosenname == null || chosenname == '') {
     chosenname = selection.name;
   } else {
-    let blob = new Blob([copyChibi(selection)], {type: 'text/csv'});
+    let blob = new Blob([copyChitten(selection)], {type: 'text/csv'});
     if (window.navigator.msSaveOrOpenBlob) {
       window.navigator.msSaveBlob(blob, txt);
     } else {
@@ -149,12 +151,12 @@ function saveToFile() {
   }
 }
 
-
+// OLD METHOD - NOT CALLED
 /**
 * function to upload a creature file from a local device
 * @param {event} evt - the click event
 */
-function uploadChibi() {
+function uploadChitten() {
   let f = evt.target.files[0];
   if (f) {
     let r = new FileReader();
@@ -177,7 +179,7 @@ function openUploadDialog() {
     if (file.name.match(/\.(chi)$/)) {
       let reader = new FileReader();
       reader.onload = function() {
-        pasteChibi(reader.result);
+        pasteChitten(reader.result);
       };
       reader.readAsText(file);
     } else {

@@ -10,7 +10,7 @@ function DummyPointer() {
   this.speedY = 0;
   this.update = function() {
     this.x = pointerPos.x;
-    this.x = pointerPos.y;
+    this.y = pointerPos.y;
     this.speedX = this.lastX - this.x;
     this.speedY = this.lastY - this.y;
     this.lastX = this.x;
@@ -94,29 +94,29 @@ function checkBounceBottom(what) {
 */
 function produceExplosion(ex, ey) {
   // blast all the guys
-  for (let i = 0; i < chibis.length; i++) {
-    if (chibis[i].awake) {
-      let diffx = ex - chibis[i].x;
-      let diffy = ey - chibis[i].y;
+  for (let i = 0; i < chittens.length; i++) {
+    if (chittens[i].awake) {
+      let diffx = ex - chittens[i].x;
+      let diffy = ey - chittens[i].y;
       // as long as it's not the guy that triggered it
-      if (!diffx == 0 && !diffy == 0) {
+      if (!(diffx == 0 && diffy == 0)) {
         // if the guy is within range;
         let range = 200;
         if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-          chibis[i].love += 25;
-          chibis[i].energy -= 50;
-          chibis[i].health -= 10;
+          chittens[i].love += 25;
+          chittens[i].energy -= 50;
+          chittens[i].health -= 10;
           diffx /= 5;
           diffy /= 5;
           if (diffx >= 0) {
-            chibis[i].speedX -= (100-diffx)/2;
-          } else if (diffx < 0) {
-            chibis[i].speedX += (100-diffx)/2;
+            chittens[i].speedX -= (100-Math.abs(diffx))/2;
+          } else {
+            chittens[i].speedX += (100-Math.abs(diffx))/2;
           }
           if (diffy >= 0) {
-            chibis[i].speedY -= (100-diffy)/2;
-          } else if (diffy <= 0) {
-            chibis[i].speedY += (100-diffy)/2;
+            chittens[i].speedY -= (100-Math.abs(diffy))/2;
+          } else {
+            chittens[i].speedY += (100-Math.abs(diffy))/2;
           }
         }
       }
@@ -148,7 +148,7 @@ function produceExplosion(ex, ey) {
     let diffx = ex - fireflies[i].x;
     let diffy = ey - fireflies[i].y;
     // as long as it's not the fly that triggered it
-    if (!diffx == 0 && !diffy == 0) {
+    if (!(diffx == 0 && diffy == 0)) {
       // if the firefly is within range;
       let range = 200;
       if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
@@ -170,25 +170,30 @@ function produceExplosion(ex, ey) {
 }
 
 /**
-* function to detect a collision between two objects
+* function to detect a collision between two circular objects
 * @param {Lifeform} thisobj - the first object
 * @param {lifeform} otherobj - the second object
 * @return {boolean} whether they collided or not
 */
 function detectCollision(thisobj, otherobj) {
-  let myleft = thisobj.x-5;
-  let myright = thisobj.x + (thisobj.size)+5;
-  let mytop = thisobj.y-5;
-  let mybottom = thisobj.y + (thisobj.size)+5;
-  let otherleft = otherobj.x;
-  let otherright = otherobj.x + (otherobj.size);
-  let othertop = otherobj.y;
-  let otherbottom = otherobj.y + (otherobj.size);
-  let crash = true;
-  if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
-    crash = false;
-  }
-  return crash;
+  let dx = thisobj.x - otherobj.x;
+  let dy = thisobj.y - otherobj.y;
+  let distance = Math.sqrt(dx * dx + dy * dy);
+  let minDistance = (thisobj.size + otherobj.size) / 2;
+  return distance < minDistance;
+}
+
+/**
+* function to detect rectangular collision (for UI elements)
+* @param {object} point - object with x, y coordinates
+* @param {object} rect - object with x, y, size properties
+* @return {boolean} whether point is inside rectangle
+*/
+function detectRectCollision(point, rect) {
+  return point.x >= rect.x && 
+         point.x <= rect.x + rect.size && 
+         point.y >= rect.y && 
+         point.y <= rect.y + rect.size;
 }
 
 /**
@@ -197,34 +202,47 @@ function detectCollision(thisobj, otherobj) {
 * @param {object} obj2 - the second object
 */
 function collide(obj1, obj2) {
-  // pythagoras
+  // calculate distance once and reuse
   let distX = obj1.x - obj2.x;
   let distY = obj1.y - obj2.y;
-  let d = Math.sqrt((distX) * (distX) + (distY) * (distY));
-  let nx = (obj2.x - obj1.x) / d;
-  let ny = (obj2.y - obj1.y) / d;
+  let d = Math.sqrt(distX * distX + distY * distY);
+  
+  // prevent division by zero
+  if (d === 0) return;
+  
+  let nx = distX / d;
+  let ny = distY / d;
   let p = 2 * (obj1.speedX * nx + obj1.speedY * ny - obj2.speedX * nx - obj2.speedY * ny) / (obj1.size + obj2.size);
-  // calulating the point of collision
+  
+  // calculate collision point
   let colPointX = ((obj1.x * obj2.size) + (obj2.x * obj1.size)) / (obj1.size + obj2.size);
   let colPointY = ((obj1.y * obj2.size) + (obj2.y * obj1.size)) / (obj1.size + obj2.size);
-  // stopping overlaps
-  obj1.x = colPointX + obj1.size * (obj1.x - obj2.x) / d;
-  obj1.y = colPointY + obj1.size * (obj1.y - obj2.y) / d;
-  obj2.x = colPointX + obj2.size * (obj2.x - obj1.x) / d;
-  obj2.y = colPointY + obj2.size * (obj2.y - obj1.y) / d;
-  // updating velocity to reflect collision
+  
+  // separate overlapping objects
+  let overlap = (obj1.size + obj2.size) / 2 - d;
+  if (overlap > 0) {
+    let separationX = nx * overlap * 0.5;
+    let separationY = ny * overlap * 0.5;
+    obj1.x += separationX;
+    obj1.y += separationY;
+    obj2.x -= separationX;
+    obj2.y -= separationY;
+  }
+  
+  // update velocities
   obj1.speedX -= p * obj1.size * nx * elasticity;
   obj1.speedY -= p * obj1.size * ny * elasticity;
   obj2.speedX += p * obj2.size * nx * elasticity;
   obj2.speedY += p * obj2.size * ny * elasticity;
-  // calculate rotation on collision
-  let targetangle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
+  
+  // calculate rotation (reuse calculated angle components)
   if (!obj1.hitBottom) {
-    obj1.spin += targetangle/20;
+    obj1.spin += Math.atan2(ny, nx) / 20;
   }
   if (!obj2.hitBottom) {
-    obj2.spin -= targetangle/20;
+    obj2.spin -= Math.atan2(ny, nx) / 20;
   }
+  
   applySpeedLimit(obj1);
   applySpeedLimit(obj2);
 }

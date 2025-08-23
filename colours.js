@@ -38,11 +38,11 @@ function getRandomEyeColour() {
     seedB = seedG;
   }
   colour = rgbToHex(seedR, seedG, seedB);
-  return mixTwoColours(randomColour(), colour, (Math.random()*0.5));
+  return mixTwoColours(colour, randomColour(), 1 - (Math.random()*0.5));
 }
 
 /**
-* function to create a realistic coat for a chibi
+* function to create a realistic coat for a cat
 * @return {array} three hex colours
 */
 function generateRealisticCoat(randSeed) {

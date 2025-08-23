@@ -2,31 +2,30 @@
 * function to initialise all the buttons
 */
 function initButtons() {
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 65, 'Show me more', 'Generate another 9 Chibis'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Adopt this Chibi', 'Add the selected Chibi to your game'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 65, 'Show me more', 'Generate another 9 Chittens'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Adopt this Chitten', 'Add the selected Chitten to your game'));
   buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 85, 'Give them all away', 'Rehome the entire litter'));
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(195, 0, '\u2608', 'Rehome the selected Chibi'));
+  buttons.push(new Button(195, 0, '\u2608', 'Rehome the selected Chitten'));
   buttons.push(new Button(canvasWidth/2, 370, 'DUMMY', 'DUMMY')); // not being used
   buttons[4].visible = false;
-  // menu shit
-  buttons.push(new Button(164, 0, '\u21E9', 'Download the selected Chibi to your device'));
-  buttons.push(new Button(133, 0, '\u21E7', 'Upload a Chibi from your device'));
-
+  // menu
+  buttons.push(new Button(164, 0, '\u21E9', 'Download the selected Chitten to your device'));
+  buttons.push(new Button(133, 0, '\u21E7', 'Upload a Chitten from your device'));
   // gene editing
-  buttons.push(new Button(60, 595, 'Save Female', 'Save a Female clone of this Chibi'));
-  buttons.push(new Button(60, 630, 'Save Male', 'Save a Male clone of this Chibi'));
+  buttons.push(new Button(60, 595, 'Save Female', 'Save a Female clone of this Chitten'));
+  buttons.push(new Button(60, 630, 'Save Male', 'Save a Male clone of this Chitten'));
   buttons.push(new Button(60, 665, 'Close', 'Close the genetic editor'));
   buttons[7].visible = false;
   buttons[8].visible = false;
   buttons[9].visible = false;
-  // menu shit
+  // menu
   buttons.push(new Button(231, 0, '&!', 'Dev mode - open genetic editor'));
-  buttons.push(new Button(59, 0, '+\u2640', 'Adopt a female Chibi'));
-  buttons.push(new Button(98, 0, '+\u2642', 'Adopt a male Chibi'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 100, 'Close', 'Close the cattery'));
+  buttons.push(new Button(59, 0, '+\u2640', 'Adopt a female Chitten'));
+  buttons.push(new Button(98, 0, '+\u2642', 'Adopt a male Chitten'));
+  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 100, 'Close', 'Close the chittery'));
   buttons[13].visible = false;
   buttons.push(new Button(20, 0, '\u275A\u275A', 'Pause the simulation'));
 
@@ -37,6 +36,26 @@ function initButtons() {
   labels[1].visible = false;
   labels[2].visible = false;
 }
+
+  /**
+  * function for a piece of plain text
+  * @param {int} size - the size
+  * @param {string} colour - the colour
+  * @param {int} x - the x pos
+  * @param {int} y - the y pos
+  */
+  function TextElement(size, colour, x, y) {
+    this.size = size;
+    this.x = x;
+    this.y = y;
+    this.colour = colour;
+    this.update = function() {
+      ctx.font = this.size + ' ' + globalFont;
+      ctx.fillStyle = this.colour;
+      ctx.fillText(this.text, this.x, this.y);
+      ctx.globalAlpha = 1;
+    };
+  }
 
 /**
 * function to describe a button
@@ -107,15 +126,15 @@ function Button(x, y, text, toolTip) {
 function handleButton(input) {
   switch (input) {
     case 0:
-    if (!chosenChibiF) {
-      for (let i = currentChibis; i < chibis.length; i++) {
-        chibis.splice(i, 1);
+    if (!chosenChittenF) {
+      for (let i = currentChittens; i < chittens.length; i++) {
+        chittens.splice(i, 1);
         i--;
       }
       initFemaleCattery();
-    } else if (!chosenChibiM) {
-      for (let i = currentChibis; i < chibis.length; i++) {
-        chibis.splice(i, 1);
+    } else if (!chosenChittenM) {
+      for (let i = currentChittens; i < chittens.length; i++) {
+        chittens.splice(i, 1);
         i--;
       }
       initMaleCattery();
@@ -124,11 +143,11 @@ function handleButton(input) {
     case 1:
     if (selection !== null) {
       labels[2].visible = false;
-      if (!chosenChibiF) {
-        chosenChibiF = true;
-        for (let i = currentChibis; i < chibis.length; i++) {
-          if (chibis[i] !== selection) {
-            chibis.splice(i, 1);
+      if (!chosenChittenF) {
+        chosenChittenF = true;
+        for (let i = currentChittens; i < chittens.length; i++) {
+          if (chittens[i] !== selection) {
+            chittens.splice(i, 1);
             i--;
           }
         }
@@ -149,18 +168,19 @@ function handleButton(input) {
         labels[0].visible = false;
         labels[1].visible = false;
         selection.inCatBox = null;
+        selection.focus = fireflies[selection.findClosestFireFly()];
         buttons[10].available = true;
         buttons[11].available = true;
         buttons[12].available = true;
         buttons[6].available = true;
         buttons[13].visible = false;
-        choosingChibi = false;
+        choosingChitten = false;
         selection = null;
-      } else if (!chosenChibiM) {
-        chosenChibiM = true;
-        for (let i = currentChibis; i < chibis.length; i++) {
-          if (chibis[i] !== selection) {
-            chibis.splice(i, 1);
+      } else if (!chosenChittenM) {
+        chosenChittenM = true;
+        for (let i = currentChittens; i < chittens.length; i++) {
+          if (chittens[i] !== selection) {
+            chittens.splice(i, 1);
             i--;
           }
         }
@@ -184,34 +204,38 @@ function handleButton(input) {
         buttons[12].available = true;
         buttons[6].available = true;
         buttons[13].visible = false;
-        choosingChibi = false;
+        choosingChitten = false;
         selection = null;
       } else if (!chosenKitten) {
         for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
-          for (let j = 0; j < chibis.length && !found; j++) {
-            if (chibis[j].inCatBox == parentBoxes[i]) {
-              chibis[j].inCatBox = null;
-              chibis[j].hitBottom = false;
+          for (let j = 0; j < chittens.length && !found; j++) {
+            if (chittens[j].inCatBox == parentBoxes[i]) {
+              chittens[j].inCatBox = null;
+              chittens[j].hitBottom = false;
             }
           }
         }
         parentBoxes = [];
         chosenKitten = true;
-        for (let i = currentChibis; i < chibis.length; i++) {
-          if (chibis[i] !== selection) {
-            chibis.splice(i, 1);
+        for (let i = currentChittens; i < chittens.length; i++) {
+          if (chittens[i] !== selection) {
+            chittens.splice(i, 1);
             i--;
           }
         }
-        sendMessage(selection.name+' joined the family');
-        selection.hitBottom = false;
-        selection.love = 100;
-        speech.push(new Speak(selection, neutralWord()));
-        selection.size *= 0.5;
-        selection.reinitSizeAndColour();
-        selection.sitting = false;
-        createGlyphs(selection.x, selection.y, '\u2764');
-        selection.reinitSizeAndColour;
+        if (selection && selection.name) {
+          sendMessage(selection.name+' joined the family');
+          selection.hitBottom = false;
+          selection.love = 100;
+          speech.push(new Speak(selection, neutralWord()));
+          selection.size *= 0.5;
+          selection.reinitSizeAndColour();
+          selection.sitting = false;
+          createGlyphs(selection.x, selection.y, '\u2764');
+          selection.reinitSizeAndColour();
+        } else {
+          console.warn('Selection became undefined during litter processing');
+        }
         boxes = [];
         buttons[0].visible = false;
         buttons[1].visible = false;
@@ -222,25 +246,27 @@ function handleButton(input) {
         buttons[11].available = true;
         buttons[12].available = true;
         buttons[6].available = true;
-        selection.inCatBox = null;
-        choosingChibi = false;
+        if (selection) {
+          selection.inCatBox = null;
+        }
+        choosingChitten = false;
         selection = null;
       }
     }
     break;
     case 2:
     for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
-      for (let j = 0; j < chibis.length && !found; j++) {
-        if (chibis[j].inCatBox == parentBoxes[i]) {
-          chibis[j].inCatBox = null;
+      for (let j = 0; j < chittens.length && !found; j++) {
+        if (chittens[j].inCatBox == parentBoxes[i]) {
+          chittens[j].inCatBox = null;
         }
       }
     }
     parentBoxes = [];
     labels[2].visible = false;
     chosenKitten = true;
-    for (let i = currentChibis; i < chibis.length; i++) {
-      chibis.splice(currentChibis, chibis.length - currentChibis);
+    for (let i = currentChittens; i < chittens.length; i++) {
+      chittens.splice(currentChittens, chittens.length - currentChittens);
     }
     sendMessage('A litter of chittens was rehomed');
     boxes = [];
@@ -254,17 +280,17 @@ function handleButton(input) {
     labels[0].visible = false;
     labels[1].visible = false;
     selection = null;
-    choosingChibi = false;
+    choosingChitten = false;
     break;
     case 3:
     sendMessage(selection.name+' went to live with someone else');
     speech.push(new Speak(selection, angryWord()));
-    for (let i = 0, stop = false; i < chibis.length && !stop; i++) {
-      if (chibis[i] == selection) {
+    for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
+      if (chittens[i] == selection) {
         stop = true;
         graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
         removeRelationships(selection);
-        chibis[i].kill();
+        chittens[i].kill();
       }
     }
     selection = null;
@@ -279,19 +305,19 @@ function handleButton(input) {
     openUploadDialog();
     break;
     case 7:
-    pasteChibi(copyChibi(experiment));
-    chibis[chibis.length-1].gender = 'Female';
-    chibis[chibis.length-1].name = null;
-    while (chibis[chibis.length-1].name == null) {
-      chibis[chibis.length-1].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
+    pasteChitten(copyChitten(experiment));
+    chittens[chittens.length-1].gender = 'Female';
+    chittens[chittens.length-1].name = null;
+    while (chittens[chittens.length-1].name == null) {
+      chittens[chittens.length-1].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
     }
     break;
     case 8:
-    pasteChibi(copyChibi(experiment));
-    chibis[chibis.length-1].gender = 'Male';
-    chibis[chibis.length-1].name = null;
-    while (chibis[chibis.length-1].name == null) {
-      chibis[chibis.length-1].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
+    pasteChitten(copyChitten(experiment));
+    chittens[chittens.length-1].gender = 'Male';
+    chittens[chittens.length-1].name = null;
+    while (chittens[chittens.length-1].name == null) {
+      chittens[chittens.length-1].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
     }
     break;
     case 9:
@@ -306,7 +332,7 @@ function handleButton(input) {
     break;
     case 10:
     if (selection !== null) {
-      cloneChibi(copyChibi(selection), experiment);
+      cloneChitten(copyChitten(selection), experiment);
       reinitSliders();
     }
     geneEditing = true;
@@ -333,14 +359,14 @@ function handleButton(input) {
     buttons[6].available = false;
     break;
     case 13:
-    choosingChibi = false;
-    chosenChibiF = true;
-    chosenChibiM = true;
+    choosingChitten = false;
+    chosenChittenF = true;
+    chosenChittenM = true;
     selection = null;
     boxes = [];
-    for (let i = currentChibis; i < chibis.length; i++) {
-      if (chibis[i] !== selection) {
-        chibis.splice(i, 1);
+    for (let i = currentChittens; i < chittens.length; i++) {
+      if (chittens[i] !== selection) {
+        chittens.splice(i, 1);
         i--;
       }
     }
@@ -412,9 +438,9 @@ function mouseOff() {
 function click() {
   let clickedSomething = false;
   for (let i = 0; i < boxes.length; i++) {
-    if (!clickedSomething && detectCollision(pointerPos, boxes[i])) {
+    if (!clickedSomething && detectRectCollision(pointerPos, boxes[i])) {
       clickedSomething = true;
-      selection = chibis[chibis.length - boxes.length + i];
+      selection = chittens[chittens.length - boxes.length + i];
       boxes[i].selected = true;
     } else {
       boxes[i].selected = false;
@@ -428,29 +454,29 @@ function click() {
       }
     }
   }
-  if (!clickedSomething && choosingChibi) {
+  if (!clickedSomething && choosingChitten) {
     selection = null;
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].selected = false;
     }
     let genderString = 'female';
-    if (chosenChibiF) {
+    if (chosenChittenF) {
       genderString = 'male';
     }
-    if (!chosenChibiM || !chosenChibiF) {
-      sendMessage('\u2764 Choose a '+genderString+' Chibi');
+    if (!chosenChittenM || !chosenChittenF) {
+      sendMessage('\u2764 Choose a '+genderString+' Chitten');
       buttons[1].available = false;
     }
   }
-  if ((!chosenChibiF || !chosenChibiM || !chosenKitten) && selection !== null) {
+  if ((!chosenChittenF || !chosenChittenM || !chosenKitten) && selection !== null) {
     buttons[1].available = true;
   }
-  // now select Chibis
-  if (!clickedSomething && !choosingChibi) {
-    for (let i = chibis.length-1; i >= 0 && !clickedSomething; i--) {
-      if (detectCollision(pointerPos, chibis[i])) {
+  // now select Chittens
+  if (!clickedSomething && !choosingChitten) {
+    for (let i = chittens.length-1; i >= 0 && !clickedSomething; i--) {
+      if (detectCollision(pointerPos, chittens[i])) {
         clickedSomething = true;
-        selection = chibis[i];
+        selection = chittens[i];
         selection.dragging = true;
       }
     }
@@ -486,15 +512,15 @@ function click() {
       colourBlock.updateHoverColour();
     }
   }
-  if (!clickedSomething && chibis.includes(selection)) {
+  if (!clickedSomething && chittens.includes(selection)) {
     selection = null;
   }
 }
 
 function unclick() {
-  if (chibis.includes(selection) && selection.dragging) {
+  if (chittens.includes(selection) && selection.dragging) {
     selection.dragging = false;
-    selection.focus = selection.findClosestFireFly();
+    selection.focus = selection.inCatBox ? null : selection.findClosestFireFly();
     // selection.speedX = dummypointerPos.speedX;
     // selection.speedY = dummypointerPos.speedY;
     // console.log('let go. speedX was '+dummypointerPos.speedX);
@@ -533,11 +559,23 @@ function hover() {
     }
   }
   // highlighting catboxes
-  for (let i = 0; !hovered && i < boxes.length; i++) {
-    if (pointerPos.x < boxes[i].x + boxes[i].size && pointerPos.x > boxes[i].x && pointerPos.y < boxes[i].y + boxes[i].size && pointerPos.y > boxes[i].y) {
+  for (let i = 0; i < boxes.length; i++) {
+    if (detectRectCollision(pointerPos, boxes[i])) {
       boxes[i].highlighted = true;
+      hovered = true;
     } else {
       boxes[i].highlighted = false;
+    }
+  }
+  // highlighting parent boxes in litter selection
+  if (typeof parentBoxes !== 'undefined') {
+    for (let i = 0; i < parentBoxes.length; i++) {
+      if (detectRectCollision(pointerPos, parentBoxes[i])) {
+        parentBoxes[i].highlighted = true;
+        hovered = true;
+      } else {
+        parentBoxes[i].highlighted = false;
+      }
     }
   }
   // colour picker
@@ -549,7 +587,7 @@ function hover() {
 }
 
 /**
-* function to reiit the sliders when you load a new chibi etc
+* function to reiit the sliders when you load a new chitten etc
 */
 function initSliders() {
   sliders = [];

@@ -1,16 +1,21 @@
+const version = 0.067;
 // universal physics constants
 const gravity = 0.02; // constant for gravity
-const elasticity = 0.5; // bounciness of chibis
+const elasticity = 0.5; // bounciness of chittens
 const speedLimit = 100; // maximum X or Y speed
-const maturesAt = 2; // age the chibis turn into adults at
+const maturesAt = 2; // age the chittens turn into adults at
 // canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
 const canvasHeight = (window.innerHeight || document.body.clientHeight) - 20;
-const maxDistance = canvasWidth*canvasHeight;
+const maxDistance = Math.hypot(canvasWidth, canvasHeight); // measure the diagonal across the game area
 const muckLevel = 45;
 const trueBottom = canvasHeight - muckLevel;
 // UI and messaging
 let messagesToSave = canvasHeight/20;
+// FPS
+let frameCount = 0;
+let lastTime = performance.now();
+fps = 0;
 
 // global scaling values
 idealX = 1920 - 20;
@@ -20,7 +25,6 @@ const proportion = 1/(idealArea/(canvasWidth*trueBottom));
 const maxPop = 50*proportion;
 
 secondTimer = 0;
-fps = 30;
 daytimeCounter = 0;
 timeMod = daytimeCounter;
 day = 0;
@@ -36,8 +40,8 @@ dayNames[6] = 'Sunday';
 season = 1; // spring
 seasonNext = 2; // summer
 paused = false;
-chosenChibiM = true;
-chosenChibiF = true;
+chosenChittenM = true;
+chosenChittenF = true;
 chosenKitten = true;
 choiceTimer = 0;
 guyID = 0;
@@ -66,7 +70,7 @@ hungerOrange = '#e9af4e';
 const glyphTimer = 100;
 
 // init stuff
-chibis = [];
+chittens = [];
 graveStones = [];
 myGhosts = [];
 starfield = [];
@@ -91,8 +95,8 @@ speech = [];
 geneEditing = false;
 spliceBox = new CatBox(20, 30, 100, 5);
 sliderIndex = 0;
-colourBars = new ColourBar(130, 155);
-colourBlock = new ColourPixelBlock();
+colourBars = null; // Will be initialized in startGame()
+colourBlock = null; // Will be initialized in startGame()
 
 // font
 const globalFont = 'Consolas';
@@ -111,57 +115,57 @@ const boxPadding = 20*proportion;
 const boxColumns = 3;
 const boxRows = 3;
 const boxThickness = 10*proportion;
-currentChibis = 0;
+currentChittens = 0;
 maleParent = null;
 femaleParent = null;
-choosingChibi = false;
+choosingChitten = false;
 
 // Images
 // landscape
 const newtree = new Image();
-newtree.src = 'newtree.png';
+newtree.src = 'img/newtree.png';
 const acacia = new Image();
-acacia.src = 'acacia.png';
+acacia.src = 'img/acacia.png';
 const clouds = new Image();
-clouds.src = 'clouds.png';
+clouds.src = 'img/clouds.png';
 clouds.onload = function() {
   console.log('Images buffered succesfully');
 };
 
 // for my guys
 const smile = new Image();
-smile.src = 'smile.png';
+smile.src = 'img/smile.png';
 const smile2 = new Image();
-smile2.src = 'smile2.png';
+smile2.src = 'img/smile2.png';
 const smile3 = new Image();
-smile3.src = 'smile3.png';
+smile3.src = 'img/smile3.png';
 const content = new Image();
-content.src = 'content.png';
+content.src = 'img/content.png';
 const pattern0 = new Image();
-pattern0.src = 'pattern0.png';
+pattern0.src = 'img/pattern0.png';
 const pattern1 = new Image();
-pattern1.src = 'pattern1.png';
+pattern1.src = 'img/pattern1.png';
 const pattern2 = new Image();
-pattern2.src = 'pattern2.png';
+pattern2.src = 'img/pattern2.png';
 const pattern3 = new Image();
-pattern3.src = 'pattern3.png';
+pattern3.src = 'img/pattern3.png';
 const pattern6 = new Image();
-pattern6.src = 'pattern6.png';
+pattern6.src = 'img/pattern6.png';
 const butthole = new Image();
-butthole.src = 'butthole.png';
+butthole.src = 'img/butthole.png';
 
 // graves
 const tombstone = new Image();
-tombstone.src = 'grave.png';
+tombstone.src = 'img/grave.png';
 const tombstone2 = new Image();
-tombstone2.src = 'grave2.png';
+tombstone2.src = 'img/grave2.png';
 const tombstone3 = new Image();
-tombstone3.src = 'grave3.png';
+tombstone3.src = 'img/grave3.png';
 const obelisk = new Image();
-obelisk.src = 'obelisk.png';
+obelisk.src = 'img/obelisk.png';
 // Ghosts
 const spectre = new Image();
-spectre.src = 'ghost.png';
+spectre.src = 'img/ghost.png';
 // explosions
 let explosions = [];
 
@@ -207,6 +211,11 @@ tempWinter = 0;
 function startGame() {
   // init > console data
   sendMessage('Initialising');
+  
+  // Initialize UI components that have circular dependencies
+  colourBars = new ColourBar(130, 155);
+  colourBlock = new ColourPixelBlock();
+  
   initButtons();
   sendMessage('Checking integrity of names database');
   console.log(reportNames());
@@ -229,7 +238,7 @@ function startGame() {
     }
   }
   // gene editing
-  experiment = new Chibi(70, 90, 13.5, 10, 'Female');
+  experiment = new Chitten(70, 90, 13.5, 10, 'Female');
   experiment.name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
   randomiseGenetics(experiment);
   experiment.awake = true;
@@ -240,7 +249,7 @@ function startGame() {
   sendMessage('Starting simulation');
   recalcSeasonVariables();
   myGameArea.start();
-  // set up patterns for CHIBIS
+  // set up patterns for ChittenS
   ctx = myGameArea.context;
   pat0 = ctx.createPattern(pattern0, 'repeat'); // debug
   pat1 = ctx.createPattern(pattern1, 'repeat'); // tortoiseshell
@@ -295,9 +304,18 @@ let myGameArea = {
 };
 
 /**
-* function to redraw and recalculate everything each fram
+* function to redraw and recalculate everything each frame
 **/
 function updateGameArea() {
+  // Calculate fps
+  frameCount++;
+  const now = performance.now();
+  if (now - lastTime >= 1000) { 
+    fps = frameCount;
+    frameCount = 0;
+    lastTime = now;
+  }
+  // Now clear the canvas
   myGameArea.clear();
   ctx = myGameArea.context;
   myGameArea.frameNo += 1;
@@ -400,7 +418,7 @@ function updateGameArea() {
     }
     if (choiceTimer == 0) {
       if (selection == null) {
-        selection = chibis[Math.round(Math.random()*(boxes.length-1))+currentChibis];
+        selection = chittens[Math.round(Math.random()*(boxes.length-1))+currentChittens];
       }
       handleButton(1);
     }
@@ -413,8 +431,7 @@ function updateGameArea() {
   tankGradient.addColorStop(1, outputArray[3]);
   ctx.fillStyle = tankGradient;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-  // change the value of trueWhite
-  // trueWhite = mixTwoColours('#FFFFFF', outputArray[2], 0.5);
+  textColour = mixTwoColours('#FFFFFF', outputArray[2], 0.5);
   hover();
   // fix the starfield
   if (!paused) {
@@ -438,13 +455,13 @@ function updateGameArea() {
   }
 
   // background
-  // draw the clouds - disappearring at nighttime
+  // draw the clouds - disappearing at nighttime
   ctx.globalAlpha = 0.3;
-  // if (daytimeCounter <= 300) {
-  //   ctx.globalAlpha = 0.3 - (0.3*((300 - daytimeCounter)/300));
-  // } else if (daytimeCounter > 700) {
-  //   ctx.globalAlpha = 0.3 - (0.3*((daytimeCounter-700)/300));
-  // }
+  if (daytimeCounter <= 300) {
+    ctx.globalAlpha = 0.3 - (0.3*((300 - daytimeCounter)/300));
+  } else if (daytimeCounter > 700) {
+    ctx.globalAlpha = 0.3 - (0.3*((daytimeCounter-700)/300));
+  }
   let offsetX = daytimeCounter*(canvasHeight/540*2160)/1000;
   ctx.drawImage(clouds, - offsetX, 0, (canvasHeight/540*2160), canvasHeight);
   if (offsetX > canvasWidth) {
@@ -488,7 +505,7 @@ function updateGameArea() {
       }
     }
   }
-  // draw the fruit that should appear BEHIND chibis
+  // draw the fruit that should appear BEHIND chittens
   for (let i = 0; i < fruits.length; i++) {
     if (fruits[i].eater == null) {
       fruits[i].update();
@@ -618,12 +635,12 @@ function updateGameArea() {
   femaleCount = 0;
   maleCount = 0;
   nonbinaryCount = 0;
-  for (let i = 0; i < chibis.length; i++) {
-    if (chibis[i].inCatBox == null) {
-      if (chibis[i].gender == 'Female') {
+  for (let i = 0; i < chittens.length; i++) {
+    if (chittens[i].inCatBox == null) {
+      if (chittens[i].gender == 'Female') {
         femalePresent = true;
         femaleCount ++;
-      } else if (chibis[i].gender == 'Male') {
+      } else if (chittens[i].gender == 'Male') {
         malePresent = true;
         maleCount ++;
       } else {
@@ -632,7 +649,7 @@ function updateGameArea() {
     }
   }
 
-  //   if (!choosingChibi) {
+  //   if (!choosingChitten) {
   //   if (!femalePresent) {
   //     initFemaleCattery();
   //   } else if (!malePresent) {
@@ -649,16 +666,16 @@ function updateGameArea() {
       explosions.push(new Explosion(fireflies[f].x, fireflies[f].y, '#FF2288', glowColour));
       produceExplosion(fireflies[f].x, fireflies[f].y);
       let targets = [];
-      for (let i = 0; i < chibis.length; i ++) {
-        if (fireflies[f] == chibis[i].focus) {
-          targets.push(chibis[i]);
+      for (let i = 0; i < chittens.length; i ++) {
+        if (fireflies[f] == chittens[i].focus) {
+          targets.push(chittens[i]);
         }
       }
       fireflies.splice(f, 1);
       f--;
       if (targets > 0) {
         for (let i = 0; i < targets.length; i++) {
-          targets[i].focus = targets[i].findClosestFireFly();
+          targets[i].focus = targets[i].inCatBox ? null : targets[i].findClosestFireFly();
         }
       }
     }
@@ -683,20 +700,32 @@ function updateGameArea() {
 
 
   recalculateMyGuys();
-  // DRAW SLEEPING CHIBIS FIRST
-  for (let i = 0; i < chibis.length; i++) {
-    if (!chibis[i].awake) {
-      chibis[i].update();
+  // DRAW SLEEPING ChittenS FIRST
+  for (let i = 0; i < chittens.length; i++) {
+    if (!chittens[i].awake) {
+      // Skip drawing cats that are very far off-screen, but allow wall bouncing
+      const catSize = chittens[i].size || 20;
+      const bounceBuffer = catSize * 2; // Extra buffer for wall bounce mechanics
+      if (chittens[i].x >= -bounceBuffer && chittens[i].x <= canvasWidth + bounceBuffer && 
+          chittens[i].y >= -bounceBuffer && chittens[i].y <= canvasHeight + bounceBuffer) {
+        chittens[i].update();
+      }
     }
   }
-  // NOW AWAKE CHIBIS
-  for (let i = 0; i < chibis.length; i++) {
-    if (chibis[i].awake) {
-      chibis[i].update();
+  // NOW AWAKE ChittenS
+  for (let i = 0; i < chittens.length; i++) {
+    if (chittens[i].awake) {
+      // Skip drawing cats that are very far off-screen, but allow wall bouncing
+      const catSize = chittens[i].size || 20;
+      const bounceBuffer = catSize * 2; // Extra buffer for wall bounce mechanics
+      if (chittens[i].x >= -bounceBuffer && chittens[i].x <= canvasWidth + bounceBuffer && 
+          chittens[i].y >= -bounceBuffer && chittens[i].y <= canvasHeight + bounceBuffer) {
+        chittens[i].update();
+      }
     }
   }
 
-  // draw the fruit that should appear IN FRONT OF chibis
+  // draw the fruit that should appear IN FRONT OF chittens
   for (let i = 0; i < fruits.length; i++) {
     if (fruits[i].eater !== null) {
       fruits[i].update();
@@ -773,17 +802,17 @@ function updateGameArea() {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.globalAlpha = 1;
   }
-  basicInfo = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 5);
-  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chibis '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chibis.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
+  basicInfo = new TextElement(fontSize+'px', textColour, 10, canvasHeight - 5);
+  basicInfo.text = tickerToTime(daytimeCounter) +' Day '+day+' Chittens '+(femaleCount+maleCount+nonbinaryCount) + ' /'+femaleCount+'F '+maleCount+'M '+nonbinaryCount+'N '; // +(chittens.length + trees.length + fruits.length + fireflies.length + seeds.length + glyphs.length);
   basicInfo.update();
-  topLabel = new TextElement(fontSize+'px', outputArray[2], canvasWidth - 115, 17);
-  topLabel.text = 'v0.066 FPS '+fps;
+  topLabel = new TextElement(fontSize+'px', textColour, canvasWidth - 115, 17);
+  topLabel.text = 'v' + version + ' FPS '+fps;
   topLabel.update();
   // day of the week and the season
-  leftLabel = new TextElement(fontSize+'px', outputArray[2], 255, 17);
+  leftLabel = new TextElement(fontSize+'px', textColour, 255, 17);
   leftLabel.text = dayNames[today]+', '+seasonText+ ' '+temperature+'\u00B0';
   leftLabel.update();
-  newestMessage = new TextElement(fontSize+'px', outputArray[2], 10, canvasHeight - 25);
+  newestMessage = new TextElement(fontSize+'px', textColour, 10, canvasHeight - 25);
   if (!paused) {
     newestMessage.text = currentMessage.timeStamp +' ' + currentMessage.text;
   } else {
@@ -934,14 +963,14 @@ function Seed(colour, owner) {
     this.timer --;
     let found = false;
     if (this.timer <= 0) {
-      for (let i = 0; i < chibis.length && !found; i++) {
-        if (chibis[i] == this.owner) {
+      for (let i = 0; i < chittens.length && !found; i++) {
+        if (chittens[i] == this.owner) {
           found = true;
-          if (found && chibis[i].snuggling <= 0 && chibis[i].nomnomnom <= 0
-            && chibis[i].y >= trueBottom-chibis[i].size-chibis[i].limbLength
-            && tryToPlantaTree(chibis[i].x, this.colour)) {
+          if (found && chittens[i].snuggling <= 0 && chittens[i].nomnomnom <= 0
+            && chittens[i].y >= trueBottom-chittens[i].size-chittens[i].limbLength
+            && tryToPlantaTree(chittens[i].x, this.colour)) {
               this.planted = true;
-              // sendMessage(chibis[i].name+' planted a seed');
+              // sendMessage(chittens[i].name+' planted a seed');
             }
           }
         }
@@ -959,9 +988,9 @@ function Seed(colour, owner) {
         fireflies[i].chooseNewTarget();
       }
     }
-    for (let i = 0; i < chibis.length; i++) {
-      if (chibis[i].focus == who) {
-        chibis[i].focus = chibis[i].findClosestFireFly();
+    for (let i = 0; i < chittens.length; i++) {
+      if (chittens[i].focus == who) {
+        chittens[i].focus = chittens[i].inCatBox ? null : chittens[i].findClosestFireFly();
       }
     }
   }
@@ -1014,26 +1043,6 @@ function Seed(colour, owner) {
       ctx.restore();
     };
   };
-
-  /**
-  * function for a piece of plain text
-  * @param {int} size - the size
-  * @param {string} colour - the colour
-  * @param {int} x - the x pos
-  * @param {int} y - the y pos
-  */
-  function TextElement(size, colour, x, y) {
-    this.size = size;
-    this.x = x;
-    this.y = y;
-    this.colour = colour;
-    this.update = function() {
-      ctx.font = this.size + ' ' + globalFont;
-      ctx.fillStyle = this.colour;
-      ctx.fillText(this.text, this.x, this.y);
-      ctx.globalAlpha = 1;
-    };
-  }
 
   /**
   * function for a firefly
@@ -1101,18 +1110,6 @@ function Seed(colour, owner) {
     };
     this.update = function() {
       /* focus lines and label */
-      //   if (this.focus !== null) {
-      //     ctx.globalAlpha = 0.25;
-      //   ctx.strokeStyle = trueWhite;
-      //   ctx.lineWidth = 1;
-      //   ctx.beginPath();
-      //   ctx.moveTo(this.x, this.y);
-      //   ctx.lineTo(this.focus.x, this.focus.y);
-      //   ctx.stroke();
-      //   }
-      //   if (Math.abs(this.speedX) < 2 && Math.abs(this.speedY) < 2) {
-      //   ctx.fillText('SLO', this.x, this.y - 10);
-      // }
       if (!paused) {
         if (this.justAte && Math.random() < 0.995) {
           this.justAte = false;
@@ -1329,231 +1326,248 @@ function Seed(colour, owner) {
   }
 
   /**
-  * function to handle chibis
+  * function to handle chittens
   */
   function recalculateMyGuys() {
     // block for all my guys
     if (!paused) {
-      for (let i = 0; i < chibis.length; i++) {
+      for (let i = 0; i < chittens.length; i++) {
         // do dragging first
-        if (chibis[i].dragging) {
-          chibis[i].facingForwards = true;
-          chibis[i].x = pointerPos.x;
-          chibis[i].y = pointerPos.y;
-          chibis[i].speedX = 0;
-          chibis[i].speedY = 0;
-          chibis[i].resetRotation();
-          if (selection == chibis[i]) {
+        if (chittens[i].dragging) {
+          chittens[i].facingForwards = true;
+          chittens[i].x = pointerPos.x;
+          chittens[i].y = pointerPos.y;
+          chittens[i].speedX = 0;
+          chittens[i].speedY = 0;
+          chittens[i].resetRotation();
+          if (selection == chittens[i]) {
             dummypointerPos.update();
           }
-          chibis[i].sitting = false;
-          chibis[i].hitBottom = false;
+          chittens[i].sitting = false;
+          chittens[i].hitBottom = false;
         }
         // check to see if it's time to die
         // attrition, aging etc.
         // increasing age, and related checks
-        if (chibis[i].inCatBox == null && chibis[i].birthday == daytimeCounter+1) {
-          chibis[i].age ++;
+        if (chittens[i].inCatBox == null && chittens[i].birthday == daytimeCounter+1) {
+          chittens[i].age ++;
           // maturing to adult
-          if (chibis[i].age == maturesAt) {
-            sendMessage(chibis[i].name+' reached adulthood');
-            if (createGlyphs(chibis[i].x, chibis[i].y, '\u2764')) {
+          if (chittens[i].age == maturesAt) {
+            sendMessage(chittens[i].name+' reached adulthood');
+            if (createGlyphs(chittens[i].x, chittens[i].y, '\u2764')) {
               for (let i = 1; i < 9; i++) {
                 glyphs[glyphs.length-i].timer *= 1 + (Math.random()*1);
               }
             } else {
               failed = true;
             }
-            if (chibis[i].energy < 50) {
-              chibis[i].energy += 50;
+            if (chittens[i].energy < 50) {
+              chittens[i].energy += 50;
             } else {
-              (chibis[i].energy = 100);
+              (chittens[i].energy = 100);
             }
-            chibis[i].love += 25;
+            chittens[i].love += 25;
             // reaching old age
-          } else if (chibis[i].age >= chibis[i].maxAge-1 && !chibis[i].elder) {
-            chibis[i].elder = true;
-            chibis[i].firstColour = decreaseSaturationHEX(chibis[i].firstColour, 2);
-            chibis[i].secondColour = decreaseSaturationHEX(chibis[i].secondColour, 2);
-            chibis[i].thirdColour = decreaseSaturationHEX(chibis[i].thirdColour, 2);
-            sendMessage(chibis[i].name+' reached old age');
-            createGlyphs(chibis[i].x, chibis[i].y, '\u274b');
+          } else if (chittens[i].age >= chittens[i].maxAge-1 && !chittens[i].elder) {
+            chittens[i].elder = true;
+            chittens[i].firstColour = decreaseSaturationHEX(chittens[i].firstColour, 2);
+            chittens[i].secondColour = decreaseSaturationHEX(chittens[i].secondColour, 2);
+            chittens[i].thirdColour = decreaseSaturationHEX(chittens[i].thirdColour, 2);
+            sendMessage(chittens[i].name+' reached old age');
+            createGlyphs(chittens[i].x, chittens[i].y, '\u274b');
             // dying of old age
-          } else if (chibis[i].snuggling == -1 && chibis[i].nomnomnom == -1 && chibis[i].age > chibis[i].maxAge) {
-            sendMessage(chibis[i].name+' died of old age');
-            graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
-            chibis[i].kill();
+          } else if (chittens[i].snuggling == -1 && chittens[i].nomnomnom == -1 && chittens[i].age > chittens[i].maxAge) {
+            sendMessage(chittens[i].name+' died of old age');
+            graveStones.push(new Grave(chittens[i].x, chittens[i].y, chittens[i].size, chittens[i].speedX, chittens[i].speedY, chittens[i].elder, chittens[i].firstColour));
+            chittens[i].kill();
             i--;
           }
         }
       }
       // start a new loop to check for next cause of death
-      for (let i = 0; i < chibis.length; i++) {
+      for (let i = 0; i < chittens.length; i++) {
         // dying because of low health
-        if (chibis[i].health <= 0) {
-          createGlyphs(chibis[i].x, chibis[i].y, '\u271A');
-          graveStones.push(new Grave(chibis[i].x, chibis[i].y, chibis[i].size, chibis[i].speedX, chibis[i].speedY, chibis[i].elder, chibis[i].firstColour));
-          sendMessage(chibis[i].name+' died');
-          removeRelationships(chibis[i]);
-          chibis[i].kill();
+        if (chittens[i].health <= 0) {
+          createGlyphs(chittens[i].x, chittens[i].y, '\u271A');
+          graveStones.push(new Grave(chittens[i].x, chittens[i].y, chittens[i].size, chittens[i].speedX, chittens[i].speedY, chittens[i].elder, chittens[i].firstColour));
+          sendMessage(chittens[i].name+' died');
+          removeRelationships(chittens[i]);
+          chittens[i].kill();
           i--;
           // so as long as that doesn't kill you......
         } else {
           // grow them a tiny bit
-          if (chibis[i].size < chibis[i].maxSize) {
-            chibis[i].size += 1/2000;
-            if (chibis[i].age < maturesAt) {
-              chibis[i].size += 1/2000;
+          if (chittens[i].size < chittens[i].maxSize) {
+            chittens[i].size += 1/2000;
+            if (chittens[i].age < maturesAt) {
+              chittens[i].size += 1/2000;
             }
-            chibis[i].reinitSizeAndColour();
+            chittens[i].reinitSizeAndColour();
           }
-          chibis[i].love -= 0.1;
-          if (chibis[i].health > 0 && chibis[i].inCatBox !== null) {
-            chibis[i].health -= 0.001;
+          chittens[i].love -= 0.1;
+          if (chittens[i].health > 0 && chittens[i].inCatBox !== null) {
+            chittens[i].health -= 0.001;
           }
-          if (chibis[i].inCatBox == null && chibis[i].hunger <= 0 && chibis[i].awake && chibis[i].snuggling <= 0 && chibis[i].nomnomnom <= 0) {
+          if (chittens[i].inCatBox == null && chittens[i].hunger <= 0 && chittens[i].awake && chittens[i].snuggling <= 0 && chittens[i].nomnomnom <= 0) {
             if (Math.random() <= 0.0005) {
-              speech.push(new Speak(chibis[i], angryWord()));
+              speech.push(new Speak(chittens[i], angryWord()));
             }
-            chibis[i].health -= 0.001;
+            chittens[i].health -= 0.001;
           }
-          if (chibis[i].speedY < 0) {
-            chibis[i].health -= 0.1;
+          if (chittens[i].speedY < 0) {
+            chittens[i].health -= 0.1;
           }
 
           // tiredness linked to temperature (30 is max temp)
-          chibis[i].energy -= 0.01325-(0.01325/30*temperature)
+          chittens[i].energy -= 0.01325-(0.01325/30*temperature)
           if (season == 1) {
             // get less tired and more amorous in spring
-            chibis[i].energy += 0.07;
-            chibis[i].love += 1.5;
+            chittens[i].energy += 0.07;
+            chittens[i].love += 1.5;
           } else if (season == 2) {
             // get more energy in summer
-            chibis[i].energy += 0.04;
+            chittens[i].energy += 0.04;
           }
           // get more tired between midnight and 3am
-          if (chibis[i].awake && daytimeCounter <= 250) {
-            chibis[i].energy -= 0.03125;
+          if (chittens[i].awake && daytimeCounter <= 250) {
+            chittens[i].energy -= 0.03125;
           }
           // if asleep, gain energy and a little health
-          if (!chibis[i].awake) {
-            chibis[i].energy += 0.125;
-            chibis[i].health += 0.05;
+          if (!chittens[i].awake) {
+            chittens[i].energy += 0.125;
+            chittens[i].health += 0.05;
           }
           // if energy goes above 100, wake up
-          if (!chibis[i].awake && chibis[i].energy > 90) {
-            chibis[i].awake = true;
+          if (!chittens[i].awake && chittens[i].energy > 90) {
+            chittens[i].awake = true;
             // console.log('woke up');
           }
-          if (chibis[i].love > 100) {
-            chibis[i].love = 100;
-          } else if (chibis[i].love < 0) {
-            chibis[i].love = 0;
+          if (chittens[i].love > 100) {
+            chittens[i].love = 100;
+          } else if (chittens[i].love < 0) {
+            chittens[i].love = 0;
           }
-          if (chibis[i].health > 100) {
-            chibis[i].health = 100;
+          if (chittens[i].health > 100) {
+            chittens[i].health = 100;
           }
-          if (chibis[i].energy > 100) {
-            chibis[i].energy = 100;
-          } else if (chibis[i].energy < 0) {
-            chibis[i].energy = 0;
+          if (chittens[i].energy > 100) {
+            chittens[i].energy = 100;
+          } else if (chittens[i].energy < 0) {
+            chittens[i].energy = 0;
           }
-          if (chibis[i].hunger > 0) {
-            chibis[i].hunger -= 0.25;
+          if (chittens[i].hunger > 0) {
+            chittens[i].hunger -= 0.25;
           } else if (this.hunger < 0) {
             this.hunger == 0;
           } else if (this.hunger > 1000) {
             this.hunger = 1000;
           }
 
-          for (let j = 0; j < chibis.length; j++) {
-            // if two chibis bump into each other
-            if (i !== j && chibis[i].awake && chibis[j].awake && !chibis[i].hitBottom && !chibis[j].hitBottom && detectCollision(chibis[i], chibis[j])) {
-              collide(chibis[i], chibis[j]);
+          for (let j = 0; j < chittens.length; j++) {
+            // if two chittens bump into each other
+            if (i !== j && chittens[i].awake && chittens[j].awake && !chittens[i].hitBottom && !chittens[j].hitBottom && detectCollision(chittens[i], chittens[j])) {
+              collide(chittens[i], chittens[j]);
               // having a snuggle
-              if (chibis[i].nomnomnom <= 0 && chibis[j].nomnomnom <= 0 && chibis[i].snuggling == -1 && chibis[j].snuggling == -1
-                && chibis[i].partner == chibis[j] && chibis[i].gender == 'Male' && chibis[j].gender == 'Female'
-                && !chibis[i].elder && !chibis[j].elder
-                && chibis[i].health >= 40 && chibis[j].health >= 40 && chibis[i].energy >= 40 && chibis[j].energy >= 40) {
+              if (chittens[i].nomnomnom <= 0 && chittens[j].nomnomnom <= 0 && chittens[i].snuggling == -1 && chittens[j].snuggling == -1
+                && chittens[i].partner == chittens[j] && chittens[i].gender == 'Male' && chittens[j].gender == 'Female'
+                && !chittens[i].elder && !chittens[j].elder
+                && chittens[i].health >= 40 && chittens[j].health >= 40 && chittens[i].energy >= 40 && chittens[j].energy >= 40) {
                   // snuggle
-                  chibis[j].partner = chibis[i];
+                  chittens[j].partner = chittens[i];
                   // pay the costs
-                  chibis[i].health -= 20;
-                  chibis[j].health -= 20;
-                  chibis[i].energy -= 35;
-                  chibis[j].energy -= 35;
-                  chibis[i].love += 50;
-                  chibis[j].love += 50;
-                  chibis[i].speedX = 0;
-                  chibis[j].speedX = 0;
-                  chibis[i].speedY = 0;
-                  chibis[j].speedY = 0;
-                  chibis[i].sitting = true;
-                  chibis[j].sitting = true;
+                  chittens[i].health -= 20;
+                  chittens[j].health -= 20;
+                  chittens[i].energy -= 35;
+                  chittens[j].energy -= 35;
+                  chittens[i].love += 50;
+                  chittens[j].love += 50;
+                  chittens[i].speedX = 0;
+                  chittens[j].speedX = 0;
+                  chittens[i].speedY = 0;
+                  chittens[j].speedY = 0;
+                  chittens[i].sitting = true;
+                  chittens[j].sitting = true;
                   if (Math.random() < 1/3) {
-                    speech.push(new Speak(chibis[i], happyWord()));
+                    speech.push(new Speak(chittens[i], happyWord()));
                   } else if (Math.random() < 2/3) {
-                    speech.push(new Speak(chibis[j], happyWord()));
+                    speech.push(new Speak(chittens[j], happyWord()));
                   }
-                  chibis[i].facingForwards = true;
-                  chibis[j].facingForwards = true;
-                  chibis[i].snuggling = 250;
-                  chibis[j].snuggling = 260;
-                  sendMessage(chibis[j].name+' and '+chibis[i].name+' had a snuggle');
+                  chittens[i].facingForwards = true;
+                  chittens[j].facingForwards = true;
+                  // Both cats should sit while snuggling
+                  chittens[i].targetSittingState = true;
+                  chittens[j].targetSittingState = true;
+                  chittens[i].snuggling = 250;
+                  chittens[j].snuggling = 260;
+                  sendMessage(chittens[j].name+' and '+chittens[i].name+' had a snuggle');
                 }
               }
             }
 
-            if (chibis[i].awake && chibis[i].nomnomnom == -1 && chibis[i].snuggling == -1 && fruits.includes(chibis[i].focus)) {
-              if (detectCollision(chibis[i].focus, chibis[i])) {
-                chibis[i].facingForwards = true;
-                chibis[i].speedX = 0;
-                chibis[i].speedY = 0;
-                chibis[i].energy += 10;
-                chibis[i].focus.parent.fruitCount--;
-                chibis[i].focus.eater = chibis[i];
+            if (chittens[i].focus && chittens[i].awake && chittens[i].nomnomnom == -1 && chittens[i].snuggling == -1 && fruits.includes(chittens[i].focus)) {
+              if (detectCollision(chittens[i].focus, chittens[i])) {
+                chittens[i].facingForwards = true;
+                chittens[i].speedX = 0;
+                chittens[i].speedY = 0;
+                chittens[i].energy += 10;
+                chittens[i].focus.parent.fruitCount--;
+                chittens[i].focus.eater = chittens[i];
                 if (seeds.length < 10) {
-                  seeds.push(new Seed(chibis[i].focus.colour, chibis[i]));
+                  seeds.push(new Seed(chittens[i].focus.colour, chittens[i]));
                 }
               }
             }
 
             // calculate angle to focus
-            chibis[i].angleToFocus = Math.atan2(chibis[i].focus.y - chibis[i].y, chibis[i].focus.x - chibis[i].x);
-            diffx = Math.cos(chibis[i].angleToFocus)*4;
-            diffy = Math.sin(chibis[i].angleToFocus)*4;
+            if (chittens[i].focus) {
+              chittens[i].angleToFocus = Math.atan2(chittens[i].focus.y - chittens[i].y, chittens[i].focus.x - chittens[i].x);
+              diffx = Math.cos(chittens[i].angleToFocus)*4;
+              diffy = Math.sin(chittens[i].angleToFocus)*4;
+            } else {
+              // For cats without focus (like those in catboxes), use a neutral downward angle
+              chittens[i].angleToFocus = chittens[i].inCatBox ? Math.PI/2 : 0;
+              diffx = 0;
+              diffy = 0;
+            }
 
-            if ((diffx > 0 && chibis[i].speedX > 0) || (diffx < 0 && chibis[i].speedX < 0)) {
+            if ((diffx > 0 && chittens[i].speedX > 0) || (diffx < 0 && chittens[i].speedX < 0)) {
               // if we are going right and it's to our right
               // if we are going left and it's to our left
             } else {
-              chibis[i].speedX *= 0.98;
+              chittens[i].speedX *= 0.98;
             }
             // limit speedX and speedY
-            applySpeedLimit(chibis[i]);
+            applySpeedLimit(chittens[i]);
 
             // apply gravity and movement
-            chibis[i].x += chibis[i].speedX/4;
-            chibis[i].rotation += chibis[i].spin;
-            chibis[i].spin *= 0.9;
-            while (chibis[i].rotation > 6) {
-              chibis[i].rotation -= 6;
+            chittens[i].x += chittens[i].speedX/4;
+            chittens[i].rotation += chittens[i].spin;
+            chittens[i].spin *= 0.9;
+            while (chittens[i].rotation > 6) {
+              chittens[i].rotation -= 6;
             }
-            while (chibis[i].rotation < -6) {
-              chibis[i].rotation += 6;
+            while (chittens[i].rotation < -6) {
+              chittens[i].rotation += 6;
             }
 
 
-            if (!chibis[i].hitBottom) {
-              let mass = gravity*chibis[i].size*6;
-              chibis[i].speedY += mass;
-              chibis[i].y += chibis[i].speedY/4;
-              if (Math.round(chibis[i].speedY) == 0) {
-                let tmp = ((chibis[i].jumpY*4)+chibis[i].y)/5;
-                chibis[i].jumpY = tmp;
+            if (!chittens[i].hitBottom) {
+              // Standard gravity with subtle size-based effects
+              let mass = gravity*chittens[i].size*6;
+              let airResistance = Math.abs(chittens[i].speedY) * 0.003 * (chittens[i].size / 15); // Subtle air resistance
+              
+              chittens[i].speedY += mass - airResistance;
+              
+              // Very light horizontal air resistance
+              chittens[i].speedX *= 0.99;
+              
+              chittens[i].y += chittens[i].speedY/4;
+              if (Math.round(chittens[i].speedY) == 0) {
+                let tmp = ((chittens[i].jumpY*4)+chittens[i].y)/5;
+                chittens[i].jumpY = tmp;
               }
             }
-            chibis[i].physicsCheck();
+            chittens[i].physicsCheck();
           }
         }
       }
