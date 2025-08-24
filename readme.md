@@ -2,6 +2,11 @@
 
 changelog
 
+24/08/205 = 0.069
+~ Allowed filtering by breed in the adoption centre
+~ Crossbreeds can now appear in the adoption centre
+~ Reworked the gene inheritance and expression systems
+
 23/08/2025 = 0.068
 ~ Added the Lykoi gene, it is now completely separate from the hairless gene. Both genes interact realistically.
 ~ Sphynxes now come in pink, grey or a mix of both

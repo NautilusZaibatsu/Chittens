@@ -121,8 +121,8 @@ function reportNames() {
  * @return {string[]} Array of individual breed names
  */
 function extractBreedNames(breedString) {
-  if (!breedString || breedString === 'Mixed') {
-    return ['Mixed'];
+  if (!breedString || breedString === mixedBreed) {
+    return [mixedBreed];
   }
 
   // Split on " x " to get individual breeds, and trim whitespace
@@ -194,7 +194,7 @@ function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
         availableLibraries.push(libraryIndex);
       } else {
         // Don't warn for Mixed breeds - this is expected behavior
-        if (breed !== 'Mixed') {
+        if (breed !== mixedBreed) {
           console.warn("No name library found for breed:", breed);
         }
         availableLibraries.push(Math.floor(Math.random() * numlibs));

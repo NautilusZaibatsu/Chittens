@@ -1,3 +1,99 @@
+// Breed filtering variables
+let selectedBreedFilter = 'All'; // Current breed filter
+let breedFilterButtons = []; // Array to hold breed filter buttons
+let breedFilterVisible = false; // Whether breed filter buttons are shown
+
+// Get available breeds based on gender from BREED_SPAWN_CONFIG
+function getAvailableBreeds(gender) {
+  let breeds = ['All', mixedBreed]; // Always include 'All' and mixedBreed at the top
+
+  // Collect all breed names
+  let breedNames = [];
+  
+  // Add regular breeds (available to all genders)
+  BREED_SPAWN_CONFIG.regularBreeds.forEach(breed => {
+    breedNames.push(breed.name);
+  });
+
+  // Add female-only breeds only for female adoption center
+  if (gender === 'Female') {
+    BREED_SPAWN_CONFIG.femaleOnlyBreeds.forEach(breed => {
+      breedNames.push(breed.name);
+    });
+  }
+  
+  // Sort breed names alphabetically
+  breedNames.sort();
+  
+  // Add sorted breeds to the list
+  breeds = breeds.concat(breedNames);
+
+  return breeds;
+}
+
+// Create breed filter buttons
+function createBreedFilterButtons(gender) {
+  // Preserve current visibility state
+  const wasVisible = breedFilterVisible;
+  
+  // Clear existing breed filter buttons
+  breedFilterButtons = [];
+
+  const availableBreeds = getAvailableBreeds(gender);
+  const buttonsPerRow = 1;
+  const buttonWidth = 140;
+  const buttonHeight = 25;
+  const startY = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2);
+  const startX = (canvasWidth / 2) + (boxSize * 2) - 20;
+
+  availableBreeds.forEach((breed, index) => {
+    const row = Math.floor(index / buttonsPerRow);
+    const col = index % buttonsPerRow;
+    const x = startX + (col * buttonWidth);
+    const y = startY + (row * (buttonHeight + 5));
+
+    let buttonTooltip;
+    if (breed === 'All') {
+      buttonTooltip = 'Show all breeds';
+    } else if (breed === mixedBreed) {
+      buttonTooltip = 'Show only mixed breeds and crossbreeds';
+    } else {
+      buttonTooltip = `Show only ${breed} chittens`;
+    }
+    
+    let button = new Button(x, y, breed, buttonTooltip, 'left');
+    button.visible = wasVisible; // Preserve previous visibility state
+    breedFilterButtons.push(button);
+  });
+}
+
+// Toggle breed filter visibility
+function toggleBreedFilter() {
+  breedFilterVisible = !breedFilterVisible;
+  breedFilterButtons.forEach(button => {
+    button.visible = breedFilterVisible;
+  });
+
+  // Update toggle button text and recalculate the size of the button
+  if (buttons[15]) { // Breed filter toggle button
+    buttons[15].text = breedFilterVisible ? 'Hide filters' : 'Breed filters';
+    buttons[15].reinitSizes();
+  }
+}
+
+// Reset breed filter when adoption center closes
+function resetBreedFilter() {
+  breedFilterVisible = false;
+  selectedBreedFilter = 'All';
+  breedFilterButtons.forEach(button => {
+    button.visible = false;
+  });
+  if (buttons[15]) {
+    buttons[15].text = 'Filter by breed';
+    buttons[15].reinitSizes();
+  }
+}
+
 /**
 * function to initialise all the buttons
 */
@@ -28,6 +124,10 @@ function initButtons() {
   buttons.push(new Button(canvasWidth / 2, (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * boxSize) + 100, 'Close', 'Close the chittery'));
   buttons[13].visible = false;
   buttons.push(new Button(20, 0, unicodeBar + '' + unicodeBar, 'Pause the simulation'));
+
+  // Add breed filter toggle button (positioned under "Show me more")
+  buttons.push(new Button(canvasWidth / 2, (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * boxSize) + 135, 'Filter by breed', 'Choose specific breeds to view'));
+  buttons[15].visible = false; // Hide breed filter button initially
 
   labels.push(new Button(canvasWidth / 2, 10, 'Welcome message', ''));
   labels.push(new Button(canvasWidth / 2, 45, 'Choose a ....', ''));
@@ -63,7 +163,8 @@ function TextElement(size, colour, x, y) {
 * @param {int} y - the y coordinate of the top of the button
 * @param {string} text - text on the button
 */
-function Button(x, y, text, toolTip) {
+function Button(x, y, text, toolTip, alignment) {
+  this.align = alignment;
   this.x = x;
   this.y = y;
   this.text = text;
@@ -86,6 +187,24 @@ function Button(x, y, text, toolTip) {
     ctx.fillStyle = trueWhite;
     ctx.fillText(this.toolTip, pointerPos.x + 12.5, pointerPos.y + 35);
   };
+  this.detectButtonClick = function () {
+    // Calculate button hitbox bounds based on alignment
+    let leftBound, rightBound;
+    if (this.align === 'left') {
+      leftBound = this.x;
+      rightBound = this.x + this.width;
+    } else if (this.align === 'right') {
+      leftBound = this.x - this.width;
+      rightBound = this.x;
+    } else {
+      // Center alignment (default)
+      leftBound = this.x - (this.width / 2);
+      rightBound = this.x + (this.width / 2);
+    }
+    
+    return this.visible && pointerPos.x < rightBound && pointerPos.x > leftBound && 
+           pointerPos.y < this.y + this.height && pointerPos.y > this.y;
+  };
   this.update = function () {
     if (this == buttons[5] || this == buttons[3]) {
       if (selection == null || selection.inCatBox !== null) {
@@ -97,7 +216,13 @@ function Button(x, y, text, toolTip) {
     if (this.visible) {
       // box
       ctx.save();
-      ctx.translate(this.x - (this.width / 2), this.y);
+      if (this.align == 'left') {
+        ctx.translate(this.x, this.y);
+      } else if (this.align == 'right') {
+        ctx.translate(this.x - this.width, this.y);
+      } else {
+        ctx.translate (this.x - (this.width / 2), this.y);
+      }
       ctx.globalAlpha = 0.25;
       if (this.highlighted) {
         ctx.globalAlpha = 1;
@@ -117,7 +242,9 @@ function Button(x, y, text, toolTip) {
       } else {
         ctx.fillStyle = trueWhite;
       }
-      ctx.fillText(this.text, 10, 18);
+      ctx.textAlign = 'center';
+      ctx.fillText(this.text, this.width / 2, 18);
+      ctx.textAlign = 'left'; // Reset to default
       ctx.restore();
     }
   };
@@ -152,6 +279,7 @@ function handleButton(input) {
             }
           }
 
+          // Adoption handling
           sendMessage(selection.name + ' was adopted');
           selection.hitBottom = false;
           selection.love = 100;
@@ -174,6 +302,8 @@ function handleButton(input) {
           buttons[12].available = true;
           buttons[6].available = true;
           buttons[13].visible = false;
+          buttons[15].visible = false;
+          resetBreedFilter();
           choosingChitten = false;
           selection = null;
         } else if (!chosenChittenM) {
@@ -184,6 +314,7 @@ function handleButton(input) {
               i--;
             }
           }
+          // Adoption handling
           sendMessage(selection.name + ' was adopted');
           selection.hitBottom = false;
           selection.love = 100;
@@ -204,6 +335,8 @@ function handleButton(input) {
           buttons[12].available = true;
           buttons[6].available = true;
           buttons[13].visible = false;
+          buttons[15].visible = false;
+          resetBreedFilter();
           choosingChitten = false;
           selection = null;
         } else if (!chosenKitten) {
@@ -375,6 +508,8 @@ function handleButton(input) {
       labels[0].visible = false;
       labels[1].visible = false;
       buttons[13].visible = false;
+      buttons[15].visible = false;
+      resetBreedFilter();
 
       buttons[10].available = true;
       buttons[11].available = true;
@@ -406,6 +541,11 @@ function handleButton(input) {
         buttons[1].available = true;
         buttons[2].available = true;
       }
+      break;
+    case 15:
+      // Toggle breed filter visibility
+      toggleBreedFilter();
+      break;
   }
 }
 
@@ -448,9 +588,26 @@ function click() {
   }
   if (!clickedSomething) {
     for (let i = 0; i < buttons.length; i++) {
-      if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width / 2) && pointerPos.x > buttons[i].x - (buttons[i].width / 2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+      if (buttons[i].available && buttons[i].detectButtonClick()) {
         clickedSomething = true;
         handleButton(i);
+      }
+    }
+
+    // Handle breed filter button clicks
+    if (!clickedSomething) {
+      for (let i = 0; i < breedFilterButtons.length; i++) {
+        if (breedFilterButtons[i].detectButtonClick()) {
+          clickedSomething = true;
+          selectedBreedFilter = breedFilterButtons[i].text;
+          // Regenerate cattery with new filter (keep buttons visible)
+          if (!chosenChittenF) {
+            handleButton(0); // Regenerate female cattery
+          } else if (!chosenChittenM) {
+            handleButton(0); // Regenerate male cattery
+          }
+          break;
+        }
       }
     }
   }
@@ -478,7 +635,7 @@ function click() {
         selection = chittens[i];
         selection.dragging = true;
         // wake up sleeping chittens when you pick them up
-        if (!selection.awake) { 
+        if (!selection.awake) {
           selection.awake = true;
         }
       }
@@ -550,11 +707,21 @@ function hover() {
   // highlighting buttons
   for (let i = 0; i < buttons.length; i++) {
     // tooltip creation on hover is handled in window.js
-    if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width / 2) && pointerPos.x > buttons[i].x - (buttons[i].width / 2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+    if (buttons[i].available && buttons[i].detectButtonClick()) {
       buttons[i].highlighted = true;
       hovered = true;
     } else {
       buttons[i].highlighted = false;
+    }
+  }
+
+  // highlighting breed filter buttons
+  for (let i = 0; i < breedFilterButtons.length; i++) {
+    if (breedFilterButtons[i].detectButtonClick()) {
+      breedFilterButtons[i].highlighted = true;
+      hovered = true;
+    } else {
+      breedFilterButtons[i].highlighted = false;
     }
   }
   // highlighting catboxes
@@ -587,7 +754,7 @@ function hover() {
   for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
     if (!chittens[i].inCatBox && chittens[i] !== experiment && detectCollision(pointerPos, chittens[i])) {
       stop = true;
-      let labelText =  chittens[i].name;
+      let labelText = chittens[i].name;
       let shift = (2 + chittens[i].name.length) * 6.72 / 2;
       ctx.save();
       ctx.translate(chittens[i].x, chittens[i].y);

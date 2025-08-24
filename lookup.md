@@ -13,7 +13,6 @@ bodypartCode[10] = 'jowl right'
 bodypartCode[11] = 'chin'
 bodypartCode[12] = 'chest'
 
-
 PATTERNS
 0 - no pattern
 1 - tortoiseshell (image)

@@ -1,4 +1,4 @@
-const version = 0.068;
+const version = 0.069;
 
 // canvas
 const canvasWidth = (window.innerWidth || document.body.clientWidth) - 20;
@@ -7,33 +7,26 @@ const muckLevel = 45;
 const trueBottom = canvasHeight - muckLevel;
 const maxDistance = Math.hypot(canvasWidth, canvasHeight); // measure the diagonal across the game area
 
-// UI and messaging
-let messagesToSave = canvasHeight / 20;
-// FPS
-let frameCount = 0;
-let lastTime = performance.now();
-fps = 0;
-
 // global scaling values
-idealX = 1920 - 20;
+const idealX = 1920 - 20;
 const idealY = 1080 - 20 - muckLevel;
 const idealArea = idealX * idealY;
 const proportion = 1 / (idealArea / (canvasWidth * trueBottom));
 const maxPop = 50 * proportion;
 
+// UI and messaging
+let messagesToSave = canvasHeight / 20;
+// FPS
+let frameCount = 0;
+let lastTime = performance.now();
+let fps = 0;
+
+// setup
 secondTimer = 0;
 daytimeCounter = 0;
 timeMod = daytimeCounter;
 day = 0;
 today = day;
-dayNames = [];
-dayNames[0] = 'Monday';
-dayNames[1] = 'Tuesday';
-dayNames[2] = 'Wednesday';
-dayNames[3] = 'Thursday';
-dayNames[4] = 'Friday';
-dayNames[5] = 'Saturday';
-dayNames[6] = 'Sunday';
 season = 1; // spring
 seasonNext = 2; // summer
 paused = false;
@@ -41,51 +34,53 @@ chosenChittenM = true;
 chosenChittenF = true;
 chosenKitten = true;
 choiceTimer = 0;
-guyID = 0;
 maleCount = 0;
 femaleCount = 0;
 nonbinaryCount = 0;
 selection = null;
 
-// set global colours / limits
-glowColour = '#FFFF88';
-explosionColour = glowColour;
-trueWhite = '#FFFFFF';
-trueBlack = '#000000';
-albinoRed = '#ee4433';
-superColour = 255;
-genderPink = '#f27bfe';
-genderBlue = '#78c7fc';
-genderPurple = '#9978f1';
-healthGreen = '#4ee986';
-lovePink = '#eb8ec9';
-energyBlue = '#1e6ee9';
-hungerOrange = '#e9af4e';
+// set global colours
+const trueWhite = '#FFFFFF';
+const trueBlack = '#000000';
+const glowColour = '#FFFF88';
+const explosionColour = glowColour;
+const albinoRed = '#ee4433';
+const genderPink = '#f27bfe';
+const genderBlue = '#78c7fc';
+const genderPurple = '#9978f1';
+const energyBlue = '#1e6ee9';
+const hungerOrange = '#e9af4e';
+const heartsPink = '#e94db5';
+
+// days and seasons
+const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const seasonNames = ['Winter', 'Spring', 'Summer', 'Autumn'];
 
 // unicode symbols
-unicodeHeart = '\u2764'; // love heart - used in many places
-unicodeDegrees = '\u00B0'; // for temperature
-unicodeAsterix = '\u274b'; // used for old age
-unicodeMedic = '\u271A'; // used for death
-unicodeBar = '\u275A'; // used for pause button
-unicodeThunderstorm = '\u2608' // used for rehoming button
-unicodeArrowDown = '\u21E9';
-unicodeArrowUp = '\u21E7';
+const unicodeHeart = '\u2764'; // love heart - used in many places
+const unicodeDegrees = '\u00B0'; // for temperature
+const unicodeAsterix = '\u274b'; // used for old age
+const unicodeMedic = '\u271A'; // used for death
+const unicodeBar = '\u275A'; // used for pause button
+const unicodeThunderstorm = '\u2608'; // used for rehoming button
+const unicodeArrowDown = '\u21E9';
+const unicodeArrowUp = '\u21E7';
 // gender
-unicodeNonBinary = '\u26A5';
-unicodeMale = '\u2642';
-unicodeFemale = '\u2640';
+const unicodeNonBinary = '\u26A5';
+const unicodeMale = '\u2642';
+const unicodeFemale = '\u2640';
 // genetics
-unicodeTick = '\u2713';
-unicodeCross = '\u2717';
+const unicodeTick = '\u2713';
+const unicodeCross = '\u2717';
 // seasonal
-unicodeLeaf = '\u2EDA';
-unicodeSnowflake = '\u2744';
-unicodeStar = '\u2606';
-unicodeSun = '\u263C';
+const unicodeLeaf = '\u2EDA';
+const unicodeSnowflake = '\u2744';
+const unicodeStar = '\u2606';
+const unicodeSun = '\u263C';
+
 
 // set timer parameters
-const glyphTimer = 100;
+const glyphTimer = 75;
 
 // firefly parameters
 const fireflyMinSeekHeight = 25; // lowest to the ground a firefly will look for fruit
@@ -892,10 +887,22 @@ function updateGameArea() {
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].update();
   }
+  
+  // Render breed filter buttons
+  for (let i = 0; i < breedFilterButtons.length; i++) {
+    breedFilterButtons[i].update();
+  }
   for (let i = 0; i < buttons.length; i++) {
     // tool tip - draw on top of buttons and labels
-    if (buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width / 2) && pointerPos.x > buttons[i].x - (buttons[i].width / 2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+    if (buttons[i].detectButtonClick()) {
       buttons[i].drawToolTip();
+    }
+  }
+  
+  // Tooltips for breed filter buttons
+  for (let i = 0; i < breedFilterButtons.length; i++) {
+    if (breedFilterButtons[i].detectButtonClick()) {
+      breedFilterButtons[i].drawToolTip();
     }
   }
 
@@ -1973,18 +1980,18 @@ function tickerToTime(counter) {
 * function to calculate the season colours
 */
 function recalcSeasonVariables() {
-  seasonText = 'Autumn';
+  seasonText = seasonNames[3];
   let glyph = unicodeLeaf;
   if (season > 3) {
     season = 0;
     glyph = unicodeSnowflake;
-    seasonText = 'Winter';
+    seasonText = seasonNames[0];
   } else if (season == 1) {
     glyph = unicodeStar;
-    seasonText = 'Spring';
+    seasonText = seasonNames[1];
   } else if (season == 2) {
     glyph = unicodeSun;
-    seasonText = 'Summer';
+    seasonText = seasonNames[2];
   }
   if (season == 3) {
     seasonNext = 0;

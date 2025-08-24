@@ -1,5 +1,7 @@
 // Optimized breed system with data-driven approach
 
+const mixedBreed = 'Mixed';
+
 const BREED_DATA = {
   'Bengal': {
     pattern: 6,
@@ -65,9 +67,9 @@ const BREED_DATA = {
     patternAlpha: [0.5, 1.0],
     colors: {
       variants: [
-        { first: ['#f78411', '#eac8a6'], second: [trueBlack, '#291003'], third: trueWhite },
-        { first: ['#876d4f', '#a09654'], second: [trueBlack, '#2c1f02'], third: trueWhite },
-        { first: ['#9cb4ca', trueBlack], second: [trueBlack, '#2c2b30'], third: trueWhite }
+        { first: ['#f78411', '#eac8a6'], second: '#eac8a6', third: trueWhite }, // orange tabby classic
+        { first: ['#5f4931', '#968058'], second: '#968058', third: trueWhite }, // brown tabby
+        { first: ['#9cb4ca', '#666666'], second: '#666666', third: trueWhite } // silver tabby
       ]
     },
     traits: {
@@ -76,8 +78,9 @@ const BREED_DATA = {
     },
     bodypartCode: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     bodypartCodeVariants: [
+      [2, 2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 2, 1], // white foot and chin tabby with light chest
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Classic tabby - mostly first color with pattern overlay
-      [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], // High contrast tabby - feet, ears, tail darker, head/chin/chest lighter  
+      [1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1], // High contrast tabby - feet, ears, tail darker, head/chin/chest lighter  
       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1], // Inverse tabby - face, ears, body, tail, jowls, chest darker
       [2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2]  // Bengal-style tabby - feet, jowls, chin, chest use third color
     ],
@@ -494,6 +497,7 @@ const BREED_DATA = {
         { first: '#1c1714', second: '#1c1714', third: '#1c1714' }, // Black
         { first: '#d2bbad', second: '#d2bbad', third: '#d2bbad' }, // Red
         { first: '#6d7580', second: '#6d7580', third: '#6d7580' }, // Blue
+        { first: trueWhite, second: trueWhite, third: trueWhite, }, // white
         { first: '#f8e7d7', second: '#f8e7d7', third: '#f8e7d7' }  // Cream
       ],
       eye: ['#7b8867', '#6b8da6', '#967749'] // Often odd-eyed
@@ -518,7 +522,7 @@ const BREED_DATA = {
     ],
     coatMod: [0.3, 0.5],
     nameLibrary: 15, // Turkish names
-    heterochromicGene: 0.3 // 30% chance of heterochromia gene
+    heterochromicGene: 0.25 // 25% base chance, higher for light colors
   },
 
   'British Shorthair': {
@@ -723,6 +727,17 @@ function applyBreed(who, breedName) {
     who.heterochromicGene = true;
   }
 
+  // Special case: Angora cats have higher heterochromia rates for light colors
+  if (breedName === 'Angora' && !who.heterochromicGene) {
+    // Calculate brightness of the coat color (0-255 scale)
+    let brightness = getBrightness(who.firstColour);
+
+    // Light colors (brightness > 180) get higher heterochromia chance
+    if (brightness > 180 && Math.random() < 0.15) { // Additional 15% chance for light colors
+      who.heterochromicGene = true;
+    }
+  }
+
   // Apply cultural names
   if (breed.nameLibrary !== undefined) {
     if (breed.nameLibrary == 'random') {
@@ -820,65 +835,6 @@ function breedBritishShorthairTortoiseshell(who) {
 }
 
 // Special breed functions that need custom logic
-/**
- * Determine trait expression for cats that carry genes
- * Should be called after genes are set but before trait expression is determined
- */
-function determineTraitExpression(who) {
-  // Albino expression: 25% of gene carriers express albinism
-  if (who.albinoGene && !who.albino) {
-    if (Math.random() <= 0.25) {
-      who.albino = true;
-    }
-  }
-
-  // Hairless expression: 30% of gene carriers express hairlessness
-  // Exception: hairless breeds like Sphynx always express it
-  if (who.hairlessGene && !who.hairless) {
-    if (who.breed === 'Sphynx' || Math.random() <= 0.3) {
-      who.hairless = true;
-    }
-  }
-
-  // Lykoi expression: 30% of gene carriers express Lykoi trait
-  // Exception: Lykoi breed always expresses it
-  // NOTE: If hairless is also expressed, hairless wins (total hairlessness)
-  if (who.lykoiGene && !who.lykoi && !who.hairless) {
-    if (who.breed === 'Lykoi' || Math.random() <= 0.3) {
-      who.lykoi = true;
-    }
-  }
-
-  // Heterochromic expression: 40% of gene carriers express heterochromia
-  if (who.heterochromicGene && who.eyeColour === who.eyeColour2) {
-    if (Math.random() <= 0.4) {
-      // Create different eye colors
-      let secondEyeColor = getRandomEyeColour();
-      // Ensure the second eye color is different
-      while (secondEyeColor === who.eyeColour) {
-        secondEyeColor = getRandomEyeColour();
-      }
-      who.eyeColour2 = secondEyeColor;
-    }
-  }
-}
-
-function mutateHeterochromia(who, seed) {
-  who.heterochromicGene = true;
-  if (seed <= 0.03) {
-    let blue = 192 + Math.floor(Math.random() * 63);
-    let red = 128 + Math.floor(Math.random() * 52);
-    let green = 99 + Math.floor(Math.random() * red / 2);
-    let blue2 = Math.round(green / 2);
-    let greenRed = Math.floor(Math.random() * (blue - 64));
-
-    if (hexToRgb(who.eyeColour).b > hexToRgb(who.eyeColour).r && hexToRgb(who.eyeColour).g) {
-      who.eyeColour2 = rgbToHex(red, green, blue2);
-    } else {
-      who.eyeColour2 = rgbToHex(greenRed, greenRed, blue);
-    }
-  }
-}
 
 function breedSphynx(who) {
   applyBreed(who, 'Sphynx');
@@ -897,7 +853,7 @@ function generateBreedAppropiateName(who) {
     return;
   }
 
-  if (!who.breed || who.breed === 'Mixed') {
+  if (!who.breed || who.breed === mixedBreed) {
     // For mixed or unspecified breeds, use completely random name
     if (who.gender === 'Male' || (who.gender === 'Non Binary' && Math.random() < 0.5)) {
       who.name = getMaleName(Math.floor(Math.random() * totalMaleNames));
@@ -914,30 +870,82 @@ function generateBreedAppropiateName(who) {
 const BREED_SPAWN_CONFIG = {
   // Regular breeds (any gender)
   regularBreeds: [
-    { name: 'Siamese', func: breedSiamese },
-    { name: 'Burmese', func: breedBurmese },
-    { name: 'Russian Blue', func: breedRussianBlue },
-    { name: 'Persian', func: breedPersian },
-    { name: 'Manx', func: breedManx },
-    { name: 'Tabby', func: breedTabby },
-    { name: 'Scottish Fold', func: breedScottishFold },
-    { name: 'Lykoi', func: breedLykoi },
-    { name: 'Sphynx', func: breedSphynx },
-    { name: 'Bengal', func: breedBengal },
-    { name: 'Egyptian Mau', func: breedEgyptianMau },
-    { name: 'Black and white shorthair', func: breedTwoTone },
-    { name: 'Abyssinian', func: breedAbyssinian },
-    { name: 'Ragdoll', func: breedRagdoll },
-    { name: 'Angora', func: breedAngora },
-    { name: 'British Shorthair', func: breedBritishShorthair }
+    {
+      name: 'Siamese',
+      func: breedSiamese
+    },
+    {
+      name: 'Burmese',
+      func: breedBurmese
+    },
+    {
+      name: 'Russian Blue',
+      func: breedRussianBlue
+    },
+    {
+      name: 'Persian',
+      func: breedPersian
+    },
+    {
+      name: 'Manx',
+      func: breedManx,
+      femaleVariants: [
+        { name: 'Manx Tortoiseshell', func: breedManxTortoiseshell, chance: 0.15 }
+      ]
+    },
+    {
+      name: 'Tabby',
+      func: breedTabby
+    },
+    {
+      name: 'Scottish Fold',
+      func: breedScottishFold
+    },
+    {
+      name: 'Lykoi',
+      func: breedLykoi
+    },
+    {
+      name: 'Sphynx',
+      func: breedSphynx
+    },
+    {
+      name: 'Bengal',
+      func: breedBengal
+    },
+    {
+      name: 'Egyptian Mau',
+      func: breedEgyptianMau
+    },
+    {
+      name: 'Black and white shorthair',
+      func: breedTwoTone
+    },
+    {
+      name: 'Abyssinian',
+      func: breedAbyssinian
+    },
+    {
+      name: 'Ragdoll',
+      func: breedRagdoll
+    },
+    {
+      name: 'Angora',
+      func: breedAngora
+    },
+    {
+      name: 'British Shorthair',
+      func: breedBritishShorthair,
+      femaleVariants: [
+        { name: 'British Shorthair Tortoiseshell', func: breedBritishShorthairTortoiseshell, chance: 0.15 }
+      ]
+    }
   ],
 
-  // Female-only breeds with rare male occurrence
+  // Female-only breeds with rare male occurrence (discrete breeds, not variants)
   femaleOnlyBreeds: [
     { name: 'Calico', func: breedCalico, maleChance: 1 / 3000 },
-    { name: 'Tortoiseshell', func: breedTortoiseShell, maleChance: 1 / 3000 },
-    { name: 'Manx Tortoiseshell', func: breedManxTortoiseshell, maleChance: 1 / 3000 },
-    { name: 'British Shorthair Tortoiseshell', func: breedBritishShorthairTortoiseshell, maleChance: 1 / 3000 }
+    { name: 'Tortoiseshell', func: breedTortoiseShell, maleChance: 1 / 3000 }
   ],
 
   // What percentage of cats should get female-only breeds (when female)
@@ -965,5 +973,63 @@ applyBreedTemplate = function (who) {
   }
   // Otherwise, pick from regular breeds with equal distribution
   const regularBreed = config.regularBreeds[Math.floor(Math.random() * config.regularBreeds.length)];
+
+  // Check if this breed has female variants and if this cat is female
+  if (who.gender !== 'Male' && regularBreed.femaleVariants) {
+    for (const variant of regularBreed.femaleVariants) {
+      if (Math.random() < variant.chance) {
+        variant.func(who);
+        return;
+      }
+    }
+  }
+
+  // Apply the base breed
   regularBreed.func(who);
+};
+
+// Apply specific breed template for adoption center filtering
+applySpecificBreedTemplate = function (who, breedName) {
+  const config = BREED_SPAWN_CONFIG;
+
+  // Handle 'All' filter - use normal random selection
+  if (breedName === 'All') {
+    applyBreedTemplate(who);
+    return;
+  }
+
+  // Check if it's a female-only breed
+  const femaleOnlyBreed = config.femaleOnlyBreeds.find(breed => breed.name === breedName);
+  if (femaleOnlyBreed) {
+    // Only apply if gender allows it (respecting male chance)
+    if (who.gender !== 'Male' || Math.random() < femaleOnlyBreed.maleChance) {
+      femaleOnlyBreed.func(who);
+      return;
+    } else {
+      // Fall back to random regular breed for males when they can't get female-only breed
+      applyBreedTemplate(who);
+      return;
+    }
+  }
+
+  // Check regular breeds
+  const regularBreed = config.regularBreeds.find(breed => breed.name === breedName);
+  if (regularBreed) {
+    // Check if this breed has female variants and if this cat is female
+    if (who.gender !== 'Male' && regularBreed.femaleVariants) {
+      for (const variant of regularBreed.femaleVariants) {
+        if (Math.random() < variant.chance) {
+          variant.func(who);
+          return;
+        }
+      }
+    }
+
+    // Apply the base breed
+    regularBreed.func(who);
+    return;
+  }
+
+  // Fallback to random if breed not found
+  applyBreedTemplate(who);
 };

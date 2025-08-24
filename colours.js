@@ -283,3 +283,32 @@ function mixThreeColours(hex1, hex2, hex3) {
   debugString = 'mixThreeColours';
   return rgbToHex(combr, combg, combb);
 }
+
+// Helper function to calculate color brightness (0-255 scale)
+function getBrightness(color) {
+  // Convert hex color to RGB and calculate brightness
+  let r, g, b;
+  
+  if (color.startsWith('#')) {
+    // Handle hex colors
+    const hex = color.slice(1);
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else {
+      r = parseInt(hex.substr(0, 2), 16);
+      g = parseInt(hex.substr(2, 2), 16);
+      b = parseInt(hex.substr(4, 2), 16);
+    }
+  } else {
+    // Handle named colors (limited support)
+    if (color === trueWhite) return 255;
+    if (color === trueBlack) return 0;
+    // Default to medium brightness for unknown colors
+    return 128;
+  }
+  
+  // Calculate perceived brightness using luminance formula
+  return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+}

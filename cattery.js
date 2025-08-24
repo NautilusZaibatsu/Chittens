@@ -9,13 +9,21 @@ const chittenBaseSize = 9;
 const chittenSizeVariation = chittenMaxSize - chittenBaseSize;
 const chittenJumpCooldown = 60; // frames
 const youngChittenJumpCooldown = 15;
-const chittenSittingCooldown = 60; // frames - how long chittens must sit before standing up
+const chittenSittingCooldown = 60; // frames - how long chittens must sit before standing up. This counts down
 const chittenSittingSpeed = 15; // frames
 const chittenStandingUpSpeed = 5; // frames
 const chittenMaxSeekFireflyDistance = maxDistance / 2; // maximum distance a chitten will actively seek out a firefly
 const chittenNormalJumpDistance = 100; // the distance a chitten normally jumps
 const chittenJumpMod = 1.5; // the multiple of the normal jumping distance a chitten can reach
 const chittenFireflySwatDistanceMod = 10; // the multiple of the chitten's size  that defines how close a firefly can get before it swats at it
+
+// mutation genes
+const albinoGeneMutateChance = 0.04; // chance to mutate
+const albinoGeneExpression = 0.25; // chance to be expressed
+const heterochromicGeneMutateChance = 0.03; // chance to mutate
+const heterochromicGeneExpression = 0.5; //chance to be expressed
+const hairlessGeneExpression = 0.5;
+const lykoiGeneExpression = 0.5;
 
 // breeding requirements
 const breedingLoveReq = 100;
@@ -153,7 +161,7 @@ function initLitter(mParent, fParent) {
       // don't mutate the pick of the litter, or the runt
       if (thisCatBox !== 0 && thisCatBox !== boxes.length - 1) {
         mutate(chittens[thisCatBox + currentChittens]);
-        determineTraitExpression(chittens[thisCatBox + currentChittens]);
+        determineTraitExpression(chittens[thisCatBox + currentChittens], true, maleParent, femaleParent);
       }
     }
   }
@@ -172,19 +180,24 @@ function initLitter(mParent, fParent) {
   chittens[chittens.length - 1].reinitSizeAndColour();
 }
 
-function randomiseGenetics(who) {
+// Consolidated base genetics function for all adoption cats
+function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
+  // Set basic physical properties
   who.age = Math.round(Math.random() * 5) + maturesAt;
   who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize);
   who.coatMod[0] = Math.random();
   who.coatMod[1] = Math.random();
   who.thickness = (Math.random() * 0.5) + 0.5;
   who.legginess = (Math.random() * 0.9) + 0.1;
-  who.patternAlpha = Math.random(); // Ensure patternAlpha is set
-  // Set default colors first (will be overridden by breed if applicable)
+  who.patternAlpha = Math.random();
+
+  // Set default colors (will be overridden by breed if applicable)
   let colourArray = generateRealisticCoat();
   who.firstColour = colourArray[0];
   who.secondColour = colourArray[1];
   who.thirdColour = colourArray[2];
+
+  // Set basic properties
   who.inCatBox = boxes[thisCatBox];
   who.birthday = Math.round(Math.random() * 1000);
   who.love = 50 + Math.round((Math.random() * 50));
@@ -202,34 +215,127 @@ function randomiseGenetics(who) {
   who.fangs = Math.random();
   who.earHeight = 0.25 + (Math.random() * 0.75);
   who.earLength = 0.25 + (Math.random() * 0.75);
-  if (who !== experiment) {
-    applyBreedTemplate(who);
-  }
-  who.eyeColour2 = who.eyeColour;
-  if (who !== experiment) {
+
+  // Handle breed application
+  if (who !== experiment && shouldApplyBreedTemplate) {
+    if (specificBreed) {
+      // Clear inappropriate genes for purebreds
+      who.hairlessGene = false;
+      who.hairless = false;
+      who.lykoiGene = false;
+      who.lykoi = false;
+
+      // Apply specific breed
+      applySpecificBreedTemplate(who, specificBreed);
+
+      // Only apply allowed mutations for purebreds
+      if (Math.random() < albinoGeneMutateChance) who.albinoGene = true;
+      if (Math.random() < heterochromicGeneMutateChance) who.heterochromicGene = true;
+    } else {
+      // Apply random breed template
+      applyBreedTemplate(who);
+      mutate(who);
+    }
+  } else if (who !== experiment) {
+    // Mixed breed - set explicitly and apply all mutations
+    who.breed = mixedBreed;
     mutate(who);
-    determineTraitExpression(who);
   }
+
+  // Apply trait expression for all adoption cats
+  if (who !== experiment) {
+    determineTraitExpression(who, false);
+  }
+
+  // Ensure heterochromia produces visible different eye colors
+  if (who.heterochromicGene && who.eyeColour === who.eyeColour2) {
+    if (Math.random() < 0.5) {
+      who.eyeColour = getRandomEyeColour();
+    } else {
+      who.eyeColour2 = getRandomEyeColour();
+    }
+  } else if (!who.heterochromicGene) {
+    who.eyeColour2 = who.eyeColour;
+  }
+
   who.reinitSizeAndColour();
 }
 
-// Function to create a crossbreed for adoption using same logic as regular cats
-function generateAdoptionCrossbreed(who) {
-  // Get available pure breeds dynamically from BREED_DATA
-  const availableBreeds = Object.keys(BREED_DATA);
+// Generate a crossbreed cat (two breeds mixed together)
+function generateCrossbreed(who) {
+  // Store the original adoption cat data
+  const originalWho = { ...who };
 
   // Pick two different breeds to mix
+  const availableBreeds = Object.keys(BREED_DATA);
   const breed1 = availableBreeds[Math.floor(Math.random() * availableBreeds.length)];
   let breed2;
   do {
     breed2 = availableBreeds[Math.floor(Math.random() * availableBreeds.length)];
   } while (breed2 === breed1);
 
-  // Set crossbreed name BEFORE applying genetics (so mutations can append to it)
-  who.breed = breed1 + ' x ' + breed2;
+  // Create temporary parent cats
+  const tempParent1 = new Chitten(0, 0, 6, 10, 'Male');
+  const tempParent2 = new Chitten(0, 0, 6, 10, 'Female');
+  
+  // Apply breeds to temp parents
+  applyBreed(tempParent1, breed1);
+  applyBreed(tempParent2, breed2);
+  
+  // Generate baby using the existing breeding system
+  const crossbreedName = generateChildBreedText(tempParent1, tempParent2);
+  generateBaby(tempParent1, tempParent2, crossbreedName);
+  
+  // Replace who entirely with the baby
+  const baby = chittens[chittens.length - 1];
+  Object.assign(who, baby);
+  
+  // Restore only the adoption-specific properties from original
+  who.inCatBox = originalWho.inCatBox;
+  who.x = originalWho.x;
+  who.y = originalWho.y;
+  who.gender = originalWho.gender;
+  who.awake = originalWho.awake;
+  who.speedX = originalWho.speedX;
+  who.speedY = originalWho.speedY;
+  who.hitBottom = originalWho.hitBottom;
+  
+  // Make this an adult cat, not a baby
+  who.age = Math.round(Math.random() * 5) + maturesAt;
+  who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize) * (who.gender === 'Female' ? 1 / 1.1 : 1.1);
+  
+  // Remove the temporary baby from the chittens array
+  chittens.splice(chittens.length - 1, 1);
+}
 
-  // Apply genetics after breed name is set
-  randomiseGenetics(who);
+// Main adoption cat generator based on filter
+function generateAdoptionCat(who, breedFilter) {
+  if (breedFilter === mixedBreed) {
+    // Mixed filter: 50% mixed, 50% crossbreed
+    if (Math.random() < 0.5) {
+      randomiseGeneticsBase(who, false, null); // Pure mixed
+    } else {
+      generateCrossbreed(who); // Crossbreed
+    }
+  } else if (breedFilter !== 'All') {
+    // Specific breed filter: 100% that purebred
+    randomiseGeneticsBase(who, true, breedFilter);
+  } else {
+    // All/Unfiltered filter: 40% purebred, 30% mixed, 30% crossbreed
+    let rand = Math.random();
+    if (rand < 0.4) {
+      randomiseGeneticsBase(who, true, null); // Random purebred
+    } else if (rand < 0.7) {
+      randomiseGeneticsBase(who, false, null); // Pure mixed
+    } else {
+      generateCrossbreed(who); // Crossbreed
+    }
+  }
+}
+
+// Legacy wrapper function for backward compatibility (used only by experimental kittens in devmode)
+function randomiseGenetics(who) {
+  randomiseGeneticsBase(who, true, null); // Random purebred with mutations
 }
 
 function initCattery(gender) {
@@ -259,6 +365,10 @@ function initCattery(gender) {
   buttons[0].visible = true;
   buttons[6].visible = true;
 
+  // Show breed filter toggle button and create breed filter buttons
+  buttons[15].visible = true;
+  createBreedFilterButtons(gender);
+
   for (let i = 0; i < boxColumns; i++) {
     for (let j = 0; j < boxRows; j++) {
       const x = (canvasWidth / 2) - (((boxSize * 3) + (boxPadding * 2)) / 2) + (i * boxPadding) + (i * boxSize);
@@ -275,11 +385,11 @@ function initCattery(gender) {
       boxes[thisCatBox].id = thisCatBox + currentChittens;
       boxes[thisCatBox].colour = (gender === 'Female' ? genderPink : genderBlue);
 
-      if (Math.random() < 0.3) {
-        generateAdoptionCrossbreed(chittens[thisCatBox + currentChittens]);
-      } else {
-        randomiseGenetics(chittens[thisCatBox + currentChittens]);
-      }
+      // Set the cat's catbox reference BEFORE generating adoption cat
+      chittens[thisCatBox + currentChittens].inCatBox = boxes[thisCatBox];
+
+      // Generate adoption cat based on breed filter
+      generateAdoptionCat(chittens[thisCatBox + currentChittens], selectedBreedFilter);
 
       const chit = chittens[thisCatBox + currentChittens];
       chit.speedX = 0;
@@ -527,7 +637,7 @@ function generateChildBreedText(parent1, parent2) {
 
   // Too mixed - revert to "Mixed" after 3 generations
   if (maxDepth >= 3) {
-    return 'Mixed';
+    return mixedBreed;
   }
 
   // Create cross name (alphabetical order for consistency)
@@ -536,22 +646,19 @@ function generateChildBreedText(parent1, parent2) {
 }
 
 function cleanBreedName(breedName) {
-  if (!breedName || breedName === 'Mixed') return 'Mixed';
-
-  // Remove albino suffix
-  let cleaned = breedName.replace(/\s+(albino|Albino)$/, '');
+  if (!breedName || breedName === mixedBreed) return mixedBreed;
 
   // Remove cross suffix  
-  cleaned = cleaned.replace(/\s+cross$/, '');
+  breedName = breedName.replace(/\s+cross$/, '');
 
   // For already crossed breeds, take the first breed only
-  const firstBreed = cleaned.split(' x ')[0];
+  const firstBreed = breedName.split(' x ')[0];
 
-  return firstBreed || 'Mixed';
+  return firstBreed || mixedBreed;
 }
 
 function getBreedDepth(breedName) {
-  if (!breedName || breedName === 'Mixed') return 0;
+  if (!breedName || breedName === mixedBreed) return 0;
 
   // Count ' x ' patterns (with spaces) to determine crossing depth
   // This avoids counting 'x' in breed names like "Sphynx"
@@ -562,8 +669,30 @@ function getBreedDepth(breedName) {
   return 2; // Complex cross (simplified to avoid infinite complexity)
 }
 
+// Gene inheritence section
 /**
-* function to collide two objects using physics
+* function to determine inheritence of genes using mendellian logic
+ * @param {boolean} parent1Gene - the first parent's gene
+ * @param {boolean} parent2Gene - the first parent's gene
+ * @return {boolean} whether the offspring inherits the gene
+ * */
+function inheritGenes(parent1Gene, parent2Gene) {
+  let hasGene = false;
+  // If both parents carry the gene → 75% chance to inherit
+  if (parent1Gene && parent2Gene) {
+    hasGene = Math.random() < 0.75;
+    // If one parent carries the gene → 50% chance to inherit
+  } else if (parent1Gene || parent2Gene) {
+    hasGene = Math.random() < 0.5;
+    // If neither → no gene inherited
+  } else {
+    hasGene = false;
+  }
+  return hasGene;
+}
+
+/**
+* function to generate a baby from two parents
 * @param {object} parent1 - the first parent
 * @param {object} parent2 - the second parent
 * @return {string} the gender of the baby
@@ -810,57 +939,6 @@ function generateBaby(parent1, parent2, specBreed) {
   } else {
     chittens[chittens.length - 1].coatMod[1] = (parent1.coatMod[1] + parent2.coatMod[1] + Math.random()) / 3;
   }
-  // check for genetic conditions being passed down
-  // albino gene inheritance (separate from expression)
-  let albinoGeneChance = 0;
-  if (parent1.albinoGene && parent2.albinoGene) {
-    albinoGeneChance = 0.75; // 75% chance to inherit gene when both parents carry it
-  } else if (parent1.albinoGene || parent2.albinoGene) {
-    albinoGeneChance = 0.5; // 50% chance when one parent carries it
-  }
-  if (albinoGeneChance >= Math.random()) {
-    chittens[chittens.length - 1].albinoGene = true;
-    // Expression chance: only 25% of gene carriers actually express albinism
-    if (Math.random() <= 0.25) {
-      chittens[chittens.length - 1].albino = true;
-    }
-  }
-
-  // hairless gene inheritance (recessive trait)
-  let hairlessGeneChance = 0;
-  if (parent1.hairlessGene && parent2.hairlessGene) {
-    hairlessGeneChance = 0.75; // 75% chance to inherit gene when both parents carry it
-  } else if (parent1.hairlessGene || parent2.hairlessGene) {
-    hairlessGeneChance = 0.5; // 50% chance when one parent carries it
-  }
-  if (hairlessGeneChance >= Math.random()) {
-    chittens[chittens.length - 1].hairlessGene = true;
-  }
-
-  // lykoi gene inheritance (separate recessive trait)
-  let lykoiGeneChance = 0;
-  if (parent1.lykoiGene && parent2.lykoiGene) {
-    lykoiGeneChance = 0.75; // 75% chance to inherit gene when both parents carry it
-  } else if (parent1.lykoiGene || parent2.lykoiGene) {
-    lykoiGeneChance = 0.5; // 50% chance when one parent carries it
-  }
-  if (lykoiGeneChance >= Math.random()) {
-    chittens[chittens.length - 1].lykoiGene = true;
-  }
-  if (chittens[chittens.length - 1].breed == 'Sphynx' && !chittens[chittens.length - 1].hairlessGene) {
-    chittens[chittens.length - 1].breed = 'Mixed';
-  }
-
-  // heterochromic gene inheritance
-  let heterochromicGeneChance = 0;
-  if (parent1.heterochromicGene && parent2.heterochromicGene) {
-    heterochromicGeneChance = 0.75; // 75% chance to inherit gene when both parents carry it
-  } else if (parent1.heterochromicGene || parent2.heterochromicGene) {
-    heterochromicGeneChance = 0.5; // 50% chance when one parent carries it
-  }
-  if (heterochromicGeneChance >= Math.random()) {
-    chittens[chittens.length - 1].heterochromicGene = true;
-  }
 
   // mixing in a little randomness to the colours
   let seedC = Math.random();
@@ -880,21 +958,36 @@ function generateBaby(parent1, parent2, specBreed) {
   }
   chittens[chittens.length - 1].eyeColour = mixTwoColours(eyeColour, getRandomEyeColour(), 1 - (Math.random() * 0.025));
 
-  // Heterochromic expression: only cats with the gene can express it
-  if (chittens[chittens.length - 1].heterochromicGene) {
-    // 40% chance for gene carriers to actually express heterochromia
-    if (Math.random() <= 0.4) {
-      mutateHeterochromia(chittens[chittens.length - 1], 0);
-    } else {
-      chittens[chittens.length - 1].eyeColour2 = chittens[chittens.length - 1].eyeColour;
-    }
+  // check for genetic conditions being passed down - it is actually expressed in determineTraitExpression()
+  // albino gene inheritance (separate from expression)
+  let inheritAlbinoGene = inheritGenes(parent1.albinoGene, parent2.albinoGene);
+  if (inheritAlbinoGene) {
+    chittens[chittens.length - 1].albinoGene = true;
+  }
+
+  // hairless gene inheritance (recessive trait)
+  let inheritHairlessGene = inheritGenes(parent1.hairlessGene, parent2.hairlessGene);
+  if (inheritHairlessGene) {
+    chittens[chittens.length - 1].hairlessGene = true;
+  }
+
+  // lykoi gene inheritance (separate recessive trait)
+  let inheritLykoiGene = inheritGenes(parent1.lykoiGene, parent2.lykoiGene);
+  if (inheritLykoiGene) {
+    chittens[chittens.length - 1].lykoiGene = true;
+  }
+
+  // heterochromic gene inheritance
+  let inheritHeterochromicGene = inheritGenes(parent1.heterochromicGene, parent2.heterochromicGene);
+  if (inheritHeterochromicGene) {
+    chittens[chittens.length - 1].heterochromicGene = true;
   } else {
     chittens[chittens.length - 1].eyeColour2 = chittens[chittens.length - 1].eyeColour;
   }
 
-  if (chittens[chittens.length - 1].gender == 'Male' && Math.random() > 1 / 3000) {
-    chittens[chittens.length - 1].thirdColour = chittens[chittens.length - 1].firstColour;
-  }
+  // end of genetic mutation inheritance section
+
+  // assembling the body
   let tmpBodypartCode = [];
   for (let i = 0; i < parent1.bodypartCode.length; i++) {
     if (Math.random() < 0.5) {
@@ -924,8 +1017,7 @@ function generateBaby(parent1, parent2, specBreed) {
   chittens[chittens.length - 1].earHeight = babyEars2;
 
   // Determine trait expression for inherited genes
-  determineTraitExpression(chittens[chittens.length - 1]);
-
+  determineTraitExpression(chittens[chittens.length - 1], true, parent1, parent2);
   return babyGender;
 }
 
@@ -939,11 +1031,9 @@ function generateBaby(parent1, parent2, specBreed) {
 * @param {int} ears - the ear modifier (cat -> fox);
 */
 function Chitten(x, y, bodySize, maxSize, gender) {
-  this.id = ('0000' + guyID).slice(-4);
-  guyID++;
   this.size = bodySize;
   this.maxSize = Math.min(maxSize, chittenMaxSize);
-  this.breed = 'Mixed';
+  this.breed = mixedBreed;
   this.inCatBox = null;
   this.x = x;
   this.y = y;
@@ -1013,13 +1103,13 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   // interaction
   this.dragging = false;
   // genetic conditions
-  this.albino = false;
-  this.albinoGene = false;
-  this.hairlessGene = false;
-  this.lykoiGene = false;
   this.heterochromicGene = false;
-  this.hairless = false;
+  this.albinoGene = false;
+  this.albino = false;
+  this.lykoiGene = false;
   this.lykoi = false;
+  this.hairlessGene = false;
+  this.hairless = false;
   this.kill = function () {
     removeFocusFrom(this);
     chittens.splice(chittens.indexOf(this, chittens), 1);
@@ -1501,7 +1591,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.fill();
 
     // === PATTERN OVERLAY ===
-    if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+    if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
       ctx.fillStyle = pat;
       ctx.globalAlpha = this.patternAlpha;
       ctx.beginPath();
@@ -1732,9 +1822,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.fillText('z', 12, this.size - 14 - amntToMove);
     }
 
-    // hearts
+    // hearts for snuggling
     if (this.snuggling > 0) {
-      ctx.fillStyle = '#e94db5';
+      ctx.fillStyle = heartsPink;
       ctx.font = '20px' + ' ' + globalFont;
       let amntToMove = this.snuggling; // 0 to 250
       while (amntToMove > 40) {
@@ -1748,7 +1838,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.fillText(unicodeHeart, -10, -(this.size * 4) + amntToMove);
     }
 
-    // eating noms
+    // eating nom nom noms
     if (this.nomnomnom > 0) {
       ctx.fillStyle = trueWhite;
       ctx.font = '10px' + ' ' + globalFont;
@@ -1810,7 +1900,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.fill();
 
       // === PATTERN OVERLAY - SITTING ===
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         // Pattern - butt
@@ -1823,7 +1913,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.fill();
 
         // Special pattern effects
-        if (this.pattern == 3) {
+        if (!this.albino && this.pattern == 3) {
           let fadeGrad = ctx.createLinearGradient(0, -(this.size + (this.thickness * this.size / 2)) / 2, 0, (this.size + (this.thickness * this.size / 2)));
           fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
           fadeGrad.addColorStop(1, this.firstColour);
@@ -1832,7 +1922,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
           ctx.fill();
         }
-        if (this.pattern == 6) {
+        if (!this.albino && this.pattern == 6) {
           let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
           ctx.globalAlpha = 0.5;
           bGradient.addColorStop(0, this.thirdColour);
@@ -1861,7 +1951,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.fill();
 
       // === PATTERN OVERLAY - STANDING ===
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -1870,7 +1960,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.fill();
 
         // Special pattern effects
-        if (this.pattern == 3) {
+        if (!this.albino && this.pattern == 3) {
           let fadeGrad = ctx.createLinearGradient(0, -(this.size + (this.thickness * this.size / 2)) / 2, 0, (this.size + (this.thickness * this.size / 2)));
           fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
           fadeGrad.addColorStop(1, this.firstColour);
@@ -1879,7 +1969,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
           ctx.fill();
         }
-        if (this.pattern == 6) {
+        if (!this.albino && this.pattern == 6) {
           let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
           ctx.globalAlpha = 0.5;
           bGradient.addColorStop(0, this.thirdColour);
@@ -1942,7 +2032,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(0, fgY, ((this.size + (this.thickness * this.size / 5)) / 1.5) * chestScale, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         // Scale chest pattern to match chest scaling
@@ -2033,7 +2123,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.lineTo(oneq * 4, +this.size / 2);
     ctx.stroke();
     ctx.fill();
-    if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+    if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
       ctx.fillStyle = pat;
       ctx.globalAlpha = this.patternAlpha;
       ctx.beginPath();
@@ -2124,14 +2214,14 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.stroke();
       ctx.fill();
       // draw the pattern image
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
         // colourpoint
-      } else if (this.pattern == 4) {
+      } else if (!this.albino && this.pattern == 4) {
         let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2 * this.patternAlpha, 0, 0, this.size * this.patternAlpha);
         faceGradient.addColorStop(0, this.firstColour);
         faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -2140,7 +2230,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.fill();
       }
       // additional gradient on top for tabby
-      if (this.pattern == 3) {
+      if (!this.albino && this.pattern == 3) {
         let fadeGrad = ctx.createLinearGradient(0, -this.size / 2, 0, this.size);
         fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
         fadeGrad.addColorStop(1, this.firstColour);
@@ -2150,7 +2240,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.fill();
       }
       // additional gradient on top for bengal / mau pattern
-      if (this.pattern == 6) {
+      if (!this.albino && this.pattern == 6) {
         let faceGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
         ctx.globalAlpha = 0.5;
         faceGradient.addColorStop(0, this.thirdColour);
@@ -2196,7 +2286,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(0, this.limbLength + (this.size * 0.6), this.size, 3.15, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -2387,7 +2477,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(0, (this.size * (this.nosePos - 0.5) / 2) + this.size / 1.5, (this.size / 3.5), 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
         ctx.fillStyle = jowlPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -2444,7 +2534,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
         ctx.fillStyle = jowlPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -2475,7 +2565,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5 && this.pattern !== 3) {
         ctx.fillStyle = jowlPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -2485,7 +2575,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       }
 
       // === T-SHAPED NOSE (uses nose-specific colors, not skin colors) ===
-      let noseX = 0;
       let noseY = (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5);
       let noseWidth = this.size / 1.75;
       let noseHeight = this.size / 4;
@@ -2592,7 +2681,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.arc((this.size / 1.6), (this.size) + (this.limbLength / 2.5), footSize, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = footPat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -2615,7 +2704,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.arc(this.focus.x, this.focus.y, footSize, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
-        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.fillStyle = footPat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.beginPath();
@@ -2636,7 +2725,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
-        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.fillStyle = footPat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.beginPath();
@@ -2685,7 +2774,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
-        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.fillStyle = footPat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.beginPath();
@@ -3082,7 +3171,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       sameDirection = true;
     }
 
-    // drawing
+    // Preparing to draw the chitten
     ctx = myGameArea.context;
     ctx.globalAlpha = 1;
     let sleepshift = 0;
@@ -3243,56 +3332,90 @@ removeRelationships = function (who) {
 mutate = function (who) {
   // albino gene chance (4%)
   let albinoChance = Math.random();
-  if (albinoChance <= 0.04) {
+  if (albinoChance <= albinoGeneMutateChance) {
     who.albinoGene = true;
     // Don't set pattern or call mutateAlbino - let determineTraitExpression handle it
   }
 
   // heterochromic gene chance (3%)
-  if (Math.random() <= 0.03) {
+  if (Math.random() <= heterochromicGeneMutateChance) {
     who.heterochromicGene = true;
     // Don't automatically set different eye colors - let determineTraitExpression handle it
   }
 };
 
-/** function to determine if genetic traits should be expressed
-* @param {Chitten} who - the chitten
-*/
-determineTraitExpression = function (who) {
-  // Hairless gene expression (recessive - needs gene to be present)
-  if (who.hairlessGene) {
-    // Expression chance: 90% of gene carriers actually express hairlessness
-    if (Math.random() <= 0.9) {
-      who.hairless = true;
-    }
-  }
-
-  // Lykoi gene expression (recessive - needs gene to be present) 
-  if (who.lykoiGene && !who.hairless) { // Hairless dominates over Lykoi
-    // Expression chance: 85% of gene carriers actually express lykoi trait
-    if (Math.random() <= 0.85) {
-      who.lykoi = true;
-    }
-  }
-
-  // Albino gene expression (already handled in breeding, but check for adoption cats)
+/**
+ * Determine trait expression for cats that carry genes
+ * Should be called after genes are set but before trait expression is determined
+ */
+function determineTraitExpression(who, bredInGame, parent1, parent2) {
+  // Albino expression: 25% of gene carriers express albinism
   if (who.albinoGene && !who.albino) {
-    // Expression chance: 25% of gene carriers actually express albinism
-    if (Math.random() <= 0.25) {
+    if (Math.random() <= albinoGeneExpression) {
       who.albino = true;
     }
   }
 
-  // Heterochromia gene expression
-  if (who.heterochromicGene) {
-    // Expression chance: 70% of gene carriers actually express heterochromia
-    if (Math.random() <= 0.7) {
-      // Generate different eye color
-      let eyeColors = ['#00ff00', '#0000ff', '#ff0000', '#ffff00', '#ff00ff', '#00ffff'];
-      who.eyeColour2 = eyeColors[Math.floor(Math.random() * eyeColors.length)];
+  // Hairless expression: 30% of gene carriers express hairlessness
+  // Exception: hairless breeds like Sphynx always express it
+  if (who.hairlessGene && !who.hairless) {
+    if (who.breed === 'Sphynx' || Math.random() <= hairlessGeneExpression) {
+      who.hairless = true;
     }
   }
-};
+
+  // Lykoi expression: 30% of gene carriers express Lykoi trait
+  // Exception: Lykoi breed always expresses it
+  // NOTE: If hairless is also expressed, hairless wins (total hairlessness)
+  if (who.lykoiGene && !who.lykoi && !who.hairless) {
+    if (who.breed === 'Lykoi' || Math.random() <= lykoiGeneExpression) {
+      who.lykoi = true;
+    }
+  }
+
+  if (!bredInGame) {
+    // Heterochromic expression: 40% of gene carriers express heterochromia
+    if (who.heterochromicGene && who.eyeColour === who.eyeColour2) {
+      if (Math.random() <= heterochromicGeneExpression) {
+        // Create different eye colors
+        let secondEyeColor = getRandomEyeColour();
+        // Ensure the second eye color is different
+        while (secondEyeColor === who.eyeColour) {
+          secondEyeColor = getRandomEyeColour();
+        }
+        who.eyeColour2 = secondEyeColor;
+      }
+    }
+  } else {
+    // determine if it's actually expressed
+    if (Math.random() <= heterochromicGeneExpression) {
+      // For bred kittens, use realistic parent-based heterochromia
+      // Choose between parent eye colors with some variation
+      // If parents have different eye colors, use them as the base
+      if (parent1.eyeColour !== parent2.eyeColour) {
+        let useParent1First = Math.random() < 0.5; // 50/50 chance for each eye to be inherited from each parent
+        if (useParent1First) {
+          who.eyeColour = mixTwoColours(parent1.eyeColour, getRandomEyeColour(), 0.9);
+          who.eyeColour2 = mixTwoColours(parent2.eyeColour, getRandomEyeColour(), 0.9);
+        } else {
+          who.eyeColour = mixTwoColours(parent2.eyeColour, getRandomEyeColour(), 0.9);
+          who.eyeColour2 = mixTwoColours(parent1.eyeColour, getRandomEyeColour(), 0.9);
+        }
+      } else {
+        // If parents have same eye color, one eye follows inheritance, other is different
+        // eyeColour is already set from normal inheritance above
+        who.eyeColour2 = getRandomEyeColour();
+        // Ensure they're actually different
+        while (who.eyeColour2 === who.eyeColour) {
+          who.eyeColour2 = getRandomEyeColour();
+        }
+      }
+    } else {
+      who.eyeColour2 = who.eyeColour;
+    }
+  }
+}
+
 
 skinColourCheck = function (theColour) {
   let rgb = hexToRgb(theColour);
