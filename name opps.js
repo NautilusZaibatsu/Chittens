@@ -1,64 +1,3 @@
-// Version 0.05
-/**
-* function generate a baby name from two parents
-* @param {string} maleName - the male parent's name
-* @param {string} femaleName - the female parent's name
-* @param {string} gender - the desired gender
-*/
-function generateBabyName(maleName, femaleName, gender) {
-  // console.log('generate '+gender+' baby for '+maleName+' & '+femaleName);
-  let stop = false;
-  let ethnic = null;
-  let thisSeed = null;
-  let nameLogic = 'random';
-  let result = null;
-  let nameLogicChance = Math.random();
-  if (nameLogicChance < 0.49) {
-    nameLogic = 'maleParent';
-  } else if (nameLogicChance < 0.98) {
-    nameLogic = 'femaleParent';
-  }
-  if (nameLogic == 'random') {
-    if (gender == 'Male' || (gender == 'Non Binary' && Math.random() < 0.5)) {
-      result = getMaleName(Math.floor(Math.random() * ((numlibs * namesinlib))));
-    } else {
-      result = getFemaleName(Math.floor(Math.random() * ((numlibs * namesinlib))));
-    }
-    // male parent
-  } else if (nameLogic == 'maleParent') {
-    ethnic = getLibraryName(maleName, 'Male');
-  } else {
-    ethnic = getLibraryName(femaleName, 'Female');
-  }
-
-  // now process it
-  thisSeed = Math.floor(Math.random() * namesinlib);
-  for (let i = 0; i < numlibs; i++) {
-    if (ethnic == nameArrayNames[i]) {
-      if (gender == 'Male' || (gender == 'Non Binary' && Math.random() < 0.5)) {
-        result = maleNameArray[i][thisSeed];
-      } else {
-        result = femaleNameArray[i][thisSeed];
-      }
-    }
-  }
-  // check if this name already exists in the game
-  let flagged = false;
-  for (let c = 0; c < chittens.length && !flagged; c++) {
-    if (chittens[c].name == result) {
-      flagged = true;
-    }
-  }
-  if (flagged) {
-    // console.log('Prevented from picking name that is already in the game '+result);
-    result = generateBabyName(maleName, femaleName, gender);
-  }
-  if (result == null) {
-    console.log('null name error Stop is ' + stop + ' Ethnic was ' + ethnic + ' namelogic was ' + nameLogic + ' Parents were ' + maleName + ' & ' + femaleName + ' gender was ' + gender + ' seed was ' + thisSeed);
-  }
-  return result;
-};
-
 /**
 * function to return a male name, when fed a number that is between 0 and the total number of male names
 */
@@ -90,19 +29,19 @@ function getFemaleName(index) {
 /**
 * function to return a male name, when fed a number that is between 0 and the total number of male libraries
 */
-function getRandomMaleEthnicName(ethnicity) {
+function getRandomMaleCulturalName(culture) {
   let index = Math.round(Math.random() * (namesinlib - 1));
-  return maleNameArray[ethnicity][index];
-  console.log('oops M ' + ethnicity);
+  return maleNameArray[culture][index];
+  console.log('oops M ' + culture);
 }
 
 /**
 * function to return a female name, when fed a number that is between 0 and the total number of female libraries
 */
-function getRandomFemaleEthnicName(ethnicity) {
+function getRandomFemaleCulturalName(culture) {
   let index = Math.round(Math.random() * (namesinlib - 1));
-  return femaleNameArray[ethnicity][index];
-  console.log('oops F ' + ethnicity);
+  return femaleNameArray[culture][index];
+  console.log('oops F ' + culture);
 }
 
 /**
@@ -131,9 +70,20 @@ function getLibraryName(name, gender) {
 
 
 function reportNames() {
-  console.log('Initialising names database');
   if (nameArrayNames.length !== maleNameArray.length || nameArrayNames.length !== femaleNameArray.length) {
-    console.log('error - library index does not match library contents');
+    console.warn('error - library index does not match library contents');
+  }
+  // check there is the correct number of names per library
+  let target = namesinlib;
+  for (let i = 0; i < maleNameArray.length; i++) {
+    if (maleNameArray[i].length < target) {
+      console.warn('Incorrect number of names in Male ' + nameArrayNames[i] + ' dictionary, expected ' + target + ' but found ' + maleNameArray[i].length);
+    }
+  }
+  for (let i = 0; i < femaleNameArray.length; i++) {
+    if (femaleNameArray[i].length < target) {
+      console.warn('Incorrect number of names in Female' + nameArrayNames[i] + ' dictionary, expected ' + target + ' but found ' + femaleNameArray[i].length);
+    }
   }
   // check for duplicates
   for (let i = 0; i < namesinlib * numlibs; i++) {
@@ -154,7 +104,7 @@ function reportNames() {
       }
     }
     if (duplicateF > 1 || duplicateM > 1) {
-      console.log('Duplicate name found in dictionary');
+      console.warn('Duplicate name found in dictionary');
       if (duplicateF > 1) {
         console.log(getFemaleName(i));
       } else {
@@ -162,12 +112,7 @@ function reportNames() {
       }
     }
   }
-  // let lString = '';
-  // for (let i = 0; i < numlibs; i++) {
-  //   lString += ' '+getLibraryName(getMaleName(i*namesinlib), 'Male');
-  // }
-  // console.log(lString);
-  return numlibs + ' name libraries succesfully loaded';
+  return numlibs + ' name libraries loaded succesfully';
 };
 
 /**
@@ -219,7 +164,7 @@ function getBreedNameLibrary(breedName) {
 }
 
 /**
- * Generate a name based on breed ethnicity instead of parent names
+ * Generate a name based on breed culture instead of parent names
  * @param {string} parent1Breed - First parent's breed string (can be crossbreed)
  * @param {string} parent2Breed - Second parent's breed string (can be crossbreed)  
  * @param {string} gender - The desired gender for the name
@@ -238,17 +183,9 @@ function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
 
   for (let breed of allBreeds) {
     if (breed === "Mixed") {
-      // If Mixed is selected, use random ethnicity
+      // If Mixed is selected, use random culture
       availableLibraries.push(Math.floor(Math.random() * numlibs));
     } else {
-      // Strip known mutation suffixes
-      for (const suffix of mutationSuffixes) {
-        if (breed.endsWith(suffix)) {
-          breed = breed.slice(0, -suffix.length);
-          break; // only one suffix should apply
-        }
-      }
-
       const libraryIndex = getBreedNameLibrary(breed);
 
       if (libraryIndex === "random") {
@@ -287,9 +224,9 @@ function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
 
   function pickFromLibrary(lib, gender) {
     if (gender === 'Male' || (gender === 'Non Binary' && Math.random() < 0.5)) {
-      return getRandomMaleEthnicName(lib);
+      return getRandomMaleCulturalName(lib);
     } else {
-      return getRandomFemaleEthnicName(lib);
+      return getRandomFemaleCulturalName(lib);
     }
   }
 

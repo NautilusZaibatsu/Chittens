@@ -1,7 +1,9 @@
 // library for all name dictionaries. to add a libary, create constands for both male and female names, then add a string with that name to nameArrayNames.
 
+const namesinlib = 50; // target number of names per dictionary
+
+// Celtic
 const maleCeltic = [
-  // Celtic
   'Adair',
   'Aidan',
   'Aeron',
@@ -71,7 +73,7 @@ const femaleCeltic = [
   'Cerian',
   'Ceridwen',
   'Cernunnos',
-  'Conchenn',
+  'Claire',
   'Deoiridh',
   'Efa',
   'Elen',
@@ -108,9 +110,8 @@ const femaleCeltic = [
   'Una',
 ];
 
-
+// Scandinavian
 const maleScandinavian = [
-  // Scandinavian
   'Aaric',
   'Aksel',
   'Andhrimnir',
@@ -162,9 +163,8 @@ const maleScandinavian = [
   'Volstaff',
   'Yisreal',
 ];
-
+// Scandinavian
 const femaleScandinavian = [
-  // Scandinavian
   'Alma',
   'Astrid',
   'Atla',
@@ -217,8 +217,8 @@ const femaleScandinavian = [
   'Yngvild',
 ];
 
+// native American / mayan / incan / aztec
 const maleAmerican = [
-  // native American / mayan / incan / aztec
   'Acolmiztli',
   'Adlartok',
   'Ahanu',
@@ -271,8 +271,8 @@ const maleAmerican = [
   'Yactecuhtli',
 ];
 
+// native American / mayan / incan / aztec
 const femaleAmerican = [
-  // native American / mayan / incan / aztec
   'Ahuatzi',
   'Amaruq',
   'Aviaja',
@@ -325,8 +325,8 @@ const femaleAmerican = [
   'Zitkala',
 ];
 
+// Japanese
 const maleJapanese = [
-  // Japanese
   'Aizen',
   'Ashitaka',
   'Asahi',
@@ -379,8 +379,8 @@ const maleJapanese = [
   'Yuuto',
 ];
 
+// Japanese
 const femaleJapanese = [
-  // Japanese
   'Akari',
   'Aoi',
   'Ayaka',
@@ -433,9 +433,8 @@ const femaleJapanese = [
   'Yuri',
 ];
 
-
+// Polynesian
 const malePolynesian = [
-  // Polynesian
   'Aleki',
   'Aheahe',
   'Afa',
@@ -488,8 +487,8 @@ const malePolynesian = [
   'Vaea',
 ];
 
+// Polynesian
 const femalePolynesian = [
-  // Polynesian
   'Alalahe',
   'Alani',
   'Arihi',
@@ -542,6 +541,7 @@ const femalePolynesian = [
   'Waiola',
 ];
 
+// african
 const maleAfrican = [
   'Adebi',
   'Akida',
@@ -594,6 +594,8 @@ const maleAfrican = [
   'Zababa',
   'Zuberi',
 ];
+
+// african
 const femaleAfrican = [
   'Adea',
   'Adiah',
@@ -647,6 +649,7 @@ const femaleAfrican = [
   'Zola',
 ];
 
+// chinese
 const maleChinese = [
   'Bao',
   'Cheng',
@@ -700,7 +703,7 @@ const maleChinese = [
   'Zhou',
 ];
 
-
+// chinese
 const femaleChinese = [
   'Ban',
   'Baobei',
@@ -754,6 +757,7 @@ const femaleChinese = [
   'Ziyi',
 ];
 
+// german
 const maleGerman = [
   'Benedikt',
   'Dominik',
@@ -807,6 +811,7 @@ const maleGerman = [
   'Valentin',
 ];
 
+// german
 const femaleGerman = [
   'Anni',
   'Annika',
@@ -860,6 +865,7 @@ const femaleGerman = [
   'Zoe',
 ];
 
+// indian
 const maleIndian = [
   'Abhi',
   'Abhinav',
@@ -913,6 +919,7 @@ const maleIndian = [
   'Yash',
 ];
 
+// indian
 const femaleIndian = [
   'Aastha',
   'Aishwarya',
@@ -966,6 +973,7 @@ const femaleIndian = [
   'Varsha',
 ];
 
+// egyptian
 const maleEgyptian = [
   'Aker',
   'Amenhotep',
@@ -1019,6 +1027,7 @@ const maleEgyptian = [
   'Xerxes',
 ];
 
+// egyptian
 const femaleEgyptian = [
   'Ahti',
   'Ahmes',
@@ -1072,6 +1081,7 @@ const femaleEgyptian = [
   'Wosret',
 ];
 
+// arabic
 const maleArabic = [
   'Adbullah',
   'Ahmad',
@@ -1125,6 +1135,7 @@ const maleArabic = [
   'Zayd',
 ];
 
+// arabic
 const femaleArabic = [
   'Alia',
   'Aliyah',
@@ -1178,6 +1189,7 @@ const femaleArabic = [
   'Ziya',
 ];
 
+// thai
 const maleThai = [
   'A-wut',
   'Aat',
@@ -1231,6 +1243,7 @@ const maleThai = [
   'Sud',
 ];
 
+// thai
 const femaleThai = [
   'Achara',
   'Anong',
@@ -1284,6 +1297,7 @@ const femaleThai = [
   'Tida',
 ];
 
+// russian
 const maleRussian = [
   'Aleksei',
   'Alexandr',
@@ -1294,7 +1308,6 @@ const maleRussian = [
   'Anton',
   'Arseniy',
   'Artem',
-  'Arthur',
   'Bekhan',
   'Bogdan',
   'Boris',
@@ -1314,6 +1327,7 @@ const maleRussian = [
   'Kirill',
   'Kolya',
   'Kostya',
+  'Kuba',
   'Mikhail',
   'Misha',
   'Nikolai',
@@ -1337,6 +1351,7 @@ const maleRussian = [
   'Zhenya',
 ];
 
+// russian
 const femaleRussian = [
   'Albina',
   'Alena',
@@ -1390,6 +1405,7 @@ const femaleRussian = [
   'Zenya',
 ];
 
+// fictional
 const maleFictional = [
   'Aslan',
   'Azrael',
@@ -1443,6 +1459,7 @@ const maleFictional = [
   'Tygra',
 ];
 
+// fictional
 const femaleFictional = [
   'Arlene',
   'Blair',
@@ -1496,12 +1513,334 @@ const femaleFictional = [
   'Victoria',
 ];
 
-const nameArrayNames = ['African', 'American', 'Arabic', 'Celtic', 'Chinese', 'Egyptian', 'Fictional', 'German', 'Indian', 'Japanese', 'Polynesian', 'Russian', 'Scandinavian', 'Thai'];
-const maleNameArray = [maleAfrican, maleAmerican, maleArabic, maleCeltic, maleChinese, maleEgyptian, maleFictional, maleGerman, maleIndian, maleJapanese, malePolynesian, maleRussian, maleScandinavian, maleThai];
-const femaleNameArray = [femaleAfrican, femaleAmerican, femaleArabic, femaleCeltic, femaleChinese, femaleEgyptian, femaleFictional, femaleGerman, femaleIndian, femaleJapanese, femalePolynesian, femaleRussian, femaleScandinavian, femaleThai];
+// Ethiopian names
+const maleEthiopian = [
+  'Abebe',
+  'Abraham',
+  'Addisu',
+  'Alemayehu',
+  'Amanuel',
+  'Ashenafi',
+  'Berhe',
+  'Binyam',
+  'Chala',
+  'Dawit',
+  'Desta',
+  'Ephrem',
+  'Ermias',
+  'Fasil',
+  'Fikre',
+  'Fitsum',
+  'Gebremeskel',
+  'Getachew',
+  'Girma',
+  'Habtamu',
+  'Haile',
+  'Henok',
+  'Ibrahim',
+  'Kidus',
+  'Kassa',
+  'Kinfe',
+  'Lemma',
+  'Liben',
+  'Mehari',
+  'Meron',
+  'Nebyu',
+  'Nega',
+  'Olana',
+  'Paulos',
+  'Petros',
+  'Rezene',
+  'Robel',
+  'Samuel',
+  'Seifu',
+  'Tadesse',
+  'Tafari',
+  'Tamiru',
+  'Tekle',
+  'Urgessa',
+  'Wolde',
+  'Wondwosen',
+  'Yacob',
+  'Yohannes',
+  'Zelalem',
+  'Zerihun',
+];
+
+const femaleEthiopian = [
+  'Aberash',
+  'Almaz',
+  'Alem',
+  'Beza',
+  'Bethlehem',
+  'Birtukan',
+  'Chaltu',
+  'Degu',
+  'Dinkinesh',
+  'Eden',
+  'Enku',
+  'Eyerusalem',
+  'Fantu',
+  'Fikerte',
+  'Frehiwot',
+  'Genet',
+  'Gete',
+  'Gizaw',
+  'Hamrawit',
+  'Hewan',
+  'Hirut',
+  'Iyerusalem',
+  'Itsegenet',
+  'Kalkidan',
+  'Kidan',
+  'Kokebe',
+  'Konjit',
+  'Lemlem',
+  'Liya',
+  'Mahlet',
+  'Marta',
+  'Nardos',
+  'Netsanet',
+  'Nigist',
+  'Rahel',
+  'Ribka',
+  'Salam',
+  'Selam',
+  'Selamawit',
+  'Simret',
+  'Tadelech',
+  'Tigist',
+  'Tsion',
+  'Worke',
+  'Wubete',
+  'Wude',
+  'Winta',
+  'Yeshi',
+  'Yetemwork',
+  'Yinash',
+  'Zinash',
+];
+
+// Turkish names
+const maleTurkish = [
+  'Ahmet',
+  'Alper',
+  'Baris',
+  'Berke',
+  'Burak',
+  'Can',
+  'Cem',
+  'Cihan',
+  'Deniz',
+  'Dede',
+  'Dogan',
+  'Doruk',
+  'Efe',
+  'Emre',
+  'Esref',
+  'Fatih',
+  'Firat',
+  'Furkan',
+  'Gokce',
+  'Gokhan',
+  'Gorkem',
+  'Halil',
+  'Hakan',
+  'Huseyin',
+  'Ismail',
+  'Kaan',
+  'Kemal',
+  'Levent',
+  'Mehmet',
+  'Mesut',
+  'Murat',
+  'Necati',
+  'Onur',
+  'Osman',
+  'Ozil',
+  'Polat',
+  'Poyraz',
+  'Recep',
+  'Regip',
+  'Riza',
+  'Selim',
+  'Serkan',
+  'Taner',
+  'Tolga',
+  'Ugur',
+  'Umut',
+  'Veli',
+  'Volkan',
+  'Yakup',
+  'Yusuf',
+  'Zafer',
+];
+
+const femaleTurkish = [
+  'Arzu',
+  'Asli',
+  'Ayse',
+  'Aylin',
+  'Berna',
+  'Betul',
+  'Burcu',
+  'Canan',
+  'Ceyda',
+  'Cigdem',
+  'Derya',
+  'Dilek',
+  'Duygu',
+  'Ebru',
+  'Elif',
+  'Emine',
+  'Fatma',
+  'Filiz',
+  'Funda',
+  'Gamze',
+  'Gizem',
+  'Gulsen',
+  'Hatice',
+  'Hulya',
+  'Ipek',
+  'Irem',
+  'Kayra',
+  'Kezban',
+  'Leyla',
+  'Melis',
+  'Meltem',
+  'Nesrin',
+  'Nurcan',
+  'Ozlem',
+  'Pervin',
+  'Pinar',
+  'Reyhan',
+  'Ruveyda',
+  'Selin',
+  'Sevgi',
+  'Tuba',
+  'Tugba',
+  'Ulku',
+  'Umay',
+  'Vesile',
+  'Vildan',
+  'Yasemin',
+  'Yelda',
+  'Zehra',
+  'Zeliha',
+];
+
+// British names
+const maleBritish = [
+  'Adam',
+  'Alexander',
+  'Alistair',
+  'Arthur',
+  'Barnaby',
+  'Benedict',
+  'Benjamin',
+  'Cedric',
+  'Cecil',
+  'Charles',
+  'Christopher',
+  'Daniel',
+  'David',
+  'Dominic',
+  'Edmund',
+  'Edward',
+  'Evelyn',
+  'Francis',
+  'Frederick',
+  'Gabriel',
+  'George',
+  'Geoffrey',
+  'Giles',
+  'Harold',
+  'Henry',
+  'Hugh',
+  'Isaac',
+  'James',
+  'Jonathan',
+  'Kenneth',
+  'Kingston',
+  'Lawrence',
+  'Leonard',
+  'Matthew',
+  'Michael',
+  'Nicholas',
+  'Nigel',
+  'Neil',
+  'Oscar',
+  'Patrick',
+  'Philip',
+  'Quentin',
+  'Reginald',
+  'Robert',
+  'Stephen',
+  'Theodore',
+  'Thomas',
+  'Victor',
+  'Walter',
+  'William',
+];
+
+const femaleBritish = [
+  'Ada',
+  'Alexandra',
+  'Annabelle',
+  'Beatrice',
+  'Belinda',
+  'Bridget',
+  'Catherine',
+  'Charlotte',
+  'Cordelia',
+  'Daphne',
+  'Deborah',
+  'Dorothy',
+  'Edith',
+  'Eileen',
+  'Elizabeth',
+  'Emily',
+  'Evangeline',
+  'Felicity',
+  'Fiona',
+  'Francesca',
+  'Gabrielle',
+  'Genevieve',
+  'Georgina',
+  'Harriet',
+  'Helena',
+  'Hermione',
+  'Imogen',
+  'Isabella',
+  'Jacqueline',
+  'Jane',
+  'Katherine',
+  'Kimberly',
+  'Louise',
+  'Lucinda',
+  'Margaret',
+  'Miranda',
+  'Miriam',
+  'Nicola',
+  'Olivia',
+  'Ophelia',
+  'Philippa',
+  'Rebecca',
+  'Rosalind',
+  'Samantha',
+  'Stephanie',
+  'Tabitha',
+  'Theresa',
+  'Vivienne',
+  'Violet',
+  'Wendy',
+];
+
+const nameArrayNames = ['African', 'American', 'Arabic', 'Celtic', 'Chinese', 'Egyptian', 'Fictional', 'German', 'Indian', 'Japanese', 'Polynesian', 'Russian', 'Scandinavian', 'Thai', 'Ethiopian', 'Turkish', 'British'];
+const maleNameArray = [maleAfrican, maleAmerican, maleArabic, maleCeltic, maleChinese, maleEgyptian, maleFictional, maleGerman, maleIndian, maleJapanese, malePolynesian, maleRussian, maleScandinavian, maleThai, maleEthiopian, maleTurkish, maleBritish];
+const femaleNameArray = [femaleAfrican, femaleAmerican, femaleArabic, femaleCeltic, femaleChinese, femaleEgyptian, femaleFictional, femaleGerman, femaleIndian, femaleJapanese, femalePolynesian, femaleRussian, femaleScandinavian, femaleThai, femaleEthiopian, femaleTurkish, femaleBritish];
 
 const numlibs = nameArrayNames.length;
-const namesinlib = 50;
 
 const totalMaleNames = (numlibs * namesinlib);
 const totalFemaleNames = (numlibs * namesinlib);

@@ -2,6 +2,22 @@
 
 changelog
 
+23/08/2025 = 0.068
+~ Added the Lykoi gene, it is now completely separate from the hairless gene. Both genes interact realistically.
+~ Sphynxes now come in pink, grey or a mix of both
+~ Albinos can now inherit fur patterns, but never express them
+~ Added gene expression to chitten tooltip
+~ A chitten's tooltip appears when it is being held
+~ Reworked the way breeding behaviour to make males initiate it
+~ Changed eye colour defaults to be more realistic
+~ Chittens can now jump down from trees for food and mating
+~ Removed Bobtail - it isn't a breed
+~ Added Abyssinian, Ragdoll, Angora and British Shorthair breeds
+~ Added Ethiopian, Turkish and British names
+~ Every breed has had their appearances tweaked
+~ Improved the physics of chitten air collisions
+~ Reworked firefly behaviour to make it more interesting
+
 22/08/2025 = 0.067
 ~ Massive performance improvements
 ~ Jumping and air movement now scale with genetics: 

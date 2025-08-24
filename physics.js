@@ -1,3 +1,12 @@
+// universal physics constants
+const gravity = 0.02; // constant for gravity
+const speedLimit = 100; // maximum X or Y speed
+const groundFriction = 0.9; // ground friction coefficient (0.9 means 10% speed loss per frame)
+const airResistance = 0.999; // air resistance coefficient (0.999 means 0.001% speed loss per frame)
+
+dummypointerPos = new DummyPointer();
+
+
 /**
 * function to describe the pointer, for calculating the speed.
 */
@@ -212,28 +221,40 @@ function collide(obj1, obj2) {
   
   let nx = distX / d;
   let ny = distY / d;
-  let p = 2 * (obj1.speedX * nx + obj1.speedY * ny - obj2.speedX * nx - obj2.speedY * ny) / (obj1.size + obj2.size);
   
-  // calculate collision point
+  // Use mass for chittens if available, otherwise fall back to size for other objects
+  let mass1 = obj1.mass !== undefined ? obj1.mass : obj1.size;
+  let mass2 = obj2.mass !== undefined ? obj2.mass : obj2.size;
+  
+  // Prevent zero mass
+  if (mass1 === 0) mass1 = obj1.size;
+  if (mass2 === 0) mass2 = obj2.size;
+  
+  let p = 2 * (obj1.speedX * nx + obj1.speedY * ny - obj2.speedX * nx - obj2.speedY * ny) / (mass1 + mass2);
+  
+  // calculate collision point (still use size for positioning)
   let colPointX = ((obj1.x * obj2.size) + (obj2.x * obj1.size)) / (obj1.size + obj2.size);
   let colPointY = ((obj1.y * obj2.size) + (obj2.y * obj1.size)) / (obj1.size + obj2.size);
   
-  // separate overlapping objects
+  // separate overlapping objects (still use size for collision detection)
   let overlap = (obj1.size + obj2.size) / 2 - d;
   if (overlap > 0) {
-    let separationX = nx * overlap * 0.5;
-    let separationY = ny * overlap * 0.5;
-    obj1.x += separationX;
-    obj1.y += separationY;
-    obj2.x -= separationX;
-    obj2.y -= separationY;
+    // Separate based on mass ratio - heavier objects move less
+    let totalMass = mass1 + mass2;
+    let separation1 = overlap * (mass2 / totalMass);
+    let separation2 = overlap * (mass1 / totalMass);
+    
+    obj1.x += nx * separation1;
+    obj1.y += ny * separation1;
+    obj2.x -= nx * separation2;
+    obj2.y -= ny * separation2;
   }
   
-  // update velocities
-  obj1.speedX -= p * obj1.size * nx * elasticity;
-  obj1.speedY -= p * obj1.size * ny * elasticity;
-  obj2.speedX += p * obj2.size * nx * elasticity;
-  obj2.speedY += p * obj2.size * ny * elasticity;
+  // update velocities using mass for more realistic physics
+  obj1.speedX -= p * mass1 * nx * elasticity;
+  obj1.speedY -= p * mass1 * ny * elasticity;
+  obj2.speedX += p * mass2 * nx * elasticity;
+  obj2.speedY += p * mass2 * ny * elasticity;
   
   // calculate rotation (reuse calculated angle components)
   if (!obj1.hitBottom) {

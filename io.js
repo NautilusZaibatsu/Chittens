@@ -48,6 +48,8 @@ function copyChitten(chitten) {
   chitten.fangs+'*'+
   chitten.hairlessGene+'*'+
   chitten.hairless+'*'+
+  chitten.lykoiGene+'*'+
+  chitten.lykoi+'*'+
   chitten.heterochromicGene+'*'+
   chitten.patternAlpha+'*'+
   chitten.pattern+'*'+
@@ -84,7 +86,7 @@ function cloneChitten(outputbuffer, who) {
   for (let i = 0; i < 12; i ++) {
     who.bodypartCode[i] = parseInt(attributeArray[i+19]);
   }
-  who.bodypartCode[12] = parseInt(attributeArray[48]);
+  who.bodypartCode[12] = parseInt(attributeArray[50]);
   who.thirdColour = attributeArray[31];
   who.nosePos = parseFloat(attributeArray[32]);
   who.eyePosX = parseFloat(attributeArray[33]);
@@ -97,13 +99,15 @@ function cloneChitten(outputbuffer, who) {
   who.fangs = parseFloat(attributeArray[40]);
   who.hairlessGene = (attributeArray[41] == 'true');
   who.hairless = (attributeArray[42] == 'true');
-  who.heterochromicGene = (attributeArray[43] == 'true');
-  who.patternAlpha = parseFloat(attributeArray[44]);
-  who.pattern = parseFloat(attributeArray[45]);
-  who.eyeColour2 = attributeArray[46];
+  who.lykoiGene = (attributeArray[43] == 'true');
+  who.lykoi = (attributeArray[44] == 'true');
+  who.heterochromicGene = (attributeArray[45] == 'true');
+  who.patternAlpha = parseFloat(attributeArray[46]);
+  who.pattern = parseFloat(attributeArray[47]);
+  who.eyeColour2 = attributeArray[48];
   who.earWidth = parseFloat(attributeArray[5]);
-  who.earHeight = parseFloat(attributeArray[47]);
-  who.breed = attributeArray[48];
+  who.earHeight = parseFloat(attributeArray[49]);
+  who.breed = attributeArray[50];
   who.reinitSizeAndColour();
 }
 

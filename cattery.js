@@ -1,25 +1,61 @@
 // init
 thisCatBox = 0;
 
-// Chitten params
+// chitten params
+const maturesAt = 2; // age the chittens turn into adults at
+const elasticity = 0.5; // bounciness of chittens
 const chittenMaxSize = 15;
 const chittenBaseSize = 9;
 const chittenSizeVariation = chittenMaxSize - chittenBaseSize;
 const chittenJumpCooldown = 60; // frames
+const youngChittenJumpCooldown = 15;
+const chittenSittingCooldown = 60; // frames - how long chittens must sit before standing up
 const chittenSittingSpeed = 15; // frames
 const chittenStandingUpSpeed = 5; // frames
+const chittenMaxSeekFireflyDistance = maxDistance / 2; // maximum distance a chitten will actively seek out a firefly
+const chittenNormalJumpDistance = 100; // the distance a chitten normally jumps
+const chittenJumpMod = 1.5; // the multiple of the normal jumping distance a chitten can reach
+const chittenFireflySwatDistanceMod = 10; // the multiple of the chitten's size  that defines how close a firefly can get before it swats at it
+
+// breeding requirements
+const breedingLoveReq = 100;
+const breedingEnergyReq = 50;
+const breedingHealthReq = 50;
+
+// skin colours
+nosePink = '#dfb2bc';
+noseBlack = '#111111';
+skinPink = '#e9bbc5ff';
+skinGrey = '#91868e';
+
+// gene editing
+geneEditing = false;
+spliceBox = new CatBox(20, 30, 100, 5);
+sliderIndex = 0;
+colourBars = null; // Will be initialized in startGame()
+colourBlock = null; // Will be initialized in startGame()
 
 // Performance optimization: Cache mate-finding results
 let availableMates = [];
 let matesCacheFrame = 0;
 const MATES_CACHE_REFRESH_RATE = 30; // Refresh every 30 frames
 
+// catboxes
+const timeToMakeChoice = 5000;
+// if it is in landscape
+if (canvasWidth > canvasHeight || canvasWidth == canvasHeight) {
+  boxSize = 200 * proportion;
+} else {
+  // if it is in portrait (like a phone)
+  boxSize = canvasWidth / 5;
+}
+
 function updateMatesCache() {
   availableMates = [];
   for (let i = 0; i < chittens.length; i++) {
     if (chittens[i].snuggling == -1 && chittens[i].awake && !chittens[i].elder &&
       chittens[i].gender == 'Female' && chittens[i].age >= maturesAt &&
-      chittens[i].health >= 50 && chittens[i].energy >= 50) {
+      chittens[i].health >= breedingHealthReq && chittens[i].energy >= breedingEnergyReq && chittens[i].love >= breedingLoveReq) {
       availableMates.push(chittens[i]);
     }
   }
@@ -46,6 +82,20 @@ function initLitter(mParent, fParent) {
   parentBoxes.push(new CatBox((canvasWidth / 2) + (boxSize * 2), (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2), boxSize, boxThickness));
   fParent.inCatBox = parentBoxes[0];
   mParent.inCatBox = parentBoxes[1];
+
+  // Reset sitting state for parents when moved to boxes
+  fParent.sitting = false;
+  fParent.sittingProgress = 0;
+  fParent.targetSittingState = false;
+  fParent.sittingCooldown = 0;
+  mParent.sitting = false;
+  mParent.sittingProgress = 0;
+  mParent.targetSittingState = false;
+  mParent.sittingCooldown = 0;
+
+  // Set the parent box IDs to point to the correct chittens
+  parentBoxes[0].id = chittens.indexOf(fParent);
+  parentBoxes[1].id = chittens.indexOf(mParent);
   fParent.x = parentBoxes[0].x + (boxSize / 2);
   fParent.y = parentBoxes[0].y + (boxSize / 2);
   mParent.x = parentBoxes[1].x + (boxSize / 2);
@@ -64,9 +114,9 @@ function initLitter(mParent, fParent) {
   buttons[12].available = false;
   buttons[6].available = false;
   initChoiceBoxes();
-  choiceTimer = 1000;
+  choiceTimer = timeToMakeChoice;
   labels[2].visible = true;
-  sendMessage('\u2764 ' + fParent.name + ' gave birth to ' + mParent.name + '\'s chittens');
+  sendMessage(unicodeHeart + ' ' + fParent.name + ' gave birth to ' + mParent.name + '\'s chittens');
   labels[0] = new Button(canvasWidth / 2, (trueBottom / 2) - ((3 * (boxSize + boxPadding)) / 2) - 120, 'Choose one of ' + fParent.name + ' and ' + mParent.name + '\'s litter to keep', '');
   labels[1] = new Button(canvasWidth / 2, (trueBottom / 2) - ((3 * (boxSize + boxPadding)) / 2) - 50, 'The rest will be adopted by nice people', '');
   maleParent = mParent;
@@ -261,93 +311,12 @@ function CatBox(x, y, size, thickness) {
   this.highlighted = false;
   this.id = 0;
   this.text = '';
-  this.colour = '#000000';
+  this.colour = trueBlack;
   this.update = function () {
     ctx.globalAlpha = 1;
     ctx.fillStyle = trueWhite;
     ctx.fillText(this.text, this.x + 5, this.y + 15);
     ctx.lineWidth = this.thickness;
-    if (this.highlighted) {
-      ctx.save();
-      ctx.translate(30, 125);
-
-      // Draw modern tooltip background
-      const tooltipX = (canvasWidth / 2) + (((boxSize + boxPadding) * 3) / 2);
-      const tooltipY = (trueBottom / 2) - (((boxSize + boxPadding) * 3) / 2) - 20;
-      const tooltipWidth = 280;
-      const tooltipHeight = 190;
-
-      // Background with border
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-      ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
-
-      // Header with cat name
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.font = 'bold 14px Arial';
-      ctx.fillText(chittens[this.id].name, tooltipX + 10, tooltipY + 20);
-
-      // Basic info with smaller font
-      ctx.font = '12px Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.fillText('Breed: ' + chittens[this.id].breed, tooltipX + 10, tooltipY + 40);
-      ctx.fillText('Age: ' + chittens[this.id].age, tooltipX + 10, tooltipY + 55);
-      ctx.fillText('Gender: ' + chittens[this.id].gender, tooltipX + 10, tooltipY + 70);
-      let cString = '';
-      if (chittens[this.id].albino || chittens[this.id].sphynx) {
-        if (chittens[this.id].albino) {
-          cString = 'Albino ';
-        }
-        if (chittens[this.id].sphynx) {
-          cString += 'Sphynx';
-        }
-      } else {
-        let c1 = ntc.name(chittens[this.id].firstColour)[1];
-        let c2 = ntc.name(chittens[this.id].secondColour)[1];
-        let c3 = ntc.name(chittens[this.id].thirdColour)[1];
-        if (c1 == c2 & c1 == c3) {
-          cString = c1;
-        } else if (c1 == c2) {
-          cString = c1 + ' & ' + c3;
-        } else if (c1 == c3) {
-          cString = c1 + ' & ' + c2;
-        } else if (c2 == c3) {
-          cString = c1 + ' & ' + c2;
-        } else {
-          cString = c1 + ', ' + c2 + ' & ' + c3;
-        }
-      }
-      ctx.fillText('Coat: ' + cString, tooltipX + 10, tooltipY + 85);
-      let eString = '';
-      if (chittens[this.id].eyeColour == chittens[this.id].eyeColour2 && !chittens[this.id].albino) {
-        eString = ntc.name(chittens[this.id].eyeColour)[1];
-      } else if (chittens[this.id].albino) {
-        eString = 'Albino';
-      } else {
-        // Heterochromic - show both eye colors
-        let color1Name = ntc.name(chittens[this.id].eyeColour)[1];
-        let color2Name = ntc.name(chittens[this.id].eyeColour2)[1];
-        eString = 'Heterochromic ' + color1Name + ' & ' + color2Name;
-      }
-      ctx.fillText('Eyes: ' + eString, tooltipX + 10, tooltipY + 100);
-      ctx.fillText('Size: ' + Math.round((chittens[this.id].maxSize)), tooltipX + 10, tooltipY + 115);
-
-      ctx.font = 'bold 11px Arial';
-      ctx.fillText('GENETICS', tooltipX + 10, tooltipY + 140);
-
-      let ag = chittens[this.id].albinoGene ? 'YES' : 'NO';
-      let hg = chittens[this.id].hairlessGene ? 'YES' : 'NO';
-      let htg = chittens[this.id].heterochromicGene ? 'YES' : 'NO';
-
-      ctx.fillText('Albino: ' + ag, tooltipX + 10, tooltipY + 155);
-      ctx.fillText('Hairless: ' + hg, tooltipX + 10, tooltipY + 168);
-      ctx.fillText('Heterochromic: ' + htg, tooltipX + 10, tooltipY + 181);
-
-      ctx.restore();
-    }
-
     ctx.save();
     if (!this.selected) {
       ctx.globalAlpha = 0.5;
@@ -383,6 +352,146 @@ function CatBox(x, y, size, thickness) {
       }
     }
   };
+}
+
+/**
+ * Draws a tooltip for any chitten at specified coordinates
+ * @param {Chitten} chitten - The chitten to show tooltip for
+ */
+function drawChittenTooltip(chitten) {
+  ctx.save();
+
+  // Calculate dynamic tooltip size based on content
+  let maxWidth = 200; // Minimum width
+  let lineHeight = 15;
+  let contentHeight = 20; // Top padding
+
+  // Measure text widths to find max width needed
+  ctx.font = 'bold 14px Arial';
+  maxWidth = Math.max(maxWidth, ctx.measureText(chitten.name).width);
+
+  ctx.font = '12px Arial';
+  maxWidth = Math.max(maxWidth, ctx.measureText('Breed: ' + chitten.breed).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Age: ' + chitten.age).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Gender: ' + chitten.gender).width);
+
+  // Pre-calculate coat string for width measurement
+  let cString = '';
+  if (chitten.albino || chitten.sphynx) {
+    if (chitten.albino) {
+      cString = 'Albino White';
+    } else if (chitten.hairless) {
+      let c1 = ntc.name(chitten.skinColour1)[1];
+      let c2 = ntc.name(chitten.skinColour2)[1];
+      let c3 = ntc.name(chitten.skinColour3)[1];
+      cString = c1 + ', ' + c2 + ' & ' + c3;
+    }
+  } else {
+    let c1 = ntc.name(chitten.firstColour)[1];
+    let c2 = ntc.name(chitten.secondColour)[1];
+    let c3 = ntc.name(chitten.thirdColour)[1];
+    if (chitten.secondColour == chitten.thirdColour) {
+      cString = c1 + ' & ' + c2;
+    } else {
+      cString = c1 + ', ' + c2 + ' & ' + c3;
+    }
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Coat: ' + cString).width);
+
+  // Pre-calculate eye string for width measurement
+  let eString = '';
+  if (chitten.eyeColour == chitten.eyeColour2 && !chitten.albino) {
+    eString = ntc.name(chitten.eyeColour)[1];
+  } else if (chitten.albino) {
+    eString = 'Pink';
+  } else {
+    let color1Name = ntc.name(chitten.eyeColour)[1];
+    let color2Name = ntc.name(chitten.eyeColour2)[1];
+    eString = 'Heterochromic ' + color1Name + ' & ' + color2Name;
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Eyes: ' + eString).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Size: ' + Math.round(chitten.maxSize)).width);
+
+  ctx.font = 'bold 11px Arial';
+  maxWidth = Math.max(maxWidth, ctx.measureText('GENETICS').width);
+
+  // Gene strings with unicode symbols
+  let ag = chitten.albinoGene ? unicodeTick : unicodeCross;
+  let ae = chitten.albino ? unicodeTick : unicodeCross;
+  let hg = chitten.hairlessGene ? unicodeTick : unicodeCross;
+  let he = chitten.hairless ? unicodeTick : unicodeCross;
+  let lg = chitten.lykoiGene ? unicodeTick : unicodeCross;
+  let le = chitten.lykoi ? unicodeTick : unicodeCross;
+  let htg = chitten.heterochromicGene ? unicodeTick : unicodeCross;
+  let hte = (chitten.eyeColour !== chitten.eyeColour2) ? unicodeTick : unicodeCross;
+
+  ctx.font = '10px Arial';
+  maxWidth = Math.max(maxWidth, ctx.measureText('Albino Gene: ' + ag + ' Expressed: ' + ae).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Hairless Gene: ' + hg + ' Expressed: ' + he).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Lykoi Gene: ' + lg + ' Expressed: ' + le).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Heterochromic Gene: ' + htg + ' Expressed: ' + hte).width);
+
+  contentHeight = 20 + (lineHeight * 11); // 11 lines (removed gender line) + GENETICS spacing
+
+  const tooltipWidth = maxWidth + 20; // Add padding
+  const tooltipHeight = contentHeight;
+
+  // Position tooltip near mouse
+  let tooltipX, tooltipY;
+  tooltipX = pointerPos.x + 15; // Offset from mouse
+  tooltipY = pointerPos.y - tooltipHeight - 15; // Above mouse
+  // Keep tooltip on screen
+  if (tooltipX + tooltipWidth > canvasWidth) tooltipX = canvasWidth - tooltipWidth - 10;
+  if (tooltipY < 0) tooltipY = pointerPos.y + 15; // Below mouse if no room above
+  if (tooltipX < 0) tooltipX = 10;
+
+  // Draw tooltip background with border
+  ctx.fillStyle = trueBlack;
+  ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+
+  // Header with cat name
+  ctx.fillStyle = trueWhite;
+  ctx.font = 'bold 14px Arial';
+  ctx.fillText(chitten.name, tooltipX + 10, tooltipY + 20);
+
+  // Gender symbol in top right with color coding
+  let genderSymbol = unicodeNonBinary;
+  let genderColor = genderPurple;
+  if (chitten.gender == 'Male') {
+    genderSymbol = unicodeMale;
+    genderColor = genderBlue;
+  } else if (chitten.gender == 'Female') {
+    genderSymbol = unicodeFemale;
+    genderColor = genderPink;
+  }
+
+  ctx.fillStyle = genderColor;
+  ctx.font = 'bold 16px Arial';
+  let genderWidth = ctx.measureText(genderSymbol).width;
+  ctx.fillText(genderSymbol, tooltipX + tooltipWidth - genderWidth - 10, tooltipY + 20);
+
+  // Basic info with smaller font (moved up one line)
+  ctx.font = '12px Arial';
+  ctx.fillStyle = trueWhite;
+  ctx.fillText('Breed: ' + chitten.breed, tooltipX + 10, tooltipY + 40);
+  ctx.fillText('Age: ' + chitten.age, tooltipX + 10, tooltipY + 55);
+  ctx.fillText('Coat: ' + cString, tooltipX + 10, tooltipY + 70);
+  ctx.fillText('Eyes: ' + eString, tooltipX + 10, tooltipY + 85);
+  ctx.fillText('Size: ' + Math.round(chitten.maxSize), tooltipX + 10, tooltipY + 100);
+
+  ctx.font = 'bold 11px Arial';
+  ctx.fillText('GENETICS', tooltipX + 10, tooltipY + 125);
+
+  ctx.font = '10px Arial';
+  ctx.fillText('Albino Gene: ' + ag + ' Expressed: ' + ae, tooltipX + 10, tooltipY + 140);
+  ctx.fillText('Hairless Gene: ' + hg + ' Expressed: ' + he, tooltipX + 10, tooltipY + 153);
+  ctx.fillText('Lykoi Gene: ' + lg + ' Expressed: ' + le, tooltipX + 10, tooltipY + 166);
+  ctx.fillText('Heterochromic Gene: ' + htg + ' Expressed: ' + hte, tooltipX + 10, tooltipY + 179);
+
+  ctx.restore();
 }
 
 /**
@@ -676,6 +785,7 @@ function generateBaby(parent1, parent2, specBreed) {
     chittens[chittens.length - 1].patternAlpha = (parent1.patternAlpha + parent2.patternAlpha + Math.random()) / 3;
   }
 
+  // pattern inheritance
   patternSwitch = Math.round(Math.random()); // 0 to 1.
   if (patternSwitch == 0) {
     chittens[chittens.length - 1].pattern = parent1.pattern;
@@ -713,7 +823,6 @@ function generateBaby(parent1, parent2, specBreed) {
     // Expression chance: only 25% of gene carriers actually express albinism
     if (Math.random() <= 0.25) {
       chittens[chittens.length - 1].albino = true;
-      chittens[chittens.length - 1].pattern = 0; // Albino pattern
     }
   }
 
@@ -726,10 +835,17 @@ function generateBaby(parent1, parent2, specBreed) {
   }
   if (hairlessGeneChance >= Math.random()) {
     chittens[chittens.length - 1].hairlessGene = true;
-    // Expression chance: only 30% of gene carriers actually express hairlessness
-    if (Math.random() <= 0.3) {
-      chittens[chittens.length - 1].hairless = true;
-    }
+  }
+
+  // lykoi gene inheritance (separate recessive trait)
+  let lykoiGeneChance = 0;
+  if (parent1.lykoiGene && parent2.lykoiGene) {
+    lykoiGeneChance = 0.75; // 75% chance to inherit gene when both parents carry it
+  } else if (parent1.lykoiGene || parent2.lykoiGene) {
+    lykoiGeneChance = 0.5; // 50% chance when one parent carries it
+  }
+  if (lykoiGeneChance >= Math.random()) {
+    chittens[chittens.length - 1].lykoiGene = true;
   }
   if (chittens[chittens.length - 1].breed == 'Sphynx' && !chittens[chittens.length - 1].hairlessGene) {
     chittens[chittens.length - 1].breed = 'Mixed';
@@ -806,6 +922,10 @@ function generateBaby(parent1, parent2, specBreed) {
   chittens[chittens.length - 1].fangs = specFang;
   chittens[chittens.length - 1].earWidth = babyEars;
   chittens[chittens.length - 1].earHeight = babyEars2;
+
+  // Determine trait expression for inherited genes
+  determineTraitExpression(chittens[chittens.length - 1]);
+
   return babyGender;
 }
 
@@ -825,7 +945,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.maxSize = Math.min(maxSize, chittenMaxSize);
   this.breed = 'Mixed';
   this.inCatBox = null;
-  this.i = ''; // temp for debug
   this.x = x;
   this.y = y;
   this.speedX = 0;
@@ -839,6 +958,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.skinColour1 = trueWhite;
   this.skinColour2 = trueWhite;
   this.skinColour3 = trueWhite;
+  this.noseColour = noseBlack;
   this.eyeColour = trueWhite;
   this.eyeColour2 = trueWhite;
   this.nosePos = 0;
@@ -847,7 +967,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.eyeSize = 0;
   this.headWidth = 0;
   this.headHeight = 0;
-  this.coatMod = [1, 1];
+  this.coatMod = [1, 1]; // [0] is fade position for gradients, [1] is the angle of the gradient
   this.patternAlpha = 0;
   this.pattern = 0;
   this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -856,6 +976,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.earHeight = 0.5;
   this.thickness = 0; // 0.5 is average
   this.legginess = 0;
+  this.mass = 0; // Calculated based on size and thickness
   this.angleToFocus = 0;
   this.behaviorUpdateCounter = Math.floor(Math.random() * 5); // Stagger initial updates
   this.jumpCooldown = 0; // Frames to wait before next jump
@@ -868,12 +989,14 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.sitting = false;
   this.sittingProgress = 0; // 0 = standing, 1 = fully sitting
   this.targetSittingState = false; // What sitting state we're lerping toward
+  this.sittingCooldown = 0; // Frames left before chitten can stand up from sitting
   this.health = 100;
   this.love = 50;
   this.energy = 100;
   this.hunger = 1000;
-  this.snuggling = -1; // start at -1 so they dont try to give birth when they are not truly snuggling
+  this.snuggling = -1; // Default is. 1 is the snuggling state, anything above 0 is the animation length in frames
   this.nomnomnom = -1; // as above
+  this.preparingToEat = false; // true when grabbed fruit and sitting before eating
   this.awake = true;
   this.litters = 0;
   this.birthday = daytimeCounter;
@@ -893,31 +1016,51 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.albino = false;
   this.albinoGene = false;
   this.hairlessGene = false;
+  this.lykoiGene = false;
   this.heterochromicGene = false;
   this.hairless = false;
+  this.lykoi = false;
   this.kill = function () {
     removeFocusFrom(this);
-    chittens.splice(findIndex(this, chittens), 1);
+    chittens.splice(chittens.indexOf(this, chittens), 1);
   };
   // function to reinitialisae sizes (for growth)
   this.reinitSizeAndColour = function () {
     this.limbLength = (this.size) + (1.5 * this.legginess * this.size);
     this.cellShadeThickness = this.size / 10;
-    if (this.albino && !this.hairless) {
+    // Calculate mass based on size and thickness
+    this.mass = this.size * this.thickness;
+    if (this.albino && !this.hairless && !this.lykoi) {
       this.cellShadeLine = mixTwoColours(trueWhite, trueBlack, 0.7);
-    } else if (this.hairless || this.pattern == 5) {
+    } else if (this.hairless || this.lykoi) {
       this.cellShadeLine = mixTwoColours(nosePink, noseBlack, 0.5);
     } else {
       this.cellShadeLine = mixTwoColours(mixThreeColours(this.firstColour, this.secondColour, this.thirdColour), trueBlack, 0.7);
     }
     if (this.albino) {
-      this.skinColour1 = nosePink;
+      this.skinColour1 = skinPink;
+      this.skinColour2 = skinPink;
+      this.skinColour3 = skinPink;
+      this.noseColour = nosePink;
     } else {
       this.skinColour1 = skinColourCheck(this.firstColour);
       this.skinColour2 = skinColourCheck(this.secondColour);
       this.skinColour3 = skinColourCheck(this.thirdColour);
+      // Set nose color based on primary fur color
+      this.noseColour = noseColourCheck(this.firstColour);
     }
+
   };
+  // reset jump cooldown
+  this.resetJumpCoolDown = function () {
+    // Wait frames before next jump, fat cats are lazier
+    if (this.age < maturesAt) {
+      // Kittens following mothers get much shorter cooldown to be eager followers
+      this.jumpCooldown = youngChittenJumpCooldown + (youngChittenJumpCooldown * this.thickness);;
+    } else {
+      this.jumpCooldown = chittenJumpCooldown + (chittenJumpCooldown * this.thickness);
+    }
+  }
   // reset rotation
   this.resetRotation = function (fastest) {
     // Normalize rotation to [-π, π] range to prevent full spins
@@ -944,16 +1087,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
 
-  this.focusIsFirefly = function () {
-    isFireFly = false;
-    for (let i = 0; i < fireflies.length; i++) {
-      if (this.focus == fireflies[i]) {
-        isFireFly = true;
-      }
-    }
-    return isFireFly;
-  };
-
   // act
   // @return {boolean} - whether the action has a cost
   this.act = function () {
@@ -962,16 +1095,26 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       this.jumpCooldown--;
     }
 
+    // Decrement sitting cooldown
+    if (this.sittingCooldown > 0) {
+      this.sittingCooldown--;
+    }
+
     // Update sitting animation
+    // Sitting down
     if (this.targetSittingState && this.sittingProgress < 1) {
+      this.resetJumpCoolDown(); // reset the jump cooldown if are trying to sit
       // Lerping toward sitting: fatter cats sit down faster
       this.sittingProgress += (1 / chittenSittingSpeed) * (1 + this.thickness);
       if (this.sittingProgress >= 1) {
         this.sittingProgress = 1;
         this.sitting = true;
+        // Start sitting cooldown when fully sitting
+        this.sittingCooldown = chittenSittingCooldown;
       }
     } else if (!this.targetSittingState && this.sittingProgress > 0) {
       // Lerping toward standing: fatter cats stand up slower
+      // standing up
       this.sittingProgress -= (1 / chittenStandingUpSpeed) * (1 - this.thickness);
       if (this.sittingProgress <= 0) {
         this.sittingProgress = 0;
@@ -993,31 +1136,48 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       if (this.partner !== null) {
         this.partner.snuggling = -1;
         this.partner.partner = null;
-        createGlyphs((this.x - (this.x - this.partner.x) / 2), (this.y - (this.y - this.partner.y) / 2), '\u2764');
-        initLitter(this.partner, this);
+        createGlyphs((this.x - (this.x - this.partner.x) / 2), (this.y - (this.y - this.partner.y) / 2), unicodeHeart);
+        initLitter(this.partner, this); // this.partner = male, this = female
         // take snuggling to -1 so that it doesn't give birth forever
       } else {
         sendMessage(this.name + ' had a phantom pregnancy');
       }
       this.snuggling = -1;
       this.partner = null;
-    } else if ((this.snuggling >= 0)) {
+    } else if (!choosingChitten && (this.snuggling >= 0)) {
       this.snuggling--;
     } else if (this.inCatBox == null && this.nomnomnom >= 0) {
       // if you're eating, decrease the eating timer
       this.nomnomnom--;
     } else {
+      // Opportunistic firefly interactions happen every frame for responsiveness
+      if (!this.inCatBox && this.awake && this.snuggling == -1 && this.nomnomnom == -1) {
+        // Check for nearby fireflies for quick opportunistic jumps
+        let closestFirefly = fireflies[this.findClosestFireFly()];
+        if (closestFirefly) {
+          let dx = this.x - closestFirefly.x;
+          let dy = this.y - closestFirefly.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+
+          // If firefly is very close, switch focus and reset jump cooldown for immediate action
+          if (distance < this.size * chittenFireflySwatDistanceMod && (!this.focus || fireflies.includes(this.focus))) {
+            this.focus = closestFirefly;
+            this.jumpCooldown = 0; // Allow immediate jumping at close fireflies
+          }
+        }
+      }
+
       // deciding what the focus is
-      // Throttle behavior updates based on cat state
+      // Throttle heavy behavior updates based on cat state
       this.behaviorUpdateCounter++;
-      let updateFrequency = 5; // Default: every 5 frames
+      let updateFrequency = 3; // Reduced from 5 to make cats more active
 
       if (this.inCatBox) {
         updateFrequency = 15; // Cats in boxes update less frequently
       } else if (!this.awake) {
         updateFrequency = 10; // Sleeping cats update less frequently
       } else if (this.age < maturesAt) {
-        updateFrequency = 3; // Kittens are more active
+        updateFrequency = 2; // Kittens are even more active
       }
 
       if (this.behaviorUpdateCounter >= updateFrequency) {
@@ -1026,20 +1186,18 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         let target = null;
         // if not an adult, just follow mother (unless in catbox)
         if (this.age < maturesAt && this.mother !== null && !this.inCatBox) {
-          this.focus = this.mother;
           target = this.mother;
         }
         // are we hungry?
         if (target == null && this.inCatBox == null && this.hunger <= 250 && fruits.length > 0) {
           let closestFruit = this.findClosestFruit();
           if (closestFruit !== 'X') {
-            this.focus = closestFruit;
             target = closestFruit;
           }
         }
         // are we gonna pick a mate? (using cached mate list for performance)
-        if (target == null && !choosingChitten && !this.elder && this.gender == 'Male' && this.age >= maturesAt && chittens.length <= maxPop && this.health >= 50
-          && this.energy >= 50) {
+        if (target == null && this.snuggling == -1 && !choosingChitten && !this.elder && this.gender == 'Male' && this.age >= maturesAt && chittens.length <= maxPop && this.health >= breedingHealthReq
+          && this.energy >= breedingEnergyReq) {
           // Update mates cache periodically
           matesCacheFrame++;
           if (matesCacheFrame >= MATES_CACHE_REFRESH_RATE) {
@@ -1048,26 +1206,32 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           }
 
           // Use cached available mates instead of looping through all cats
+          if (!choosingChitten && this.gender == "Male" && this.love >= breedingLoveReq && this.energy >= breedingEnergyReq && this.health >= breedingHealthReq) {
+          }
           for (let j = 0; j < availableMates.length && target == null; j++) {
-            if (this !== availableMates[j] && this.love + availableMates[j].love >= 100) {
-              this.partner = availableMates[j];
-              availableMates[j].partner = this;
-              target = availableMates[j];
-            }
+            this.partner = availableMates[j];
+            availableMates[j].partner = this;
+            target = availableMates[j];
           }
         }
+
+        // decide what we are focused on now
         if (target == null && !this.inCatBox) {
           // default action - jump at firefly (only if not in adoption box)
           this.focus = fireflies[this.findClosestFireFly()];
-        }
-        // actually jumping now
-        // 1% chance of speaking
-        if (Math.random() <= 0.01) {
-          speech.push(new Speak(this, neutralWord()));
+        } else {
+          this.focus = target;
         }
 
-        // kittens sitting down near their mothers
-        if (this.age < maturesAt && this.mother !== null && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size) * 4) && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size) * 4)) {
+        // // debug - draw focus
+        // ctx.beginPath();
+        // ctx.moveTo(this.x, this.y);
+        // ctx.restore();
+        // ctx.lineTo(this.focus.x, this.focus.y);
+        // ctx.stroke();
+
+        // kittens sitting down near their mothers - only when very close
+        if (this.age < maturesAt && this.mother !== null && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size) * 1.5) && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size) * 1.5)) {
           if (this.mother.awake) {
             this.targetSittingState = true;
             this.facingForwards = true;
@@ -1077,30 +1241,75 @@ function Chitten(x, y, bodySize, maxSize, gender) {
             this.targetSittingState = false;
             this.facingForwards = true;
           }
-        } else if (this.focus && this.jumpCooldown <= 0) {
-          // if the focus is below  the Chitten
-          if (this.focus.y <= this.y + this.size) {
-            // If sitting, must lerp to standing before jumping
+
+        } else if (this.focus) {
+          // Determine if we should allow jumping down based on target type
+          let isFirefly = fireflies.includes(this.focus);
+          let isMother = (this.focus === this.mother && this.age < maturesAt);
+          let canJumpDown = !isFirefly; // Allow jumping down for mates and food, but not fireflies
+
+          // For regular targets, use the old cooldown system
+          // For fireflies and mothers, use opportunistic distance-based probability
+          let shouldJump = false;
+          if (!isFirefly && !isMother && this.jumpCooldown <= 0) {
+            shouldJump = true;
+          } else if ((isFirefly || isMother) && this.jumpCooldown <= 0) {
+            // Calculate distance-based jump probability for fireflies and mothers
+            let distance = Math.sqrt(
+              Math.pow(this.focus.x - this.x, 2) +
+              Math.pow(this.focus.y - this.y, 2)
+            );
+            let jumpChance;
+            if (isMother) {
+              // Kittens are eager followers - high base chance, even higher when far
+              // Base 60% chance when very close, up to 95% when far away
+              let maxMotherDistance = this.size * 8; // Consider distances up to 8 body lengths  
+              let normalizedDistance = Math.min(1, distance / maxMotherDistance);
+              jumpChance = Math.max(0.6, Math.min(0.95, normalizedDistance * 0.35 + 0.6));
+            } else {
+              // Firefly logic: closer = higher chance to jump
+              let normalizedDistance = distance / chittenMaxSeekFireflyDistance;
+              jumpChance = Math.max(0.1, Math.min(0.8, 1 - normalizedDistance));
+            }
+            shouldJump = Math.random() < jumpChance;
+          }
+
+          // if the focus is below the Chitten OR we can jump down to any target
+          if (shouldJump && (this.focus.y <= this.y + this.size || (canJumpDown && this.focus.y > this.y + this.size))) {
+            // If sitting, must lerp to standing before jumping (unless eating)
             if (this.sittingProgress > 0) {
-              this.targetSittingState = false; // Start standing up
-              return false; // Don't jump yet, wait for sitting animation
+              // Don't stand up if eating or preparing to eat, or if sitting cooldown is active
+              if (this.nomnomnom <= 0 && !this.preparingToEat && this.sittingCooldown <= 0) {
+                this.targetSittingState = false; // Start standing up
+              }
+              return false; // Don't jump yet, wait for sitting animation or eating to finish
             }
 
+            // Jumping starts here
+            let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
+            // Modify the jump power by how far away the target is
+            let dx = this.focus.x - this.x;
+            let dy = this.focus.y - this.y;
+            let jumpDistance = Math.sqrt(dx * dx + dy * dy);
+            let jumpMod = Math.min(jumpDistance / chittenNormalJumpDistance, chittenJumpMod);
             // Calculate jump power based on leg length (subtle effect)
             let legPower = 1 + (this.legginess * 0.15); // Longer legs = slightly better jumping (0.85 to 1.15x)
+            // Only apply upward base velocity if target is above or level, not when jumping down
+            if (this.focus.y <= this.y) {
+              this.speedY = -this.size * 0.7 * legPower;
+            } else {
+              this.speedY = 0; // No base upward velocity when jumping down
+            }
+            this.speedX += Math.cos(targetangle) * 25 * legPower * jumpMod;
+            this.speedY += Math.sin(targetangle) * 25 * legPower * jumpMod;
 
-            // Base jump velocity - more grounded
-            this.speedY = -this.size * 0.6 * legPower;
-            let targetangle = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-            this.speedX += Math.cos(targetangle) * 25 * legPower;
-            this.speedY += Math.sin(targetangle) * 25 * legPower;
+            this.resetJumpCoolDown();
 
-            // Set jump cooldown to prevent frantic jumping
-            // Wait frames before next jump, fat cats are lazier
-            this.jumpCooldown = chittenJumpCooldown + (chittenJumpCooldown * this.thickness);
             if (this.age < maturesAt) {
-              this.speedX *= 0.5;
-              this.speedY *= 0.5;
+              // Reduce jump power but not as severely when following mother
+              let reduction = isMother ? 0.75 : 0.5; // 75% power for mother, 50% for others
+              this.speedX *= reduction;
+              this.speedY *= reduction;
             } else {
               // it doesn't cost kittens energy or health to jump
               this.energy -= 7;
@@ -1118,10 +1327,14 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           }
         }
       } else {
-        // 0.5% chance to sit when behavior updates
-        if (Math.random() < 0.005) {
+        // 1% chance to sit when behavior updates
+        if (Math.random() < 0.01) {
           this.targetSittingState = true;
         }
+      }
+      // 0.1% chance of speaking
+      if (Math.random() <= 0.001) {
+        speech.push(new Speak(this, neutralWord()));
       }
     }
   };
@@ -1211,8 +1424,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     } else {
       this.hitBottom = true;
       this.facingForwards = true;
-      // apply floor forces
-      this.speedX *= 0.92;
+      // apply ground friction
+      this.speedX *= groundFriction;
       this.resetRotation(false);
       // jump occasionally
       if (!this.dragging && this.rotation == 0 && this.awake && this.inCatBox == null) {
@@ -1223,13 +1436,14 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   };
 
   this.drawTail = function (pat, backendShiftX, backendShiftY, sleepshift) {
-    // tail
-    // make it wag
+    // === TAIL ANIMATION CALCULATIONS ===
     let tmp = Math.abs(daytimeCounter - this.birthday);
     while (tmp > 30 && tmp > 0) {
       tmp -= 30; // 0 to 30
     }
-    tmp = Math.abs(tmp - 15); // 0 to 15 to 0 to 15
+    tmp = Math.abs(tmp - 15); // 0 to 15 to 0 to 15 (wagging motion)
+
+    // === CONTEXT TRANSFORMATIONS ===
     ctx.save();
     if (this.awake && !this.facingForwards && this.sittingProgress > 0) {
       ctx.translate(0, -this.size * this.sittingProgress);
@@ -1242,6 +1456,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (this.hitBottom || !this.awake) {
       ctx.translate(0, sleepshift - this.size);
     }
+
+    // === COLOR SETUP ===
     let tailGradient = trueWhite;
     if (this.hairless) {
       if (this.bodypartCode[6] == 0) {
@@ -1270,40 +1486,40 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     } else if (this.albino) {
       tailGradient = trueWhite;
     } else {
-      tailGradient = nosePink;
+      tailGradient = skinPink;
     }
+
+    // === DRAW OUTLINE AND FILL ===
     ctx.fillStyle = tailGradient;
     ctx.lineWidth = 2 * this.cellShadeThickness;
     ctx.strokeStyle = this.cellShadeLine;
     ctx.beginPath();
     ctx.moveTo(+this.size / 3, (this.size / 3));
-    ctx.arc((this.size * (-tmp + 7.5) * this.tailLength / 8 * this.thickness) - (this.size / 32), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);// Mouth (clockwise)
+    ctx.arc((this.size * (-tmp + 7.5) * this.tailLength / 8 * this.thickness) - (this.size / 32), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
     ctx.lineTo(-this.size / 3, this.size / 3);
     ctx.stroke();
     ctx.fill();
+
+    // === PATTERN OVERLAY ===
     if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
       ctx.fillStyle = pat;
       ctx.globalAlpha = this.patternAlpha;
       ctx.beginPath();
       ctx.moveTo(+this.size / 3, (this.size / 3));
-      ctx.arc((this.size * (-tmp + 7.5) * this.tailLength / 8 * this.thickness) - (this.size / 32), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);// Mouth (clockwise)
+      ctx.arc((this.size * (-tmp + 7.5) * this.tailLength / 8 * this.thickness) - (this.size / 32), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
       ctx.lineTo(-this.size / 3, this.size / 3);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
-    // if (!this.hitBottom && this.awake) {
-    //   ctx.rotate(-Math.atan2(-this.speedY, -this.speedX));
-    // }
 
-    // butthole
+    // === ADDITIONAL DETAILS ===
     if (!this.facingForwards) {
       ctx.translate(0, this.size);
       ctx.globalAlpha = 0.3;
       ctx.drawImage(butthole, -(this.size / 3), -this.size / 3, this.size / 1.5, this.size / 1.5);
       ctx.globalAlpha = 1;
     }
-
-    ctx.restore(); // 0 - rotated
+    ctx.restore();
   };
 
   this.drawBackLegs = function (pat, backendShiftX, backendShiftY, bodyGradient, sameDirection, legAngle) {
@@ -1346,8 +1562,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           rightFootColour = this.thirdColour;
         }
       } else if (this.albino && this.hairless) {
-        leftFootColour = nosePink;
-        rightFootColour = nosePink;
+        leftFootColour = skinPink;
+        rightFootColour = skinPink;
       }
       ctx.lineWidth = (this.size / 2.5) * this.thickness * 2;
       ctx.save(); // 0 open - rotated
@@ -1431,13 +1647,13 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(0, this.limbLength * 0.6, this.size / 3.5 * this.thickness * 2, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = footPat;
         ctx.strokeStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
         if (this.awake && this.sittingProgress > 0) {
-          ctx.moveTo(-backendShiftX * this.sittingProgress, -(this.size / 2 + backendShiftY) * this.sittingProgress);
+          ctx.moveTo(0, -(this.size / 2) * this.sittingProgress);
         } else {
           ctx.moveTo(0, 0);
         }
@@ -1471,13 +1687,13 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(0, this.limbLength * 0.6, this.size / 3.5 * this.thickness * 2, 0, 2 * Math.PI);
       ctx.fill();
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = footPat;
         ctx.strokeStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
         if (this.awake && this.sittingProgress > 0) {
-          ctx.moveTo(-backendShiftX * this.sittingProgress, -(this.size / 2 + backendShiftY) * this.sittingProgress);
+          ctx.moveTo(0, -(this.size / 2) * this.sittingProgress);
         } else {
           ctx.moveTo(0, 0);
         }
@@ -1529,7 +1745,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       }
       ctx.globalAlpha = (1 - (amntToMove / 40)) / 2;
       amntToMove *= 1;
-      ctx.fillText('\u2764', -10, -(this.size * 4) + amntToMove);
+      ctx.fillText(unicodeHeart, -10, -(this.size * 4) + amntToMove);
     }
 
     // eating noms
@@ -1564,44 +1780,49 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   };
 
   this.drawBody = function (pat, backendShiftX, backendShiftY, bodyGradient) {
-    // body balls
+    // === BODY ANIMATION CALCULATIONS ===
     let tmp = Math.abs(daytimeCounter - this.birthday);
     while (tmp > 15 && tmp > 0) {
       tmp -= 15; // 0 to 30
     }
     tmp *= 0.5;
-    tmp = Math.abs(tmp - 3.75); // -0 to -3.75 to 0 to 3.75
-    // bum sticking in the air
+    tmp = Math.abs(tmp - 3.75); // -0 to -3.75 to 0 to 3.75 (butt wagging)
+
+    // === SETUP DRAWING STYLE ===
     ctx.fillStyle = bodyGradient;
     ctx.strokeStyle = this.cellShadeLine;
     ctx.lineWidth = 2 * this.cellShadeThickness;
-    ctx.beginPath();
+
     if (this.awake && this.sittingProgress > 0) {
-      // Interpolate between standing and sitting positions
+      // === SITTING POSITION - INTERPOLATED ===
       let sittingOffset = this.sittingProgress;
-      // make the butt wag (lerped position)
+
+      // DRAW OUTLINE AND FILL - BUTT
       ctx.beginPath();
       ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
-      // belly piece (lerped position)
+
+      // DRAW OUTLINE AND FILL - BELLY
       ctx.beginPath();
       ctx.arc(-backendShiftX / 4, -this.size - (this.backendShiftY / 4) * sittingOffset, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
 
+      // === PATTERN OVERLAY - SITTING ===
       if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
-        // butt (lerped)
+        // Pattern - butt
         ctx.beginPath();
         ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
         ctx.fill();
-        // belly (lerped)
+        // Pattern - belly
         ctx.beginPath();
         ctx.arc(-backendShiftX / 4, -this.size - (this.backendShiftY / 4) * sittingOffset, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
         ctx.fill();
 
+        // Special pattern effects
         if (this.pattern == 3) {
           let fadeGrad = ctx.createLinearGradient(0, -(this.size + (this.thickness * this.size / 2)) / 2, 0, (this.size + (this.thickness * this.size / 2)));
           fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
@@ -1611,7 +1832,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
           ctx.fill();
         }
-        if (this.pattern == 6) { // pattern6
+        if (this.pattern == 6) {
           let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
           ctx.globalAlpha = 0.5;
           bGradient.addColorStop(0, this.thirdColour);
@@ -1621,20 +1842,25 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
           ctx.fill();
         }
+        ctx.globalAlpha = 1;
       }
     } else if (this.awake) {
-      // butt
+      // === STANDING POSITION ===
+
+      // DRAW OUTLINE AND FILL - BUTT
       ctx.fillStyle = bodyGradient;
       ctx.beginPath();
       ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
-      // belly piece
+
+      // DRAW OUTLINE AND FILL - BELLY
       ctx.beginPath();
       ctx.arc(-(this.size / 32) - backendShiftX / 4, - backendShiftY / 4, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
 
+      // === PATTERN OVERLAY - STANDING ===
       if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
@@ -1642,8 +1868,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.arc(-(this.size / 32) - backendShiftX / 4, - backendShiftY / 4, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
         ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
         ctx.fill();
-        ctx.globalAlpha = 1;
 
+        // Special pattern effects
         if (this.pattern == 3) {
           let fadeGrad = ctx.createLinearGradient(0, -(this.size + (this.thickness * this.size / 2)) / 2, 0, (this.size + (this.thickness * this.size / 2)));
           fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
@@ -1653,7 +1879,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
           ctx.fill();
         }
-        if (this.pattern == 6) { // pattern6
+        if (this.pattern == 6) {
           let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
           ctx.globalAlpha = 0.5;
           bGradient.addColorStop(0, this.thirdColour);
@@ -1662,6 +1888,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
           ctx.fill();
         }
+        ctx.globalAlpha = 1;
       }
     }
   };
@@ -1687,7 +1914,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       // default works for albino
       let chestColour = bodyGradient;
       if (this.albino && this.hairless) {
-        chestColour = nosePink;
+        chestColour = skinPink;
       } else if (this.hairless) {
         if (this.bodypartCode[12] == 0) {
           chestColour = this.skinColour1;
@@ -1787,8 +2014,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         rightEarGradient.addColorStop(1, this.thirdColour);
       }
     } else if (this.albino && this.hairless) {
-      leftEarGradient = nosePink;
-      rightEarGradient = nosePink;
+      leftEarGradient = skinPink;
+      rightEarGradient = skinPink;
     }
     ctx.fillStyle = leftEarGradient;
     ctx.strokeStyle = this.cellShadeLine;
@@ -1877,7 +2104,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         headGradient.addColorStop(1, this.thirdColour);
       }
     } else if (this.albino && this.hairless) {
-      headGradient = nosePink;
+      headGradient = skinPink;
     }
     if (this.awake && this.sittingProgress > 0) {
       ctx.translate(0, -((this.limbLength + (this.size / 4)) / 2) * this.sittingProgress);
@@ -1896,37 +2123,46 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
+      // draw the pattern image
       if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.fillStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
-        if (this.pattern == 3) {
-          let fadeGrad = ctx.createLinearGradient(0, -this.size / 2, 0, this.size);
-          fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
-          fadeGrad.addColorStop(1, this.firstColour);
-          ctx.fillStyle = fadeGrad;
-          ctx.beginPath();
-          ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-          ctx.fill();
-        }
-      } else if (this.pattern == 4 || this.pattern == 5) {
+        // colourpoint
+      } else if (this.pattern == 4) {
         let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2 * this.patternAlpha, 0, 0, this.size * this.patternAlpha);
-        if (this.pattern == 4) {
-          faceGradient.addColorStop(0, this.firstColour);
-        } else {
-          faceGradient.addColorStop(0, nosePink);
-        }
+        faceGradient.addColorStop(0, this.firstColour);
         faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = faceGradient;
         ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
         ctx.fill();
       }
-      if (this.pattern == 6) { // pattern6
+      // additional gradient on top for tabby
+      if (this.pattern == 3) {
+        let fadeGrad = ctx.createLinearGradient(0, -this.size / 2, 0, this.size);
+        fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
+        fadeGrad.addColorStop(1, this.firstColour);
+        ctx.fillStyle = fadeGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      // additional gradient on top for bengal / mau pattern
+      if (this.pattern == 6) {
         let faceGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
         ctx.globalAlpha = 0.5;
         faceGradient.addColorStop(0, this.thirdColour);
+        faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = faceGradient;
+        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      // draw lykoi skin coloured face on top
+      if (this.lykoi) {
+        let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2 * this.patternAlpha, 0, 0, this.size * this.patternAlpha);
+        faceGradient.addColorStop(0, skinPink);
         faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = faceGradient;
         ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
@@ -2129,8 +2365,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.fill();
       // real drawing
       ctx.fillStyle = trueWhite;
-      if ((!this.albino && this.pattern == 5)) {
-        ctx.fillStyle = nosePink;
+      if (this.lykoi) {
+        ctx.fillStyle = skinPink;
       } else if (this.hairless) {
         if (this.bodypartCode[11] == 0) {
           ctx.fillStyle = this.skinColour1;
@@ -2186,8 +2422,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
       // real drawing
       ctx.fillStyle = trueWhite;
-      if ((!this.albino && this.pattern == 5)) {
-        ctx.fillStyle = nosePink;
+      if (this.lykoi) {
+        ctx.fillStyle = skinPink;
       } else if (this.hairless) {
         if (this.bodypartCode[9] == 0) {
           ctx.fillStyle = this.skinColour1;
@@ -2217,7 +2453,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.globalAlpha = 1;
       }
       ctx.fillStyle = trueWhite;
-      if ((!this.albino && this.pattern == 5)) {
+      if (this.lykoi) {
         ctx.fillStyle = nosePink;
       } else if (this.hairless) {
         if (this.bodypartCode[10] == 0) {
@@ -2248,15 +2484,33 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.globalAlpha = 1;
       }
 
-      // nose
-      // cell cellshading
+      // === T-SHAPED NOSE (uses nose-specific colors, not skin colors) ===
+      let noseX = 0;
+      let noseY = (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5);
+      let noseWidth = this.size / 1.75;
+      let noseHeight = this.size / 4;
+      let noseVertWidth = this.size / 6;
+      let noseVertHeight = this.size / 2.5;
+
+      // Draw T-shaped nose outline (cellshading)
       ctx.fillStyle = this.cellShadeLine;
-      ctx.fillRect(-(this.size / 3.5) - this.cellShadeThickness, (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5) - (this.size / 3) - this.cellShadeThickness, (this.size / 1.75) + (this.cellShadeThickness * 2), (this.size / 4) + (this.cellShadeThickness * 2));
-      ctx.fillRect(-(this.size / 12) - this.cellShadeThickness, (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5) - (this.size / 3) - this.cellShadeThickness, (this.size / 6) + (this.cellShadeThickness * 2), (this.size / 2.5) + (this.cellShadeThickness * 2));
-      // real drawing
-      ctx.fillStyle = this.skinColour1;
-      ctx.fillRect(-(this.size / 3.5), (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5) - (this.size / 3), this.size / 1.75, this.size / 4);
-      ctx.fillRect(-(this.size / 12), (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5) - (this.size / 3), this.size / 6, this.size / 2.5);
+      ctx.lineWidth = this.cellShadeThickness;
+      ctx.strokeStyle = this.cellShadeLine;
+      ctx.beginPath();
+      // Top horizontal bar of T
+      ctx.rect(-noseWidth / 2 - this.cellShadeThickness, noseY - noseHeight - this.cellShadeThickness, noseWidth + (this.cellShadeThickness * 2), noseHeight + (this.cellShadeThickness * 2));
+      // Vertical bar of T  
+      ctx.rect(-noseVertWidth / 2 - this.cellShadeThickness, noseY - noseHeight - this.cellShadeThickness, noseVertWidth + (this.cellShadeThickness * 2), noseVertHeight + (this.cellShadeThickness * 2));
+      ctx.fill();
+
+      // Draw T-shaped nose fill using nose-specific color
+      ctx.fillStyle = this.noseColour;
+      ctx.beginPath();
+      // Top horizontal bar of T
+      ctx.rect(-noseWidth / 2, noseY - noseHeight, noseWidth, noseHeight);
+      // Vertical bar of T
+      ctx.rect(-noseVertWidth / 2, noseY - noseHeight, noseVertWidth, noseVertHeight);
+      ctx.fill();
     }
   };
 
@@ -2317,17 +2571,14 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         rightHandGradient.addColorStop(1, this.thirdColour);
       }
     } else if (this.albino && this.hairless) {
-      leftHandGradient = nosePink;
-      rightHandGradient = nosePink;
+      leftHandGradient = skinPink;
+      rightHandGradient = skinPink;
     }
     ctx.lineWidth = 2 * this.cellShadeThickness;
     ctx.strokeStyle = this.cellShadeLine;
 
     // if we are awake on a floor
     if (this.awake && this.hitBottom) {
-      if (!this.facingForwards) {
-        ctx.translate(0, -this.size * 1.5);
-      }
       ctx.save();
       ctx.translate(this.x, this.y);
       // REAL DRAWING
@@ -2393,16 +2644,10 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           ctx.fill();
           ctx.globalAlpha = 1;
         }
-        // jelly beans
+        // jelly beans / toe pads
         if (this.focus && this.facingForwards && this.y > this.focus.y) {
-          // uniformly scale the pads
+          // uniformly scale the pads so that it looks like the feet are reaching towards the focus
           ctx.save();
-          // Debug: Force cats in boxes to have neutral limb position
-          if (this.inCatBox) {
-            ctx.translate(0, (footSize / 2) + this.limbLength);
-          } else {
-            ctx.translate(this.limbLength * Math.cos(this.angleToFocus), (footSize / 2) + (this.limbLength * Math.sin(this.angleToFocus)));
-          }
           let scaleY = 1;
           if (this.y - (this.size * 10) < this.focus.y) {
             scaleY = (this.y - this.focus.y) / this.size / 10;
@@ -2525,7 +2770,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.lineTo(this.size * 1 / 2, shrunkLegEnd);
       ctx.stroke();
       // pattern
-      if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+      if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
         ctx.strokeStyle = pat;
         ctx.globalAlpha = this.patternAlpha;
         ctx.beginPath();
@@ -2575,7 +2820,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.restore();
         ctx.lineTo(this.focus.x, this.focus.y);
         ctx.stroke();
-        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.strokeStyle = pat;
           ctx.globalAlpha = this.patternAlpha;
           ctx.save(); // 0 open
@@ -2649,7 +2894,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
         ctx.stroke();
         ctx.restore(); // closed
-        if (this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
+        if (!this.albino && this.pattern !== 0 && this.pattern !== 4 && this.pattern !== 5) {
           ctx.strokeStyle = pat;
           ctx.globalAlpha = this.patternAlpha;
           // left arm
@@ -2690,6 +2935,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       pat = pat3;
     } else if (this.pattern == 6) {
       pat = pat6;
+    } else if (this.pattern == 7) {
+      pat = pat7;
     }
     ctx.setTransform(100 / this.size, 0, 0, 100 / this.size, 0, 0);
     ctx.restore();
@@ -2792,6 +3039,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     for (let f = 0; f < fireflies.length; f++) {
       if (this.inCatBox == null && this.focus == fireflies[f] && !this.hitBottom && !fireflies[f].touchedThisFrame && this.awake && this.energy > 0 && this.snuggling == -1 && this.nomnomnom == -1 && detectCollision(this, fireflies[f])) {
         fireflies[f].touchedThisFrame = true;
+        fireflies[f].chooseNewTarget(); // Force firefly to choose new target when touched
         this.resetRotation(true);
         fireflies[f].speedX += (this.speedX * this.size) / 1500;
         fireflies[f].speedY += (this.speedY * this.size) / 2000;// + (0.002 * this.size);
@@ -2837,7 +3085,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // drawing
     ctx = myGameArea.context;
     ctx.globalAlpha = 1;
-    let shift = (2 + this.name.length) * 6.72 / 2;
     let sleepshift = 0;
     if (!this.awake) {
       sleepshift = this.limbLength + (this.size / 4);
@@ -2915,7 +3162,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           bodyGradient.addColorStop(1, this.thirdColour);
         }
       } else if (this.albino && this.hairless) {
-        bodyGradient = nosePink;
+        bodyGradient = skinPink;
       }
 
       this.drawBody(pat, backendShiftX, backendShiftY, bodyGradient);
@@ -2930,27 +3177,10 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     this.drawIcons();
     ctx.globalAlpha = 1;
 
-    // label
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    if ((selection == this || this.inCatBox !== null) && this !== experiment) {
-      // label
-      ctx.fillStyle = mixTwoColours(outputArray[2], trueBlack, 0.5);
-      ctx.fillRect(-shift - 10, sleepshift - 15 - (this.size * 2.75), (shift * 2) + 20, 20);
-
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = trueWhite;
-      ctx.font = '12px' + ' ' + globalFont;
-      if (this.gender == 'Female') {
-        ctx.fillText(this.name + ' \u2640', -shift, sleepshift - (this.size * 2.75));
-      } else if (this.gender == 'Male') {
-        ctx.fillText(this.name + ' \u2642', -shift, sleepshift - (this.size * 2.75));
-      } else {
-        ctx.fillText(this.name + ' \u26A5', -shift, sleepshift - (this.size * 2.75));
-      }
-    }
-    ctx.restore();
   };
+
+  // Initialize mass and other size-dependent properties
+  this.reinitSizeAndColour();
 }
 
 /**
@@ -3007,42 +3237,6 @@ removeRelationships = function (who) {
   removeFocusFrom(who);
 };
 
-applyBreedTemplate = function (who) {
-  // using breed templates
-  let breedSwitch = Math.random();
-  if (breedSwitch < 0.05) {
-    breedSiamese(who);
-  } else if (breedSwitch < 0.1) {
-    breedBurmese(who);
-  } else if (breedSwitch < 0.2) {
-    breedRussianBlue(who);
-  } else if (breedSwitch < 0.3) {
-    breedPersian(who);
-  } else if (breedSwitch < 0.35) {
-    breedManx(who);
-  } else if (breedSwitch < 0.45) {
-    breedTabby(who);
-  } else if (breedSwitch < 0.5) {
-    breedBobtail(who);
-  } else if (breedSwitch < 0.55) {
-    breedScottishFold(who);
-  } else if (breedSwitch < 0.6) {
-    breedLykoi(who);
-  } else if (breedSwitch < 0.65) {
-    breedSphynx(who);
-  } else if (breedSwitch < 0.7) {
-    breedBengal(who);
-  } else if (breedSwitch < 0.75) {
-    breedEgyptianMau(who);
-  } else if ((who.gender !== 'Male' && breedSwitch < 0.8) || (who.gender == 'Male' && Math.random() < 1 / 3000)) {
-    breedCalico(who);
-  } else if ((who.gender !== 'Male' && breedSwitch < 0.85) || (who.gender == 'Male' && Math.random() < 1 / 3000)) {
-    breedTortoiseShell(who);
-  } else if (breedSwitch < 0.9) {
-    breedTwoTone(who);
-  }
-};
-
 /** function to apply genetics and disorders to Chittens
 * @param {Chitten} who - the chitten
 */
@@ -3059,17 +3253,95 @@ mutate = function (who) {
     who.heterochromicGene = true;
     // Don't automatically set different eye colors - let determineTraitExpression handle it
   }
+};
 
-  // Hairless gene - only applied through breeding, not random mutation in adoption
+/** function to determine if genetic traits should be expressed
+* @param {Chitten} who - the chitten
+*/
+determineTraitExpression = function (who) {
+  // Hairless gene expression (recessive - needs gene to be present)
+  if (who.hairlessGene) {
+    // Expression chance: 90% of gene carriers actually express hairlessness
+    if (Math.random() <= 0.9) {
+      who.hairless = true;
+    }
+  }
+
+  // Lykoi gene expression (recessive - needs gene to be present) 
+  if (who.lykoiGene && !who.hairless) { // Hairless dominates over Lykoi
+    // Expression chance: 85% of gene carriers actually express lykoi trait
+    if (Math.random() <= 0.85) {
+      who.lykoi = true;
+    }
+  }
+
+  // Albino gene expression (already handled in breeding, but check for adoption cats)
+  if (who.albinoGene && !who.albino) {
+    // Expression chance: 25% of gene carriers actually express albinism
+    if (Math.random() <= 0.25) {
+      who.albino = true;
+    }
+  }
+
+  // Heterochromia gene expression
+  if (who.heterochromicGene) {
+    // Expression chance: 70% of gene carriers actually express heterochromia
+    if (Math.random() <= 0.7) {
+      // Generate different eye color
+      let eyeColors = ['#00ff00', '#0000ff', '#ff0000', '#ffff00', '#ff00ff', '#00ffff'];
+      who.eyeColour2 = eyeColors[Math.floor(Math.random() * eyeColors.length)];
+    }
+  }
 };
 
 skinColourCheck = function (theColour) {
-  let c1 = hexToRgb(theColour).r + hexToRgb(theColour).g + hexToRgb(theColour).b;
-  if (c1 > 382.5) {
-    return nosePink;
-  } else {
-    return noseBlack;
+  let rgb = hexToRgb(theColour);
+  let r = rgb.r;
+  let g = rgb.g;
+  let b = rgb.b;
+
+  // Check for white cats (high brightness across all channels)
+  if (r > 200 && g > 200 && b > 200) {
+    return skinPink;
   }
+
+  // Check for ginger/orange cats (red dominance)
+  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
+    return skinPink;
+  }
+
+  // Check for brown cats (balanced warm tones)
+  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
+    return skinPink;
+  }
+
+  // All other colors (grey, black, etc.) get grey skin
+  return skinGrey;
+};
+
+noseColourCheck = function (theColour) {
+  let rgb = hexToRgb(theColour);
+  let r = rgb.r;
+  let g = rgb.g;
+  let b = rgb.b;
+
+  // Check for white cats (high brightness across all channels)
+  if (r > 200 && g > 200 && b > 200) {
+    return nosePink;
+  }
+
+  // Check for ginger/orange cats (red dominance)
+  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
+    return nosePink;
+  }
+
+  // Check for brown cats (balanced warm tones)
+  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
+    return nosePink;
+  }
+
+  // All other colors (grey, black, etc.) get black nose
+  return noseBlack;
 };
 
 /** function to create a random bodypartCode

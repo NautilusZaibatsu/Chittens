@@ -5,9 +5,9 @@
 * @return {string} the hexcode for a random colour
 */
 function randomColour() {
-  let seedR = Math.round(Math.random()*255);
-  let seedG = Math.round(Math.random()*255);
-  let seedB = Math.round(Math.random()*255);
+  let seedR = Math.round(Math.random() * 255);
+  let seedG = Math.round(Math.random() * 255);
+  let seedB = Math.round(Math.random() * 255);
   let randC = rgbToHex(seedR, seedG, seedB);
   return randC;
 }
@@ -17,28 +17,31 @@ function randomColour() {
 * @return {hex} - a colour
 */
 function getRandomEyeColour() {
-  let randSeed = Math.round(Math.random()*2); // 0, 1 or 2
-  let seedG = 0;
-  let seedB = 0;
-  let colour = 'red'; // for debug
-  if (randSeed <= 1/3) {
-    // blues
-    seedB = Math.floor(Math.random()*180);
-    seedG = Math.floor(Math.random()*seedB);
-    seedR = seedG;
-  } else if (randSeed == 1) {
-    // greens
-    seedG = Math.floor(Math.random()*130);
-    seedR = Math.floor(Math.random()*seedG);
-    seedB = seedR;
+  let randSeed = Math.floor(Math.random() * 3); // 0, 1 or 2
+  let seedR = 0, seedG = 0, seedB = 0;
+  let colour;
+
+  if (randSeed === 0) {
+    // Blues
+    seedB = 150 + Math.floor(Math.random() * 105);
+    seedG = Math.floor(seedB * (0.3 + Math.random() * 0.4));
+    seedR = Math.floor(seedG * (0.7 + Math.random() * 0.3));
+  } else if (randSeed === 1) {
+    // Greens
+    seedG = 120 + Math.floor(Math.random() * 100);
+    seedR = Math.floor(seedG * (0.4 + Math.random() * 0.4));
+    seedB = Math.floor(seedG * (0.2 + Math.random() * 0.3));
   } else {
-    // browns
-    seedR = 195;
-    seedG = Math.floor(Math.random()*seedR);
-    seedB = seedG;
+    // Browns (amber → golden → chocolate)
+    seedR = 140 + Math.floor(Math.random() * 60);   // 140–200
+    seedG = seedR - (20 + Math.floor(Math.random() * 40)); // 20–60 lower than R
+    seedB = Math.floor(seedG * (0.3 + Math.random() * 0.3)); // 30–60% of G
+    // Clamp just in case
+    if (seedG < 60) seedG = 60;
+    if (seedB < 30) seedB = 30;
   }
   colour = rgbToHex(seedR, seedG, seedB);
-  return mixTwoColours(colour, randomColour(), 1 - (Math.random()*0.5));
+  return colour;
 }
 
 /**
@@ -47,7 +50,7 @@ function getRandomEyeColour() {
 */
 function generateRealisticCoat(randSeed) {
   if (randSeed == null) {
-    randSeed = Math.round(Math.random()*3);
+    randSeed = Math.round(Math.random() * 3);
   }
   let coatArray = [];
   // solid colour
@@ -77,21 +80,21 @@ function randomColourRealistic(seed) {
   let seedG = 0;
   let seedB = 0;
   let colour = 'red'; // for debug
-  if (seed <= 1/3) {
+  if (seed <= 1 / 3) {
     // orange through peach
-    seedR = Math.floor(Math.random()*255);
-    seedG = Math.floor(Math.random()*(seedR/1.7));
-    seedB = Math.floor(Math.random()*(seedG/1.25));
+    seedR = Math.floor(Math.random() * 255);
+    seedG = Math.floor(Math.random() * (seedR / 1.7));
+    seedB = Math.floor(Math.random() * (seedG / 1.25));
     colour = rgbToHex(seedR, seedG, seedB);
-  } else if (seed <= 2/3) {
+  } else if (seed <= 2 / 3) {
     // russian blue
-    seedB = Math.floor(Math.random()*255);
-    seedG = (seedB/2) + Math.floor(Math.random()*50);//Math.floor(Math.random()*(seedB));
+    seedB = Math.floor(Math.random() * 255);
+    seedG = (seedB / 2) + Math.floor(Math.random() * 50);//Math.floor(Math.random()*(seedB));
     seedR = seedG; //Math.floor(Math.random()*(seedB));
     colour = rgbToHex(seedR, seedG, seedB);
   } else {
     // greys
-    let seed = Math.floor(Math.random()*255);
+    let seed = Math.floor(Math.random() * 255);
     colour = rgbToHex(seed, seed, seed);
   }
   return colour;
@@ -107,26 +110,26 @@ function randomColourFruity() {
   let seedB = 0;
   let colour = 'red'; // for debug
   let randSeed = Math.random();
-  if (randSeed <= 1/4) {
+  if (randSeed <= 1 / 4) {
     // orange - yellow
-    seedR = Math.floor(Math.random()*100) + 155;
-    seedG = Math.floor(Math.random()*100) + 150;
-    seedB = Math.floor(Math.random()*100) + 50;
-  } else if (randSeed <= 2/4) {
+    seedR = Math.floor(Math.random() * 100) + 155;
+    seedG = Math.floor(Math.random() * 100) + 150;
+    seedB = Math.floor(Math.random() * 100) + 50;
+  } else if (randSeed <= 2 / 4) {
     // red
-    seedR = Math.floor(Math.random()*100) + 155;
-    seedG = Math.floor(Math.random()*50) + 80;
-    seedB = Math.floor(Math.random()*50) + 80;
-  } else if (randSeed <= 3/4) {
+    seedR = Math.floor(Math.random() * 100) + 155;
+    seedG = Math.floor(Math.random() * 50) + 80;
+    seedB = Math.floor(Math.random() * 50) + 80;
+  } else if (randSeed <= 3 / 4) {
     // green
-    seedR = Math.floor(Math.random()*60) + 100;
-    seedG = Math.floor(Math.random()*100) + 155;
-    seedB = Math.floor(Math.random()*50) + 80;
+    seedR = Math.floor(Math.random() * 60) + 100;
+    seedG = Math.floor(Math.random() * 100) + 155;
+    seedB = Math.floor(Math.random() * 50) + 80;
   } else {
     // blue
-    seedB = Math.floor(Math.random()*80) + 75;
-    seedR = Math.random()*seedB/2;
-    seedG = Math.random()*seedB/2;
+    seedB = Math.floor(Math.random() * 80) + 75;
+    seedR = Math.random() * seedB / 2;
+    seedG = Math.random() * seedB / 2;
   }
   colour = rgbToHex(seedR, seedG, seedB);
   return colour;
@@ -141,12 +144,12 @@ function randomColourFruity() {
 */
 function rgbToHex(r, g, b) {
   if (r > 255 || g > 255 || b > 255) {
-    console.log('error 1 '+debugString);
-    console.log('rgb: '+r+' '+g+' '+b);
+    console.log('error 1 ' + debugString);
+    console.log('rgb: ' + r + ' ' + g + ' ' + b);
   }
   if (r < 0 || g < 0 || b < 0) {
-    console.log('error 2 '+debugString);
-    console.log('rgb: '+r+' '+g+' '+b);
+    console.log('error 2 ' + debugString);
+    console.log('rgb: ' + r + ' ' + g + ' ' + b);
   }
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
@@ -188,7 +191,7 @@ function rgbToHsl(r, g, b) {
     }
     h /= 6;
   }
-  return [ h, s, l ];
+  return [h, s, l];
 }
 
 /**
@@ -206,18 +209,18 @@ function hslToRgb(h, s, l) {
     function hue2rgb(p, q, t) {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
       return p;
     }
     let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
     let p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
+    r = hue2rgb(p, q, h + 1 / 3);
     g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
+    b = hue2rgb(p, q, h - 1 / 3);
   }
-  return [ r * 255, g * 255, b * 255 ];
+  return [r * 255, g * 255, b * 255];
 }
 
 function increaseSaturationHEX(hex) {
@@ -230,7 +233,7 @@ function increaseSaturationHEX(hex) {
 
 function decreaseSaturationHEX(hex, fraction) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
-  let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1]/fraction, rgbhsl[2]);
+  let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1] / fraction, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   debugString = 'decreaseSaturationHEX';
   return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
@@ -252,9 +255,9 @@ function mixTwoColours(hex1, hex2, prop) {
   rj = hexToRgb(hex2).r;
   gj = hexToRgb(hex2).g;
   bj = hexToRgb(hex2).b;
-  combr = Math.round((ri*prop)+(rj*(1-prop)));
-  combg = Math.round((gi*prop)+(gj*(1-prop)));
-  combb = Math.round((bi*prop)+(bj*(1-prop)));
+  combr = Math.round((ri * prop) + (rj * (1 - prop)));
+  combg = Math.round((gi * prop) + (gj * (1 - prop)));
+  combb = Math.round((bi * prop) + (bj * (1 - prop)));
   debugString = 'mixTwoColours';
   return rgbToHex(combr, combg, combb);
 }
@@ -274,9 +277,9 @@ function mixThreeColours(hex1, hex2, hex3) {
   rk = hexToRgb(hex3).r;
   gk = hexToRgb(hex3).g;
   bk = hexToRgb(hex3).b;
-  combr = Math.round((ri + rj + rk)/3);
-  combg = Math.round((gi + gj + gk)/3);
-  combb = Math.round((bi + bj + bk)/3);
+  combr = Math.round((ri + rj + rk) / 3);
+  combg = Math.round((gi + gj + gk) / 3);
+  combb = Math.round((bi + bj + bk) / 3);
   debugString = 'mixThreeColours';
   return rgbToHex(combr, combg, combb);
 }

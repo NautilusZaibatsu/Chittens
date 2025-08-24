@@ -2,18 +2,18 @@
 * function to initialise all the buttons
 */
 function initButtons() {
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 65, 'Show me more', 'Generate another 9 Chittens'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 30, 'Adopt this Chitten', 'Add the selected Chitten to your game'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 85, 'Give them all away', 'Rehome the entire litter'));
+  buttons.push(new Button(canvasWidth / 2, (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * boxSize) + 65, 'Show me more', 'Generate another 9 Chittens'));
+  buttons.push(new Button(canvasWidth / 2, (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * boxSize) + 30, 'Adopt this Chitten', 'Add the selected Chitten to your game'));
+  buttons.push(new Button(canvasWidth / 2, (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * boxSize) + 85, 'Give them all away', 'Rehome the entire litter'));
   buttons[0].visible = false;
   buttons[1].visible = false;
   buttons[2].visible = false;
-  buttons.push(new Button(195, 0, '\u2608', 'Rehome the selected Chitten'));
-  buttons.push(new Button(canvasWidth/2, 370, 'DUMMY', 'DUMMY')); // not being used
+  buttons.push(new Button(195, 0, unicodeThunderstorm, 'Rehome the selected Chitten'));
+  buttons.push(new Button(canvasWidth / 2, 370, 'DUMMY', 'DUMMY')); // not being used
   buttons[4].visible = false;
   // menu
-  buttons.push(new Button(164, 0, '\u21E9', 'Download the selected Chitten to your device'));
-  buttons.push(new Button(133, 0, '\u21E7', 'Upload a Chitten from your device'));
+  buttons.push(new Button(164, 0, unicodeArrowDown, 'Download the selected Chitten to your device'));
+  buttons.push(new Button(133, 0, unicodeArrowUp, 'Upload a Chitten from your device'));
   // gene editing
   buttons.push(new Button(60, 595, 'Save Female', 'Save a Female clone of this Chitten'));
   buttons.push(new Button(60, 630, 'Save Male', 'Save a Male clone of this Chitten'));
@@ -23,39 +23,39 @@ function initButtons() {
   buttons[9].visible = false;
   // menu
   buttons.push(new Button(231, 0, '&!', 'Dev mode - open genetic editor'));
-  buttons.push(new Button(59, 0, '+\u2640', 'Adopt a female Chitten'));
-  buttons.push(new Button(98, 0, '+\u2642', 'Adopt a male Chitten'));
-  buttons.push(new Button(canvasWidth/2, (canvasHeight/2) - ((3*(boxSize+boxPadding))/2) + (3*boxSize) + 100, 'Close', 'Close the chittery'));
+  buttons.push(new Button(59, 0, unicodeFemale, 'Adopt a female Chitten'));
+  buttons.push(new Button(98, 0, unicodeMale, 'Adopt a male Chitten'));
+  buttons.push(new Button(canvasWidth / 2, (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * boxSize) + 100, 'Close', 'Close the chittery'));
   buttons[13].visible = false;
-  buttons.push(new Button(20, 0, '\u275A\u275A', 'Pause the simulation'));
+  buttons.push(new Button(20, 0, unicodeBar + '' + unicodeBar, 'Pause the simulation'));
 
-  labels.push(new Button(canvasWidth/2, 10, 'Welcome message', ''));
-  labels.push(new Button(canvasWidth/2, 45, 'Choose a ....', ''));
-  labels.push(new Button(canvasWidth/2, (trueBottom/2) - ((3*(boxSize+boxPadding))/2) - 85, 'X', ''));
+  labels.push(new Button(canvasWidth / 2, 10, 'Welcome message', ''));
+  labels.push(new Button(canvasWidth / 2, 45, 'Choose a ....', ''));
+  labels.push(new Button(canvasWidth / 2, (trueBottom / 2) - ((3 * (boxSize + boxPadding)) / 2) - 85, 'X', ''));
   labels[0].visible = false;
   labels[1].visible = false;
   labels[2].visible = false;
 }
 
-  /**
-  * function for a piece of plain text
-  * @param {int} size - the size
-  * @param {string} colour - the colour
-  * @param {int} x - the x pos
-  * @param {int} y - the y pos
-  */
-  function TextElement(size, colour, x, y) {
-    this.size = size;
-    this.x = x;
-    this.y = y;
-    this.colour = colour;
-    this.update = function() {
-      ctx.font = this.size + ' ' + globalFont;
-      ctx.fillStyle = this.colour;
-      ctx.fillText(this.text, this.x, this.y);
-      ctx.globalAlpha = 1;
-    };
-  }
+/**
+* function for a piece of plain text
+* @param {int} size - the size
+* @param {string} colour - the colour
+* @param {int} x - the x pos
+* @param {int} y - the y pos
+*/
+function TextElement(size, colour, x, y) {
+  this.size = size;
+  this.x = x;
+  this.y = y;
+  this.colour = colour;
+  this.update = function () {
+    ctx.font = this.size + ' ' + globalFont;
+    ctx.fillStyle = this.colour;
+    ctx.fillText(this.text, this.x, this.y);
+    ctx.globalAlpha = 1;
+  };
+}
 
 /**
 * function to describe a button
@@ -67,26 +67,26 @@ function Button(x, y, text, toolTip) {
   this.x = x;
   this.y = y;
   this.text = text;
-  this.width = (this.text.length*fontWidth)+20;
-  this.size = ((this.text.length*fontWidth)+20);
+  this.width = (this.text.length * fontWidth) + 20;
+  this.size = ((this.text.length * fontWidth) + 20);
   this.height = 25;
   this.visible = true;
   this.available = true;
   this.highlighted = false;
   this.toolTip = toolTip;
-  this.toolTipWidth = (toolTip.length*fontWidth)+20;
-  this.reinitSizes = function() {
-    this.toolTipWidth = (toolTip.length*fontWidth)+20;
-    this.width = (this.text.length*fontWidth)+20;
-    this.size = ((this.text.length*fontWidth)+20);
+  this.toolTipWidth = (toolTip.length * fontWidth) + 20;
+  this.reinitSizes = function () {
+    this.toolTipWidth = (toolTip.length * fontWidth) + 20;
+    this.width = (this.text.length * fontWidth) + 20;
+    this.size = ((this.text.length * fontWidth) + 20);
   };
-  this.drawToolTip = function() {
+  this.drawToolTip = function () {
     ctx.fillStyle = mixTwoColours(outputArray[3], trueBlack, 0.5);
     ctx.fillRect(pointerPos.x, pointerPos.y + 20, this.toolTipWidth, 20);
     ctx.fillStyle = trueWhite;
     ctx.fillText(this.toolTip, pointerPos.x + 12.5, pointerPos.y + 35);
   };
-  this.update = function() {
+  this.update = function () {
     if (this == buttons[5] || this == buttons[3]) {
       if (selection == null || selection.inCatBox !== null) {
         this.available = false;
@@ -97,7 +97,7 @@ function Button(x, y, text, toolTip) {
     if (this.visible) {
       // box
       ctx.save();
-      ctx.translate(this.x -(this.width/2), this.y);
+      ctx.translate(this.x - (this.width / 2), this.y);
       ctx.globalAlpha = 0.25;
       if (this.highlighted) {
         ctx.globalAlpha = 1;
@@ -126,286 +126,286 @@ function Button(x, y, text, toolTip) {
 function handleButton(input) {
   switch (input) {
     case 0:
-    if (!chosenChittenF) {
-      for (let i = currentChittens; i < chittens.length; i++) {
-        chittens.splice(i, 1);
-        i--;
-      }
-      initFemaleCattery();
-    } else if (!chosenChittenM) {
-      for (let i = currentChittens; i < chittens.length; i++) {
-        chittens.splice(i, 1);
-        i--;
-      }
-      initMaleCattery();
-    }
-    break;
-    case 1:
-    if (selection !== null) {
-      labels[2].visible = false;
       if (!chosenChittenF) {
-        chosenChittenF = true;
         for (let i = currentChittens; i < chittens.length; i++) {
-          if (chittens[i] !== selection) {
-            chittens.splice(i, 1);
-            i--;
-          }
+          chittens.splice(i, 1);
+          i--;
         }
-
-        sendMessage(selection.name+' was adopted');
-        selection.hitBottom = false;
-        selection.love = 100;
-        speech.push(new Speak(selection, neutralWord()));
-        selection.sitting = false;
-        createGlyphs(selection.x, selection.y, '\u2764');
-        seeds.push(new Seed(randomColourFruity(), selection));
-        seeds.push(new Seed(randomColourFruity(), selection));
-        seeds[seeds.length-1].timer = 750;
-        boxes = [];
-        buttons[0].visible = false;
-        buttons[1].visible = false;
-        buttons[2].visible = false;
-        labels[0].visible = false;
-        labels[1].visible = false;
-        selection.inCatBox = null;
-        selection.focus = fireflies[selection.findClosestFireFly()];
-        buttons[10].available = true;
-        buttons[11].available = true;
-        buttons[12].available = true;
-        buttons[6].available = true;
-        buttons[13].visible = false;
-        choosingChitten = false;
-        selection = null;
+        initFemaleCattery();
       } else if (!chosenChittenM) {
-        chosenChittenM = true;
         for (let i = currentChittens; i < chittens.length; i++) {
-          if (chittens[i] !== selection) {
-            chittens.splice(i, 1);
-            i--;
-          }
+          chittens.splice(i, 1);
+          i--;
         }
-        sendMessage(selection.name+' was adopted');
-        selection.hitBottom = false;
-        selection.love = 100;
-        speech.push(new Speak(selection, neutralWord()));
-        selection.sitting = false;
-        createGlyphs(selection.x, selection.y, '\u2764');
-        seeds.push(new Seed(randomColourFruity(), selection));
-        seeds.push(new Seed(randomColourFruity(), selection));
-        seeds[seeds.length-1].timer = 750;
-        boxes = [];
-        buttons[0].visible = false;
-        buttons[1].visible = false;
-        labels[0].visible = false;
-        labels[1].visible = false;
-        selection.inCatBox = null;
-        buttons[10].available = true;
-        buttons[11].available = true;
-        buttons[12].available = true;
-        buttons[6].available = true;
-        buttons[13].visible = false;
-        choosingChitten = false;
-        selection = null;
-      } else if (!chosenKitten) {
-        for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
-          for (let j = 0; j < chittens.length && !found; j++) {
-            if (chittens[j].inCatBox == parentBoxes[i]) {
-              chittens[j].inCatBox = null;
-              chittens[j].hitBottom = false;
+        initMaleCattery();
+      }
+      break;
+    case 1:
+      if (selection !== null) {
+        labels[2].visible = false;
+        if (!chosenChittenF) {
+          chosenChittenF = true;
+          for (let i = currentChittens; i < chittens.length; i++) {
+            if (chittens[i] !== selection) {
+              chittens.splice(i, 1);
+              i--;
             }
           }
-        }
-        parentBoxes = [];
-        chosenKitten = true;
-        for (let i = currentChittens; i < chittens.length; i++) {
-          if (chittens[i] !== selection) {
-            chittens.splice(i, 1);
-            i--;
-          }
-        }
-        if (selection && selection.name) {
-          sendMessage(selection.name+' joined the family');
+
+          sendMessage(selection.name + ' was adopted');
           selection.hitBottom = false;
           selection.love = 100;
           speech.push(new Speak(selection, neutralWord()));
-          selection.size *= 0.5;
-          selection.reinitSizeAndColour();
           selection.sitting = false;
-          createGlyphs(selection.x, selection.y, '\u2764');
-          selection.reinitSizeAndColour();
-        } else {
-          console.warn('Selection became undefined during litter processing');
-        }
-        boxes = [];
-        buttons[0].visible = false;
-        buttons[1].visible = false;
-        buttons[2].visible = false;
-        labels[0].visible = false;
-        labels[1].visible = false;
-        buttons[10].available = true;
-        buttons[11].available = true;
-        buttons[12].available = true;
-        buttons[6].available = true;
-        if (selection) {
+          createGlyphs(selection.x, selection.y, unicodeHeart);
+          seeds.push(new Seed(randomColourFruity(), selection));
+          seeds.push(new Seed(randomColourFruity(), selection));
+          seeds[seeds.length - 1].timer = 750;
+          boxes = [];
+          buttons[0].visible = false;
+          buttons[1].visible = false;
+          buttons[2].visible = false;
+          labels[0].visible = false;
+          labels[1].visible = false;
           selection.inCatBox = null;
+          selection.focus = fireflies[selection.findClosestFireFly()];
+          buttons[10].available = true;
+          buttons[11].available = true;
+          buttons[12].available = true;
+          buttons[6].available = true;
+          buttons[13].visible = false;
+          choosingChitten = false;
+          selection = null;
+        } else if (!chosenChittenM) {
+          chosenChittenM = true;
+          for (let i = currentChittens; i < chittens.length; i++) {
+            if (chittens[i] !== selection) {
+              chittens.splice(i, 1);
+              i--;
+            }
+          }
+          sendMessage(selection.name + ' was adopted');
+          selection.hitBottom = false;
+          selection.love = 100;
+          speech.push(new Speak(selection, neutralWord()));
+          selection.sitting = false;
+          createGlyphs(selection.x, selection.y, unicodeHeart);
+          seeds.push(new Seed(randomColourFruity(), selection));
+          seeds.push(new Seed(randomColourFruity(), selection));
+          seeds[seeds.length - 1].timer = 750;
+          boxes = [];
+          buttons[0].visible = false;
+          buttons[1].visible = false;
+          labels[0].visible = false;
+          labels[1].visible = false;
+          selection.inCatBox = null;
+          buttons[10].available = true;
+          buttons[11].available = true;
+          buttons[12].available = true;
+          buttons[6].available = true;
+          buttons[13].visible = false;
+          choosingChitten = false;
+          selection = null;
+        } else if (!chosenKitten) {
+          for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
+            for (let j = 0; j < chittens.length && !found; j++) {
+              if (chittens[j].inCatBox == parentBoxes[i]) {
+                chittens[j].inCatBox = null;
+                chittens[j].hitBottom = false;
+              }
+            }
+          }
+          parentBoxes = [];
+          chosenKitten = true;
+          for (let i = currentChittens; i < chittens.length; i++) {
+            if (chittens[i] !== selection) {
+              chittens.splice(i, 1);
+              i--;
+            }
+          }
+          if (selection && selection.name) {
+            sendMessage(selection.name + ' joined the family');
+            selection.hitBottom = false;
+            selection.love = 100;
+            speech.push(new Speak(selection, neutralWord()));
+            selection.size *= 0.5;
+            selection.reinitSizeAndColour();
+            selection.sitting = false;
+            createGlyphs(selection.x, selection.y, unicodeHeart);
+            selection.reinitSizeAndColour();
+          } else {
+            console.warn('Selection became undefined during litter processing');
+          }
+          boxes = [];
+          buttons[0].visible = false;
+          buttons[1].visible = false;
+          buttons[2].visible = false;
+          labels[0].visible = false;
+          labels[1].visible = false;
+          buttons[10].available = true;
+          buttons[11].available = true;
+          buttons[12].available = true;
+          buttons[6].available = true;
+          if (selection) {
+            selection.inCatBox = null;
+          }
+          choosingChitten = false;
+          selection = null;
         }
-        choosingChitten = false;
-        selection = null;
       }
-    }
-    break;
+      break;
     case 2:
-    for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
-      for (let j = 0; j < chittens.length && !found; j++) {
-        if (chittens[j].inCatBox == parentBoxes[i]) {
-          chittens[j].inCatBox = null;
+      for (let i = 0, found = false; i < parentBoxes.length && !found; i++) {
+        for (let j = 0; j < chittens.length && !found; j++) {
+          if (chittens[j].inCatBox == parentBoxes[i]) {
+            chittens[j].inCatBox = null;
+          }
         }
       }
-    }
-    parentBoxes = [];
-    labels[2].visible = false;
-    chosenKitten = true;
-    for (let i = currentChittens; i < chittens.length; i++) {
-      chittens.splice(currentChittens, chittens.length - currentChittens);
-    }
-    sendMessage('A litter of chittens was rehomed');
-    boxes = [];
-    buttons[0].visible = false;
-    buttons[1].visible = false;
-    buttons[2].visible = false;
-    buttons[10].available = true;
-    buttons[11].available = true;
-    buttons[12].available = true;
-    buttons[6].available = true;
-    labels[0].visible = false;
-    labels[1].visible = false;
-    selection = null;
-    choosingChitten = false;
-    break;
-    case 3:
-    sendMessage(selection.name+' went to live with someone else');
-    speech.push(new Speak(selection, angryWord()));
-    for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
-      if (chittens[i] == selection) {
-        stop = true;
-        graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
-        removeRelationships(selection);
-        chittens[i].kill();
+      parentBoxes = [];
+      labels[2].visible = false;
+      chosenKitten = true;
+      for (let i = currentChittens; i < chittens.length; i++) {
+        chittens.splice(currentChittens, chittens.length - currentChittens);
       }
-    }
-    selection = null;
-    break;
-    case 4:
-    // DUMMY
-    break;
-    case 5:
-    saveToFile(selection);
-    break;
-    case 6:
-    openUploadDialog();
-    break;
-    case 7:
-    pasteChitten(copyChitten(experiment));
-    chittens[chittens.length-1].gender = 'Female';
-    chittens[chittens.length-1].name = null;
-    while (chittens[chittens.length-1].name == null) {
-      chittens[chittens.length-1].name = getFemaleName(Math.floor(Math.random()*numlibs*namesinlib));
-    }
-    break;
-    case 8:
-    pasteChitten(copyChitten(experiment));
-    chittens[chittens.length-1].gender = 'Male';
-    chittens[chittens.length-1].name = null;
-    while (chittens[chittens.length-1].name == null) {
-      chittens[chittens.length-1].name = getMaleName(Math.floor(Math.random()*numlibs*namesinlib));
-    }
-    break;
-    case 9:
-    geneEditing = false;
-    buttons[7].visible = false;
-    buttons[8].visible = false;
-    buttons[9].visible = false;
-    buttons[10].available = true;
-    buttons[11].available = true;
-    buttons[12].available = true;
-    buttons[6].available = true;
-    break;
-    case 10:
-    if (selection !== null) {
-      cloneChitten(copyChitten(selection), experiment);
-      reinitSliders();
-    }
-    geneEditing = true;
-    buttons[7].visible = true;
-    buttons[8].visible = true;
-    buttons[9].visible = true;
-    buttons[10].available = false;
-    buttons[11].available = false;
-    buttons[12].available = false;
-    buttons[6].available = false;
-    break;
-    case 11:
-    initFemaleCattery();
-    buttons[10].available = false;
-    buttons[11].available = false;
-    buttons[12].available = false;
-    buttons[6].available = false;
-    break;
-    case 12:
-    initMaleCattery();
-    buttons[10].available = false;
-    buttons[11].available = false;
-    buttons[12].available = false;
-    buttons[6].available = false;
-    break;
-    case 13:
-    choosingChitten = false;
-    chosenChittenF = true;
-    chosenChittenM = true;
-    selection = null;
-    boxes = [];
-    for (let i = currentChittens; i < chittens.length; i++) {
-      if (chittens[i] !== selection) {
-        chittens.splice(i, 1);
-        i--;
-      }
-    }
-    buttons[0].visible = false;
-    buttons[1].visible = false;
-    labels[0].visible = false;
-    labels[1].visible = false;
-    buttons[13].visible = false;
-
-    buttons[10].available = true;
-    buttons[11].available = true;
-    buttons[12].available = true;
-    buttons[6].available = true;
-    break;
-    case 14:
-    // pause button
-    if (!paused) {
-      paused = true;
-      buttons[6].available = false;
-      buttons[10].available = false;
-      buttons[11].available = false;
-      buttons[12].available = false;
-      buttons[0].available = false;
-      buttons[1].available = false;
-      buttons[2].available = false;
-      if (selection!== null && selection.dragging) {
-        selection.dragging = false;
-        selection.findClosestFireFly();
-      }
-    } else {
-      paused = false;
-      buttons[6].available = true;
+      sendMessage('A litter of chittens was rehomed');
+      boxes = [];
+      buttons[0].visible = false;
+      buttons[1].visible = false;
+      buttons[2].visible = false;
       buttons[10].available = true;
       buttons[11].available = true;
       buttons[12].available = true;
-      buttons[0].available = true;
-      buttons[1].available = true;
-      buttons[2].available = true;
-    }
+      buttons[6].available = true;
+      labels[0].visible = false;
+      labels[1].visible = false;
+      selection = null;
+      choosingChitten = false;
+      break;
+    case 3:
+      sendMessage(selection.name + ' went to live with someone else');
+      speech.push(new Speak(selection, angryWord()));
+      for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
+        if (chittens[i] == selection) {
+          stop = true;
+          graveStones.push(new Grave(selection.x, selection.y, selection.size, selection.speedX, selection.speedY, selection.elder, selection.firstColour));
+          removeRelationships(selection);
+          chittens[i].kill();
+        }
+      }
+      selection = null;
+      break;
+    case 4:
+      // DUMMY
+      break;
+    case 5:
+      saveToFile(selection);
+      break;
+    case 6:
+      openUploadDialog();
+      break;
+    case 7:
+      pasteChitten(copyChitten(experiment));
+      chittens[chittens.length - 1].gender = 'Female';
+      chittens[chittens.length - 1].name = null;
+      while (chittens[chittens.length - 1].name == null) {
+        chittens[chittens.length - 1].name = getFemaleName(Math.floor(Math.random() * numlibs * namesinlib));
+      }
+      break;
+    case 8:
+      pasteChitten(copyChitten(experiment));
+      chittens[chittens.length - 1].gender = 'Male';
+      chittens[chittens.length - 1].name = null;
+      while (chittens[chittens.length - 1].name == null) {
+        chittens[chittens.length - 1].name = getMaleName(Math.floor(Math.random() * numlibs * namesinlib));
+      }
+      break;
+    case 9:
+      geneEditing = false;
+      buttons[7].visible = false;
+      buttons[8].visible = false;
+      buttons[9].visible = false;
+      buttons[10].available = true;
+      buttons[11].available = true;
+      buttons[12].available = true;
+      buttons[6].available = true;
+      break;
+    case 10:
+      if (selection !== null) {
+        cloneChitten(copyChitten(selection), experiment);
+        reinitSliders();
+      }
+      geneEditing = true;
+      buttons[7].visible = true;
+      buttons[8].visible = true;
+      buttons[9].visible = true;
+      buttons[10].available = false;
+      buttons[11].available = false;
+      buttons[12].available = false;
+      buttons[6].available = false;
+      break;
+    case 11:
+      initFemaleCattery();
+      buttons[10].available = false;
+      buttons[11].available = false;
+      buttons[12].available = false;
+      buttons[6].available = false;
+      break;
+    case 12:
+      initMaleCattery();
+      buttons[10].available = false;
+      buttons[11].available = false;
+      buttons[12].available = false;
+      buttons[6].available = false;
+      break;
+    case 13:
+      choosingChitten = false;
+      chosenChittenF = true;
+      chosenChittenM = true;
+      selection = null;
+      boxes = [];
+      for (let i = currentChittens; i < chittens.length; i++) {
+        if (chittens[i] !== selection) {
+          chittens.splice(i, 1);
+          i--;
+        }
+      }
+      buttons[0].visible = false;
+      buttons[1].visible = false;
+      labels[0].visible = false;
+      labels[1].visible = false;
+      buttons[13].visible = false;
+
+      buttons[10].available = true;
+      buttons[11].available = true;
+      buttons[12].available = true;
+      buttons[6].available = true;
+      break;
+    case 14:
+      // pause button
+      if (!paused) {
+        paused = true;
+        buttons[6].available = false;
+        buttons[10].available = false;
+        buttons[11].available = false;
+        buttons[12].available = false;
+        buttons[0].available = false;
+        buttons[1].available = false;
+        buttons[2].available = false;
+        if (selection !== null && selection.dragging) {
+          selection.dragging = false;
+          selection.findClosestFireFly();
+        }
+      } else {
+        paused = false;
+        buttons[6].available = true;
+        buttons[10].available = true;
+        buttons[11].available = true;
+        buttons[12].available = true;
+        buttons[0].available = true;
+        buttons[1].available = true;
+        buttons[2].available = true;
+      }
   }
 }
 
@@ -448,7 +448,7 @@ function click() {
   }
   if (!clickedSomething) {
     for (let i = 0; i < buttons.length; i++) {
-      if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+      if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width / 2) && pointerPos.x > buttons[i].x - (buttons[i].width / 2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
         clickedSomething = true;
         handleButton(i);
       }
@@ -464,20 +464,23 @@ function click() {
       genderString = 'male';
     }
     if (!chosenChittenM || !chosenChittenF) {
-      sendMessage('\u2764 Choose a '+genderString+' Chitten');
       buttons[1].available = false;
     }
   }
   if ((!chosenChittenF || !chosenChittenM || !chosenKitten) && selection !== null) {
     buttons[1].available = true;
   }
-  // now select Chittens
+  // Picking up Chittens
   if (!clickedSomething && !choosingChitten) {
-    for (let i = chittens.length-1; i >= 0 && !clickedSomething; i--) {
+    for (let i = chittens.length - 1; i >= 0 && !clickedSomething; i--) {
       if (detectCollision(pointerPos, chittens[i])) {
         clickedSomething = true;
         selection = chittens[i];
         selection.dragging = true;
+        // wake up sleeping chittens when you pick them up
+        if (!selection.awake) { 
+          selection.awake = true;
+        }
       }
     }
   }
@@ -521,10 +524,8 @@ function unclick() {
   if (chittens.includes(selection) && selection.dragging) {
     selection.dragging = false;
     selection.focus = selection.inCatBox ? null : selection.findClosestFireFly();
-    // selection.speedX = dummypointerPos.speedX;
-    // selection.speedY = dummypointerPos.speedY;
-    // console.log('let go. speedX was '+dummypointerPos.speedX);
   }
+
   if (geneEditing) {
     // check sliders
     for (let i = 0; i < sliders.length; i++) {
@@ -532,9 +533,7 @@ function unclick() {
         sliders[i].sBar.dragging = false;
         if ((i > 6 && i < 18) || i == 26 || i == 29) {
           sliders[i].currentPos = Math.round(sliders[i].currentPos);
-            sendMessage(experiment.bodypartCode[12]);
         }
-        console.log('exact: '+sliders[i].currentPos);
       }
     }
     if (colourBlock.dragging) {
@@ -551,7 +550,7 @@ function hover() {
   // highlighting buttons
   for (let i = 0; i < buttons.length; i++) {
     // tooltip creation on hover is handled in window.js
-    if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width/2) && pointerPos.x > buttons[i].x - (buttons[i].width/2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
+    if (buttons[i].available && buttons[i].visible && pointerPos.x < buttons[i].x + (buttons[i].width / 2) && pointerPos.x > buttons[i].x - (buttons[i].width / 2) && pointerPos.y < buttons[i].y + buttons[i].height && pointerPos.y > buttons[i].y) {
       buttons[i].highlighted = true;
       hovered = true;
     } else {
@@ -584,10 +583,35 @@ function hover() {
   } else if (colourBlock.dragging && pointerPos.x < colourBlock.x && pointerPos.x >= colourBlock.x + 100 && pointerPos.y < colourBlock.y && pointerPos.y >= colourBlock.y + 100) {
     colourBlock.dragging = false;
   }
+  // chittens hover label
+  for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
+    if (!chittens[i].inCatBox && chittens[i] !== experiment && detectCollision(pointerPos, chittens[i])) {
+      stop = true;
+      let labelText =  chittens[i].name;
+      let shift = (2 + chittens[i].name.length) * 6.72 / 2;
+      ctx.save();
+      ctx.translate(chittens[i].x, chittens[i].y);
+      ctx.globalAlpha = 1;
+      // draw box
+      ctx.fillStyle = mixTwoColours(outputArray[2], trueBlack, 0.5);
+      ctx.fillRect(-shift - 10, - 40 - (chittens[i].size * 2.75), (shift * 2) + 20, 20);
+      // draw label
+      ctx.fillStyle = trueWhite;
+      ctx.font = '12px' + ' ' + globalFont;
+      if (chittens[i].gender == 'Female') {
+        ctx.fillText(labelText + ' ' + unicodeFemale, -shift, - 25 - (chittens[i].size * 2.75));
+      } else if (chittens[i].gender == 'Male') {
+        ctx.fillText(labelText + ' ' + unicodeMale, -shift, - 25 - (chittens[i].size * 2.75));
+      } else {
+        ctx.fillText(labelText + ' ' + unicodeNonBinary, -shift, - 25 - (chittens[i].size * 2.75));
+      }
+      ctx.restore();
+    }
+  }
 }
 
 /**
-* function to reiit the sliders when you load a new chitten etc
+* function to reinit the sliders when you load a new chitten etc
 */
 function initSliders() {
   sliders = [];
@@ -665,7 +689,7 @@ function reinitSliders() {
 */
 function Slider(lowerLimit, upperLimit, currentPos, x, y, txt) {
   this.id = sliderIndex;
-  sliderIndex ++;
+  sliderIndex++;
   this.lowerLimit = lowerLimit;
   this.upperLimit = upperLimit;
   this.currentPos = currentPos;
@@ -675,9 +699,9 @@ function Slider(lowerLimit, upperLimit, currentPos, x, y, txt) {
   this.y = y;
   this.text = txt;
   this.sBar = new SliderBar(this);
-  this.update = function() {
+  this.update = function () {
     // bar base is 0 to 100
-    this.proportion = 100/(Math.abs(this.upperLimit - this.lowerLimit));
+    this.proportion = 100 / (Math.abs(this.upperLimit - this.lowerLimit));
     this.relativePosition = this.proportion * (this.currentPos - this.lowerLimit);
     ctx.lineWidth = 2;
     ctx.strokeStyle = trueBlack;
@@ -705,7 +729,7 @@ function SliderBar(parent) {
   this.x = this.parent.x;
   this.y = this.parent.y;
   this.size = 10;
-  this.update = function() {
+  this.update = function () {
     if (this.dragging) {
       let correctMouseX = pointerPos.x;
       if (correctMouseX < this.parent.x) {
@@ -716,7 +740,7 @@ function SliderBar(parent) {
       let score = (correctMouseX - this.parent.x);
       this.parent.currentPos = (score / this.parent.proportion) + this.parent.lowerLimit;
       this.x = correctMouseX;
-      ctx.fillRect(this.x - 5, this.y -10, 10, 20);
+      ctx.fillRect(this.x - 5, this.y - 10, 10, 20);
       if (this.parent.id == 0) {
         experiment.thickness = this.parent.currentPos;
       } else if (this.parent.id == 1) {
@@ -793,7 +817,7 @@ function ColourBar(x, y) {
   this.y = y;
   this.text = 'colours';
   this.selected = 0;
-  this.update = function() {
+  this.update = function () {
     ctx.font = '12px' + ' ' + globalFont;
     ctx.globalAlpha = 0.5;
     ctx.fillText(this.text, this.x, this.y - 8);
@@ -829,45 +853,45 @@ function ColourPixelBlock() {
   this.pixelColumns = 25;
   this.dragging = false;
   // convert x axis
-  let lrInterval = (255*6)/this.pixelColumns; // 71.68
+  let lrInterval = (255 * 6) / this.pixelColumns; // 71.68
   // generate hue gradient
-  for (let i = 0; i < this.pixelColumns-1; i++) {
-    this.huePixels.push((i * lrInterval)+(lrInterval/2));
+  for (let i = 0; i < this.pixelColumns - 1; i++) {
+    this.huePixels.push((i * lrInterval) + (lrInterval / 2));
   }
   // convert gradient positions to hex values
-  for (let i = 0; i < this.huePixels.length; i ++) {
+  for (let i = 0; i < this.huePixels.length; i++) {
     if (this.huePixels[i] < 255) {
       let tmp = [255, 0, Math.round(this.huePixels[i])];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 255*2) {
+    } else if (this.huePixels[i] < 255 * 2) {
       let tmp = [255 + 256 - Math.round(this.huePixels[i]), 0, 255];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 255*3) {
-      let tmp = [0, Math.round(this.huePixels[i] - (256*2)), 255];
+    } else if (this.huePixels[i] < 255 * 3) {
+      let tmp = [0, Math.round(this.huePixels[i] - (256 * 2)), 255];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 255*4) {
-      let tmp = [0, 255, 255 + (255*3) - Math.round(this.huePixels[i])];
+    } else if (this.huePixels[i] < 255 * 4) {
+      let tmp = [0, 255, 255 + (255 * 3) - Math.round(this.huePixels[i])];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 255*5) {
-      let tmp = [Math.round(this.huePixels[i]) - (256*4), 255, 0];
+    } else if (this.huePixels[i] < 255 * 5) {
+      let tmp = [Math.round(this.huePixels[i]) - (256 * 4), 255, 0];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
-    } else if (this.huePixels[i] < 255*6) {
-      let tmp = [255, 255 + (255*5) - Math.round(this.huePixels[i]), 0];
+    } else if (this.huePixels[i] < 255 * 6) {
+      let tmp = [255, 255 + (255 * 5) - Math.round(this.huePixels[i]), 0];
       this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
     }
   }
   let outputPixels = [];
   // create all rows and populate white - transparent - black fade
   let tmpPix = [];
-  for (let i = 0; i < this.pixelRows; i ++) {
-    if (i < this.pixelRows/2) {
-      for (let j = 0; j < this.pixelColumns-1; j++) {
-        tmpPix[j] = mixTwoColours('#FFFFFF', this.huePixels[j], 1 - (i/this.pixelRows*2));
+  for (let i = 0; i < this.pixelRows; i++) {
+    if (i < this.pixelRows / 2) {
+      for (let j = 0; j < this.pixelColumns - 1; j++) {
+        tmpPix[j] = mixTwoColours(trueWhite, this.huePixels[j], 1 - (i / this.pixelRows * 2));
       }
       outputPixels = outputPixels.concat(tmpPix);
-    } else if (i > this.pixelRows/2) {
-      for (let j = 0; j < this.pixelColumns-1; j++) {
-        tmpPix[j] = mixTwoColours('#000000', this.huePixels[j], (i - (this.pixelRows/2))/this.pixelRows*2);
+    } else if (i > this.pixelRows / 2) {
+      for (let j = 0; j < this.pixelColumns - 1; j++) {
+        tmpPix[j] = mixTwoColours(trueBlack, this.huePixels[j], (i - (this.pixelRows / 2)) / this.pixelRows * 2);
       }
       outputPixels = outputPixels.concat(tmpPix);
     } else {
@@ -876,7 +900,7 @@ function ColourPixelBlock() {
   }
 
   // make a set of pixels that are greys (black to white)
-  let factor = 256/this.pixelColumns;
+  let factor = 256 / this.pixelColumns;
   for (let i = 0; i < this.pixelColumns; i++) {
     let tmp = Math.round(i * factor);
     outputPixels.push(rgbToHex(tmp, tmp, tmp));
@@ -884,15 +908,15 @@ function ColourPixelBlock() {
 
   this.pixels = outputPixels;
 
-  this.updateHoverColour = function() {
+  this.updateHoverColour = function () {
     let xPoint = pointerPos.x - this.x;
     let yPoint = pointerPos.y - this.y;
-    let xCoord = Math.round(xPoint/this.pixelSize);
-    let yCoord = Math.round(yPoint/this.pixelSize);
-    let newIndex = (yCoord*this.pixelRows+1) + xCoord;
+    let xCoord = Math.round(xPoint / this.pixelSize);
+    let yCoord = Math.round(yPoint / this.pixelSize);
+    let newIndex = (yCoord * this.pixelRows + 1) + xCoord;
     if (newIndex < this.pixels.length) {
-      let midPointX = xCoord + (this.pixelSize/2);
-      let midPointY = yCoord + (this.pixelSize/2);
+      let midPointX = xCoord + (this.pixelSize / 2);
+      let midPointY = yCoord + (this.pixelSize / 2);
       let perfectColour = this.pixels[newIndex];
       let diffx = midPointX - xPoint; // 0 to pixelSize/2
       let diffy = midPointY - yPoint;
@@ -901,15 +925,15 @@ function ColourPixelBlock() {
       let newC1 = perfectColour;
       let newC2 = perfectColour;
       if (diffx < 0 && xCoord > 0 && xCoord < this.pixelColumns) {
-        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex-1], Math.abs((this.pixelSize/2)/diffx));
+        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex - 1], Math.abs((this.pixelSize / 2) / diffx));
       } else if (diffx > 0 && xCoord > 0 && xCoord < this.pixelColumns) {
-        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex+1], Math.abs((this.pixelSize/2)/diffx));
+        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex + 1], Math.abs((this.pixelSize / 2) / diffx));
       }
 
-      if (diffy < 0 && yCoord > 0 && yCoord < this.pixelRows-1) {
-        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex - this.pixelRows], Math.abs((this.pixelSize/2)/diffy));
-      } else if (diffy > 0 && yCoord > 0 && yCoord < this.pixelRows-1) {
-        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex + this.pixelRows], Math.abs((this.pixelSize/2)/diffy));
+      if (diffy < 0 && yCoord > 0 && yCoord < this.pixelRows - 1) {
+        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex - this.pixelRows], Math.abs((this.pixelSize / 2) / diffy));
+      } else if (diffy > 0 && yCoord > 0 && yCoord < this.pixelRows - 1) {
+        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex + this.pixelRows], Math.abs((this.pixelSize / 2) / diffy));
       }
       perfectColour = mixTwoColours(newC1, newC2, 0.5);
 
@@ -926,12 +950,12 @@ function ColourPixelBlock() {
       experiment.reinitSizeAndColour();
     }
   };
-  this.update = function() {
+  this.update = function () {
     ctx.strokeStyle = outputArray[3];
-    ctx.strokeRect(this.x, this.y, this.pixelSize*this.pixelRows, this.pixelSize*this.pixelColumns);
+    ctx.strokeRect(this.x, this.y, this.pixelSize * this.pixelRows, this.pixelSize * this.pixelColumns);
 
-    for (let i = 0; i < outputPixels.length; i ++) {
-      let row = Math.floor(i/this.pixelRows);
+    for (let i = 0; i < outputPixels.length; i++) {
+      let row = Math.floor(i / this.pixelRows);
       ctx.fillStyle = this.pixels[i];
       ctx.fillRect(this.x + (i * this.pixelSize) - (row * this.pixelSize * this.pixelRows), this.y + (row * this.pixelSize), this.pixelSize, this.pixelSize);
     }
