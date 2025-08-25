@@ -72,7 +72,7 @@ function generateRealisticCoat(randSeed) {
 };
 
 /**
-* function to return a random colour as hex
+* function to return a random realistic coat colour as hex
 * @return {string} the hexcode for a random colour
 */
 function randomColourRealistic(seed) {
@@ -99,6 +99,68 @@ function randomColourRealistic(seed) {
   }
   return colour;
 }
+
+skinColourCheck = function (theColour) {
+  let rgb = hexToRgb(theColour);
+  let r = rgb.r;
+  let g = rgb.g;
+  let b = rgb.b;
+
+  // Check for white cats (high brightness across all channels)
+  if (r > skinColourBrightnessthreshold && g > skinColourBrightnessthreshold && b > skinColourBrightnessthreshold) {
+    return skinPink;
+  }
+
+  // Check for ginger/orange cats (red dominance)
+  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
+    return skinPink;
+  }
+
+  // Check for brown cats (balanced warm tones)
+  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
+    return skinPink;
+  }
+
+  // All other colors (grey, black, etc.) get grey skin
+  return skinGrey;
+};
+
+noseColourCheck = function (theColour) {
+  let rgb = hexToRgb(theColour);
+  let r = rgb.r;
+  let g = rgb.g;
+  let b = rgb.b;
+
+  // Check for white cats (high brightness across all channels)
+  if (r > 200 && g > 200 && b > 175) {
+    return nosePink;
+  }
+
+  // Check for ginger/orange cats (red dominance)
+  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
+    return nosePink;
+  }
+
+  // Check for brown cats (balanced warm tones)
+  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
+    return nosePink;
+  }
+
+  // All other colors (grey, black, etc.) get black nose
+  return noseBlack;
+};
+
+/** function to create a random bodypartCode
+* this code is used to denote the zones of colour on a Chitten
+* @return {array} - the bodypart code
+*/
+randomBodyPartCode = function () {
+  let tmpArray = [];
+  for (let i = 0; i < 13; i++) {
+    tmpArray.push(Math.round(Math.random() * 2));
+  }
+  return tmpArray;
+};
 
 /**
 * function to return a random colour as hex
@@ -134,6 +196,8 @@ function randomColourFruity() {
   colour = rgbToHex(seedR, seedG, seedB);
   return colour;
 }
+
+// GENERAL COLOUR OPERATIONS BELOW THIS LINE
 
 /**
 * function to turn rgb values into hexadecimal
@@ -238,12 +302,19 @@ function decreaseSaturationHEX(hex, fraction) {
   debugString = 'decreaseSaturationHEX';
   return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
 }
+
 /**
 * @param {string} hex1
 * @param {string} hex2
 * @param {int} prop - the proportion of hex1 to hex2 (0 to 1);
 */
 function mixTwoColours(hex1, hex2, prop) {
+  if (typeof hex1 !== 'string' || !hex1.startsWith('#')) {
+    console.warn('mixTwoColours was passed a non hex value: ' + hex1);
+  }
+  if (typeof hex2 !== 'string' || !hex2.startsWith('#')) {
+    console.warn('mixTwoColours was passed a non hex value: ' + hex2);
+  }
   if (prop > 1) {
     prop = 1;
   } else if (prop < 0) {
@@ -268,6 +339,15 @@ function mixTwoColours(hex1, hex2, prop) {
 * @param {string} hex3
 */
 function mixThreeColours(hex1, hex2, hex3) {
+  if (typeof hex1 !== 'string' ||!hex1.startsWith('#')) {
+    console.warn('mixThreeColours was passed a non hex value: ' + hex1);
+  }
+  if (typeof hex2 !== 'string' ||!hex2.startsWith('#')) {
+    console.warn('mixThreeColours was passed a non hex value: ' + hex2);
+  }
+  if (typeof hex3 !== 'string' ||!hex3.startsWith('#')) {
+    console.warn('mixThreeColours was passed a non hex value: ' + hex3);
+  }
   ri = hexToRgb(hex1).r;
   gi = hexToRgb(hex1).g;
   bi = hexToRgb(hex1).b;
@@ -288,7 +368,7 @@ function mixThreeColours(hex1, hex2, hex3) {
 function getBrightness(color) {
   // Convert hex color to RGB and calculate brightness
   let r, g, b;
-  
+
   if (color.startsWith('#')) {
     // Handle hex colors
     const hex = color.slice(1);
@@ -308,7 +388,7 @@ function getBrightness(color) {
     // Default to medium brightness for unknown colors
     return 128;
   }
-  
+
   // Calculate perceived brightness using luminance formula
   return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
 }

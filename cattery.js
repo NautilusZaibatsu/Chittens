@@ -1,5 +1,7 @@
 // init
+// catboxes
 thisCatBox = 0;
+boxSize = 170 * proportion;
 
 // chitten params
 const maturesAt = 2; // age the chittens turn into adults at
@@ -7,11 +9,11 @@ const elasticity = 0.5; // bounciness of chittens
 const chittenMaxSize = 15;
 const chittenBaseSize = 9;
 const chittenSizeVariation = chittenMaxSize - chittenBaseSize;
-const chittenJumpCooldown = 60; // frames
-const youngChittenJumpCooldown = 15;
-const chittenSittingCooldown = 60; // frames - how long chittens must sit before standing up. This counts down
-const chittenSittingSpeed = 15; // frames
-const chittenStandingUpSpeed = 5; // frames
+const chittenJumpCooldown = 60; // UPS (game logic updates at 50 UPS)
+const youngChittenJumpCooldown = 15; // UPS
+const chittenSittingCooldown = 60; // UPS - how long chittens must sit before standing up. This counts down
+const chittenSittingSpeed = 15; // UPS 
+const chittenStandingUpSpeed = 5; // UPS
 const chittenMaxSeekFireflyDistance = maxDistance / 2; // maximum distance a chitten will actively seek out a firefly
 const chittenNormalJumpDistance = 100; // the distance a chitten normally jumps
 const chittenJumpMod = 1.5; // the multiple of the normal jumping distance a chitten can reach
@@ -31,10 +33,11 @@ const breedingEnergyReq = 50;
 const breedingHealthReq = 50;
 
 // skin colours
-nosePink = '#dfb2bc';
-noseBlack = '#111111';
-skinPink = '#e9bbc5ff';
-skinGrey = '#91868e';
+const nosePink = '#dfb2bc';
+const noseBlack = '#111111';
+const skinPink = '#e9bbc5ff';
+const skinGrey = '#91868e';
+const skinColourBrightnessthreshold = 175;
 
 // gene editing
 geneEditing = false;
@@ -48,15 +51,10 @@ let availableMates = [];
 let matesCacheFrame = 0;
 const MATES_CACHE_REFRESH_RATE = 30; // Refresh every 30 frames
 
-// catboxes
-const timeToMakeChoice = 5000;
-// if it is in landscape
-if (canvasWidth > canvasHeight || canvasWidth == canvasHeight) {
-  boxSize = 200 * proportion;
-} else {
-  // if it is in portrait (like a phone)
-  boxSize = canvasWidth / 5;
-}
+// choosing from litter choice timer
+const standardModeChoiceTimer = 5000; // 100 seconds - appears as 99
+const endlessModeChoiceTimer = 300; // 6 seconds - appears as 5
+
 
 function updateMatesCache() {
   availableMates = [];
@@ -77,11 +75,27 @@ function initChoiceBoxes() {
   buttons[1].visible = true;
   currentChittens = chittens.length;
   boxes = [];
+  // drop any held chittens when we init the boxes
   if (selection !== null && selection.dragging) {
     selection.dragging = false;
     selection.focus = selection.findClosestFireFly();
   }
   selection = null;
+}
+
+// function to adopt a specified chitten
+function adoptChitten(who) {
+  who.hitBottom = false;
+  who.love = 100;
+  speech.push(new Speak(who, neutralWord()));
+  who.sitting = false;
+  createGlyphs(who.x, who.y, unicodeHeart);
+  seeds.push(new Seed(randomColourFruity(), who));
+  seeds[seeds.length - 1].timer = 750;
+  who.focus = fireflies[who.findClosestFireFly()];
+  who.inCatBox = null;
+  // Update mates cache so new chittens can find partners immediately
+  updateMatesCache();
 }
 
 function initLitter(mParent, fParent) {
@@ -122,7 +136,11 @@ function initLitter(mParent, fParent) {
   buttons[12].available = false;
   buttons[6].available = false;
   initChoiceBoxes();
-  choiceTimer = timeToMakeChoice;
+  if (endlessMode) {
+    choiceTimer = endlessModeChoiceTimer;
+  } else {
+    choiceTimer = standardModeChoiceTimer;
+  }
   labels[2].visible = true;
   sendMessage(unicodeHeart + ' ' + fParent.name + ' gave birth to ' + mParent.name + '\'s chittens');
   labels[0] = new Button(canvasWidth / 2, (trueBottom / 2) - ((3 * (boxSize + boxPadding)) / 2) - 120, 'Choose one of ' + fParent.name + ' and ' + mParent.name + '\'s litter to keep', '');
@@ -277,19 +295,19 @@ function generateCrossbreed(who) {
   // Create temporary parent cats
   const tempParent1 = new Chitten(0, 0, 6, 10, 'Male');
   const tempParent2 = new Chitten(0, 0, 6, 10, 'Female');
-  
+
   // Apply breeds to temp parents
   applyBreed(tempParent1, breed1);
   applyBreed(tempParent2, breed2);
-  
+
   // Generate baby using the existing breeding system
   const crossbreedName = generateChildBreedText(tempParent1, tempParent2);
   generateBaby(tempParent1, tempParent2, crossbreedName);
-  
+
   // Replace who entirely with the baby
   const baby = chittens[chittens.length - 1];
   Object.assign(who, baby);
-  
+
   // Restore only the adoption-specific properties from original
   who.inCatBox = originalWho.inCatBox;
   who.x = originalWho.x;
@@ -299,11 +317,11 @@ function generateCrossbreed(who) {
   who.speedX = originalWho.speedX;
   who.speedY = originalWho.speedY;
   who.hitBottom = originalWho.hitBottom;
-  
+
   // Make this an adult cat, not a baby
   who.age = Math.round(Math.random() * 5) + maturesAt;
   who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize) * (who.gender === 'Female' ? 1 / 1.1 : 1.1);
-  
+
   // Remove the temporary baby from the chittens array
   chittens.splice(chittens.length - 1, 1);
 }
@@ -341,7 +359,6 @@ function randomiseGenetics(who) {
 function initCattery(gender) {
   initChoiceBoxes();
   buttons[13].visible = true;
-
   if (gender === 'Female') {
     chosenChittenF = false;
   } else {
@@ -351,7 +368,7 @@ function initCattery(gender) {
   labels[0] = new Button(
     canvasWidth / 2,
     (trueBottom / 2) - ((3 * (boxSize + boxPadding)) / 2) - 85,
-    'Welcome to the Chittery',
+    'Adoption Centre',
     ''
   );
 
@@ -1113,6 +1130,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.kill = function () {
     removeFocusFrom(this);
     chittens.splice(chittens.indexOf(this, chittens), 1);
+    recalculateChittenNumbers();
   };
   // function to reinitialisae sizes (for growth)
   this.reinitSizeAndColour = function () {
@@ -1313,13 +1331,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           this.focus = target;
         }
 
-        // // debug - draw focus
-        // ctx.beginPath();
-        // ctx.moveTo(this.x, this.y);
-        // ctx.restore();
-        // ctx.lineTo(this.focus.x, this.focus.y);
-        // ctx.stroke();
-
         // kittens sitting down near their mothers - only when very close
         if (this.age < maturesAt && this.mother !== null && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size) * 1.5) && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size) * 1.5)) {
           if (this.mother.awake) {
@@ -1469,7 +1480,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // check if mate hit a Tree
     let hitTree = false;
     for (let i = 0; i < trees.length && !hitTree; i++) {
-      if (this.x >= trees[i].x + (this.size / 2) - (trees[i].width / 2) && this.x <= trees[i].x - (this.size / 2) + (trees[i].width / 2) && this.y >= trees[i].y - (this.size) - (this.limbLength / 2.5) - (this.size / 2) && this.y <= trees[i].y + trees[i].height && this.speedY >= 0) {
+      if (!this.inCatBox && this.x >= trees[i].x + (this.size / 2) - (trees[i].width / 2) && this.x <= trees[i].x - (this.size / 2) + (trees[i].width / 2) && this.y >= trees[i].y - (this.size) - (this.limbLength / 2.5) - (this.size / 2) && this.y <= trees[i].y + trees[i].height && this.speedY >= 0) {
         this.y = trees[i].y - (this.size) - (this.limbLength / 2.5);
         trees[i].loadthisframe += this.size;
         hitTree = true;
@@ -3014,6 +3025,21 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
   this.update = function () {
+    // Game logic for chitten AI and behavior
+    // Physics are handled in window.js main game loop
+  };
+  this.render = function () {
+
+    /* focus lines for debug*/
+    // if (this.focus !== null) {
+    //   ctx.strokeStyle = trueWhite;
+    //   ctx.lineWidth = 1;
+    //   ctx.beginPath();
+    //   ctx.moveTo(this.x, this.y);
+    //   ctx.lineTo(this.focus.x, this.focus.y);
+    //   ctx.stroke();
+    // }
+
     ctx.save();
     let pat = pat0;
     if (this.pattern == 1) {
@@ -3070,16 +3096,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
     ctx.restore();
 
-
-    /* focus lines */
-    // if (this.focus !== null) {
-    // ctx.strokeStyle = trueWhite;
-    // ctx.lineWidth = 1;
-    // ctx.beginPath();
-    // ctx.moveTo(this.x, this.y);
-    // ctx.lineTo(this.focus.x, this.focus.y);
-    // ctx.stroke();
-    // }
     this.hitFocus = this.focus ? detectCollision(this, this.focus) : false;
     let backendShiftX = this.size * this.speedX / 30;
     let backendShiftY = this.size * this.speedY / 30;
@@ -3416,65 +3432,72 @@ function determineTraitExpression(who, bredInGame, parent1, parent2) {
   }
 }
 
-
-skinColourCheck = function (theColour) {
-  let rgb = hexToRgb(theColour);
-  let r = rgb.r;
-  let g = rgb.g;
-  let b = rgb.b;
-
-  // Check for white cats (high brightness across all channels)
-  if (r > 200 && g > 200 && b > 200) {
-    return skinPink;
+// Function to count how many chittens exist and if in endless mode keep males and females around
+function recalculateChittenNumbers() {
+  // count up sexes
+  femaleCount = 0;
+  maleCount = 0;
+  nonbinaryCount = 0;
+  for (let i = 0; i < chittens.length; i++) {
+    if (chittens[i].inCatBox == null) {
+      if (chittens[i].gender == 'Female') {
+        femaleCount++;
+      } else if (chittens[i].gender == 'Male') {
+        maleCount++;
+      } else {
+        nonbinaryCount++;
+      }
+    }
   }
 
-  // Check for ginger/orange cats (red dominance)
-  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
-    return skinPink;
+  if (parentBoxes.length == 2) {
+    maleCount++;
+    femaleCount++;
   }
 
-  // Check for brown cats (balanced warm tones)
-  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
-    return skinPink;
+  if (endlessMode) {
+
+    // Check if there are any fertile females (not elder, age >= maturesAt)
+    let fertileFemales = 0;
+    for (let i = 0; i < chittens.length; i++) {
+      if (chittens[i].gender == 'Female' && !chittens[i].elder && chittens[i].age >= maturesAt) {
+        fertileFemales++;
+      }
+    }
+
+    // Check if there are any fertile males (not elder, age >= maturesAt)
+    let fertileMales = 0;
+    for (let i = 0; i < chittens.length; i++) {
+      if (chittens[i].gender == 'Male' && !chittens[i].elder && chittens[i].age >= maturesAt) {
+        fertileMales++;
+      }
+    }
+    // include any parents in catboxes due to having a litter
+    if (parentBoxes.length == 2) {
+      fertileMales++;
+      fertileFemales++;
+    }
+
+    if (fertileFemales == 0) {
+      // Spawn a random female at the left side of screen at bottom
+      const newFemale = new Chitten(20, trueBottom - 20, 6, 10, 'Female');
+      generateAdoptionCat(newFemale, 'All');
+      chittens.push(newFemale);
+      generateBreedAppropiateName(chittens[chittens.length - 1]);
+      // Adoption handling
+      sendMessage(chittens[chittens.length - 1].name + ' wandered in');
+      adoptChitten(chittens[chittens.length - 1]);
+    }
+
+    if (fertileMales == 0) {
+      // Spawn a random male at the right side of screen at bottom
+      const newMale = new Chitten(canvasWidth - 20, trueBottom - 20, 6, 10, 'Male');
+      generateAdoptionCat(newMale, 'All');
+      chittens.push(newMale);
+      generateBreedAppropiateName(chittens[chittens.length - 1]);
+      // Adoption handling
+      sendMessage(chittens[chittens.length - 1].name + ' wandered in');
+      adoptChitten(chittens[chittens.length - 1]);
+    }
   }
-
-  // All other colors (grey, black, etc.) get grey skin
-  return skinGrey;
-};
-
-noseColourCheck = function (theColour) {
-  let rgb = hexToRgb(theColour);
-  let r = rgb.r;
-  let g = rgb.g;
-  let b = rgb.b;
-
-  // Check for white cats (high brightness across all channels)
-  if (r > 200 && g > 200 && b > 200) {
-    return nosePink;
-  }
-
-  // Check for ginger/orange cats (red dominance)
-  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
-    return nosePink;
-  }
-
-  // Check for brown cats (balanced warm tones)
-  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
-    return nosePink;
-  }
-
-  // All other colors (grey, black, etc.) get black nose
-  return noseBlack;
-};
-
-/** function to create a random bodypartCode
-* this code is used to denote the zones of colour on a Chitten
-* @return {array} - the bodypart code
-*/
-randomBodyPartCode = function () {
-  let tmpArray = [];
-  for (let i = 0; i < 13; i++) {
-    tmpArray.push(Math.round(Math.random() * 2));
-  }
-  return tmpArray;
-};
+}

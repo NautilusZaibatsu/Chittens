@@ -9,7 +9,7 @@ const BREED_DATA = {
     patternAlpha: [0.5, 1.0],
     colors: {
       first: ['#660c00', '#171523'],
-      second: trueBlack,
+      second: '#27190f',
       third: ['#ffd699', '#b4d4d8'],
       eye: ['#cbe06b', '#627374']
     },
@@ -209,7 +209,7 @@ const BREED_DATA = {
         { first: '#ad9e97', second: '#ad9e97', third: '#ad9e97' }, // lilac
         { first: '#765745', second: '#765745', third: '#765745' } // chocolate
       ],
-      eye: ['#c5e93d', '#e08700']
+      eye: ['#c5e93d', '#583d14']
     },
     traits: {
       thickness: 1,
@@ -257,14 +257,14 @@ const BREED_DATA = {
     colors: {
       variants: [
         { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3 }, // Brown tabby - gets tabby pattern
-        { first: '#C0C0C0', second: trueBlack, third: trueWhite, pattern: 3 }, // Silver tabby - gets tabby pattern
+        { first: '#C0C0C0', second: '#333339', third: trueWhite, pattern: 3 }, // Silver tabby - gets tabby pattern
         { first: '#D2B48C', second: '#FFA500', third: trueWhite, pattern: 3 }, // Orange tabby - gets tabby pattern
         { first: '#696969', second: '#C0C0C0', third: trueWhite }, // Blue - solid
-        { first: trueWhite, second: trueBlack, third: trueWhite }, // Black and white - solid 
-        { first: trueBlack, second: trueBlack, third: trueBlack }, // Solid black
+        { first: '#16100c', second: '#16100c', third: trueWhite }, // Black and white - solid 
+        { first: '#16100c', second: '#16100c', third: '#16100c' }, // Solid black
         { first: trueWhite, second: trueWhite, third: trueWhite }  // Solid white
       ],
-      eye: ['#FFD700', '#32CD32', '#4169E1'] // Gold, green, blue eyes
+      eye: ['#c4e256', '#549e54', '#4169E1'] // Gold, green, blue
     },
     traits: {
       earHeight: 0, // Folded ears - key breed trait
@@ -292,13 +292,13 @@ const BREED_DATA = {
     colors: {
       variants: [
         { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3 }, // Brown tabby
-        { first: '#C0C0C0', second: trueBlack, third: trueWhite, pattern: 3 }, // Silver tabby
+        { first: '#C0C0C0', second: '#16100c', third: trueWhite, pattern: 3 }, // Silver tabby
         { first: trueWhite, second: '#FFA500', third: '#FFE4B5', pattern: 3 }, // Orange tabby
-        { first: trueBlack, second: trueWhite, third: trueWhite }, // Black and white
+        { first: '#16100c', second: trueWhite, third: trueWhite }, // Black and white
         { first: '#696969', second: '#C0C0C0', third: trueWhite }, // Blue/gray
-        { first: trueBlack, second: trueBlack, third: trueBlack } // Solid black
+        { first: '#16100c', second: '#16100c', third: '#16100c' } // Solid black
       ],
-      eye: ['#FFD700', '#32CD32', '#4169E1'] // Gold, green, blue
+      eye: ['#c4e256', '#549e54', '#4169E1'] // Gold, green, blue
     },
     traits: {
       headWidth: [0.7, 1.0], // Round, full head
@@ -319,8 +319,8 @@ const BREED_DATA = {
     size: [7, 11], // Medium-sized, elegant breed
     colors: {
       variants: [
-        { first: '#9a9aa3', second: '#9a9aa3', third: '#9a9aa3' }, // classic
-        { first: '#c6c4c5', second: '#c6c4c5', third: '#c6c4c5' }, // lighter
+        { first: '#9a9aa3', second: '#9a9aa3', third: '#9a9aa3' }, // lighter
+        { first: '#747491', second: '#747491', third: '#747491' }, // classic
         { first: '#708090', second: '#708090', third: '#708090' } // darker
       ],
       eye: '#b8d297', // Vivid green eyes (breed standard)
@@ -400,10 +400,10 @@ const BREED_DATA = {
     maxSize: 14,
     size: [8, 14], // Medium sized breed
     colors: {
-      first: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#FF8C00', '#654321', '#2F2F2F', trueBlack],
-      second: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#FF8C00', '#654321', '#2F2F2F', trueBlack],
-      third: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#FF8C00', '#654321', '#2F2F2F', trueBlack],
-      eye: ['#1E90FF', '#32CD32', '#FFD700'] // Vivid eyes common in Sphynx
+      first: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#2F2F2F'],
+      second: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#2F2F2F'],
+      third: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#2F2F2F'],
+      eye: ['#1E90FF', '#60b64f', '#e7d156'] // Vivid eyes common in Sphynx
     },
     traits: {
       thickness: 0.5,
@@ -431,7 +431,7 @@ const BREED_DATA = {
         { first: '#9b9380', second: '#9b9380', third: trueWhite }, // Blue
         { first: '#bda57f', second: '#bda57f', third: trueWhite }  // Fawn
       ],
-      eye: ['#ffd700', '#daa520', '#32cd32'] // Gold to green eyes
+      eye: ['#ffd700', '#daa520', '#45cf45'] // Gold to green eyes
     },
     traits: {
       thickness: [0.4, 0.6], // Lean, athletic build
@@ -533,14 +533,14 @@ const BREED_DATA = {
     colors: {
       variants: [
         { first: '#708090', second: '#708090', third: '#708090' }, // British Blue (classic)
-        { first: trueBlack, second: trueBlack, third: trueBlack }, // Black
+        { first: '#16100c', second: '#16100c', third: '#16100c' }, // Black
         { first: trueWhite, second: trueWhite, third: trueWhite }, // White
         { first: '#deb887', second: '#deb887', third: '#deb887' }, // Cream
         { first: '#d2691e', second: '#d2691e', third: '#d2691e' }, // Red
-        { first: '#c0c0c0', second: trueBlack, third: trueWhite, pattern: 3 }, // Silver tabby
+        { first: '#c0c0c0', second: '#333333', third: trueWhite, pattern: 3 }, // Silver tabby
         { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3 } // Brown tabby
       ],
-      eye: ['#ffd700', '#ff8c00', '#32cd32'] // Gold to green eyes  
+      eye: ['#ffd700', '#ff8c00', '#4fc44f'] // Gold to green eyes  
     },
     traits: {
       thickness: [0.8, 1.0], // Very stocky, cobby build
@@ -609,7 +609,10 @@ function mixRandomEyeColor(colorArray) {
 // Main breed application function
 function applyBreed(who, breedName) {
   const breed = BREED_DATA[breedName];
-  if (!breed) return;
+  if (!breed) {
+    console.warn('Error reading breed: ' + breedName);
+    return;
+  }
 
   // Apply pattern
   if (breed.pattern !== undefined) who.pattern = breed.pattern;
@@ -641,15 +644,43 @@ function applyBreed(who, breedName) {
       who.firstColour = mixRandomCoatColor(variant.first);
       who.secondColour = mixRandomCoatColor(variant.second);
       who.thirdColour = mixRandomCoatColor(variant.third);
+      // Handle eye colors for variants - check variant first, then breed, then fallback
+      if (variant.eye) {
+        who.eyeColour = mixRandomEyeColor(variant.eye);
+      } else if (breed.colors.eye) {
+        who.eyeColour = mixRandomEyeColor(breed.colors.eye);
+      } else {
+        who.eyeColour = getRandomEyeColour();
+      }
+      who.eyeColour2 = who.eyeColour;
       // If this variant specifies its own pattern, override the breed default
       if (variant.pattern !== undefined) {
         who.pattern = variant.pattern;
       }
     } else {
-      if (breed.colors.first) who.firstColour = mixRandomCoatColor(breed.colors.first);
-      if (breed.colors.second) who.secondColour = mixRandomCoatColor(breed.colors.second);
-      if (breed.colors.third) who.thirdColour = mixRandomCoatColor(breed.colors.third);
-      if (breed.colors.eye) who.eyeColour = mixRandomEyeColor(breed.colors.eye);
+      // assigning the colours, with fallbacks
+      if (breed.colors.first) {
+        who.firstColour = mixRandomCoatColor(breed.colors.first);
+      } else {
+        who.firstColour = randomColourRealistic();
+      }
+      if (breed.colors.second) {
+        who.secondColour = mixRandomCoatColor(breed.colors.second);
+      } else {
+        who.secondColour = randomColourRealistic();
+      }
+      if (breed.colors.third) {
+        who.thirdColour = mixRandomCoatColor(breed.colors.third);
+      } else {
+        who.thirdColour = randomColourRealistic();
+      }
+      if (breed.colors.eye) {
+        who.eyeColour = mixRandomEyeColor(breed.colors.eye);
+      } else {
+        // Fallback: if breed has no eye color definition, use random eye color
+        who.eyeColour = getRandomEyeColour();
+      }
+      who.eyeColour2 = who.eyeColour;
     }
   }
 

@@ -2,6 +2,13 @@
 
 changelog
 
+= 0.070
+~ Game performance is no longer framerate dependent, UPS is now 50 and FPS is unlimited
+~ Implemented endless mode - sit back and relax and let the game play itself
+~ Hid devmode from the user for now, we might bring it back via cheats
+~ Basic support for window resizing
+~ Trees and seeds rework, trees should no longer die out
+
 24/08/205 = 0.069
 ~ Allowed filtering by breed in the adoption centre
 ~ Crossbreeds can now appear in the adoption centre

@@ -44,9 +44,9 @@ function Message(text, timeStamp) {
      this.x = this.who.x - (fontWidth * this.mew.length/2/1.5);
      this.y = this.who.y - (this.who.size*3);
      ctx.font = fontSize/1.5+'px' + ' ' + globalFont;
-     ctx.fillStyle = outputArray[2];
+     ctx.fillStyle = uiColourArray[2];
      ctx.fillRect(this.x - 5, this.y - 10, (fontWidth * this.mew.length/1.5) + 10, 13);
-     ctx.fillStyle = mixTwoColours(trueWhite, outputArray[2], 0.5);
+     ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
      ctx.fillText(this.mew, this.x, this.y);
      if (daytimeCounter > this.timeStamp + 20 || daytimeCounter + 20 < this.timeStamp) {
        this.flagged = true;
