@@ -13,6 +13,7 @@ function copyChitten(chitten) {
   chitten.earWidth+'*'+
   chitten.thickness+'*'+
   chitten.legginess+'*'+
+  chitten.coordination+'*'+
   chitten.size+'*'+
   chitten.limbLength+'*'+
   chitten.maxSize+'*'+
@@ -51,13 +52,19 @@ function copyChitten(chitten) {
   chitten.lykoiGene+'*'+
   chitten.lykoi+'*'+
   chitten.heterochromicGene+'*'+
+  chitten.colourpointGene+'*'+
+  chitten.colourpointExpressed+'*'+
+  chitten.colourpointMap[0]+'*'+
+  chitten.colourpointMap[1]+'*'+
+  chitten.colourpointMap[2]+'*'+
+  chitten.colourpointMap[3]+'*'+
   chitten.patternAlpha+'*'+
   chitten.pattern+'*'+
   chitten.eyeColour2+'*'+
   chitten.earHeight+'*'+
   chitten.breed+'*'+
-  chitten.bodypartCode[12];
-;
+  chitten.bodypartCode[12]+'*'+
+  chitten.mawSize;
   // console.log(outputbuffer);
   return outputbuffer;
 }
@@ -75,39 +82,48 @@ function cloneChitten(outputbuffer, who) {
   who.coatMod[1] = parseFloat(attributeArray[4]);
   who.thickness = parseFloat(attributeArray[6]);
   who.legginess = parseFloat(attributeArray[7]);
-  who.limbLength = parseFloat(attributeArray[9]);
-  who.birthday = parseFloat(attributeArray[11]);
-  who.name = attributeArray[13];
+  who.coordination = parseFloat(attributeArray[8]);
+  who.limbLength = parseFloat(attributeArray[10]);
+  who.birthday = parseFloat(attributeArray[12]);
+  who.name = attributeArray[14];
   who.love = 100;
-  who.tailLength = parseFloat(attributeArray[16]);
-  who.albino = (attributeArray[17] == 'true');
-  who.albinoGene = (attributeArray[18] == 'true');
+  who.tailLength = parseFloat(attributeArray[17]);
+  who.albino = (attributeArray[18] == 'true');
+  who.albinoGene = (attributeArray[19] == 'true');
   who.skinColour = skinColourCheck(who.firstColour);
   for (let i = 0; i < 12; i ++) {
-    who.bodypartCode[i] = parseInt(attributeArray[i+19]);
+    who.bodypartCode[i] = parseInt(attributeArray[i+20]);
   }
-  who.bodypartCode[12] = parseInt(attributeArray[50]);
-  who.thirdColour = attributeArray[31];
-  who.nosePos = parseFloat(attributeArray[32]);
-  who.eyePosX = parseFloat(attributeArray[33]);
-  who.eyePosY = parseFloat(attributeArray[34]);
-  who.headWidth = parseFloat(attributeArray[35]);
-  who.headHeight = parseFloat(attributeArray[36]);
-  who.eyeColour = attributeArray[37];
-  who.eyeSize = parseFloat(attributeArray[38]);
-  who.maxAge = parseFloat(attributeArray[39]);
-  who.fangs = parseFloat(attributeArray[40]);
-  who.hairlessGene = (attributeArray[41] == 'true');
-  who.hairless = (attributeArray[42] == 'true');
-  who.lykoiGene = (attributeArray[43] == 'true');
-  who.lykoi = (attributeArray[44] == 'true');
-  who.heterochromicGene = (attributeArray[45] == 'true');
-  who.patternAlpha = parseFloat(attributeArray[46]);
-  who.pattern = parseFloat(attributeArray[47]);
-  who.eyeColour2 = attributeArray[48];
+  who.bodypartCode[12] = parseInt(attributeArray[52]);
+  who.thirdColour = attributeArray[32];
+  who.nosePos = parseFloat(attributeArray[33]);
+  who.eyePosX = parseFloat(attributeArray[34]);
+  who.eyePosY = parseFloat(attributeArray[35]);
+  who.headWidth = parseFloat(attributeArray[36]);
+  who.headHeight = parseFloat(attributeArray[37]);
+  who.eyeColour = attributeArray[38];
+  who.eyeSize = parseFloat(attributeArray[39]);
+  who.maxAge = parseFloat(attributeArray[40]);
+  who.fangs = parseFloat(attributeArray[41]);
+  who.hairlessGene = (attributeArray[42] == 'true');
+  who.hairless = (attributeArray[43] == 'true');
+  who.lykoiGene = (attributeArray[44] == 'true');
+  who.lykoi = (attributeArray[45] == 'true');
+  who.heterochromicGene = (attributeArray[46] == 'true');
+  who.colourpointGene = (attributeArray[47] == 'true');
+  who.colourpointExpressed = (attributeArray[48] == 'true');
+  who.colourpointMap[0] = (attributeArray[49] == 'true'); // chin
+  who.colourpointMap[1] = (attributeArray[50] == 'true'); // ears
+  who.colourpointMap[2] = (attributeArray[51] == 'true'); // feet
+  who.colourpointMap[3] = (attributeArray[52] == 'true'); // tail
+  who.patternAlpha = parseFloat(attributeArray[53]);
+  who.pattern = parseFloat(attributeArray[54]);
+  who.eyeColour2 = attributeArray[55];
   who.earWidth = parseFloat(attributeArray[5]);
-  who.earHeight = parseFloat(attributeArray[49]);
-  who.breed = attributeArray[50];
+  who.earHeight = parseFloat(attributeArray[56]);
+  who.breed = attributeArray[57];
+  who.bodypartCode[12] = attributeArray[58];
+  who.mawSize = attributeArray[59];
   who.reinitSizeAndColour();
 }
 
@@ -117,15 +133,15 @@ function cloneChitten(outputbuffer, who) {
 */
 function pasteChitten(outputbuffer) {
   let attributeArray = outputbuffer.split('*');
-  if (attributeArray.length !== 49) {
+  if (attributeArray.length !== 60) {
     alert('Old filetype detected');
   } else {
     // push a new chitten
-    chittens.push(new Chitten(canvasWidth*Math.random(), parseInt(attributeArray[8]) /* ypos */, parseInt(attributeArray[8]), parseFloat(attributeArray[10]), attributeArray[0]));
+    chittens.push(new Chitten(canvasWidth*Math.random(), parseInt(attributeArray[9]) /* ypos */, parseInt(attributeArray[9]), parseFloat(attributeArray[11]), attributeArray[0]));
     // overwrite it
     cloneChitten(outputbuffer, chittens[chittens.length-1]);
     seeds.push(new Seed(randomColourFruity(), chittens[chittens.length-1]));
-    speech.push(new Speak(chittens[chittens.length-1], neutralWord()));
+    addSpeech(chittens[chittens.length-1], neutralWord());
     sendMessage(chittens[chittens.length-1].name + ' arrived');
     selection = null;
   }
@@ -152,25 +168,6 @@ function saveToFile() {
       elem.click();
       document.body.removeChild(elem);
     }
-  }
-}
-
-// OLD METHOD - NOT CALLED
-/**
-* function to upload a creature file from a local device
-* @param {event} evt - the click event
-*/
-function uploadChitten() {
-  let f = evt.target.files[0];
-  if (f) {
-    let r = new FileReader();
-    r.onload = function(e) {
-      let contents = e.target.result;
-      loadFromFile(contents);
-    };
-    r.readAsText(f);
-  } else {
-    alert('Failed to load file');
   }
 }
 

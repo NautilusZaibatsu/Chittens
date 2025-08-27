@@ -48,7 +48,7 @@ function Message(text, timeStamp) {
      ctx.fillRect(this.x - 5, this.y - 10, (fontWidth * this.mew.length/1.5) + 10, 13);
      ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
      ctx.fillText(this.mew, this.x, this.y);
-     if (daytimeCounter > this.timeStamp + 20 || daytimeCounter + 20 < this.timeStamp) {
+     if (daytimeCounter > this.timeStamp + speechDuration || daytimeCounter + speechDuration < this.timeStamp) {
        this.flagged = true;
      }
      ctx.font = fontSize+'px' + ' ' + globalFont;
@@ -67,6 +67,6 @@ function happyWord() {
   return happyWords[Math.round(Math.random()*(happyWords.length-1))];
 }
 
- const neutralWords = ['mew', 'meow', 'brrrup'];
+ const neutralWords = ['mew', 'meow', 'brrrup', 'miau', 'nyan'];
  const angryWords = ['grrr', 'brrrbl', 'rawr'];
  const happyWords = ['prrr', 'mraow', 'owo'];

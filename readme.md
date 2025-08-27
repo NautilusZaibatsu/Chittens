@@ -2,54 +2,75 @@
 
 changelog
 
-= 0.070
-~ Game performance is no longer framerate dependent, UPS is now 50 and FPS is unlimited
-~ Implemented endless mode - sit back and relax and let the game play itself
-~ Hid devmode from the user for now, we might bring it back via cheats
-~ Basic support for window resizing
-~ Trees and seeds rework, trees should no longer die out
+26/08/2025 = 0.071
+~ Complete rework of the jumping system:
+-- Chittens will now calculate their jumps, and use multijump strategies.
+-- Chittens will try to use trees to get near things they want to reach.
+~ Chitten mouths now open and close to speak and eat, the amount they can open their mouths is determined genetically.
+~ Chittens now have a coordination trait, defining how clumsy they are. This is determined genetically too.
+~ Colourpoint is now a gene expression not a coat pattern
+~ Chitten's coat colours now fade more smoothly across their bodies
+~ Flora updates:
+-- Chittens can now eat fruits from the tree they are sitting in.
+-- Chittens in trees now exert less force on them, causing them to drop a lot less.
+-- Trees will now not spawn too close to the edge of the game area, which was preventing chittens from reaching some fruits.
+-- Fireflies can now accidentally knock fruit out of trees (and so can chittens!).
+~ Tweaked some firefly logic.
+~ Better handling of speed physics.
+~ Hover indicator to help selecting chittens.
 
-24/08/205 = 0.069
-~ Allowed filtering by breed in the adoption centre
-~ Crossbreeds can now appear in the adoption centre
-~ Reworked the gene inheritance and expression systems
+~ Bug fixes:
+-- Fixed several bugs related to the new endless mode.
+-- Fixed a bug that prevented loading chittens from file.
+
+24/08/2025 = 0.070
+~ Game performance is no longer framerate dependent, UPS is now 50 and FPS is unlimited.
+~ Implemented endless mode - sit back and relax and let the game play itself.
+~ Hid devmode from the user for now, we might bring it back via cheats.
+~ Basic support for window resizing.
+~ Trees and seeds rework, trees should no longer die out.
+
+24/08/2025 = 0.069
+~ Allowed filtering by breed in the adoption centre.
+~ Crossbreeds can now appear in the adoption centre.
+~ Reworked the gene inheritance and expression systems.
 
 23/08/2025 = 0.068
 ~ Added the Lykoi gene, it is now completely separate from the hairless gene. Both genes interact realistically.
-~ Sphynxes now come in pink, grey or a mix of both
-~ Albinos can now inherit fur patterns, but never express them
-~ Added gene expression to chitten tooltip
-~ A chitten's tooltip appears when it is being held
-~ Reworked the way breeding behaviour to make males initiate it
-~ Changed eye colour defaults to be more realistic
-~ Chittens can now jump down from trees for food and mating
-~ Removed Bobtail - it isn't a breed
-~ Added Abyssinian, Ragdoll, Angora and British Shorthair breeds
-~ Added Ethiopian, Turkish and British names
-~ Every breed has had their appearances tweaked
-~ Improved the physics of chitten air collisions
-~ Reworked firefly behaviour to make it more interesting
+~ Sphynxes now come in pink, grey or a mix of both.
+~ Albinos can now inherit fur patterns, but never express them.
+~ Added gene expression to chitten tooltip.
+~ A chitten's tooltip appears when it is being held.
+~ Reworked the way breeding behaviour to make males initiate it.
+~ Changed eye colour defaults to be more realistic.
+~ Chittens can now jump down from trees for food and mating.
+~ Removed Bobtail - it isn't a breed.
+~ Added Abyssinian, Ragdoll, Angora and British Shorthair breeds.
+~ Added Ethiopian, Turkish and British names.
+~ Every breed has had their appearances tweaked.
+~ Improved the physics of chitten air collisions.
+~ Reworked firefly behaviour to make it more interesting.
 
 22/08/2025 = 0.067
-~ Massive performance improvements
-~ Jumping and air movement now scale with genetics: 
+~ Massive performance improvements.
+~ Jumping and air movement now scale with genetics:
 -- Longer legs boost jump power.
 -- Body size affects air resistance. 
 -- Youngsters are less coordinated. 
 -- Fatter chittens jump less often.
-~ Chittens now smoothly sit and stand up. Fatter chittens sit down faster and stand up slower than thin ones
-~ Collision logic fixes
-~ Fixed cattery selection hover issue
-~ Crossbreeds are now available for adoption
-~ Redesigned name generation to use breed presets instead of parent names
-~ Restructured the breeds system to make it modular
-~ Updated all breeds and included colour variations within them
-~ Reworked albinism to be a true mutation, not a breed. Any breed can now spawn as an albino, not just mixed breeds
-~ Reworked both hairless genes and the Sphynx and Lykoi breeds so that they work more intuitively
-~ Reworked heterochromia genes/mutation to be more realistic
-~ Fixed an issue where attributes were getting mixed up on file save and load
-~ Newborns can no longer be too big for their mother to give birth to
-~ Resized butts to be smaller
+~ Chittens now smoothly sit and stand up. Fatter chittens sit down faster and stand up slower than thin ones.
+~ Collision logic fixes.
+~ Fixed cattery selection hover issue.
+~ Crossbreeds are now available for adoption.
+~ Redesigned name generation to use breed presets instead of parent names.
+~ Restructured the breeds system to make it modular.
+~ Updated all breeds and included colour variations within them.
+~ Reworked albinism to be a true mutation, not a breed. Any breed can now spawn as an albino, not just mixed breeds.
+~ Reworked both hairless genes and the Sphynx and Lykoi breeds so that they work more intuitively.
+~ Reworked heterochromia genes/mutation to be more realistic.
+~ Fixed an issue where attributes were getting mixed up on file save and load.
+~ Newborns can no longer be too big for their mother to give birth to.
+~ Resized butts to be smaller.
 
 11/12/2019 = 0.066
 ~ added a chest piece to the Chittens, so that coloured bellies are possible

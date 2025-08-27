@@ -189,9 +189,9 @@ function randomColourFruity() {
     seedB = Math.floor(Math.random() * 50) + 80;
   } else {
     // blue
-    seedB = Math.floor(Math.random() * 80) + 75;
-    seedR = Math.random() * seedB / 2;
-    seedG = Math.random() * seedB / 2;
+    seedB = Math.floor(Math.random() * 100) + 155;
+    seedR = Math.floor(Math.random() * 50) + 80;
+    seedG = Math.floor(Math.random() * 50) + 80;
   }
   colour = rgbToHex(seedR, seedG, seedB);
   return colour;
@@ -208,12 +208,10 @@ function randomColourFruity() {
 */
 function rgbToHex(r, g, b) {
   if (r > 255 || g > 255 || b > 255) {
-    console.log('error 1 ' + debugString);
-    console.log('rgb: ' + r + ' ' + g + ' ' + b);
+    console.warn('rgb: ' + r + ' ' + g + ' ' + b);
   }
   if (r < 0 || g < 0 || b < 0) {
-    console.log('error 2 ' + debugString);
-    console.log('rgb: ' + r + ' ' + g + ' ' + b);
+    console.warn('rgb: ' + r + ' ' + g + ' ' + b);
   }
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
@@ -291,7 +289,6 @@ function increaseSaturationHEX(hex) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
-  debugString = 'increaseSaturationHEX';
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
 
@@ -299,7 +296,6 @@ function decreaseSaturationHEX(hex, fraction) {
   let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
   let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1] / fraction, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
-  debugString = 'decreaseSaturationHEX';
   return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
 }
 
@@ -329,7 +325,6 @@ function mixTwoColours(hex1, hex2, prop) {
   combr = Math.round((ri * prop) + (rj * (1 - prop)));
   combg = Math.round((gi * prop) + (gj * (1 - prop)));
   combb = Math.round((bi * prop) + (bj * (1 - prop)));
-  debugString = 'mixTwoColours';
   return rgbToHex(combr, combg, combb);
 }
 
@@ -360,7 +355,6 @@ function mixThreeColours(hex1, hex2, hex3) {
   combr = Math.round((ri + rj + rk) / 3);
   combg = Math.round((gi + gj + gk) / 3);
   combb = Math.round((bi + bj + bk) / 3);
-  debugString = 'mixThreeColours';
   return rgbToHex(combr, combg, combb);
 }
 
@@ -388,7 +382,6 @@ function getBrightness(color) {
     // Default to medium brightness for unknown colors
     return 128;
   }
-
   // Calculate perceived brightness using luminance formula
   return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
 }
