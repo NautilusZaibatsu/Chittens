@@ -6,10 +6,12 @@ fruits = [];
 seeds = [];
 glyphs = [];
 
+let fruitSet = new Set(fruits);
+
 // tree parameters
-let minTrees = canvasWidth / 300;
-let maxTrees = canvasWidth / 80;
-let startingTrees = canvasWidth / 250;
+let minTrees;
+let maxTrees;
+let startingTrees;
 const treeGrowthRate = 1.5;
 const treeWitherRate = 1;
 const treeStrength = 40; // how strong a tree is, how much it resists being pushed down by chittens
@@ -74,7 +76,7 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
     };
     this.update = function () {
         // respawning fruit twice a day
-        if (this.birthday == daytimeCounter || Math.abs(this.birthday - daytimeCounter) == 500) {
+        if (this.birthday == daytimeCounter || Math.abs(this.birthday - daytimeCounter) == ticksPerDay/2) {
             this.spawnFruit();
         }
         // Update position and growth logic
@@ -129,15 +131,16 @@ function Fruit(colour, parent, treePos) {
     this.y = 0;
     this.eater = null;
     this.fumbled = false;
+    this.rotTimer = -1; // Timer for rotting when on surface (-1 = not started)
     //physics
-    this.mass = 1;
+    this.mass = 2;
     this.update = function () {
         // Update position in tree if not fumbled
         if (!this.fumbled) {
             if (this.eater !== null) {
                 // stick to the chitten that has grabbed it
                 this.x = this.eater.x;
-                this.y = this.eater.y + (this.eater.size * 1.75);
+                this.y = this.eater.y + this.eater.bodyToFeetDistance;
             } else {
                 this.x = this.parent.x - (this.size * 2.5) + ((treePos - 1) * this.parent.width) / 4;
                 this.y = this.parent.y + this.size + (this.parent.width / 10);
@@ -165,7 +168,7 @@ function Fruit(colour, parent, treePos) {
         ctx.restore();
     };
     // fucntion to fumble a fruit
-    this.fumbleFruit = function () {
+    this.fumbleFruit = function (spdX, spdY) {
         // Fumble! Fruit falls to ground with physics
         // Store current position as starting point for physics
         let currentX = this.x;
@@ -174,9 +177,8 @@ function Fruit(colour, parent, treePos) {
         this.onSurface = false; // Enable physics
         this.x = currentX; // Set fixed position for physics
         this.y = currentY;
-        this.speedX = (Math.random() - 0.5) * 2; // Small random horizontal velocity
-        this.speedY = Math.random() * 1; // Small downward velocity
-
+        this.speedX = spdX +  ((Math.random() - 0.5) * 2); // Small random horizontal velocity
+        this.speedY = spdY + (Math.random() * 1); // Small downward velocity
         // Remove fruit from tree slot (if it has a parent tree)
         if (this.parent && this.treePos !== undefined) {
             this.treePos = null;
@@ -208,7 +210,7 @@ function Seed(colour, owner) {
         if (trees.length < maxTrees && eaten) {
             if (this.timer <= 0) {
                 if (this.owner.snuggling <= 0 && this.owner.eatingChewsRemaining == 0
-                    && this.owner.y >= trueBottom - this.owner.size - this.owner.limbLength
+                    && this.owner.y >= trueBottom - this.owner.size - this.owner.frontLegLength
                     && tryToPlantaTree(this.owner.x, this.colour)) {
                     this.planted = true;
                     // sendMessage(this.owner.name + ' planted a seed');

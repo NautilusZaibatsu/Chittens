@@ -2,6 +2,37 @@
 
 changelog
 
+30/08/2025 = 0.072
+~ Big graphical update, chittens now look and animate much better
+-- This has however "broken" some breeds as they haven't been updated yet.
+-- Updated breeds include Bengal, Egyptian Mau, Siamese, Burmese and Tabby.
+ ~ Age based colours and patterns:
+ -- All kittens are born with blue eyes, like real cats. Their true eye colours develop as they mature.
+ -- Colourpoint kittens are born in creamy white colours, and their true coat colours develop as they mature.
+ -- Tabby kitten markings start off subtle but get darker and their coats start darker and get lighter as they mature.
+ -- Ticked markings don't appear in newborn kittens but express over time.
+ ~ Coat / markings:
+ -- Can now be in all manner of colours, and are genetically inherited.
+ -- Are more varied in terms of pattern placement.
+ -- markings by the Chitten size.
+ -- New pattern for tortoiseshell coats.
+ -- More variation between solid colour body parts and those with smooth gradients.
+ ~ Foot pad and toe colours are now defined by the colour of the paw.
+ ~ Chittens will now not automatically die when they reach their maximum age.
+ ~ Chittens are now slightly larger.
+ ~ Jumping:
+ -- Jumping ability has been recalculated, you should see better jumps for all sizes.
+ -- Chittens now prepare to land by bringing their feet back around.
+ ~ Fruits:
+ -- Now rot on the ground if untouched for 24 hours.
+ -- Can now be seen in achitten's grasp when being eaten.
+ ~ It's now easier to hover on and pick up a chitten to inspect them.
+ ~ Changed saving and loading to use JSON.
+
+ 
+ ~ Bug fixes:
+  -- Fixed a few bugs relating to window resizing and fruits
+
 26/08/2025 = 0.071
 ~ Complete rework of the jumping system:
 -- Chittens will now calculate their jumps, and use multijump strategies.

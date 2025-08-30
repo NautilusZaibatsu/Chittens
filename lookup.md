@@ -26,6 +26,8 @@ PATTERNS
 COATMOD
 [0] = y midpoint position for gradients
 [1] = angle of the gradient
+[2] = rotation of the pattern
+[3] = the strength of the gradients (0, none, 1 max)
 
 COATMOD ANGLES
 0 vector points right.
@@ -35,7 +37,7 @@ COATMOD ANGLES
 1 same as 0
 
 SPECIAL FEATURES
-Colourpoint gene:
+Colourpoint gene expression:
 ~ always affects jowls
 ~ Turns the affected area .thirdColour
 ~ .secondColour overrides the effect everywhere except jowls
@@ -46,3 +48,6 @@ Colourpoint gene:
 [1] ears
 [2] feet
 [3] tail
+
+Albino gene:
+~ Eyes glow a faint red instead of the normal glow colour if the albino gene is present

@@ -1,13 +1,13 @@
-// Version 0.01
+const rgbMax = 255;
 
 /**
 * function to return a random colour as hex
 * @return {string} the hexcode for a random colour
 */
 function randomColour() {
-  let seedR = Math.round(Math.random() * 255);
-  let seedG = Math.round(Math.random() * 255);
-  let seedB = Math.round(Math.random() * 255);
+  let seedR = Math.round(Math.random() * rgbMax);
+  let seedG = Math.round(Math.random() * rgbMax);
+  let seedB = Math.round(Math.random() * rgbMax);
   let randC = rgbToHex(seedR, seedG, seedB);
   return randC;
 }
@@ -45,33 +45,6 @@ function getRandomEyeColour() {
 }
 
 /**
-* function to create a realistic coat for a cat
-* @return {array} three hex colours
-*/
-function generateRealisticCoat(randSeed) {
-  if (randSeed == null) {
-    randSeed = Math.round(Math.random() * 3);
-  }
-  let coatArray = [];
-  // solid colour
-  if (randSeed < 3) {
-    coatArray[0] = randomColourRealistic(Math.random());
-    coatArray[1] = coatArray[0];
-    coatArray[2] = coatArray[0];
-  } else {
-    // bi-colour
-    coatArray[0] = trueWhite;
-    coatArray[1] = randomColourRealistic(Math.random());
-    coatArray[2] = coatArray[0];
-  }
-  return coatArray;
-  // striped tabby
-  // spotted tabby
-  // ticked tabby
-  // classic tabby
-};
-
-/**
 * function to return a random realistic coat colour as hex
 * @return {string} the hexcode for a random colour
 */
@@ -82,25 +55,25 @@ function randomColourRealistic(seed) {
   let colour = 'red'; // for debug
   if (seed <= 1 / 3) {
     // orange through peach
-    seedR = Math.floor(Math.random() * 255);
+    seedR = Math.floor(Math.random() * rgbMax);
     seedG = Math.floor(Math.random() * (seedR / 1.7));
     seedB = Math.floor(Math.random() * (seedG / 1.25));
     colour = rgbToHex(seedR, seedG, seedB);
   } else if (seed <= 2 / 3) {
     // russian blue
-    seedB = Math.floor(Math.random() * 255);
+    seedB = Math.floor(Math.random() * rgbMax);
     seedG = (seedB / 2) + Math.floor(Math.random() * 50);//Math.floor(Math.random()*(seedB));
     seedR = seedG; //Math.floor(Math.random()*(seedB));
     colour = rgbToHex(seedR, seedG, seedB);
   } else {
     // greys
-    let seed = Math.floor(Math.random() * 255);
+    let seed = Math.floor(Math.random() * rgbMax);
     colour = rgbToHex(seed, seed, seed);
   }
   return colour;
 }
 
-skinColourCheck = function (theColour) {
+getSkinColourFromColour = function (theColour) {
   let rgb = hexToRgb(theColour);
   let r = rgb.r;
   let g = rgb.g;
@@ -125,11 +98,15 @@ skinColourCheck = function (theColour) {
   return skinGrey;
 };
 
-noseColourCheck = function (theColour) {
+getNoseColourFromColour = function (theColour) {
   let rgb = hexToRgb(theColour);
   let r = rgb.r;
   let g = rgb.g;
   let b = rgb.b;
+
+  if ((r + g + b) / 6 > rgbMax / 2) {
+    return nosePink
+  }
 
   // Check for white cats (high brightness across all channels)
   if (r > 200 && g > 200 && b > 175) {
@@ -207,7 +184,7 @@ function randomColourFruity() {
 * @return {string} - the hexcode for the colour
 */
 function rgbToHex(r, g, b) {
-  if (r > 255 || g > 255 || b > 255) {
+  if (r > rgbMax || g > rgbMax || b > rgbMax) {
     console.warn('rgb: ' + r + ' ' + g + ' ' + b);
   }
   if (r < 0 || g < 0 || b < 0) {
@@ -231,6 +208,21 @@ function hexToRgb(hex) {
 }
 
 /**
+ * Convert hex color + alpha to rgba string
+ * @param {string} hex - hex color (#rrggbb)
+ * @param {number} alpha - alpha (0..1)
+ * @returns {string} rgba string
+ */
+function hexToRgba(hex, alpha) {
+  let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  let r = parseInt(result[1], 16);
+  let g = parseInt(result[2], 16);
+  let b = parseInt(result[3], 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
 * Converts an RGB color value to HSL
 * @param  {int}  r - The red color value
 * @param  {int}  g - The green color value
@@ -238,7 +230,7 @@ function hexToRgb(hex) {
 * @return  Array           The HSL representation
 */
 function rgbToHsl(r, g, b) {
-  r /= 255, g /= 255, b /= 255;
+  r /= rgbMax, g /= rgbMax, b /= rgbMax;
   let max = Math.max(r, g, b), min = Math.min(r, g, b);
   let h, s, l = (max + min) / 2;
   if (max == min) {
@@ -282,18 +274,20 @@ function hslToRgb(h, s, l) {
     g = hue2rgb(p, q, h);
     b = hue2rgb(p, q, h - 1 / 3);
   }
-  return [r * 255, g * 255, b * 255];
+  return [r * rgbMax, g * rgbMax, b * rgbMax];
 }
 
 function increaseSaturationHEX(hex) {
-  let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
+  let rgb = hexToRgb(hex);
+  let rgbhsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
   let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
 
 function decreaseSaturationHEX(hex, fraction) {
-  let rgbhsl = rgbToHsl(hexToRgb(hex).r, hexToRgb(hex).g, hexToRgb(hex).b);
+  let rgb = hexToRgb(hex);
+  let rgbhsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
   let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1] / fraction, rgbhsl[2]);
   // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
   return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
@@ -334,13 +328,13 @@ function mixTwoColours(hex1, hex2, prop) {
 * @param {string} hex3
 */
 function mixThreeColours(hex1, hex2, hex3) {
-  if (typeof hex1 !== 'string' ||!hex1.startsWith('#')) {
+  if (typeof hex1 !== 'string' || !hex1.startsWith('#')) {
     console.warn('mixThreeColours was passed a non hex value: ' + hex1);
   }
-  if (typeof hex2 !== 'string' ||!hex2.startsWith('#')) {
+  if (typeof hex2 !== 'string' || !hex2.startsWith('#')) {
     console.warn('mixThreeColours was passed a non hex value: ' + hex2);
   }
-  if (typeof hex3 !== 'string' ||!hex3.startsWith('#')) {
+  if (typeof hex3 !== 'string' || !hex3.startsWith('#')) {
     console.warn('mixThreeColours was passed a non hex value: ' + hex3);
   }
   ri = hexToRgb(hex1).r;
@@ -377,7 +371,7 @@ function getBrightness(color) {
     }
   } else {
     // Handle named colors (limited support)
-    if (color === trueWhite) return 255;
+    if (color === trueWhite) return rgbMax;
     if (color === trueBlack) return 0;
     // Default to medium brightness for unknown colors
     return 128;

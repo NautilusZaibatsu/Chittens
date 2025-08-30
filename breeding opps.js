@@ -10,8 +10,13 @@ const heterochromicGeneExpression = 0.5; //chance to be expressed
 const lykoiMutateChance = 0.0001;
 const lykoiGeneExpression = 0.5;
 
+// function to init a kitten once it has been adopted
 function initKitten(who) {
   who.health = 50;
+  who.matureModifier = 0;
+  who.birthday = daytimeCounter;
+  who.size /= kittenPreviewSizeMod;
+  who.reinitSizeAndColour();
 }
 
 /**
@@ -23,30 +28,17 @@ function initKitten(who) {
 function generateKitten(parent1, parent2, childBreed) {
   // male is parent1
   // female is parent2
-  let babyGender = randomGender();
-
-  let sizeSwitch = Math.round(Math.random() * 2); // 0 to 2
-  let specSize = 1;
-  if (sizeSwitch == 0) {
-    specSize = ((parent1.maxSize * 9) + ((Math.random() * chittenSizeVariation) + chittenBaseSize)) / 10;
-  } else if (sizeSwitch == 1) {
-    specSize = ((parent2.maxSize * 9) + ((Math.random() * chittenSizeVariation) + chittenBaseSize)) / 10;
-  } else {
-    specSize = (parent1.maxSize + parent2.maxSize + ((Math.random() * chittenSizeVariation) + chittenBaseSize)) / 3;
-  }
-
-  // specSize = selectGeneInteger(parent1.maxSize, parent2.maxSize, Math.random());
-    // Ensure breeding never exceeds global maximum
-  specSize = Math.min(specSize, chittenMaxSize);
-
+  let kGender = randomGender();
+  let kMaxSize = selectGeneInteger(parent1.maxSize, parent2.maxSize, Math.random());
+  kMaxSize = Math.min(kMaxSize, chittenMaxSize);
+    let babySize = (kMaxSize / 2) + (Math.random() * 2);
   // make sure the baby is not too big for the mother
-  let babySize = specSize / 3;
-  let babySizeRandom = (Math.random() * 0.1) + 0.3; // randomise here to create more variation
+  let babySizeRandom = (Math.random() * 0.1) + 0.3;
   if (babySize > parent2.size * babySizeRandom) {
     babySize = parent2.size * babySizeRandom;
   }
 
-  chittens.push(new Chitten(parent1.x + ((parent2.x - parent1.x) / 2), parent1.y + ((parent2.y - parent1.y) / 2), babySize, specSize, babyGender));
+  chittens.push(new Chitten(parent1.x + ((parent2.x - parent1.x) / 2), parent1.y + ((parent2.y - parent1.y) / 2), babySize, kMaxSize, kGender));
   chittens[chittens.length-1].breed = childBreed;
 
   // physical traits
@@ -70,11 +62,14 @@ function generateKitten(parent1, parent2, childBreed) {
   chittens[chittens.length-1].patternAlpha = selectGeneInteger(parent1.patternAlpha, parent2.patternAlpha, Math.random());
   chittens[chittens.length-1].coatMod[0] = selectGeneInteger(parent1.coatMod[0], parent2.coatMod[0], Math.random());
   chittens[chittens.length-1].coatMod[1] = selectGeneInteger(parent1.coatMod[1], parent2.coatMod[1], Math.random());
+  chittens[chittens.length-1].coatMod[2] = selectGeneInteger(parent1.coatMod[2], parent2.coatMod[2], Math.random());
+  chittens[chittens.length-1].coatMod[3] = selectGeneInteger(parent1.coatMod[3], parent2.coatMod[3], Math.random());
   chittens[chittens.length-1].bodypartCode = selectGenesFromArraysInts(parent1.bodypartCode, parent2.bodypartCode, 2);
   // colours
   chittens[chittens.length-1].firstColour = selectGeneColour(parent1.firstColour, parent2.firstColour);
   chittens[chittens.length-1].secondColour = selectGeneColour(parent1.secondColour, parent2.secondColour);
   chittens[chittens.length-1].thirdColour = selectGeneColour(parent1.thirdColour, parent2.thirdColour);
+  chittens[chittens.length-1].patternColour = selectGeneColour(parent1.patternColour, parent2.patternColour);
   chittens[chittens.length-1].eyeColour = selectGeneColour(parent1.eyeColour, parent2.eyeColour);
   chittens[chittens.length-1].eyeColour2 = selectGeneColour(parent1.eyeColour2, parent2.eyeColour2);
   // shuffle colours
@@ -103,7 +98,7 @@ function generateKitten(parent1, parent2, childBreed) {
   }
   // Determine trait expression for inherited genes
   determineTraitExpression(chittens[chittens.length - 1], true, parent1, parent2);
-  return babyGender;
+  return kGender;
 }
 
 /**
@@ -174,7 +169,7 @@ function determineTraitExpression(who, bredInGame, parent1, parent2) {
     who.colourpointMap = [false, false, false, false];
   }
 
-  // Sort colors by brightness for colorpoint cats (lightest to darkest)
+  // Sort colors by brightness for colorpoint and 75% of tabby cats (lightest to darkest)
   if (who.colourpointExpressed) {
     let colors = [
       { color: who.firstColour, brightness: getBrightness(who.firstColour) },
@@ -290,27 +285,29 @@ function randomGender() {
   }
 }
 
-// Consolidated base genetics function for all adoption cats
+// Consolidated random genetics function for all adoption cats
 function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   // Set basic physical properties
-  who.age = Math.round(Math.random() * 5) + maturesAt;
   who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize);
   who.coatMod[0] = Math.random();
   who.coatMod[1] = Math.random();
+  who.coatMod[2] = Math.random();
+  who.coatMod[3] = Math.random();
   who.thickness = (Math.random() * 0.5) + 0.5;
   who.legginess = (Math.random() * 0.9) + 0.1;
   who.coordination = Math.random(); // Random coordination from 0.0 to 1.0
+  who.pattern = validPatterns[Math.floor(Math.random() * validPatterns.length)].value;
   who.patternAlpha = Math.random();
 
   // Set default colors (will be overridden by breed if applicable)
-  let colourArray = generateRealisticCoat();
-  who.firstColour = colourArray[0];
-  who.secondColour = colourArray[1];
-  who.thirdColour = colourArray[2];
+  who.firstColour = randomColourRealistic();
+  who.secondColour = randomColourRealistic();
+  who.thirdColour = randomColourRealistic();
+  who.patternColour = randomColourRealistic();
 
   // Set basic properties
   who.inCatBox = boxes[thisCatBox];
-  who.birthday = Math.round(Math.random() * 1000);
+  who.birthday = Math.floor(Math.random() * ticksPerDay);
   who.love = 50 + Math.round((Math.random() * 50));
   who.tailLength = (Math.random() * 0.75) + 0.25;
   who.bodypartCode = randomBodyPartCode();
@@ -322,7 +319,8 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   who.eyeColour = getRandomEyeColour();
   who.eyeColour2 = who.eyeColour;
   who.eyeSize = Math.random();
-  who.maxAge = 12 + (Math.random() * 8);
+  who.maxAge = minMaxAge + (ageVariance * Math.random());
+  who.age = Math.round(Math.random() * 5) + maturesAt;
   who.fangs = Math.random();
   who.earHeight = 0.25 + (Math.random() * 0.75);
   who.earLength = 0.25 + (Math.random() * 0.75);
@@ -369,8 +367,6 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   } else if (!who.heterochromicGene) {
     who.eyeColour2 = who.eyeColour;
   }
-
-  who.reinitSizeAndColour();
 }
 
 // Generate a crossbreed cat (two breeds mixed together)
@@ -415,8 +411,6 @@ function generateCrossbreed(who) {
   // Make this an adult cat, not a baby
   who.age = Math.round(Math.random() * 5) + maturesAt;
   who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize) * (who.gender === 'Female' ? 1 / 1.1 : 1);
-  who.reinitSizeAndColour();
-
   // Remove the temporary baby from the chittens array
   chittens.splice(chittens.length - 1, 1);
 }

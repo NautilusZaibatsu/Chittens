@@ -1,6 +1,6 @@
 // firefly parameters
-const fireflyMinSeekHeight = 25; // lowest to the ground a firefly will look for fruit
-const fireflyMaxEatingSpeed = 0.5; // Maximum average speed for fireflies to eat fruit
+const fireflyMinSeekHeight = 40; // lowest to the ground a firefly will look for fruit
+const fireflyMaxEatingSpeed = 0.5; // Maximum average speed fireflies can eat fruit at
 const startingFireflies = 1; // fireflies at start of game
 const minFireflies = 1;
 const maxFireflies = 6;
@@ -44,7 +44,7 @@ function FireFly(x, y, focus, size, firstColour) {
         if (fruits[i].parent == this.lastTreeVisited) {
           flagged = true;
         }
-        if (!flagged && fruits[i] !== this.focus && fruits[i].y < trueBottom - fireflyMinSeekHeight && !fruits[i].fumbled) {
+        if (!flagged && fruits[i] !== this.focus && fruits[i].y < trueBottom - fireflyMinSeekHeight) {
           options.push(i);
         }
       }
@@ -65,39 +65,46 @@ function FireFly(x, y, focus, size, firstColour) {
         }
         this.focus = fruits[target];
       } else if (options.length == 0) {
-        // no valid fruit targets, decide between other fireflies or trees
-        let useFirefly = fireflies.length > 1 && Math.random() < 0.1; // 10% chance to target another firefly
+        // no valid fruit targets, prefer cursor but occasionally use other targets
+        let useCursor = Math.random() < 0.7; // 70% chance to follow cursor when no fruits
 
-        if (useFirefly) {
-          // Target another firefly
-          let fireflyOptions = [];
-          for (let i = 0; i < fireflies.length; i++) {
-            if (fireflies[i] !== this) {
-              fireflyOptions.push(i);
-            }
-          }
-          if (fireflyOptions.length > 0) {
-            let randomFireflyIndex = Math.floor(Math.random() * fireflyOptions.length);
-            this.focus = fireflies[fireflyOptions[randomFireflyIndex]];
-          } else {
-            this.focus = pointerPos;
-          }
+        if (useCursor) {
+          this.focus = pointerPos;
         } else {
-          // Look for suitable trees instead
-          let treeOptions = [];
-          for (let i = 0; i < trees.length; i++) {
-            if (trees[i].y < trueBottom - fireflyMinSeekHeight) {
-              treeOptions.push(i);
-            }
-          }
+          // 30% chance to target other things
+          let useFirefly = fireflies.length > 1 && Math.random() < 0.5; // 50% of the 30% for fireflies
 
-          if (treeOptions.length > 0) {
-            // Pick a random suitable tree
-            let randomTreeIndex = Math.floor(Math.random() * treeOptions.length);
-            this.focus = trees[treeOptions[randomTreeIndex]];
+          if (useFirefly) {
+            // Target another firefly
+            let fireflyOptions = [];
+            for (let i = 0; i < fireflies.length; i++) {
+              if (fireflies[i] !== this) {
+                fireflyOptions.push(i);
+              }
+            }
+            if (fireflyOptions.length > 0) {
+              let randomFireflyIndex = Math.floor(Math.random() * fireflyOptions.length);
+              this.focus = fireflies[fireflyOptions[randomFireflyIndex]];
+            } else {
+              this.focus = pointerPos;
+            }
           } else {
-            // No suitable trees either, fall back to pointer
-            this.focus = pointerPos;
+            // Look for suitable trees instead
+            let treeOptions = [];
+            for (let i = 0; i < trees.length; i++) {
+              if (trees[i].y < trueBottom - fireflyMinSeekHeight) {
+                treeOptions.push(i);
+              }
+            }
+
+            if (treeOptions.length > 0) {
+              // Pick a random suitable tree
+              let randomTreeIndex = Math.floor(Math.random() * treeOptions.length);
+              this.focus = trees[treeOptions[randomTreeIndex]];
+            } else {
+              // No suitable trees either, fall back to pointer
+              this.focus = pointerPos;
+            }
           }
         }
       }

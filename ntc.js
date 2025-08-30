@@ -84,7 +84,7 @@ var ntc = {
   // http://acko.net/dev/farbtastic
   hsl: function(color) {
 
-    var rgb = [parseInt('0x' + color.substring(1, 3)) / 255, parseInt('0x' + color.substring(3, 5)) / 255, parseInt('0x' + color.substring(5, 7)) / 255];
+    var rgb = [parseInt('0x' + color.substring(1, 3)) / rgbMax, parseInt('0x' + color.substring(3, 5)) / rgbMax, parseInt('0x' + color.substring(5, 7)) / rgbMax];
     var min, max, delta, h, s, l;
     var r = rgb[0], g = rgb[1], b = rgb[2];
 
@@ -104,7 +104,7 @@ var ntc = {
       if (max == b && max != r) h += (4 + (r - g) / delta);
       h /= 6;
     }
-    return [parseInt(h * 255), parseInt(s * 255), parseInt(l * 255)];
+    return [parseInt(h * rgbMax), parseInt(s * rgbMax), parseInt(l * rgbMax)];
   },
 
   // adopted from: Farbtastic 1.2

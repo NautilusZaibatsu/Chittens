@@ -1,51 +1,109 @@
 // init
 // catboxes
 thisCatBox = 0;
+let maxPop; // maximum number of chittens allowed
 
-// chitten params
-const baseJumpPower = 10; // the base jumping power of a chitten
-const maturesAt = 2; // age the chittens turn into adults at
-const chittenGrowthRate = 1 / 2000; // amount chittens grow per game tick
+// --- LIFESTAGES
+const maturesAt = 2; // how many days the chitten is in the kitten stage
+const oldAgeFor = 2; // how many days the chitten is in the old age stage
+const chittenGrowthRate = 1 / 2000; // amount chittens grow per game tick until they reach their max size
+const maxMaxAge = 20; // default maximum age before old death checks start - can be increased by breeding
+const minMaxAge = 13; // default min maximum age
+const ageVariance = maxMaxAge - minMaxAge;
+// litters
+const minLitterSize = 6;
+const kittenPreviewSizeMod = 2; // amount a kitten's size is increased for the preview during litter selection for better visibility
+// adoption centre
+const proportionOfRandomChittens = 0.3; // proportion of mixed filter chittens that are truely randomly generated 
+// Age specific colours (all arrays should be darkest to brightest)
+const kittenEyeColours = ['#253485', '#a1b2d8'];
+const colourpointKittenColours = ['#d3cd91', trueWhite];
+// --- SIZE
+const chittenBaseSize = 15;
+const chittenMinSize = 10;
+const chittenMaxSize = 20;
+const chittenSizeVariation = chittenMaxSize - chittenMinSize;
+// --- PHYSICALS
+const baseJumpPower = 500; // the base jumping power of a chitten
+const kittenJumpPenalty = 250;
+const chittenBaseCoordination = 0.999; // how coordinated the base chittens are (1 is perfect). Associated with fumbling fruits and adjusting speed in the air
 const elasticity = 0.5; // bounciness of chittens
-const chittenMaxSize = 15;
-const chittenMinSize = 7;
-const chittenBaseSize = 10;
-const chittenSizeVariation = chittenMaxSize - chittenBaseSize;
-const chittenJumpCooldown = 60; // UPS (game logic updates at 50 UPS)
+const chittenJumpCooldown = 90; // UPS (game logic updates at 50 UPS)
+// --- ANIMATION
 const youngChittenJumpCooldown = 15; // UPS
 const chittenSittingCooldown = 60; // UPS - how long chittens must sit before standing up. This counts down
 const chittenSittingSpeed = 15; // UPS 
 const chittenStandingUpSpeed = 15; // UPS
-const chittenMaxSeekFireflyDistance = maxDistance / 2; // maximum distance a chitten will actively seek out a firefly
+const chittenMaxSeekFireflyDistance = 1000; // diagonal measurement for physics calculations
 const chittenFireflySwatDistanceMod = 10; // the multiple of the chitten's size  that defines how close a firefly can get before it swats at it
 const chittenMouthOpenCloseSpeed = 8; // UPS - frames to fully open/close mouth
 const eatingChewCycleDuration = 20; // UPS frames per chew cycle (open + close)
 const eatingTotalChews = 4; // Number of chew cycles during eating
-const chittenBaseCoordination = 0.999; // how coordinated the base chittens are (1 is perfect). Associated with fumbling fruits and adjusting speed in the air
-
 // Derived eating phase durations (all based on eatingChewCycleDuration)
 const eatingClosedPauseDuration = Math.max(1, Math.round(eatingChewCycleDuration * 0.1)); // 10% of cycle
 const eatingOpenHoldDuration = Math.max(1, Math.round(eatingChewCycleDuration * 0.15)); // 15% of cycle
 const speechDuration = 25; // time a chitten's speech lasts
-
 // breeding requirements
 const breedingLoveReq = 100;
 const breedingEnergyReq = 50;
 const breedingHealthReq = 50;
-
 // skin colours
 const nosePink = '#dfb2bc';
 const noseBlack = '#111111';
 const skinPink = '#e9bbc5';
 const skinGrey = '#91868e';
-const skinColourBrightnessthreshold = 175;
+const skinColourBrightnessthreshold = rgbMax / 2;
+// patterns
+const validPatterns = [
+  { value: 0, label: 'None' },
+  { value: 1, label: 'Tortoiseshell' },
+  { value: 3, label: 'Tabby' },
+  { value: 6, label: 'Rosette' },
+  { value: 7, label: 'Ticked' }
+];
+
+/**
+* Get pattern name from validPatterns array
+*/
+function getPatternName(patternValue) {
+  const pattern = validPatterns.find(p => p.value === patternValue);
+  return pattern ? pattern.label : 'Unknown';
+}
+// images
+// patterns and body parts
+const smile = new Image();
+smile.src = 'img/smile.png';
+const smile2 = new Image();
+smile2.src = 'img/smile2.png';
+const smile3 = new Image();
+smile3.src = 'img/smile3.png';
+const content = new Image();
+content.src = 'img/content.png';
+const pattern1 = new Image(); // tortoiseshell
+pattern1.src = 'img/pattern1.png';
+pattern1.onload = () => { };
+const pattern2 = new Image(); // albino spotting (unused atm)
+pattern2.src = 'img/pattern2.png';
+pattern2.onload = () => { };
+const pattern3 = new Image(); // tabby
+pattern3.src = 'img/pattern3.png';
+pattern3.onload = () => { };
+const pattern6 = new Image(); // rosette
+pattern6.src = 'img/pattern6.png';
+pattern6.onload = () => { };
+const pattern7 = new Image(); // ticked
+pattern7.src = 'img/pattern7.png';
+pattern7.onload = () => { };
+const butthole = new Image();
+butthole.src = 'img/butthole.png';
 
 // gene editing
 geneEditing = false;
-spliceBox = new CatBox(20, 30, 100, 5);
+spliceBox = new CatBox(20, 30, 250, 5); // Increased size by 150% (100 * 2.5) for editor preview
 sliderIndex = 0;
 colourBars = null; // Will be initialized in startGame()
 colourBlock = null; // Will be initialized in startGame()
+editorButtons = []; // Editor save/close buttons
 
 // Performance optimization: Cache mate-finding results
 let availableMates = [];
@@ -69,87 +127,106 @@ chittens = [];
 * @param {int} ears - the ear modifier (cat -> fox);
 */
 function Chitten(x, y, bodySize, maxSize, gender) {
-  this.size = bodySize;
-  this.maxSize = Math.min(maxSize, chittenMaxSize);
-  this.breed = mixedBreed;
-  this.inCatBox = null;
-  this.x = x;
-  this.y = y;
-  this.speedX = 0;
-  this.speedY = 0;
-  this.rotation = 0;
-  this.spin = 0;
+  this.name = null;
+  this.age = 0;
+  this.maxAge = minMaxAge + (ageVariance / 2);
+  this.birthday = daytimeCounter;
+  // Life stages
+  this.matureModifier = 1; // 0 to 1 value for maturity (0 = newborn, 1 = mature)
+  this.oldAgeModifier = 0; // 0 to 1 value for old age (0 = not aging, 1 = dead)
+  this.elder = false;
+  // General
   this.gender = gender;
+  this.litters = 0;
+  // Coats / colours / outlines
   this.firstColour = trueWhite;
   this.secondColour = trueWhite;
   this.thirdColour = trueWhite;
+  this.patternColour = trueBlack;
   this.skinColour1 = trueWhite;
   this.skinColour2 = trueWhite;
   this.skinColour3 = trueWhite;
-  this.noseColour = noseBlack;
   this.eyeColour = trueWhite;
   this.eyeColour2 = trueWhite;
+  this.pattern = 0;
+  this.patternAlpha = 0.5;
+  this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this.coatMod = [Math.random(), Math.random(), Math.random(), 0]; // [0] is fade position for gradients, [1] is the angle of the gradient, [2] is roation of pattern, [3] is gradient expression
+  this.outlineColour = '';
+  this.noseColour = noseBlack;
+  this.leftToeColour = skinPink;
+  this.rightToeColour = skinPink;
+  // Size
+  this.size = bodySize;
+  this.maxSize = Math.min(maxSize, chittenMaxSize);
+  // Appearance
   this.nosePos = 0.5;
   this.eyePosX = 0.5;
   this.eyePosY = 0.5;
   this.eyeSize = 0.5;
   this.headWidth = 0.5;
   this.headHeight = 0.5;
-  this.coatMod = [1, 1]; // [0] is fade position for gradients, [1] is the angle of the gradient
-  this.patternAlpha = 0.5;
-  this.pattern = 0;
-  this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   this.fangs = 0.5; // [style, length]
   this.earWidth = 0.5; // 0.5 is average
   this.earHeight = 0.5;
   this.thickness = 0.5; // 0.5 is average
   this.legginess = 0.5;
+  this.tailLength = 0.5;
+  this.mawSize = 0.5;
+  // Derived sizes and offsets
+  this.outlineThickness; // recalculated in reinitsizeandcolour
+  this.bodyToFeetDistance;
+  this.legWidth;
+  this.frontLegLength;
+  this.frontLegOriginX;
+  this.frontLegOriginY;
+  this.backLegOriginY;
+  this.backLegOriginX;
+  this.footSize;
+  this.frontFootOriginX;
+  this.frontFootOriginY;
+  this.backFootOriginX;
+  this.backFootOriginY;
+  this.thicknessModS;
+  this.thicknessModL;
+  // behaviour
   this.angleToFocus = Math.PI / 2; // spawn with angle to focus straight down
+  this.originalAngleToFocus = Math.PI / 2;
   this.behaviorUpdateCounter = Math.floor(Math.random() * 5); // Stagger initial updates
   this.jumpCooldown = 0; // Frames to wait before next jump
-  this.cellShadeThickness = this.size / 10;
-  this.cellShadeLine = '';
-  this.limbLength = (this.size) + (1.5 * this.legginess * this.size); // 10 to 16 + 0 to 6 == 16 to 6
-  this.tailLength = 0.5;
-  this.maxAge = 14;
-  this.onSurface = false;
-  this.sitting = false;
-  this.sittingCooldown = 0; // Frames left before chitten can stand up from sitting
-  this.health = 100;
-  this.love = 50;
+  //meters
+  this.health = 100; // max 100
+  this.love = 100;
   this.energy = 100;
   this.hunger = 100; // 1000 is no hunger, 0 is starvation
-  this.preparingToEat = false; // true when grabbed fruit and sitting before eating
-  this.awake = true;
-  this.litters = 0;
-  this.birthday = daytimeCounter;
-  this.age = 0;
-  this.name = null;
-  this.elder = false;
-  this.reachedNirvana = false;
-  this.focus = null;
-  this.hitFocus = false;
-  this.partner = null;
-  this.mother = null;
-  this.facingForwards = true;
-  this.mawSize = 0.5;
   // physics
   this.mass = this.size * this.thickness;
   this.coordination = 0.5; // how well coordinated the chitten is (0.0 to 1.0)
   this.maxJumpPower = 0; // set in reinitsizes
+  this.x = x;
+  this.y = y;
+  this.speedX = 0;
+  this.speedY = 0;
+  this.rotation = 0;
+  this.spin = 0;
+  this.jumpHeight = 0;
   // special states
   this.snuggling = -1; // Default is -1. 0 is the snuggling state, anything above -1 is the animation length in UPS frames
   // animation states
   this.eatingChewsRemaining = 0; // 0 = not eating, >0 = chews left to do
   this.eatingChewTimer = 0; // tracks progress within current chew cycle
   this.eatingChewState = 'closed'; // 'closed', 'opening', 'open', 'closing'
+  this.preparingToEat = false; // true when grabbed fruit and sitting before eating
   this.sittingProgress = 0; // 0 = standing, 1 = fully sitting
+  this.sitting = false;
+  this.sittingCooldown = 0; // Frames left before chitten can stand up from sitting
   this.targetSittingState = false; // Which sitting state we're lerping toward
   this.openMouthProgress = 0; // 0 = closed, 1 = fully open
   this.targetMouthOpenState = false; // Which mouth open state we're lerping toward
   // interaction
   this.beingHeld = false;
-  // genetic conditions
+  // genetics
+  this.breed = mixedBreed;
   this.heterochromicGene = false;
   this.albinoGene = false;
   this.albino = false;
@@ -161,42 +238,69 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.colourpointExpressed = false;
   this.colourpointMap = [false, false, false, false]; // chin, ears, feet, tail
   // checks
+  this.onSurface = false;
   this.closestFirefly = null;
+  this.inCatBox = null;
+  this.awake = true;
+  this.reachedNirvana = false;
+  this.partner = null;
+  this.mother = null;
+  this.facingForwards = true;
+  this.focus = null;
+  this.hitFocus = false;
+  this.flaggedForDeath = false;
+  this.onTree = false;
   this.kill = function () {
+    removeRelationships(this);
     removeFocusFrom(this);
+    createGlyphs(this.x, this.y, unicodeMedic, 1);
+    gravestones.push(new Grave(this.x, this.y, this.size, this.speedX, this.speedY, this.elder, this.firstColour));
     chittens.splice(chittens.indexOf(this, chittens), 1);
     recalculateChittenNumbers();
   };
   // function to reinitialise sizes (for growth)
   this.reinitSizeAndColour = function () {
-    this.limbLength = (this.size) + (1.5 * this.legginess * this.size);
-    this.cellShadeThickness = this.size / 10;
-    // Calculate mass based on size and thickness
-    this.mass = this.size * this.thickness;
+    // --- LIFESTAGES
+    // Fraction of current day passed and exact age
+    const dayFrac = ((daytimeCounter - this.birthday + ticksPerDay) % ticksPerDay) / ticksPerDay;
+    const ageExact = this.age + dayFrac;
+    // --- Maturity modifier
+    let matureModifier = Math.min(1, Math.max(0, ageExact / maturesAt));
+    // --- Old age modifier ---
+    const startOld = this.maxAge - oldAgeFor;
+    let oldAgeModifier = 0;
+    if (ageExact >= this.maxAge) {
+      oldAgeModifier = 1;
+    } else if (ageExact >= startOld) {
+      oldAgeModifier = (ageExact - startOld) / oldAgeFor; // 0..1 over the last `oldAgeFor` years
+    }
+    // Store results
+    this.matureModifier = matureModifier;
+    this.oldAgeModifier = oldAgeModifier;
+    // Calculating the colours of cell shading
     if (this.albino && !this.hairless && !this.lykoi) {
-      this.cellShadeLine = mixTwoColours(trueWhite, trueBlack, 0.7);
+      this.outlineColour = mixTwoColours(trueWhite, trueBlack, 0.7);
     } else if (this.hairless || this.lykoi) {
-      this.cellShadeLine = mixTwoColours(nosePink, noseBlack, 0.5);
+      this.outlineColour = mixTwoColours(nosePink, noseBlack, 0.5);
     } else {
-      this.cellShadeLine = mixTwoColours(mixThreeColours(this.firstColour, this.secondColour, this.thirdColour), trueBlack, 0.7);
+      let c1 = mixTwoColours(this.firstColour, this.secondColour, 0.5);
+      let c2 = mixTwoColours(this.thirdColour, this.patternColour, 0.5);
+      let cc = mixTwoColours(c1, c2, 0.5);
+      this.outlineColour = mixTwoColours(this.modifyColourByLifeStage(cc), trueBlack, 0.7);
     }
-    if (this.albino) {
-      this.skinColour1 = skinPink;
-      this.skinColour2 = skinPink;
-      this.skinColour3 = skinPink;
-      this.noseColour = nosePink;
-    } else {
-      this.skinColour1 = skinColourCheck(this.firstColour);
-      this.skinColour2 = skinColourCheck(this.secondColour);
-      this.skinColour3 = skinColourCheck(this.thirdColour);
-      // Set nose color based on primary fur color
-      this.noseColour = noseColourCheck(this.firstColour);
-    }
+    this.skinColour1 = getSkinColourFromColour(this.firstColour);
+    this.skinColour2 = getSkinColourFromColour(this.secondColour);
+    this.skinColour3 = getSkinColourFromColour(this.thirdColour);
+    this.noseColour = getNoseColourFromColour(this.firstColour);
+    this.leftToeColour = getNoseColourFromColour(this.getBodypartColor(0));
+    this.rightToeColour = getNoseColourFromColour(this.getBodypartColor(1));
+    // Calculate mass and jumping range based on physical attributes
+    this.mass = (this.size + ((this.size / 2) * this.thickness)) / 2; // ~ 5 to 15
+    let power = baseJumpPower - ((1 - matureModifier) * kittenJumpPenalty);
+    const work = power * this.size;
+    const v0 = Math.sqrt(Math.max(0, (2 * work) / this.mass));
+    this.maxJumpPower = v0;
 
-    // Calculate jumping range based on physical attributes
-    let legPower = 1 + (this.legginess * 0.15);
-    let massPower = Math.sqrt(this.mass);
-    this.maxJumpPower = baseJumpPower * legPower * massPower;
     // Use calculateBallisticTrajectory to determine maximum horizontal range
     // Test with a target at ground level to get maximum distance
     let testResult = calculateBallisticTrajectory(200, 0, this.size, this.mass, this.maxJumpPower);
@@ -209,10 +313,26 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       let testResult2 = calculateBallisticTrajectory(100, 0, this.size, this.mass, this.maxJumpPower);
       this.jumpingRange = testResult2 && testResult2.reachable ? 100 : 50;
     }
-
+    // derived values
+    this.outlineThickness = this.size / 10;
+    this.legWidth = (this.size / 2.5) * this.thickness * 2
+    this.thicknessModS = this.thickness * this.size / 2;
+    this.thicknessModL = this.thickness * this.size / 5;
+    this.frontLegLength = this.size + (1.75 * this.legginess * this.size); // 10 to 16 + 0 to 6 == 16 to 6
+    this.frontLegOriginX = this.size * 2 / 3;
+    this.frontLegOriginY = this.size / 4;
+    this.backLegLength = this.frontLegLength * 0.6;
+    this.backLegOriginY = this.size / 2;
+    this.backLegOriginX = this.size / 1.6;
+    this.footSize = (this.size / 3.5) * (this.thickness * 2.25);
+    this.frontFootOriginX = this.size / 1.6;
+    this.frontFootOriginY = this.size + (this.frontLegLength / 2.5);
+    this.backFootOriginX = this.backLegOriginX;
+    this.backFootOriginY = this.backLegLength;
+    this.bodyToFeetDistance = this.frontLegLength - this.footSize;
   };
   // reset jump cooldown
-  this.resetJumpCoolDown = function () {
+  this.resetJumpCooldown = function () {
     // Wait frames before next jump, fat cats are lazier
     if (this.age < maturesAt) {
       // Kittens following mothers get much shorter cooldown to be eager followers
@@ -246,8 +366,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       }
     }
   };
-
-  // 
   this.lifeTick = function () {
     // --- SIZE / GROWTH ---
     if (this.size < this.maxSize) {
@@ -261,7 +379,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // --- HEALTH ---
     if (this.hunger <= 0 && this.awake && this.snuggling <= 0 && this.eatingChewsRemaining == 0) {
       if (Math.random() <= 0.0005) {
-        addSpeech(this, angryWord());
+        speak(this, angryWord());
       }
       // Starvation
       this.health -= 0.001;
@@ -282,10 +400,12 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     this.energy -= 0.01325 - (0.01325 / 30 * temperature);
     if (season == 1) {
       // spring: less tired, more amorous
-      this.energy += 0.07;
+      this.energy += 0.05;
+      this.love += 0.5;
     } else if (season == 2) {
       // summer: more energy
-      this.energy += 0.04;
+      this.energy += 0.07;
+      this.love += 0.25;
     }
     if (this.awake && daytimeCounter <= 250) {
       // more tired between midnight and 3am
@@ -294,6 +414,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (!this.awake) {
       // regain energy while asleep
       this.energy += 0.125;
+      this.love += 0.005;
     }
     if (!this.awake && this.energy > 90) {
       // wake up if energy gets high enough
@@ -306,11 +427,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
 
     // --- LOVE ---
-    if (season == 1) {
-      this.love += 0.01; // spring boost
-    } else if (season != 2) {
-      this.love -= 0.001; // autumn/winter drop
-    }
     if (this.love > 100) {
       this.love = 100;
     } else if (this.love < 0) {
@@ -321,11 +437,20 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (this.hunger > 0) {
       this.hunger -= 0.25;
     } else if (this.hunger < 0) {
-      this.hunger = 0; // fixed typo: was '=='
+      this.hunger = 0;
     }
     if (this.hunger > 1000) {
       this.hunger = 1000;
     }
+  }
+
+  // functions to call to enter the sleep state
+  this.fallAsleep = function () {
+    this.awake = false;
+    this.facingForwards = true;
+    this.speedX = 0;
+    this.rotation = 0;
+    this.spin = 0;
   }
 
   // function to make a chitten continue eating once they have started
@@ -356,6 +481,25 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         // Finished all chews
         this.eatingChewState = 'closed';
         this.targetMouthOpenState = false;
+        // sendMessage(fruits[i].eater.name+' ate a piece of fruit');
+        this.hunger += 500;
+        this.health += 50;
+        this.energy += 10;
+        this.love += 10;
+        // kill fruit that has been consumed
+        let found = false;
+        for (let i = 0; i < fruits.length && !found; i++) {
+          if (fruits[i].eater == this) {
+            // give the chitten a seed to plant
+            if (seeds.length < minSeeds) {
+              seeds.push(new Seed(fruits[i].colour, this));
+            }
+            removeFocusFrom(fruits[i]);
+            found = true;
+            fruits.splice(i, 1);
+            speak(this, happyWord());
+          }
+        }
       }
     }
     // Cycle the eating phases
@@ -376,6 +520,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
   // act
   this.act = function () {
+
     // Decrement jump cooldown
     if (this.jumpCooldown > 0) {
       this.jumpCooldown--;
@@ -389,7 +534,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // Update sitting animation
     // Sitting down
     if (this.targetSittingState && this.sittingProgress < 1) {
-      this.resetJumpCoolDown(); // reset the jump cooldown if are trying to sit
+      this.resetJumpCooldown(); // reset the jump cooldown if are trying to sit
       // Lerping toward sitting: fatter cats sit down faster
       this.sittingProgress += (1 / chittenSittingSpeed) * (1 + this.thickness);
       if (this.sittingProgress >= 1) {
@@ -443,7 +588,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           let distance = Math.sqrt(dx * dx + dy * dy);
 
           // If firefly is very close, switch focus and reset jump cooldown for immediate action
-          if (distance < this.size * chittenFireflySwatDistanceMod && (!this.focus || fireflies.includes(this.focus))) {
+          if (distance < (this.size * 2) * chittenFireflySwatDistanceMod && (!this.focus || fireflies.includes(this.focus))) {
             this.focus = closestFirefly;
             this.jumpCooldown = 0; // Allow immediate jumping at close fireflies
           }
@@ -471,6 +616,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         } else {
           // deciding what the focus is
           let target = null;
+
           // if not an adult, just follow mother (unless in catbox)
           if (this.age < maturesAt && this.mother !== null && !this.inCatBox) {
             target = this.mother;
@@ -507,7 +653,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           // Check for nearby fireflies that might override other targets
           if (!this.inCatBox && target !== null && target !== this.partner) {
             let closestFireflyIndex = this.findClosestFireFly();
-            if (closestFireflyIndex !== 'X') {
+            if (closestFireflyIndex !== 0) {
               let fireflyDistance = Math.sqrt(
                 (this.x - fireflies[closestFireflyIndex].x) ** 2 +
                 (this.y - fireflies[closestFireflyIndex].y) ** 2
@@ -522,7 +668,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
               }
             }
           }
-
           if (target == null && !this.inCatBox) {
             // default action - target firefly if we can't find anything better (only if not in adoption box)
             // This allows targeting distant fireflies occasionally
@@ -537,7 +682,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
                   // Use tree as intermediate target, but remember our ultimate goal
                   this.ultimateTarget = target;
                   this.focus = helpfulTree;
-                  // console.log("I'm gonna try to use a tree");
                 } else {
                   // No helpful tree found, target directly (will jump to get closer)
                   this.focus = target;
@@ -552,8 +696,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
         // kittens sitting down near their mothers - only when very close
         if (this.age < maturesAt && this.mother !== null
-          && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size) * 1.5)
-          && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size) * 1.5)) {
+          && (Math.abs(this.x - this.mother.x) < (this.size + this.mother.size) * 2)
+          && (Math.abs(this.y - this.mother.y) < (this.size + this.mother.size) * 2)) {
           if (this.mother.awake) {
             // copy the mother
             this.targetSittingState = this.mother.targetSittingState;
@@ -561,9 +705,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
             // kittens falling asleep near their mothers
           } else if (this.eatingChewsRemaining == 0) {
             this.energy = this.mother.energy - (Math.random() * 5);
-            this.awake = false;
-            this.targetSittingState = false;
-            this.facingForwards = true;
+            this.fallAsleep();
           }
 
         } else if (this.focus) {
@@ -599,7 +741,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           }
 
           // if the focus is below the Chitten OR we can jump down to any target
-          if (shouldJump && (this.focus.y <= this.y + this.size || (canJumpDown && this.focus.y > this.y + this.size))) {
+          if (shouldJump && (this.focus.y <= this.y + (this.size * 2) || (canJumpDown && this.focus.y > this.y + (this.size * 2)))) {
             // If sitting, must lerp to standing before jumping (unless eating)
             if (this.sittingProgress > 0) {
               // Don't stand up if eating or preparing to eat, or if sitting cooldown is active
@@ -661,9 +803,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
                 // console.log("Jumping with " + Math.round(optimalAngle * 180 / Math.PI) + "° arc toward partner/target");
               }
             }
+            this.resetJumpCooldown();
 
-            this.resetJumpCoolDown();
-
+            // pay jumping costs:
             if (this.age >= maturesAt) {
               // it doesn't cost kittens energy or health to jump
               this.energy -= 7;
@@ -672,8 +814,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
                 this.facingForwards = false;
               }
             }
+            // frame timing edge
             this.y--;
-            this.targetSittingState = false;
             // one in ten jumps is facing backwards
             if (Math.random() < 1 / 10) {
               this.facingForwards = false;
@@ -682,13 +824,13 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         }
       } else {
         // 1% chance to sit when behavior updates
-        if (Math.random() < 0.01) {
+        if (!this.targetSittingState && Math.random() < 0.01) {
           this.targetSittingState = true;
         }
       }
       // 0.1% chance of speaking
       if (Math.random() <= 0.001) {
-        addSpeech(this, neutralWord());
+        speak(this, neutralWord());
       }
     }
   };
@@ -774,39 +916,24 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     return target;
   };
 
-  // Find closest firefly for eye glow (no range restrictions)
-  this.findClosestFireFlyForEyes = function () {
-    let tmp = maxDistance;
-    let target = 'X';
-    for (let i = 0; i < fireflies.length; i++) {
-      let tmpX = this.x - fireflies[i].x;
-      let tmpY = this.y - fireflies[i].y;
-      let distance = Math.sqrt((tmpX * tmpX) + (tmpY * tmpY));
-      if (distance < tmp) {
-        tmp = distance;
-        target = i;
-      }
-    }
-    if (target == 'X') {
-      return 0;
-    }
-    return target;
-  };
-
   // check for bounces on walls and landing on trees
   this.physicsCheck = function () {
+
     this.onSurface = false;
+    this.onTree = false;
     // check if chitten hit a Tree
     let hitTree = false;
     for (let i = 0; i < trees.length && !hitTree; i++) {
       if (!this.inCatBox && this.x >= trees[i].x + (this.size / 2) - (trees[i].width / 2)
         && this.x <= trees[i].x - (this.size / 2) + (trees[i].width / 2)
-        && this.y >= trees[i].y - (this.size) - (this.limbLength / 2.5) - (this.size / 2) && this.y <= trees[i].y + trees[i].height
-        && this.speedY >= 0) {
-        this.y = trees[i].y - (this.size) - (this.limbLength / 2.5);
+        && this.y >= trees[i].y - this.bodyToFeetDistance - (this.size / 2) && this.y <= trees[i].y + trees[i].height) {
+        if (this.speedY >= 0) {
+          this.y = trees[i].y - this.bodyToFeetDistance;
+          hitTree = true;
+          this.landedOnSurface();
+        }
+        this.onTree = true;
         trees[i].loadthisframe += this.mass;
-        hitTree = true;
-        this.landedOnSurface();
 
         // Check if we landed on our target tree and should now go to ultimate target
         if (this.ultimateTarget && this.focus === trees[i]) {
@@ -831,46 +958,30 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         if (this.eatingChewsRemaining == 0 && this.snuggling <= 0) {
           this.energy -= 0.01;
         }
-        if (this.y > trueBottom - (this.size) - (this.limbLength / 2.5)) {
-          this.y = trueBottom - (this.size) - (this.limbLength / 2.5);
+        if (this.y > trueBottom - (this.size) - (this.frontLegLength / 2.5)) {
+          this.y = trueBottom - (this.size) - (this.frontLegLength / 2.5);
         }
       }
     }
     checkBounceSides(this);
     checkBounceTop(this);
-    if (choosingChitten) {
-      for (let i = 0; i < boxes.length; i++) {
-        boxes[i].checkBounce(this);
-      }
-      if (!chosenKitten) {
-        for (let i = 0; i < parentBoxes.length; i++) {
-          parentBoxes[i].checkBounce(this);
-        }
-      }
-    }
 
     // check if chitten hit the floor, come to a rest if so
-    if (!this.onSurface && this.y >= trueBottom - (this.size) - (this.limbLength / 2.5)) {
-      this.y = trueBottom - (this.size) - (this.limbLength / 2.5);
+    if (!this.onSurface && this.y >= trueBottom - this.bodyToFeetDistance) {
+      this.y = trueBottom - this.bodyToFeetDistance;
       this.landedOnSurface();
     }
   };
 
   this.landedOnSurface = function () {
     this.speedY = 0;
-    if (this.energy <= 0 && this.eatingChewsRemaining == 0 && this.snuggling == -1) {
+    if (this.energy <= 0 && this.eatingChewsRemaining == 0 && this.snuggling == -1 && this.sitting) {
       // fall asleep when tired
-      this.targetSittingState = false;
-      this.awake = false;
-      this.facingForwards = true;
-      this.speedX = 0;
-      this.rotation = 0;
-      this.spin = 0;
+      this.fallAsleep();
     } else {
       this.onSurface = true;
       this.facingForwards = true;
       // apply ground friction
-      this.speedX *= groundFriction;
       this.resetRotation(false);
       // jump occasionally
       if (!this.beingHeld && this.rotation == 0 && this.awake && !this.inCatBox) {
@@ -879,40 +990,124 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
 
-  // Helper function to get bodypart color
-  this.getBodypartColor = function (bodypartIndex, isHairless = false) {
+  // helper function for mixing coat colours at different stages of life
+  this.modifyColourByLifeStage = function (clr) {
+    let colour = clr;
+    // colourpoint first
+    if (this.colourpointExpressed && (this.matureModifier !== 1)) {
+      let modifier = 1; // 0 is newborn, 1 is mature
+      if (this.matureModifier !== 1) {
+        modifier = this.matureModifier;
+        const colourBrightness = getBrightness(colour) / rgbMax; // 0 to 1 where 1 is brightest
+        const colourMix = mixTwoColours(colourpointKittenColours[0], colourpointKittenColours[1], colourBrightness);
+        colour = mixTwoColours(colour, colourMix, modifier);
+      }
+    }
+    // tabbies start off darker
+    if (this.pattern == 3 && (this.matureModifier !== 1)) {
+      let modifier = 1;
+      if (this.matureModifier !== 1) {
+        modifier = this.matureModifier;
+        const colourMix = mixTwoColours(clr, trueBlack, 0.6);
+        colour = mixTwoColours(colour, colourMix, modifier);
+      }
+      // old age chittens next
+    } else if (this.oldAgeModifier !== 0) { // 0 is adult, 1 is totally old age
+      let modifier = 0;
+      if (this.oldAgeModifier !== 0) {
+        modifier = this.oldAgeModifier;
+        const colourMix = decreaseSaturationHEX(colour, 2);
+        colour = mixTwoColours(colourMix, colour, modifier);
+      }
+    }
+    return colour;
+  }
+
+  // helper function for eye colours at different stages of life
+  this.getEyeColour = function (whichEye) {
+    if (this.albino) {
+      return albinoRed;
+    }
+    if (whichEye == 'Left') {
+      let leftEyeColour = this.eyeColour;
+      if (this.age < maturesAt) {
+        const eyeBrightness1 = getBrightness(leftEyeColour) / rgbMax; // 0 to 1 where 1 is brightest
+        const eyeMix1 = mixTwoColours(kittenEyeColours[0], kittenEyeColours[1], eyeBrightness1);
+        leftEyeColour = mixTwoColours(leftEyeColour, eyeMix1, this.matureModifier);
+      }
+      return leftEyeColour;
+    } else if (whichEye == 'Right') {
+      let rightEyeColour = this.eyeColour2;
+      if (this.age < maturesAt) {
+        const eyeBrightness2 = getBrightness(rightEyeColour) / rgbMax;
+        const eyeMix2 = mixTwoColours(kittenEyeColours[0], kittenEyeColours[1], eyeBrightness2);
+        rightEyeColour = mixTwoColours(rightEyeColour, eyeMix2, this.matureModifier);
+      }
+      return rightEyeColour;
+    } else {
+      console.warn("getEyeColour fed bad string");
+    }
+  }
+
+  // Helper function to get bodypart colour
+  this.getBodypartColor = function (bpi) {
+
     // Handle albino 
     if (this.albino) {
-      return this.albino && this.hairless ? skinPink : trueWhite;
+      if (this.hairless || (this.lykoi && (bpi == 9 || bpi == 10 || bpi == 11 || bpi == 'lykoiface'))) {
+        return skinPink;
+      }
+      return trueWhite;
+    }
+    // Handle colorpoint - check if this bodypart should be colorpoint
+    // jowls are always colourpoint
+    // include hairless and lykoi cross
+    if (this.colourpointExpressed && (bpi == 9 || bpi == 10 || bpi == 'colourpointface')) {
+      if (this.hairless || this.lykoi) {
+        return this.skinColour3;
+      }
+      return this.modifyColourByLifeStage(this.thirdColour);
+    }
+    // refer to colourmap for other parts
+    if (this.colourpointExpressed && this.colourpointMap[this.bodypartcodeToColourMap(bpi)]) {
+      if (this.hairless || (this.lykoi && bpi == 11)) {
+        return this.skinColour3;
+      }
+      return this.modifyColourByLifeStage(this.thirdColour);
     }
     // Handle hairless 
-    if (isHairless || this.hairless) {
-      if (this.bodypartCode[bodypartIndex] == 0) {
+    if (this.hairless) {
+      if (this.bodypartCode[bpi] == 0) {
         return this.skinColour1;
-      } else if (this.bodypartCode[bodypartIndex] == 1) {
+      } else if (this.bodypartCode[bpi] == 1) {
         return this.skinColour2;
       } else {
         return this.skinColour3;
       }
     }
-    // Handle colorpoint - check if this bodypart should be colorpoint
-    // jowls are always colourpoint
-    if (!this.albino && this.colourpointExpressed
-      && (bodypartIndex == 9 || bodypartIndex == 10)) {
-      return this.thirdColour
+    // handle lykoi
+    if (this.lykoi) {
+      // special case: Lykoi facegradient:
+      if (bpi == 'lykoiface') {
+        return (getSkinColourFromColour(mixTwoColours(this.getBodypartColor(9), this.getBodypartColor(10), 0.5)));
+      }
+      if (bpi == 9 || bpi == 10 || bpi == 11) {
+        if (this.bodypartCode[bpi] == 0) {
+          return this.skinColour1;
+        } else if (this.bodypartCode[bpi] == 1) {
+          return this.skinColour2;
+        } else {
+          return this.skinColour3;
+        }
+      }
     }
-    // refer to colournmap for other parts
-    if (!this.albino && this.colourpointExpressed && this.colourpointMap[this.bodypartcodeToColourMap(bodypartIndex)]) {
-      return this.thirdColour;
-    }
-
     // For non-hairless, non-albino, non-colorpoint cats - use normal bodypart colors
-    if (this.bodypartCode[bodypartIndex] == 0) {
-      return this.firstColour;
-    } else if (this.bodypartCode[bodypartIndex] == 1) {
-      return this.secondColour;
+    if (this.bodypartCode[bpi] == 0) {
+      return this.modifyColourByLifeStage(this.firstColour);
+    } else if (this.bodypartCode[bpi] == 1) {
+      return this.modifyColourByLifeStage(this.secondColour);
     } else {
-      return this.thirdColour;
+      return this.modifyColourByLifeStage(this.thirdColour);
     }
   };
 
@@ -932,25 +1127,78 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
 
-  // Helper function to apply pattern overlay
-  this.applyPatternOverlay = function (pat, drawFunction) {
-    if (!this.albino && this.pattern !== 0) {
-      ctx.fillStyle = pat;
-      ctx.globalAlpha = this.patternAlpha;
-      drawFunction();
-      ctx.globalAlpha = 1;
+  // helper to draw a pattern in a specific colour
+  this.createPatternOverlay = function (bpc, drawFunction) {
+    if (this.albino || this.pattern === 0 || this.pattern === 2 || this.pattern === 4 || this.pattern === 5) return;
+    let patImage;
+    if (this.pattern == 1) {
+      patImage = pattern1;
+    } else if (this.pattern == 2) {
+      patImage = pattern2;
+    } else if (this.pattern == 3) {
+      patImage = pattern3;
+    } else if (this.pattern == 6) {
+      patImage = pattern6;
+    } else if (this.pattern == 7) {
+      patImage = pattern7;
     }
+    // modify the pattern alpha according to life stage rules
+    let patAlpha = this.patternAlpha;
+    if (this.pattern == 3) {
+      // tabby markings fade in from 50%
+      patAlpha = (this.patternAlpha / 2) + (this.matureModifier * (patAlpha / 2));
+    } else if (this.pattern == 7) {
+      // abyssinian markings fade in from 0%
+      patAlpha = this.matureModifier * this.patternAlpha;
+    }
+    ctx.globalAlpha = 1;
+    // set up the patterns:
+    // other patterns - with recoloring
+    // set up the scale
+    const baseSize = chittenMinSize * 4; // 40 if chittenMinSize = 10
+    let scale = this.size / baseSize;
+    let w = patImage.width * scale;
+    let h = patImage.height * scale;
+    // set up the colour
+    let patColour = trueBlack;
+    if (this.pattern !== 1 && this.pattern !== 7) {
+      patColour = this.modifyColourByLifeStage(this.patternColour);
+    } else if (this.pattern == 7) {
+      patColour = trueWhite;
+    } else {
+      patColour = trueBlack;
+    }
+    if (this.hairless) {
+      patColour = getSkinColourFromColour(patColour);
+    }
+    let bodyPartColour = this.getBodypartColor(bpc);
+    let alphaColour = mixTwoColours(patColour, bodyPartColour, patAlpha);
+    ctx.save();
+    // Define clip shape
+    ctx.beginPath();
+    drawFunction();   // only defines path
+    ctx.closePath();
+    ctx.clip();
+    // First: draw the pattern
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "destination-atop";
+    ctx.rotate(this.coatMod[2] * 2 * Math.PI);
+    ctx.drawImage(patImage, -w / 2, -h / 2, w, h);
+    // Now: tint it with desired color + alpha
+    ctx.fillStyle = alphaColour;
+    ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.restore();
+    ctx.globalAlpha = 1;
   };
+
 
   // Helper function for animation calculations (modulo operation)
   this.getAnimationValue = function (value, modulo) {
-    while (value > modulo && value > 0) {
-      value -= modulo;
-    }
-    while (value < 0) {
-      value += modulo;
-    }
-    return value;
+    // Normalize to 0-1 range, then convert to smooth sine wave
+    let normalizedValue = (value % modulo) / modulo;
+    let sineValue = Math.sin(normalizedValue * 2 * Math.PI);
+    // Convert from -1 to +1 range back to 0 to modulo range
+    return ((sineValue + 1) / 2) * modulo;
   };
 
   // Helper function to apply bodypart code colors to gradient based on anatomical connections
@@ -975,32 +1223,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
     const [topPartIndex, bottomPartIndex] = connections[bodypartIndex];
     let topColor, bottomColor;
-
-    if (this.colourpointExpressed) {
-      // Colorpoint cats have special gradient rules
-      if ([0, 1, 7, 8].includes(bodypartIndex)) {
-        // Feet: body part colour to thirdColour
-        topColor = this.getBodypartColor(topPartIndex);
-        bottomColor = this.thirdColour;
-      } else if (bodypartIndex === 6) {
-        // Tail: thirdColour to body part colour  
-        topColor = this.thirdColour;
-        bottomColor = this.getBodypartColor(bottomPartIndex);
-      } else if (bodypartIndex === 2) {
-        // Face: thirdColour to body part colour
-        topColor = this.thirdColour;
-        bottomColor = this.getBodypartColor(bottomPartIndex);
-      } else {
-        // Other parts use normal anatomical connections
-        topColor = this.getBodypartColor(topPartIndex);
-        bottomColor = this.getBodypartColor(bottomPartIndex);
-      }
-    } else {
-      // Normal cats use anatomical connections
-      topColor = this.getBodypartColor(topPartIndex);
-      bottomColor = this.getBodypartColor(bottomPartIndex);
-    }
-
+    // Normal cats use anatomical connections
+    topColor = mixTwoColours(this.getBodypartColor(topPartIndex), this.getBodypartColor(bodypartIndex), this.coatMod[3]);
+    bottomColor = mixTwoColours(this.getBodypartColor(bottomPartIndex), this.getBodypartColor(bodypartIndex), this.coatMod[3]);
     // Create gradient
     gradient.addColorStop(0, topColor);
     gradient.addColorStop(this.coatMod[0], mixTwoColours(topColor, bottomColor, 0.5));
@@ -1015,7 +1240,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // For solid colors (hairless, albino, or colorpoint), use getBodypartColor
     if (this.hairless || this.albino ||
       (!this.albino && this.colourpointExpressed && this.colourpointMap[this.bodypartcodeToColourMap(bodypartIndex)])) {
-      return this.getBodypartColor(bodypartIndex, this.hairless);
+      return this.getBodypartColor(bodypartIndex);
     }
 
     // For normal cats, create the specified gradient
@@ -1035,14 +1260,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
   // Helper function to create foot gradient (now uses combined function)
   this.createFootGradient = function (bodypartIndex, footSize) {
-    if (this.albino) {
-      return trueWhite;
-    } else if (this.hairless) {
-      return this.getBodypartColor(bodypartIndex);
-    }
     return this.createBodypartGradient(bodypartIndex, 'radial', [
       0, 0, 1,
-      0, 0, (this.size) + (this.limbLength / 2.5) + (footSize * 2)
+      0, 0, (this.size) + (this.frontLegLength / 2.5) + (footSize * 2)
     ]);
   };
 
@@ -1050,188 +1270,165 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.createEarGradient = function (bodypartIndex) {
     return this.createBodypartGradient(bodypartIndex, 'linear', [
       0, -this.size - (this.size * this.earWidth / 2),
-      0, this.limbLength / 4
+      0, this.frontLegLength / 4
     ]);
   };
 
-  // Helper function to draw a single front leg
-  this.drawSingleFrontLeg = function (xPosition, startY, endY, legGradient, bodypartIndex, pat) {
-    // Cell shading
-    ctx.strokeStyle = this.cellShadeLine;
-    ctx.beginPath();
-    ctx.moveTo(xPosition, startY);
-    ctx.lineTo(xPosition, endY);
-    ctx.stroke();
-
-    // Real drawing with gradient
-    ctx.lineWidth -= this.cellShadeThickness;
-    ctx.strokeStyle = legGradient;
-    ctx.beginPath();
-    ctx.moveTo(xPosition, startY);
-    ctx.lineTo(xPosition, endY);
-    ctx.stroke();
-    ctx.lineWidth += this.cellShadeThickness;
+  // Helper function to create body gradient with consistent angle and color logic
+  this.createBodyGradient = function (maxWidth) {
+    return this.createBodypartGradient(5, 'linear', [
+      + Math.cos(this.coatMod[1] * 2 * Math.PI) * maxWidth, // start pos
+      + Math.sin(this.coatMod[1] * 2 * Math.PI) * maxWidth,
+      - Math.cos(this.coatMod[1] * 2 * Math.PI) * maxWidth, // end pos
+      - Math.sin(this.coatMod[1] * 2 * Math.PI) * maxWidth
+    ]);
   };
 
-  // Helper function to draw a single reaching front leg
-  this.drawReachingFrontLeg = function (startX, startY, endX, endY, legGradient, bodypartIndex, pat) {
-    // Cell shading
-    ctx.strokeStyle = this.cellShadeLine;
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.restore();
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-
-    // Real drawing with gradient
-    ctx.lineWidth -= this.cellShadeThickness;
-    ctx.strokeStyle = legGradient;
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.restore();
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-    ctx.lineWidth += this.cellShadeThickness;
+  // Helper function to create tail gradient
+  this.createTailGradient = function () {
+    return this.createBodypartGradient(6, 'radial', [
+      0, this.size, 1,
+      0, 0, this.size * 4
+    ]);
   };
 
-  // Helper function to draw a single leg
-  this.drawSingleBackLeg = function (xOffset, yOffset, rotation, legGradient, footColor, pat) {
-    // Cell shading first
-    ctx.fillStyle = this.cellShadeLine;
-    ctx.strokeStyle = this.cellShadeLine;
-    let originalLineWidth = ctx.lineWidth;
-    ctx.lineWidth += this.cellShadeThickness;
+  // Helper function to create linear leg gradient
+  this.createLegGradient = function (bodypartIndex, x1, y1, x2, y2) {
+    let gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+    return this.applyBodypartGradient(bodypartIndex, gradient);
+  };
 
+  // Helper function to create head gradient with proper bodypart color logic
+  this.createHeadGradient = function (gradHeight) {
+    return this.createBodypartGradient(2, 'linear', [
+      + Math.cos(this.coatMod[1] * 2 * Math.PI) * gradHeight, // start pos - same angle as body
+      + Math.sin(this.coatMod[1] * 2 * Math.PI) * gradHeight,
+      - Math.cos(this.coatMod[1] * 2 * Math.PI) * gradHeight, // end pos
+      - Math.sin(this.coatMod[1] * 2 * Math.PI) * gradHeight
+    ]);
+  };
+
+  // Unified function to draw any single leg (front standing, front jumping, front touching, back)
+  this.drawSingleLeg = function (bpc, startX, startY, endX, endY, legGradient) {
+    // PRECALC
+    startY += this.outlineThickness * 2;
+    endY += this.outlineThickness * 2;
+    let dx = endX - startX;
+    let dy = endY - startY;
+    let legLength = Math.sqrt(dx * dx + dy * dy);
+    let legAngle = Math.atan2(dy, dx);
+    // Translate
     ctx.save();
-    ctx.translate(xOffset, yOffset);
-    if (!this.onSurface) {
-      ctx.rotate(rotation);
-    }
-
-    ctx.beginPath();
-    if (this.awake && this.sittingProgress > 0) {
-      ctx.moveTo(0, -(this.size / 2) * this.sittingProgress);
-    } else {
-      ctx.moveTo(0, 0);
-    }
-    ctx.lineTo(0, this.limbLength * 0.6);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(0, this.limbLength * 0.6, (this.size / 3.5 * this.thickness * 2) + this.cellShadeThickness, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.restore();
-
-    // Main drawing
-    ctx.lineWidth = originalLineWidth;
-    ctx.strokeStyle = legGradient;
+    ctx.translate(startX, startY);
+    ctx.rotate(legAngle);
+    // Cell shading
+    ctx.strokeStyle = this.outlineColour;
+    ctx.lineWidth = this.outlineThickness * 2;
+    // Drawing with gradient
     ctx.fillStyle = legGradient;
-
-    ctx.save();
-    ctx.translate(xOffset, yOffset);
-    if (!this.onSurface) {
-      ctx.rotate(rotation);
-    }
-
     ctx.beginPath();
-    if (this.awake && this.sittingProgress > 0) {
-      ctx.moveTo(0, -(this.size / 2) * this.sittingProgress);
-    } else {
-      ctx.moveTo(0, 0);
-    }
-    ctx.lineTo(0, this.limbLength * 0.6);
+    ctx.rect(-this.legWidth / 2, -this.legWidth / 2, legLength, this.legWidth);
     ctx.stroke();
-
-    ctx.fillStyle = footColor;
-    ctx.beginPath();
-    ctx.arc(0, this.limbLength * 0.6, this.size / 3.5 * this.thickness * 2, 0, 2 * Math.PI);
     ctx.fill();
-
-    // Pattern overlay
-    this.applyPatternOverlay(pat, () => {
-      ctx.strokeStyle = pat;
-      ctx.beginPath();
-      if (this.awake && this.sittingProgress > 0) {
-        ctx.moveTo(0, -(this.size / 2) * this.sittingProgress);
-      } else {
-        ctx.moveTo(0, 0);
-      }
-      ctx.lineTo(0, this.limbLength * 0.6);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(0, this.limbLength * 0.6, this.size / 3.5 * this.thickness * 2, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-
     ctx.restore();
+    // Pattern overlay (needs same transformations as leg drawing)
+    this.createPatternOverlay(bpc, () => {
+      // Calculate the leg line length and angle
+      // Position rectangle to match the leg line
+      ctx.translate(startX, startY);
+      ctx.rotate(legAngle);
+      ctx.rect(-this.legWidth / 2, -this.legWidth / 2, legLength, this.legWidth);
+    });
   };
 
-  this.drawTail = function (pat, backendShiftX, backendShiftY, sleepshift) {
-    // === TAIL ANIMATION CALCULATIONS ===
-    let tmp = this.getAnimationValue(Math.abs(daytimeCounter - this.birthday), 30);
-    tmp = Math.abs(tmp - 15); // 0 to 15 to 0 to 15 (wagging motion)
+  this.drawSingleFoot = function (bpc, x, y, rotation, gradient, drawToes, toeColour) {
+    ctx.save();
+    if (rotation !== 0) {
+      ctx.rotate(rotation);
+    }
+    ctx.lineWidth = 2 * this.outlineThickness;
+    ctx.strokeStyle = this.outlineColour
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, this.footSize, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+    ctx.restore();
 
+    // Pattern overlay for foot
+    this.createPatternOverlay(bpc, () => {
+      if (rotation !== 0) {
+        ctx.rotate(rotation);
+      }
+      ctx.arc(x, y, this.footSize, 0, 2 * Math.PI);
+    });
+    if (drawToes && !this.onSurface && this.focus && this.facingForwards && this.y > this.focus.y) {
+      // jelly beans / toe pads
+      ctx.save();
+      // Position toe pads relative to the foot
+      ctx.translate(x, y);
+      // uniformly scale the pads so that it looks like the feet are reaching towards the focus
+      let scaleY = 1;
+      if (!this.onSurface && this.focus && this.y - (this.size * 10) < this.focus.y) {
+        scaleY = (this.y - this.focus.y) / this.size / 10;
+        ctx.scale(1, scaleY);
+      }
+      ctx.fillStyle = toeColour;
+      ctx.strokeStyle = this.outlineColour;
+      ctx.lineWidth = this.size / 10;
+      ctx.beginPath();
+      ctx.arc(0, -(this.footSize), this.footSize / 3.5, 0, 2 * Math.PI); // mid
+      ctx.stroke();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-this.footSize / 2, -(this.footSize), this.footSize / 3.5, 0, 2 * Math.PI); // left
+      ctx.stroke();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(this.footSize / 2, -(this.footSize), this.footSize / 3.5, 0, 2 * Math.PI); // right
+      ctx.stroke();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, this.footSize / 10, this.footSize / 1.5, 0, 3 * Math.PI); // main
+      ctx.stroke();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  this.drawTail = function (backendShiftX, backendShiftY) {
+    // === TAIL ANIMATION CALCULATIONS ===
+    let tailWagMod = 0;
+    tailWagMod = this.getAnimationValue(Math.abs(daytimeCounter - this.birthday), 30);
+    tailWagMod = (tailWagMod - 15) / 15; // Convert 0-30 sine wave to -1 to +1 range
+    tailWagMod *= 5; // Scale to ±5 for tail wagging amplitude
     // === CONTEXT TRANSFORMATIONS ===
     ctx.save();
-    if (this.awake && !this.facingForwards && this.sittingProgress > 0) {
-      ctx.translate(0, -this.size * this.sittingProgress);
-    }
     if (!this.onSurface && this.awake) {
-      tmp = 0;
+      tailWagMod = 0;
       ctx.translate(-backendShiftX, -backendShiftY);
       ctx.rotate((90 * Math.PI / 180) + Math.atan2(-this.speedY, -this.speedX));
-    }
-    if (this.onSurface || !this.awake) {
-      ctx.translate(0, sleepshift - this.size);
     }
 
     // === COLOR SETUP ===
     let tailGradient;
-    // Check if this should be a solid color (hairless, albino, or colorpoint)
-    if (this.hairless || this.albino ||
-      (!this.albino && this.colourpointExpressed && this.colourpointMap[this.bodypartcodeToColourMap(6)])) {
-      tailGradient = this.getBodypartColor(6, this.hairless);
-    } else if (!this.albino && !this.hairless) {
-      tailGradient = ctx.createRadialGradient(0, this.size, 1, 0, 0, this.size * 4);
-      tailGradient.addColorStop(0, trueBlack);
-      if (this.bodypartCode[6] == 0) {
-        tailGradient.addColorStop(0, this.secondColour);
-        tailGradient.addColorStop(this.coatMod[0], this.firstColour);
-        tailGradient.addColorStop(1, this.firstColour);
-      } else if (this.bodypartCode[6] == 1) {
-        tailGradient.addColorStop(0, this.thirdColour);
-        tailGradient.addColorStop(this.coatMod[0], this.secondColour);
-        tailGradient.addColorStop(1, this.secondColour);
-      } else {
-        tailGradient.addColorStop(0, this.firstColour);
-        tailGradient.addColorStop(this.coatMod[0], this.thirdColour);
-        tailGradient.addColorStop(1, this.thirdColour);
-      }
-    } else if (this.albino) {
-      tailGradient = trueWhite;
-    } else {
-      tailGradient = skinPink;
-    }
+    tailGradient = this.createTailGradient();
 
     // === DRAW OUTLINE AND FILL ===
     ctx.fillStyle = tailGradient;
-    ctx.lineWidth = 2 * this.cellShadeThickness;
-    ctx.strokeStyle = this.cellShadeLine;
+    ctx.lineWidth = 2 * this.outlineThickness;
+    ctx.strokeStyle = this.outlineColour;
     ctx.beginPath();
     ctx.moveTo(+this.size / 3, (this.size / 3));
-    ctx.arc((this.size * (-tmp + 7.5) * this.tailLength / 8 * this.thickness) - (this.size / 32), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
+    ctx.arc((this.size * tailWagMod * this.tailLength / 8 * this.thickness), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
     ctx.lineTo(-this.size / 3, this.size / 3);
     ctx.stroke();
     ctx.fill();
 
     // === PATTERN OVERLAY ===
-    this.applyPatternOverlay(pat, () => {
-      ctx.beginPath();
+    this.createPatternOverlay(6, () => {
       ctx.moveTo(+this.size / 3, (this.size / 3));
-      ctx.arc((this.size * (-tmp + 7.5) * this.tailLength / 8 * this.thickness) - (this.size / 32), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
+      ctx.arc((this.size * tailWagMod * this.tailLength / 8 * this.thickness), (this.size / 3) - (2 * this.tailLength * this.size), (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
       ctx.lineTo(-this.size / 3, this.size / 3);
       ctx.fill();
     });
@@ -1246,40 +1443,64 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.restore();
   };
 
-  this.drawBackLegs = function (pat, backendShiftX, backendShiftY, bodyGradient, sameDirection, legAngle) {
-    if (this.awake && this.energy > 0) {
-      let footSize = this.size / 3.5 * this.thickness * 2.25;
-      let leftFootColour = this.createFootGradient(7, footSize);
-      let rightFootColour = this.createFootGradient(8, footSize);
+  this.drawBackLegs = function (backendShiftX, backendShiftY) {
+    // setting leg angle
+    // calculate positions
+    let startXL = (-this.backLegOriginX) - backendShiftX;
+    let startXR = (this.backLegOriginX) - backendShiftX;
+    let startY = this.backLegOriginY - backendShiftY;
+    let endXL = startXL;
+    let endXR = startXR;
+    let endY = this.backLegLength;
 
-      ctx.lineWidth = (this.size / 2.5) * this.thickness * 2;
-      ctx.save(); // 0 open - rotated
-      ctx.translate(this.x - backendShiftX, this.y - backendShiftY);
-      if (!this.onSurface) {
-        ctx.rotate(this.rotation);
+    if (!this.awake) {
+      startY += (endY - this.footSize) * (this.sittingProgress);
+    }
+
+    if (this.sittingProgress > 0) {
+      startY *= this.sittingProgress;
+    }
+    // Calculate leg rotations with clamped horizontal angles
+    let leftLegRotation = 0;//Math.PI/2;
+    let rightLegRotation = 0;//Math.PI/2;
+
+    if (!this.onSurface) {
+      // Jump up: Left leg horizontal left, right leg horizontal right
+      leftLegRotation = Math.PI;     // Horizontal left (180°)
+      rightLegRotation = 0;          // Horizontal right (0°)
+
+      // Apply lerping only during fall
+      if (!this.beingHeld && this.speedY > 0 && this.jumpHeight && this.originalAngleToFocus !== null) {
+        const currentHeight = trueBottom - this.y;
+        const fallProgress = Math.max(0, Math.min(1, (this.jumpHeight - currentHeight) / this.jumpHeight));
+        // Fall: lerp to straight down (Math.PI/2)
+        leftLegRotation = Math.PI + (Math.PI / 2 - Math.PI) * fallProgress;        // π to π/2 (anticlockwise)
+        rightLegRotation = 0 + (Math.PI / 2 - 0) * fallProgress;                   // 0 to π/2 (clockwise)
       }
 
-      // Calculate leg rotations
-      let leftLegRotation = !this.onSurface ? (sameDirection ? this.angleToFocus + (90 * Math.PI / 180) : legAngle) : 0;
-      let rightLegRotation = !this.onSurface ? (sameDirection ? this.angleToFocus + (90 * Math.PI / 180) : -legAngle) : 0;
-
-      let gradientTotalLengthY = this.limbLength * 0.6;
-      let leftBackLegGradient = ctx.createLinearGradient(-(this.size / 2.5), this.size / 2, 0, gradientTotalLengthY);
-      this.applyBodypartGradient(7, leftBackLegGradient);
-      let leftFrontLegGradient = ctx.createLinearGradient((this.size / 2.5), this.size / 2, 0, gradientTotalLengthY);
-      this.applyBodypartGradient(8, leftFrontLegGradient);
-
-      // Draw both legs using helper function
-      this.drawSingleBackLeg(-(this.size / 2.5), (this.size / 2), leftLegRotation, leftBackLegGradient, leftFootColour, pat);
-      this.drawSingleBackLeg((this.size / 2.5), (this.size / 2), rightLegRotation, leftFrontLegGradient, rightFootColour, pat);
-
-      ctx.restore(); // 0 close
+      // Update end positions based on rotation
+      endXL = startXL + this.backLegLength * Math.cos(leftLegRotation);
+      endY = startY + this.backLegLength * Math.sin(leftLegRotation);
+      endXR = startXR + this.backLegLength * Math.cos(rightLegRotation);
+      // Right leg endY should be same as left since they both extend from same hip level
     }
+
+    let leftBackLegGradient = this.createLegGradient(7, startXL, this.backLegOriginY, 0, this.backLegLength);
+    let leftFrontLegGradient = this.createLegGradient(8, startXL, this.backLegOriginY, 0, this.backLegLength);
+    let leftFootGradient = this.createFootGradient(7, this.footSize);
+    let rightFootGradient = this.createFootGradient(8, this.footSize);
+
+    // left
+    this.drawSingleLeg(7, startXL, startY, endXL, endY, leftBackLegGradient);
+    this.drawSingleFoot(7, endXL, endY, 0, leftFootGradient);
+    // // right  
+    this.drawSingleLeg(8, startXR, startY, endXR, endY, leftFrontLegGradient);
+    this.drawSingleFoot(8, endXR, endY, 0, rightFootGradient);
   };
 
   this.drawIcons = function () {
     ctx.save(); // 0
-    ctx.translate(this.x, this.y);
+    // Already translated to (this.x, this.y) in render()
     // zzzzs
     if (!this.awake) {
       ctx.fillStyle = trueWhite;
@@ -1331,115 +1552,70 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.restore(); // 0
   };
 
-  this.drawBody = function (pat, backendShiftX, backendShiftY, bodyGradient) {
-    // === BODY ANIMATION CALCULATIONS ===
-    let tmp = this.getAnimationValue(Math.abs(daytimeCounter - this.birthday), 15);
-    tmp *= 0.5;
-    tmp = Math.abs(tmp - 3.75); // -0 to -3.75 to 0 to 3.75 (butt wagging)
-
-    // === SETUP DRAWING STYLE ===
+  this.drawBody = function (backendShiftX, backendShiftY, bodyGradient) {
+    // Calculate common values
+    let buttWiggle = 0;
+    if (!this.beingHeld && this.awake) {
+      buttWiggle = this.getAnimationValue(Math.abs(daytimeCounter - this.birthday), 15);
+      buttWiggle = (buttWiggle - 7.5) / 7.5; // Convert 0-15 sine wave to -1 to +1
+      buttWiggle *= (this.size / 2); // Scale to ±this.size/2 for smooth left/right wiggle    
+    }
+    let bodyRadius = this.size + this.thicknessModS;
+    let sittingOffset = this.sittingProgress || 0;
+    // Setup drawing style
     ctx.fillStyle = bodyGradient;
-    ctx.strokeStyle = this.cellShadeLine;
-    ctx.lineWidth = 2 * this.cellShadeThickness;
+    ctx.strokeStyle = this.outlineColour;
+    ctx.lineWidth = 2 * this.outlineThickness;
 
-    if (this.awake && this.sittingProgress > 0) {
-      // === SITTING POSITION - INTERPOLATED ===
-      let sittingOffset = this.sittingProgress;
+    if (!this.awake) return; // Skip drawing if asleep
 
-      // DRAW OUTLINE AND FILL - BUTT
+    const drawBodyOutline = (x, y) => {
+      ctx.globalAlpha = 1;
       ctx.beginPath();
-      ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
+      ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
+    }
 
-      // DRAW OUTLINE AND FILL - BELLY
-      ctx.beginPath();
-      ctx.arc(-backendShiftX / 4, -this.size - (this.backendShiftY / 4) * sittingOffset, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-
-      // === PATTERN OVERLAY - SITTING ===
-      this.applyPatternOverlay(pat, () => {
-        // Pattern - butt
-        ctx.beginPath();
-        ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.fill();
-        // Pattern - belly
-        ctx.beginPath();
-        ctx.arc(-backendShiftX / 4, -this.size - (this.backendShiftY / 4) * sittingOffset, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
+    // Helper function to draw a body segment with pattern and special effects
+    const drawBodySegment = (x, y, drawGradient = false) => {
+      // Apply pattern overlay
+      this.createPatternOverlay(5, () => {
+        ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
         ctx.fill();
       });
-
-      // Special pattern effects (outside helper since they need different styling)
-      if (!this.albino && this.pattern == 3) {
-        let fadeGrad = ctx.createLinearGradient(0, -(this.size + (this.thickness * this.size / 2)) / 2, 0, (this.size + (this.thickness * this.size / 2)));
-        fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
-        fadeGrad.addColorStop(1, this.firstColour);
+      // Apply special pattern effects for certain patterns
+      // in this case it is related to the not-patterned parts of chittens' markings
+      if (drawGradient && !this.hairless && !this.albino && (this.pattern == 3 || this.pattern == 6 || this.pattern == 7)) {
+        let fadeGrad = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
+        ctx.globalAlpha = 0.5;
+        fadeGrad.addColorStop(0.25, hexToRgba(this.modifyColourByLifeStage(this.firstColour), 1));
+        fadeGrad.addColorStop(0.6, hexToRgba(this.modifyColourByLifeStage(this.firstColour), 0));
         ctx.fillStyle = fadeGrad;
         ctx.beginPath();
-        ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      if (!this.albino && this.pattern == 6) {
-        let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
-        ctx.globalAlpha = 0.5;
-        bGradient.addColorStop(0, this.thirdColour);
-        bGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = bGradient;
-        ctx.arc(-backendShiftX / 4, -this.size - (this.backendShiftY / 4) * sittingOffset, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.arc(-tmp + (1.875 * sittingOffset), -this.size, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
+        ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
       }
-    } else if (this.awake) {
-      // === STANDING POSITION ===
+    };
 
-      // DRAW OUTLINE AND FILL - BUTT
-      ctx.fillStyle = bodyGradient;
-      ctx.beginPath();
-      ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-
-      // DRAW OUTLINE AND FILL - BELLY
-      ctx.beginPath();
-      ctx.arc(-(this.size / 32) - backendShiftX / 4, - backendShiftY / 4, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-
-      // === PATTERN OVERLAY - STANDING ===
-      this.applyPatternOverlay(pat, () => {
-        ctx.beginPath();
-        ctx.arc(-(this.size / 32) - backendShiftX / 4, - backendShiftY / 4, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.fill();
-      });
-
-      // Special pattern effects (outside helper since they need different styling)
-      if (!this.albino && this.pattern == 3) {
-        let fadeGrad = ctx.createLinearGradient(0, -(this.size + (this.thickness * this.size / 2)) / 2, 0, (this.size + (this.thickness * this.size / 2)));
-        fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
-        fadeGrad.addColorStop(1, this.firstColour);
-        ctx.fillStyle = fadeGrad;
-        ctx.beginPath();
-        ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      if (!this.albino && this.pattern == 6) {
-        let bGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
-        ctx.globalAlpha = 0.5;
-        bGradient.addColorStop(0, this.thirdColour);
-        bGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = bGradient;
-        ctx.arc(-(this.size / 32) - backendShiftX, - backendShiftY, (this.size + (this.thickness * this.size / 2)), 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+    if (sittingOffset > 0) {
+      // Sitting position - draw butt and belly segments
+      drawBodyOutline(-buttWiggle + (1.875 * sittingOffset), -this.size);
+      drawBodyOutline(-backendShiftX / 4, -this.size - (backendShiftY / 4) * sittingOffset);
+      drawBodySegment(-buttWiggle + (1.875 * sittingOffset), -this.size, false);
+      drawBodySegment(-backendShiftX / 4, -this.size - (backendShiftY / 4) * sittingOffset, true);
+    } else {
+      // Standing position - draw butt and belly segments
+      drawBodyOutline(-backendShiftX, -backendShiftY);
+      drawBodyOutline(-backendShiftX / 4, -backendShiftY / 4);
+      drawBodySegment(-backendShiftX, -backendShiftY, false);
+      drawBodySegment(-backendShiftX / 4, -backendShiftY / 4, true);
     }
   };
 
-  this.drawChest = function (pat, backendShiftX, backendShiftY, bodyGradient) {
-    if (this.awake && this.sittingProgress < 1) {
+  this.drawChest = function (bodyGradient) {
+    if (this.sittingProgress < 1) {
       // Scale chest down to 0% when sitting
       let chestScale = 1 - this.sittingProgress; // 0 when sitting, 1 when standing
       let bgY = this.size / 2;
@@ -1448,93 +1624,91 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.globalAlpha = 1;
       // REAL DRAWING
       ctx.fillStyle = bodyGradient;
-      ctx.strokeStyle = this.cellShadeLine;
-      ctx.lineWidth = 2 * this.cellShadeThickness;
+      ctx.strokeStyle = this.outlineColour;
+      ctx.lineWidth = 2 * this.outlineThickness;
+      ctx.save();
+      // ctx.globalCompositeOperation = "destination-over";
       ctx.beginPath();
-      ctx.arc(0, bgY, (this.size + (this.thickness * this.size / 5)) * chestScale, 0, 2 * Math.PI);
+      ctx.arc(0, bgY, (this.size + this.thicknessModL) * chestScale, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
-
-      // chest coloured piece
+      ctx.closePath();
+      ctx.restore();
+      // chest coloured piece using bodypart gradient helper
       let chestColour;
       if (this.hairless) {
-        chestColour = this.getBodypartColor(12, true);
+        chestColour = this.getBodypartColor(12);
       } else if (!this.albino && !this.hairless) {
-        chestColour = bodyGradient; // Use existing gradient and modify it
-        if (this.bodypartCode[12] == 0) {
-          chestColour.addColorStop(0, this.secondColour);
-          chestColour.addColorStop(this.coatMod[0], this.firstColour);
-          chestColour.addColorStop(0.5, this.firstColour);
-        } else if (this.bodypartCode[12] == 1) {
-          chestColour.addColorStop(0, this.thirdColour);
-          chestColour.addColorStop(this.coatMod[0], this.secondColour);
-          chestColour.addColorStop(0.5, this.secondColour);
-        } else {
-          chestColour.addColorStop(0, this.firstColour);
-          chestColour.addColorStop(this.coatMod[0], this.thirdColour);
-          chestColour.addColorStop(0.5, this.thirdColour);
-        }
+        chestColour = this.applyBodypartGradient(12, bodyGradient);
       } else {
         chestColour = bodyGradient; // Default for albino
       }
       ctx.fillStyle = chestColour;
       ctx.beginPath();
-      ctx.arc(0, fgY, ((this.size + (this.thickness * this.size / 5)) / 1.5) * chestScale, 0, 2 * Math.PI);
+      ctx.arc(0, fgY, ((this.size + this.thicknessModL) / 1.5) * chestScale, 0, 2 * Math.PI);
       ctx.fill();
-      // Apply pattern overlay (excluding pattern 3 which doesn't apply to chest)
-      if (!this.albino && this.pattern !== 0 && this.pattern !== 3) {
-        this.applyPatternOverlay(pat, () => {
-          ctx.beginPath();
-          ctx.arc(0, bgY, (this.size + (this.thickness * this.size / 5)) * chestScale, 0, 2 * Math.PI);
-          ctx.fill();
-        });
+      // draw pattern now
+      this.createPatternOverlay(12, () => {
+        ctx.arc(0, bgY, (this.size + this.thicknessModL) * chestScale, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+
+      // additional gradient on top for tabby, bengal, mau patterns
+      if (!this.albino && !this.hairless && (this.pattern == 3 || this.pattern == 6 || this.pattern == 7)) {
+        let chestGradient = ctx.createRadialGradient(0, (this.size + (this.thickness * this.size)), 0, 0, 0, (this.size * 2));
+        ctx.globalAlpha = 1;
+        chestGradient.addColorStop(0.2, hexToRgba(this.modifyColourByLifeStage(this.firstColour), 1));
+        chestGradient.addColorStop(0.7, hexToRgba(this.modifyColourByLifeStage(this.firstColour), 0));
+        ctx.fillStyle = chestGradient;
+        ctx.beginPath();
+        ctx.arc(0, bgY, (this.size + this.thicknessModL) * chestScale, 0, 2 * Math.PI);
+        ctx.fill();
       }
       ctx.rotate(this.rotation);
     }
   };
 
-  this.drawHead = function (pat, sleepshift) {
+  this.drawHead = function () {
     // ears
     ctx.globalAlpha = 1;
     ctx.save(); // 0
-    if (this.awake) {
-      ctx.translate(-this.size, -this.size / 2);
-    } else {
-      ctx.translate(-this.size, sleepshift);
-    }
+    ctx.translate(-this.size, -this.size / 2);
     oneq = this.size / 2;
     let leftEarGradient = this.createEarGradient(3);
     let rightEarGradient = this.createEarGradient(4);
     ctx.fillStyle = leftEarGradient;
-    ctx.strokeStyle = this.cellShadeLine;
-    ctx.lineWidth = this.cellShadeThickness;
+    ctx.strokeStyle = this.outlineColour;
+    ctx.lineWidth = this.outlineThickness;
+    // stroke and fill left ear
     ctx.beginPath();
     ctx.moveTo(0, +this.size / 2);
-    ctx.lineTo(-(this.earWidth * this.size), -(this.thickness * this.size / 2) - this.earHeight * (this.size));
+    ctx.lineTo(-(this.earWidth * this.size), -this.thicknessModS - this.earHeight * (this.size));
     ctx.lineTo(oneq * 2, -(this.size * this.earWidth) / 4);
     ctx.stroke();
     ctx.fill();
+    // stroke and fill right ear
     ctx.fillStyle = rightEarGradient;
     ctx.beginPath();
     ctx.moveTo(oneq * 2, -(this.size * this.earWidth) / 4);
-    ctx.lineTo((oneq * 4) + (this.earWidth * this.size), -(this.thickness * this.size / 2) - this.earHeight * (this.size));
+    ctx.lineTo((oneq * 4) + (this.earWidth * this.size), -this.thicknessModS - this.earHeight * (this.size));
     ctx.lineTo(oneq * 4, +this.size / 2);
     ctx.stroke();
     ctx.fill();
-    // Apply pattern overlay to both ears
-    this.applyPatternOverlay(pat, () => {
-      ctx.beginPath();
+    // Apply pattern overlay to left ear
+    this.createPatternOverlay(3, () => {
       ctx.moveTo(0, +this.size / 2);
-      ctx.lineTo(-(this.earWidth * this.size), -(this.thickness * this.size / 2) - this.earHeight * (this.size));
+      ctx.lineTo(-(this.earWidth * this.size), -this.thicknessModS - this.earHeight * (this.size));
       ctx.lineTo(oneq * 2, -(this.size * this.earWidth) / 4);
-      ctx.lineTo((oneq * 4) + (this.earWidth * this.size), -(this.thickness * this.size / 2) - this.earHeight * (this.size));
+    });
+    // Apply pattern overlay to right ear
+    this.createPatternOverlay(4, () => {
+      ctx.moveTo(oneq * 2, -(this.size * this.earWidth) / 4);
+      ctx.lineTo((oneq * 4) + (this.earWidth * this.size), -this.thicknessModS - this.earHeight * (this.size));
       ctx.lineTo(oneq * 4, +this.size / 2);
-      ctx.fill();
     });
     // skin inside the ear
     if (this.facingForwards && this.awake) {
       ctx.fillStyle = this.skinColour1;
-      ctx.strokeStyle = this.cellShadeLine;
       ctx.lineWidth = this.size / 10;
       ctx.beginPath();
       ctx.moveTo(0, +(this.size / 2) + (this.earWidth * this.size / 2));
@@ -1552,283 +1726,85 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.restore(); // 0
 
     // head
-    if (this.awake && this.sittingProgress > 0) {
-      ctx.translate(0, ((this.limbLength + (this.size / 4)) / 2) * this.sittingProgress);
-    } else if (!this.awake) {
-      ctx.translate(0, sleepshift);
+    if (this.sittingProgress > 0) {
+      ctx.translate(0, ((this.frontLegLength + (this.size / 4)) / 2) * this.sittingProgress);
     }
-    let s = this.size * 6;
-    let maxWidth = Math.sqrt(s * s + s * s) / 2;
-    let headGradient = this.hairless ? this.getBodypartColor(2, true) : trueWhite;
-    if (!this.albino && !this.hairless) {
-      headGradient = ctx.createLinearGradient(
-        + Math.cos(this.coatMod[1] * 6.3) * maxWidth, // start pos
-        + Math.sin(this.coatMod[1] * 6.3) * maxWidth,
-        - Math.cos(this.coatMod[1] * 6.3) * maxWidth, // end pos
-        - Math.sin(this.coatMod[1] * 6.3) * maxWidth
-      );
-      if (this.bodypartCode[2] == 0) {
-        headGradient.addColorStop(0, this.secondColour);
-        headGradient.addColorStop(this.coatMod[0], this.firstColour);
-        headGradient.addColorStop(1, this.firstColour);
-      } else if (this.bodypartCode[2] == 1) {
-        headGradient.addColorStop(0, this.thirdColour);
-        headGradient.addColorStop(this.coatMod[0], this.secondColour);
-        headGradient.addColorStop(1, this.secondColour);
-      } else {
-        headGradient.addColorStop(0, this.firstColour);
-        headGradient.addColorStop(this.coatMod[0], this.thirdColour);
-        headGradient.addColorStop(1, this.thirdColour);
-      }
-    } else if (this.albino && this.hairless) {
-      headGradient = skinPink;
+    let headGradient = this.createHeadGradient((this.size * 2) + this.thicknessModL);
+    if (this.sittingProgress > 0) {
+      ctx.translate(0, -((this.frontLegLength + (this.size / 4)) / 2) * this.sittingProgress);
     }
-    if (this.awake && this.sittingProgress > 0) {
-      ctx.translate(0, -((this.limbLength + (this.size / 4)) / 2) * this.sittingProgress);
-    } else if (!this.awake) {
-      ctx.translate(0, -sleepshift);
-    }
-    if (this.awake) {
-      // awake mode
-      ctx.save();
-      ctx.scale(1 + (this.headWidth / 3), 1 + (this.headHeight / 5));
-      // REAL DRAWING
-      ctx.fillStyle = headGradient;
-      ctx.lineWidth = 2 * this.cellShadeThickness;
-      ctx.globalAlpha = 1;
-      ctx.beginPath();
-      ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-      // colourpoint genetic mutation
-      if (!this.albino && this.colourpointExpressed) {
-        let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2 * this.patternAlpha, 0, 0, this.size * this.patternAlpha);
-        faceGradient.addColorStop(0, this.thirdColour);
-        faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = faceGradient;
-        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      // draw the pattern image
-      this.applyPatternOverlay(pat, () => {
-        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-        ctx.fill();
-      });
-      // additional gradient on top for tabby
-      if (!this.albino && this.pattern == 3) {
-        let fadeGrad = ctx.createLinearGradient(0, -this.size / 2, 0, this.size);
-        fadeGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0)');
-        fadeGrad.addColorStop(1, this.firstColour);
-        ctx.fillStyle = fadeGrad;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      // additional gradient on top for bengal / mau pattern
-      if (!this.albino && this.pattern == 6) {
-        let faceGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
-        ctx.globalAlpha = 0.5;
-        faceGradient.addColorStop(0, this.thirdColour);
-        faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = faceGradient;
-        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      // draw lykoi skin coloured face on top
-      if (this.lykoi) {
-        let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2 * this.patternAlpha, 0, 0, this.size * this.patternAlpha);
-        faceGradient.addColorStop(0, skinPink);
-        faceGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = faceGradient;
-        ctx.arc(0, 0, this.size + (this.thickness * this.size / 5), 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      if (this.facingForwards && this.inCatBox == null && this !== experiment) {
-        // smile
-        if (this.health >= 50 && !this.elder && this.energy > 0) {
-          ctx.globalAlpha = this.love / 100;
-          if (this.gender == 'Female') {
-            ctx.drawImage(smile, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
-          } else if (this.gender == 'Male') {
-            ctx.drawImage(smile2, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
-          } else if (this.gender == 'Non Binary') {
-            ctx.drawImage(smile3, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
-          }
-          ctx.globalAlpha = 1;
-        }
-      }
-    } else {
-      // sleep mode
-      // CELL SHADING
-      ctx.fillStyle = this.cellShadeLine;
-      ctx.beginPath();
-      ctx.arc(0, this.limbLength + (this.size / 2), this.size + this.cellShadeThickness, 3.15, 2 * Math.PI);
-      ctx.fill();
-      // REAL DRAWING
-      ctx.fillStyle = headGradient;
-      ctx.beginPath();
-      ctx.arc(0, this.limbLength + (this.size * 0.6), this.size, 3.15, 2 * Math.PI);
-      ctx.fill();
-      this.applyPatternOverlay(pat, () => {
-        ctx.beginPath();
-        ctx.arc(0, this.limbLength + (this.size * 0.6), this.size, 3.15, 2 * Math.PI);
-        ctx.fill();
-      });
-    }
+    // awake mode
+    ctx.save();
+    ctx.scale(1 + (this.headWidth / 3), 1 + (this.headHeight / 5));
+    // REAL DRAWING
+    ctx.fillStyle = headGradient;
+    ctx.lineWidth = 2 * this.outlineThickness;
+    ctx.strokeStyle = this.outlineColour;
     ctx.globalAlpha = 1;
-    // eyes
-    if (this.awake && this.facingForwards) {
-      let temp = daytimeCounter;
-      while (temp > 100) {
-        temp -= 100;
-      }
-      let temp2 = this.birthday;
-      while (temp2 > 100) {
-        temp2 -= 100;
-      }
-      if (((this.snuggling >= 0 || this.eatingChewsRemaining > 0) && this.age >= maturesAt) || (temp > temp2 - 1.5 && temp < temp2 + 1.5)) {
-        ctx.save();
-        ctx.scale(1 + (this.headWidth / 3), 1 + (this.headHeight / 5));
-        ctx.drawImage(content, -this.size, -this.size, this.size * 2, this.size * 2);
-        ctx.restore();
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+    // colourpoint genetic mutation face gradient
+    if (!this.albino && this.colourpointExpressed) {
+      let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2 * this.patternAlpha, 0, 0, this.size * this.patternAlpha);
+      if (this.hairless) {
+        faceGradient.addColorStop(0, hexToRgba(this.skinColour3, 1));
+        faceGradient.addColorStop(1, hexToRgba(this.skinColour3, 0));
       } else {
-        diffy = 0.5;
-        ctx.save(); // 0 open
-        if (this.energy > 0) {
-          let glowingeyes = false;
-          let glowalpha = 0;
-          // Eyes glow when firefly is nearby (including cats in adoption boxes)
-          if (this.closestFirefly) {
-            let diffx = Math.abs(this.x - this.closestFirefly.x);
-            let diffy = Math.abs(this.y - this.closestFirefly.y);
-            if (diffx <= 100 && diffy <= 100) {
-              glowingeyes = true;
-              let absolute = Math.sqrt((diffy * diffy) + (diffx * diffx)); // 0 to 100
-              glowalpha = 0.6 * (1 - (absolute / (Math.sqrt(20000))));
-            }
-          }
-          // REAL DRAWING
-          // left eye
-          ctx.beginPath();
-          if (!this.albino) {
-            ctx.fillStyle = trueBlack;
-            if (this.albinoGene) {
-              ctx.fillStyle = mixTwoColours(trueBlack, albinoRed, 0.7);
-            }
-          } else {
-            ctx.fillStyle = mixTwoColours(trueBlack, albinoRed, 0.5);
-          }
-          ctx.strokeStyle = this.cellShadeLine;
-          ctx.lineWidth = this.size / 4;
-          ctx.translate(-(this.size * this.eyePosX * 0.3) - this.size / 1.5, - (this.size / 2) + (this.eyePosY * this.size * 0.75));
-          ctx.arc(0, 0, (this.size / 2) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
-          ctx.stroke();
-          ctx.fill();
-          if (glowingeyes) {
-            ctx.globalAlpha = 1 - glowalpha;
-          }
-          // eye colour
-          ctx.lineWidth = this.size / 7;
-          if (!this.albino) {
-            ctx.strokeStyle = this.eyeColour;
-          } else {
-            ctx.strokeStyle = albinoRed;
-          }
-          ctx.beginPath();
-          ctx.arc(0, 0, (this.size / 2.25) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
-          ctx.stroke();
-          // draw highlights
-          ctx.beginPath();
-          ctx.fillStyle = trueWhite;
-          ctx.rotate(-this.rotation);
-          ctx.arc(0, -this.size / 7, this.size / 6, 0, 2 * Math.PI);
-          ctx.arc(-this.size / 7, this.size / 5, this.size / 12, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.rotate(this.rotation);
-          // glowing at night
-          if (glowingeyes && this.closestFirefly) {
-            let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size * this.eyeSize);
-            glow.addColorStop(0, this.closestFirefly.firstColour);
-            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.globalAlpha = glowalpha / 2;
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size * this.eyeSize, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.fillStyle = trueWhite;
-            ctx.globalAlpha = glowalpha / 1.5;
-            ctx.beginPath();
-            ctx.arc(0, 0, 0.6 * ((this.size / 2) + (this.eyeSize * this.size / 6)), 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-          }
-          ctx.restore(); // 0 closed
-          // right eye
-          ctx.beginPath();
-          if (!this.albino) {
-            ctx.fillStyle = trueBlack;
-            if (this.albinoGene) {
-              ctx.fillStyle = mixTwoColours(trueBlack, albinoRed, 0.7);
-            }
-          } else {
-            ctx.fillStyle = mixTwoColours(trueBlack, albinoRed, 0.5);
-          }
-          ctx.strokeStyle = this.cellShadeLine;
-          ctx.lineWidth = this.size / 4;
-          ctx.save(); // 0 open
-          ctx.translate((this.size * this.eyePosX * 0.3) + this.size / 1.5, - (this.size / 2) + (this.eyePosY * this.size * 0.75));
-          ctx.arc(0, 0, (this.size / 2) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
-          ctx.stroke();
-          ctx.fill();
-          // eye colour
-          if (glowingeyes) {
-            ctx.globalAlpha = (1 - glowalpha);
-          }
-          ctx.lineWidth = this.size / 7;
-          if (!this.albino) {
-            ctx.strokeStyle = this.eyeColour2;
-          } else {
-            ctx.strokeStyle = albinoRed;
-          }
-          ctx.beginPath();
-          ctx.arc(0, 0, (this.size / 2.25) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
-          ctx.stroke();
+        faceGradient.addColorStop(0, hexToRgba(this.getBodypartColor('colourpoint'), 1));
+        faceGradient.addColorStop(1, hexToRgba(this.getBodypartColor('colourpoint'), 0));
+      }
+      ctx.fillStyle = faceGradient;
+      ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    this.createPatternOverlay(2, () => {
+      ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+    });
+    // additional gradient on top for tabby, bengal, mau patterns
+    if (!this.albino && !this.hairless && (this.pattern == 3 || this.pattern == 6 || this.pattern == 7)) {
+      let faceGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 2);
+      ctx.globalAlpha = 1;
+      faceGradient.addColorStop(0.3, hexToRgba(this.modifyColourByLifeStage(this.firstColour), 1));
+      faceGradient.addColorStop(0.7, hexToRgba(this.modifyColourByLifeStage(this.firstColour), 0));
+      ctx.fillStyle = faceGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    // draw lykoi skin coloured face above everything on the face
+    if (this.lykoi && !this.hairless) {
+      let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2, 0, 0, this.size);
+      ctx.globalAlpha = 1;
+      faceGradient.addColorStop(0, hexToRgba(this.getBodypartColor('lykoiface'), 1));
+      faceGradient.addColorStop(1, hexToRgba(this.getBodypartColor('lykoiface'), 0));
+      ctx.fillStyle = faceGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    ctx.restore();
 
-          // draw highlights
-          ctx.beginPath();
-          ctx.fillStyle = trueWhite;
-          ctx.rotate(-this.rotation);
-          ctx.arc(0, -this.size / 7, this.size / 6, 0, 2 * Math.PI);
-          ctx.arc(this.size / 6, this.size / 5, this.size / 12, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.rotate(this.rotation);
-
-          // glowing at night
-          if (glowingeyes && this.closestFirefly) {
-            let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size);
-            glow.addColorStop(0, this.closestFirefly.firstColour);
-            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.globalAlpha = glowalpha / 4;
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.fillStyle = trueWhite;
-            ctx.globalAlpha = glowalpha / 1.5;
-            ctx.beginPath();
-            ctx.arc(0, 0, 0.6 * ((this.size / 2) + (this.eyeSize * this.size / 6)), 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-          }
+    if (this.facingForwards && this.inCatBox == null && this !== experiment) {
+      // smile
+      if (this.health >= 50 && !this.elder && this.energy > 0) {
+        ctx.globalAlpha = this.love / 100;
+        if (this.gender == 'Female') {
+          ctx.drawImage(smile, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
+        } else if (this.gender == 'Male') {
+          ctx.drawImage(smile2, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
+        } else if (this.gender == 'Non Binary') {
+          ctx.drawImage(smile3, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
         }
-        ctx.restore(); // 0 closed
       }
     }
+
+    this.drawEyes();
+
 
     // chin
-    if (this.awake && this.facingForwards) {
+    if (this.facingForwards) {
       // drawing chin / lower jaw
       let chinSize = (this.size / 3.5);
       let chinPosX = 0;
@@ -1840,37 +1816,23 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       let offsetY = this.openMouthProgress * (0.75 + (2 * this.mawSize * chinSize));
 
       // cellshading chin
-      ctx.fillStyle = this.cellShadeLine;
+      ctx.fillStyle = this.outlineColour;
       ctx.beginPath();
-      ctx.arc(0, (this.size * (this.nosePos - 0.5) / 2) + this.size / 1.5, (this.size / 3.5) + this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.arc(0, (this.size * (this.nosePos - 0.5) / 2) + this.size / 1.5, (this.size / 3.5) + this.outlineThickness, 0, 2 * Math.PI);
       ctx.fill();
       // setting up colours:
-      ctx.fillStyle = trueWhite;
-      if (this.lykoi) {
-        ctx.fillStyle = skinPink;
-      } else {
-        ctx.fillStyle = this.getBodypartColor(11, this.hairless);
-      }
+      ctx.fillStyle = this.getBodypartColor(11);
       // drawing chin
       ctx.beginPath();
       ctx.arc(chinPosX, chinPosY + offsetY, chinSize, 0, 2 * Math.PI);
-      // chin pattern
       ctx.fill();
-      if (!this.albino && this.pattern !== 0 && this.pattern !== 3) {
-        ctx.fillStyle = pat;
-        ctx.globalAlpha = this.patternAlpha;
-        ctx.beginPath();
-        ctx.arc(chinPosX, chinPosY, chinSize, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
 
       // drawing inside of mouth
       // // cellshading
-      ctx.fillStyle = this.cellShadeLine;
+      ctx.fillStyle = this.outlineColour;
       ctx.beginPath();
-      ctx.rect(chinPosX - mouthInnerSize - this.cellShadeThickness, chinPosY - chinSize, (mouthInnerSize * 2) + this.cellShadeThickness, offsetY + mouthInnerSize);
-      ctx.arc(0, chinPosY - chinSize + offsetY + mouthInnerSize, mouthInnerSize + this.cellShadeThickness, 0, Math.PI, false)      // semi circle
+      ctx.rect(chinPosX - mouthInnerSize - this.outlineThickness, chinPosY - chinSize, (mouthInnerSize * 2) + this.outlineThickness, offsetY + mouthInnerSize);
+      ctx.arc(0, chinPosY - chinSize + offsetY + mouthInnerSize, mouthInnerSize + this.outlineThickness, 0, Math.PI, false)      // semi circle
       ctx.fill();
 
       // fill inside of mouth
@@ -1882,7 +1844,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
       // fangs
       // cellshading
-      ctx.strokeStyle = this.cellShadeLine;
+      ctx.strokeStyle = this.outlineColour;
       ctx.lineWidth = this.size / 10;
       // real drawing
       ctx.fillStyle = trueWhite;
@@ -1898,46 +1860,33 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
       // jowls
       // cellshading
-      ctx.fillStyle = this.cellShadeLine;
+      ctx.fillStyle = this.outlineColour;
       ctx.beginPath();
-      ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, (this.size / 3.5) + this.cellShadeThickness, 0, 2 * Math.PI);
-      ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, (this.size / 3.5) + this.cellShadeThickness, 0, 2 * Math.PI);
+      ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, (this.size / 3.5) + this.outlineThickness, 0, 2 * Math.PI);
+      ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, (this.size / 3.5) + this.outlineThickness, 0, 2 * Math.PI);
       ctx.fill();
 
       // real drawing
-      ctx.fillStyle = trueWhite;
-      if (this.lykoi) {
-        ctx.fillStyle = nosePink;
-      } else {
-        ctx.fillStyle = this.getBodypartColor(9, this.hairless);
-      }
+      ctx.fillStyle = this.getBodypartColor(9);
       ctx.beginPath();
       ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
       ctx.fill();
-      if (!this.albino && this.pattern !== 0 && this.pattern !== 3) {
-        this.applyPatternOverlay(pat, () => {
-          ctx.beginPath();
-          ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-      }
-      ctx.fillStyle = trueWhite;
-      if (this.lykoi) {
-        ctx.fillStyle = nosePink;
-      } else {
-        ctx.fillStyle = this.getBodypartColor(10, this.hairless);
-      }
+
+      // jowl patterns removed for now
+      // if (!this.albino && this.pattern !== 0 && this.pattern !== 3) {
+      //   this.createPatternOverlay(9, () => {
+      //     ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+      //   });
+      // }
+      ctx.fillStyle = this.getBodypartColor(10);
       ctx.beginPath();
       ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
       ctx.fill();
-      if (!this.albino && this.pattern !== 0 && this.pattern !== 3) {
-        ctx.fillStyle = pat;
-        ctx.globalAlpha = this.patternAlpha;
-        ctx.beginPath();
-        ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+      // if (!this.albino && this.pattern !== 0 && this.pattern !== 3) {
+      //   this.createPatternOverlay(10, () => {
+      //     ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+      //   });
+      // }
 
       // === T-SHAPED NOSE (uses nose-specific colors, not skin colors) ===
       let noseY = (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5);
@@ -1947,8 +1896,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       let noseVertHeight = this.size / 2.5;
 
       // Draw T-shaped nose outline (cellshading)
-      ctx.lineWidth = this.cellShadeThickness;
-      ctx.strokeStyle = this.cellShadeLine;
+      ctx.lineWidth = this.outlineThickness;
+      ctx.strokeStyle = this.outlineColour;
       // Draw T-shaped nose fill using nose-specific color
       ctx.fillStyle = this.noseColour;
       ctx.beginPath();
@@ -1961,356 +1910,471 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
 
-  this.drawFrontFeet = function (pat) {
-    let footSize = this.size / 3.5 * this.thickness * 2.25;
-    let leftHandGradient = this.createFootGradient(0, footSize);
-    let rightHandGradient = this.createFootGradient(1, footSize);
-    ctx.lineWidth = 2 * this.cellShadeThickness;
-    ctx.strokeStyle = this.cellShadeLine;
-
-    // if we are awake on a floor
-    if (this.awake && this.onSurface) {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      // REAL DRAWING
-      ctx.fillStyle = leftHandGradient;
-      ctx.beginPath();
-      ctx.arc(-(this.size / 1.6), (this.size) + (this.limbLength / 2.5), footSize, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-      ctx.fillStyle = rightHandGradient;
-      ctx.beginPath();
-      ctx.arc((this.size / 1.6), (this.size) + (this.limbLength / 2.5), footSize, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-      if (!this.albino && this.pattern !== 0) {
-        ctx.fillStyle = pat;
-        ctx.globalAlpha = this.patternAlpha;
-        ctx.beginPath();
-        ctx.arc(-(this.size / 1.6), (this.size) + (this.limbLength / 2.5), footSize, 0, 2 * Math.PI);
-        ctx.arc((this.size / 1.6), (this.size) + (this.limbLength / 2.5), footSize, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.globalAlpha = 1;
+  this.drawEyes = function () {
+    ctx.globalAlpha = 1;
+    // eyes - blink timer
+    // content image is used for sleeping, blinking and enjoying certain actions
+    if (this.facingForwards) {
+      let temp = daytimeCounter;
+      while (temp > 100) {
+        temp -= 100;
       }
-      ctx.restore();
-    } else if (!this.awake || !this.onSurface) {
-      // if we are holding something
-      if (this.focus && this.awake && this.hitFocus) {
-        ctx.fillStyle = leftHandGradient;
-        ctx.beginPath();
-        ctx.arc(this.focus.x, this.focus.y, footSize, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.fill();
-        ctx.fillStyle = rightHandGradient;
-        ctx.beginPath();
-        ctx.arc(this.focus.x, this.focus.y, footSize, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.fill();
-        this.applyPatternOverlay(pat, () => {
-          ctx.beginPath();
-          ctx.arc(this.focus.x, this.focus.y, footSize, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-        // if we are not holding anything
-      } else if (this.awake && this.energy > 0) {
-        // CELL SHADING
-        ctx.fillStyle = this.cellShadeLine;
+      let temp2 = this.birthday;
+      while (temp2 > 100) {
+        temp2 -= 100;
+      }
+      if (!this.awake || (temp > temp2 - 1.5 && temp < temp2 + 1.5)) {
+        ctx.save();
+        ctx.scale(1 + (this.headWidth / 3), 1 + (this.headHeight / 5));
+        ctx.drawImage(content, -this.size, -this.size, this.size * 2, this.size * 2);
+        ctx.restore();
+      } else {
+        diffy = 0.5;
+        ctx.save(); // 0 open
+        let glowingeyes = false;
+        let glowalpha = 0;
+        // Eyes glow when firefly is nearby (including cats in adoption boxes)
+        if (this.closestFirefly) {
+          let diffx = Math.abs(this.x - this.closestFirefly.x);
+          let diffy = Math.abs(this.y - this.closestFirefly.y);
+          if (diffx <= 100 && diffy <= 100) {
+            glowingeyes = true;
+            let absolute = Math.sqrt((diffy * diffy) + (diffx * diffx)); // 0 to 100
+            glowalpha = 0.6 * (1 - (absolute / (Math.sqrt(20000))));
+          }
+        }
+        // set up pupil colours
+        let pupilColour = trueBlack;
+        if (this.albino) {
+          pupilColour = mixTwoColours(trueBlack, albinoRed, 0.5);
+        } else if (this.albinoGene) {
+          pupilColour = mixTwoColours(trueBlack, albinoRed, 0.7);
+        }
+        ctx.fillStyle = pupilColour;
         // REAL DRAWING
-        // left front foot
-        ctx.fillStyle = leftHandGradient;
-        ctx.save();
-        ctx.translate(this.x - this.size + (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
+        // left eye
         ctx.beginPath();
-        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
+        ctx.strokeStyle = this.outlineColour;
+        ctx.lineWidth = this.size / 4;
+        ctx.translate(-(this.size * this.eyePosX * 0.3) - this.size / 1.5, - (this.size / 2) + (this.eyePosY * this.size * 0.75));
+        ctx.arc(0, 0, (this.size / 2) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
-        this.applyPatternOverlay(pat, () => {
-          ctx.beginPath();
-          ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-        // jelly beans / toe pads
-        if (this.focus && this.facingForwards && this.y > this.focus.y) {
-          ctx.save();
-          // Position toe pads relative to the foot
-          if (this.inCatBox) {
-            ctx.translate(0, (footSize / 2) + this.limbLength);
-          } else {
-            ctx.translate(this.limbLength * Math.cos(this.angleToFocus), (footSize / 2) + (this.limbLength * Math.sin(this.angleToFocus)));
-          }
-          // uniformly scale the pads so that it looks like the feet are reaching towards the focus
-          let scaleY = 1;
-          if (this.y - (this.size * 10) < this.focus.y) {
-            scaleY = (this.y - this.focus.y) / this.size / 10;
-            ctx.scale(1, scaleY);
-          }
-          ctx.fillStyle = this.skinColour1;
-          ctx.strokeStyle = this.cellShadeLine;
-          ctx.lineWidth = this.size / 10;
-          ctx.beginPath();
-          ctx.arc(0, -(footSize), footSize / 3.5, 0, 2 * Math.PI); // mid
-          ctx.stroke();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(-footSize / 2, -(footSize), footSize / 3.5, 0, 2 * Math.PI); // left
-          ctx.stroke();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(footSize / 2, -(footSize), footSize / 3.5, 0, 2 * Math.PI); // right
-          ctx.stroke();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(0, footSize / 10, footSize / 1.5, 0, 3 * Math.PI); // main
-          ctx.stroke();
-          ctx.fill();
-          ctx.restore();
+        if (glowingeyes) {
+          ctx.globalAlpha = 1 - glowalpha;
         }
-        ctx.restore(); // closed
-        // right front foot
-        ctx.fillStyle = rightHandGradient;
-        ctx.save();
-        ctx.translate(this.x + this.size - (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
+        // eye colour
+        ctx.lineWidth = this.size / 7;
+        ctx.strokeStyle = this.getEyeColour('Left');
         ctx.beginPath();
-        ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
+        ctx.arc(0, 0, (this.size / 2.25) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
+        ctx.stroke();
+        // draw highlights
+        ctx.beginPath();
+        ctx.fillStyle = trueWhite;
+        ctx.rotate(-this.rotation);
+        ctx.arc(0, -this.size / 7, this.size / 6, 0, 2 * Math.PI);
+        ctx.arc(-this.size / 7, this.size / 5, this.size / 12, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.rotate(this.rotation);
+        // glowing at night
+        if (glowingeyes && this.closestFirefly) {
+          let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size * this.eyeSize);
+          glow.addColorStop(0, hexToRgba(this.closestFirefly.firstColour, 1));
+          glow.addColorStop(1, hexToRgba(this.closestFirefly.firstColour, 0));
+          ctx.globalAlpha = glowalpha / 2;
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size * this.eyeSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = trueWhite;
+          ctx.globalAlpha = glowalpha / 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, 0.6 * ((this.size / 2) + (this.eyeSize * this.size / 6)), 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore(); // 0 closed
+        // right eye
+        ctx.fillStyle = pupilColour;
+        ctx.beginPath();
+        ctx.strokeStyle = this.outlineColour;
+        ctx.lineWidth = this.size / 4;
+        ctx.save(); // 0 open
+        ctx.translate((this.size * this.eyePosX * 0.3) + this.size / 1.5, - (this.size / 2) + (this.eyePosY * this.size * 0.75));
+        ctx.arc(0, 0, (this.size / 2) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
-        this.applyPatternOverlay(pat, () => {
-          ctx.beginPath();
-          ctx.arc(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus), footSize, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-        // jelly beans
-        if (this.focus && this.facingForwards && this.y > this.focus.y) {
-          ctx.save();
-          // Position toe pads relative to the foot
-          if (this.inCatBox) {
-            ctx.translate(0, (footSize / 2) + this.limbLength);
-          } else {
-            ctx.translate(this.limbLength * Math.cos(this.angleToFocus), (footSize / 2) + (this.limbLength * Math.sin(this.angleToFocus)));
-          }
-          // uniformly scale the pads
-          let scaleY = 1;
-          if (this.y - (this.size * 10) < this.focus.y) {
-            scaleY = (this.y - this.focus.y) / this.size / 10;
-            ctx.scale(1, scaleY);
-          }
-          ctx.fillStyle = this.skinColour1;
-          ctx.strokeStyle = this.cellShadeLine;
-          ctx.lineWidth = this.size / 10;
-          ctx.beginPath();
-          ctx.arc(0, -(footSize), footSize / 3.5, 0, 2 * Math.PI); // mid
-          ctx.stroke();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(-footSize / 2, -(footSize), footSize / 3.5, 0, 2 * Math.PI); // left
-          ctx.stroke();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(footSize / 2, -(footSize), footSize / 3.5, 0, 2 * Math.PI); // right
-          ctx.stroke();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(0, footSize / 10, footSize / 1.5, 0, 3 * Math.PI); // main
-          ctx.stroke();
-          ctx.fill();
-          ctx.restore();
+        // eye colour
+        if (glowingeyes) {
+          ctx.globalAlpha = (1 - glowalpha);
         }
-        ctx.restore(); // closed
+        ctx.lineWidth = this.size / 7;
+        ctx.strokeStyle = this.getEyeColour('Right');
+        ctx.beginPath();
+        ctx.arc(0, 0, (this.size / 2.25) + (this.eyeSize * this.size / 6), 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // draw highlights
+        ctx.beginPath();
+        ctx.fillStyle = trueWhite;
+        ctx.rotate(-this.rotation);
+        ctx.arc(0, -this.size / 7, this.size / 6, 0, 2 * Math.PI);
+        ctx.arc(this.size / 6, this.size / 5, this.size / 12, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.rotate(this.rotation);
+
+        // glowing at night
+        if (glowingeyes && this.closestFirefly) {
+          let glow = ctx.createRadialGradient(0, 0, 1, 0, 0, this.size);
+          glow.addColorStop(0, hexToRgba(this.closestFirefly.firstColour, 1));
+          glow.addColorStop(1, hexToRgba(this.closestFirefly.firstColour, 0));
+          ctx.globalAlpha = glowalpha / 4;
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = trueWhite;
+          ctx.globalAlpha = glowalpha / 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, 0.6 * ((this.size / 2) + (this.eyeSize * this.size / 6)), 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore(); // 0 closed
       }
     }
-  };
+  }
 
   // front legs
-  this.drawFrontLegs = function (bodyGradient, pat) {
+  this.drawFrontLegs = function () {
+    // setup feet
+    let leftHandGradient = this.createFootGradient(0, this.footSize);
+    let rightHandGradient = this.createFootGradient(1, this.footSize);
+    let drawToes = false;
+    // draw
     ctx.globalAlpha = 1;
-    let footSize = this.size / 3.5 * this.thickness * 2.25;
-    ctx.strokeStyle = this.cellShadeLine;
-    ctx.lineWidth = (this.size / 2.5) * this.thickness * 2; // linewidth for drawing legs
-    ctx.lineWidth += this.cellShadeThickness; // + cellshading thickness
+    let endX1 = -this.frontLegOriginX;
+    let endX2 = this.frontFootOriginX;
+    let startY = this.frontLegOriginY;
+    let endY = this.frontLegLength - this.footSize;
     // if we are awake on a floor
-    if (this.awake && this.onSurface && this.sittingProgress < 1) {
-      // Shrink front legs from top as cat sits - bottom stays in place
-      let frontLegBottom = this.limbLength - footSize / 2;
-      let frontLegTop = (this.size / 4);
-      let shrunkLegEnd = frontLegTop + (frontLegBottom - frontLegTop) * (1 - this.sittingProgress);
-      // translate
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      // Set up gradients
-      let leftFrontLegGradient, rightFrontLegGradient;
-      if (this.albino) {
-        leftFrontLegGradient = trueWhite;
-        rightFrontLegGradient = trueWhite;
+    if (!this.inCatBox && this.onSurface && this.sittingProgress <= 1) {
+      // let your legs hang down if you're chilling on a tree
+      if (this.onTree && !this.awake) {
+        endY += (endY - this.footSize) * (this.sittingProgress) * this.legginess;
       } else {
-        let gradientTotalLengthY = (this.size / 4) + shrunkLegEnd;
-        leftFrontLegGradient = ctx.createLinearGradient(0, this.size / 4, 0, gradientTotalLengthY);
-        this.applyBodypartGradient(0, leftFrontLegGradient);
-        rightFrontLegGradient = ctx.createLinearGradient(0, this.size / 4, 0, gradientTotalLengthY);
-        this.applyBodypartGradient(1, rightFrontLegGradient);
+        startY += ((endY * 0.75) - this.footSize) * (this.sittingProgress);
       }
-
-      // Draw both legs using helper
-      this.drawSingleFrontLeg(-this.size * 2 / 3, this.size / 4, shrunkLegEnd, leftFrontLegGradient, 0, pat);
-      this.drawSingleFrontLeg(this.size * 2 / 3, this.size / 4, shrunkLegEnd, rightFrontLegGradient, 1, pat);
-      // pattern
-      this.applyPatternOverlay(pat, () => {
-        ctx.strokeStyle = pat;
-        ctx.beginPath();
-        ctx.moveTo(-this.size * 2 / 3, (this.size / 4));
-        ctx.lineTo(-this.size * 2 / 3, this.limbLength - footSize / 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(this.size * 2 / 3, (this.size / 4));
-        ctx.lineTo(this.size * 2 / 3, this.limbLength - footSize / 2);
-        ctx.stroke();
-      });
-      ctx.restore();
-    } else if (!this.awake || !this.onSurface) {
+    } else if (!this.onSurface) {
       // if we are holding something
-      if (this.focus && this.awake && this.hitFocus) {
-        // Set up gradients for reaching legs
-        let ox = -this.size * 2 / 3; // origin L
-        let ox2 = this.size * 2 / 3;
-        let oy = this.size / 4;
-        let tx = this.focus.x; // target
-        let ty = this.focus.y;
-        let leftFrontLegGradient, rightFrontLegGradient;
-        if (this.albino) {
-          leftFrontLegGradient = trueWhite;
-          rightFrontLegGradient = trueWhite;
-        } else {
-          leftFrontLegGradient = ctx.createLinearGradient(ox, oy, tx, ty);
-          this.applyBodypartGradient(0, leftFrontLegGradient);
-          rightFrontLegGradient = ctx.createLinearGradient(ox2, oy, tx, ty);
-          this.applyBodypartGradient(1, rightFrontLegGradient);
-        }
-
-        // Draw both reaching legs using helper
-        this.drawReachingFrontLeg(ox, oy, tx, ty, leftFrontLegGradient, 0, pat);
-        this.drawReachingFrontLeg(ox2, oy, tx, ty, rightFrontLegGradient, 1, pat);
-        this.applyPatternOverlay(pat, () => {
-          ctx.strokeStyle = pat;
-          ctx.save(); // 0 open
-          ctx.translate(this.x, this.y);
-          ctx.beginPath();
-          ctx.moveTo(-this.size * 2 / 3, (this.size / 4));
-          ctx.restore();
-          ctx.lineTo(this.focus.x, this.focus.y);
-          ctx.stroke();
-          ctx.save(); // 0 open
-          ctx.translate(this.x, this.y);
-          ctx.beginPath();
-          ctx.moveTo(this.size * 2 / 3, (this.size / 4));
-          ctx.restore();
-          ctx.lineTo(this.focus.x, this.focus.y);
-          ctx.stroke();
-        });
-
-        // if we are not holding anything
-      } else if (this.awake && this.energy > 0) {
-        // CELL SHADING
-        // left arm
-        ctx.save(); // 0 open
-        ctx.translate(this.x, this.y);
-        ctx.beginPath();
-        ctx.moveTo(-this.size * 2 / 3, (this.size / 4));
-        ctx.restore();
-        ctx.save();
-        ctx.translate(this.x - this.size + (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
-        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-        ctx.stroke();
-        ctx.restore(); // closed
-        // right arm
-        ctx.save(); // 0 open
-        ctx.translate(this.x, this.y);
-        ctx.beginPath();
-        ctx.moveTo(this.size * 2 / 3, (this.size / 4));
-        ctx.restore();
-        ctx.save();
-        ctx.translate(this.x + this.size - (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
-        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-        ctx.stroke();
-        ctx.restore(); // closed
-        ctx.lineWidth -= this.cellShadeThickness;
-
-        // set up gradients for fill
-        let x1 = 0;
-        let y1 = this.size / 4;
-        let x2 = this.limbLength * Math.cos(this.angleToFocus);
-        let y2 = this.limbLength * Math.sin(this.angleToFocus);
-        let leftFrontLegGradient, rightFrontLegGradient;
-        if (this.albino) {
-          leftFrontLegGradient = trueWhite;
-          rightFrontLegGradient = trueWhite;
-        } else {
-          leftFrontLegGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-          this.applyBodypartGradient(0, leftFrontLegGradient);
-          rightFrontLegGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-          this.applyBodypartGradient(1, rightFrontLegGradient);
-        }
-        // DRAWING NOW
-        // left arm
-        ctx.strokeStyle = leftFrontLegGradient;
-        ctx.save(); // 0 open
-        ctx.translate(this.x, this.y);
-        ctx.beginPath();
-        ctx.moveTo(-this.size * 2 / 3, (this.size / 4));
-        ctx.restore();
-        ctx.save();
-        ctx.translate(this.x - this.size + (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
-        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-        ctx.stroke();
-        ctx.restore(); // closed
-        // right arm
-        ctx.strokeStyle = rightFrontLegGradient;
-        ctx.save(); // 0 open
-        ctx.translate(this.x, this.y);
-        ctx.beginPath();
-        ctx.moveTo(this.size * 2 / 3, (this.size / 4));
-        ctx.restore();
-        ctx.save();
-        ctx.translate(this.x + this.size - (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
-        ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-        ctx.stroke();
-        ctx.restore(); // closed
-        this.applyPatternOverlay(pat, () => {
-          ctx.strokeStyle = pat;
-          // left arm
-          ctx.save(); // 0 open
-          ctx.translate(this.x, this.y);
-          ctx.beginPath();
-          ctx.moveTo(-this.size * 2 / 3, (this.size / 4));
-          ctx.restore();
-          ctx.save();
-          ctx.translate(this.x - this.size + (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
-          ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-          ctx.stroke();
-          ctx.restore(); // closed
-          // right arm
-          ctx.save(); // 0 open
-          ctx.translate(this.x, this.y);
-          ctx.beginPath();
-          ctx.moveTo(this.size * 2 / 3, (this.size / 4));
-          ctx.restore();
-          ctx.save();
-          ctx.translate(this.x + this.size - (this.size / 3), this.y + (this.size / 1.5) - (footSize / 2));
-          ctx.lineTo(this.limbLength * Math.cos(this.angleToFocus), this.limbLength * Math.sin(this.angleToFocus));
-          ctx.stroke();
-          ctx.restore(); // closed
-        });
+      if (this.focus && this.hitFocus) {
+        endX = this.focus.x - this.x; // target
+        endY = this.focus.y - this.y;
+      } else {
+        // if we are reaching for something
+        endX1 += this.frontLegLength * Math.cos(this.angleToFocus);
+        endX2 += this.frontLegLength * Math.cos(this.angleToFocus);
+        endY *= Math.sin(this.angleToFocus);
       }
+    }
+    // Set up gradients
+    let leftFrontLegGradient = this.createLegGradient(0, -this.frontLegOriginX, startY, endX1, endY);
+    let rightFrontLegGradient = this.createLegGradient(1, this.frontLegOriginX, startY, endX2, endY);
+
+    if (!this.facingForwards) {
+      //draw feet first
+      // left
+      this.drawSingleFoot(0, endX1, endY, 0, leftHandGradient, drawToes, this.leftToeColour);
+      // right
+      this.drawSingleFoot(1, endX2, endY, 0, rightHandGradient, drawToes, this.rightToeColour);
+    }
+    // Draw both legs using unified function
+    this.drawSingleLeg(0, -this.frontLegOriginX, startY, endX1, endY, leftFrontLegGradient);
+    this.drawSingleLeg(1, this.frontLegOriginX, startY, endX2, endY, rightFrontLegGradient);
+    if (this.facingForwards) {
+      // return the front feet data to draw later
+      return [endX1, endX2, endY, leftHandGradient, rightHandGradient, this.leftToeColour, this.rightToeColour];
     }
   };
 
   this.update = function () {
-    // continue eating no matter what
-    if (this.inCatBox == null && this.eatingChewsRemaining > 0) {
-      this.continueEating();
+    //check if we are in a catbox (awaiting adoption or being picked from a litter)
+    if (this.inCatBox) {
+      this.awake = true; // Ensure catbox chittens stay awake for adoption display
+    } else {
+      // age, grow, lose meters
+      this.lifeTick();
+      if (this.birthday == daytimeCounter) {
+        this.age++;
+        // maturing to adult
+        if (this.age == maturesAt) {
+          sendMessage(this.name + ' reached adulthood');
+          let glyphsSpawned = createGlyphs(this.x, this.y, unicodeHeart, 1)
+          for (let i = 1; i <= glyphsSpawned; i++) {
+            glyphs[glyphs.length - i].timer *= 1 + (Math.random() * 1);
+          }
+          if (this.energy < 50) {
+            this.energy += 50;
+          } else {
+            (this.energy = 100);
+          }
+          this.love += 50;
+          // reaching old age
+        } else if (this.age >= (this.maxAge - oldAgeFor) && !this.elder) {
+          this.elder = true;
+          sendMessage(this.name + ' reached old age');
+          createGlyphs(this.x, this.y, unicodeAsterix, 1);
+        }
+      } else {
+        // now check if we are dead
+        if (this.snuggling == -1 && this.eatingChewsRemaining == 0 && this.age > this.maxAge && Math.random() * ticksPerDay) {
+          // dying of old age
+          this.flaggedForDeath = true;
+          sendMessage(this.name + ' died of old age');
+          // dying because of low health
+        } else if (this.health <= 0) {
+          this.flaggedForDeath = true;
+          sendMessage(this.name + ' died');
+        }
+      }
     }
-    // Game logic for chitten AI and behavior
-    // Physics are handled in window.js main game loop
+
+    // Manage jump animation state in update (once per frame)
+    if (!this.onSurface) {
+      // Store original angle and jump height when we start falling
+      if (this.speedY <= 0) {
+        // Going up or at peak - store data for fall animation
+        if (this.focus) {
+          this.originalAngleToFocus = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
+        } else {
+          this.originalAngleToFocus = Math.PI / 2;
+        }
+        this.jumpHeight = null; // Will be set when we start falling
+      } else {
+        // Coming down - store jump height at start of fall
+        if (!this.jumpHeight) {
+          this.jumpHeight = trueBottom - this.y; // How high we are when we start falling
+        }
+      }
+    } else {
+      // Reset animation state when landing
+      this.originalAngleToFocus = null;
+      this.jumpHeight = null;
+    }
+
+    if (!this.focus) {
+      diffx = 0;
+      diffy = 0;
+    }
+
+    if (this.inCatBox == null) {
+      // continue eating no matter what
+      if (this.inCatBox == null && this.eatingChewsRemaining > 0) {
+        this.continueEating();
+      }
+
+      // Dragging with mouse
+      if (this.beingHeld) {
+        this.facingForwards = true;
+        this.x = pointerPos.x;
+        this.y = pointerPos.y;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.resetRotation();
+        this.sitting = false;
+        this.onSurface = false;
+      }
+    }
+    // --- COLLISION CHECKS
+    // Only check collisions if this chitten is awake (further optimization)
+    if (!this.awake) {
+      // Sleeping chittens still need tree collision checks to follow growing/withering trees, but do nothing else
+      this.physicsCheck();
+      return;
+    }
+    // reset hitstate
+    this.hitFocus = false;
+    let thisIndex = chittens.indexOf(this, chittens);
+    // chitten to chitten collision checking
+    for (let j = thisIndex + 1; j < chittens.length; j++) {
+      // Early exit optimizations for performance
+      if (!chittens[j].awake || chittens[j].inCatBox !== null) continue;
+
+      // Fast distance check before expensive collision detection
+      let dx = this.x - chittens[j].x;
+      let dy = this.y - chittens[j].y;
+      let maxDistance = (this.size + chittens[j].size) * 1.5; // Buffer for collision
+      if (dx * dx + dy * dy > maxDistance * maxDistance) continue;
+
+      // if two chittens bump into each other (only check each pair once)
+      if (detectCollision(this, chittens[j])) {
+        if ((!this.surface || this.onTree) && (!chittens[j].onSurface || chittens[j].onTree))
+          if (!this.onSurface || !chittens[j].onSurface) {
+            collide(this, chittens[j]);
+          }
+
+        // having a snuggle
+        if (!choosingChitten
+          && !this.beingHeld && !chittens[j].beingHeld
+          && ((this.gender == 'Male' && chittens[j].gender == 'Female') || (this.gender == 'Female' && chittens[j].gender == 'Male'))
+          && this.eatingChewsRemaining == 0 && chittens[j].eatingChewsRemaining == 0
+          && this.snuggling == -1 && chittens[j].snuggling == -1
+          && this.partner == chittens[j] && chittens[j].partner == this
+          && !this.elder && !chittens[j].elder
+          && this.health >= breedingHealthReq && chittens[j].health >= breedingHealthReq
+          && this.energy >= breedingEnergyReq && chittens[j].energy >= breedingEnergyReq
+          && this.love >= breedingLoveReq && chittens[j].love >= breedingLoveReq) {
+          // snuggle starts
+          // pay the costs
+          this.health -= 20;
+          chittens[j].health -= 20;
+          this.energy -= 35;
+          chittens[j].energy -= 35;
+          this.love -= 50;
+          chittens[j].love -= 50;
+          this.speedX = 0;
+          chittens[j].speedX = 0;
+          this.speedY = 0;
+          chittens[j].speedY = 0;
+          this.sitting = true;
+          chittens[j].sitting = true;
+          if (Math.random() < 1 / 3) {
+            speak(this, happyWord());
+          } else if (Math.random() < 2 / 3) {
+            speak(chittens[j], happyWord());
+          }
+          this.facingForwards = true;
+          chittens[j].facingForwards = true;
+          // Both cats should sit while snuggling
+          this.targetSittingState = true;
+          chittens[j].targetSittingState = true;
+          this.snuggling = 250;
+          chittens[j].snuggling = 260;
+          sendMessage(chittens[j].name + ' and ' + this.name + ' had a snuggle');
+        }
+      }
+    }
+
+    // Collision with fruit
+    if (this.focus && this.awake && this.eatingChewsRemaining == 0 && this.snuggling == -1 && fruitSet.has(this.focus)) {
+      if (detectFruitCollision(this, this.focus)) {
+        let fruit = this.focus;
+        this.hitFocus = true;
+
+        // Check if fruit is already claimed
+        if (fruit.eater) {
+          // Find a new target since this fruit is taken
+          this.focus = null;
+          return;
+        }
+
+        let taskDifficulty = 0.2;
+        let failureRate = (1 - (this.coordination * chittenBaseCoordination)) * taskDifficulty;
+        if (Math.random() < failureRate) {
+          fruit.fumbleFruit(this.speedX, this.speedY);
+        } else {
+          // Atomically claim the fruit
+          fruit.eater = this;
+          fruit.rotTimer = -1;
+
+          // Set chitten eating state
+          this.facingForwards = true;
+          this.speedX = 0;
+          this.speedY = 0;
+          this.preparingToEat = true;
+          this.targetSittingState = true;
+
+          // Decrement parent fruit count
+          if (fruit.parent && !fruit.fumbled) {
+            fruit.parent.fruitCount--;
+          }
+        }
+      }
+    }
+    // --- APPLY Y SPEED
+    if (!this.onSurface) {
+      // Standard gravity with subtle size-based effects
+      let mass = gravity * this.mass;
+      // Apply drag proportional to velocity and size
+      let dragX = this.speedX * dragFactor * (this.size / 15);
+      let dragY = this.speedY * dragFactor * (this.size / 15);
+
+      // Subtract drag in the direction of motion
+      this.speedX -= dragX;
+      this.speedY -= dragY;
+
+      // Gravity/mass force only applies vertically
+      this.speedY += mass;
+
+      // apply y speed
+      this.y += this.speedY / 4;
+    } else {
+      // Apply ground friction
+      this.speedX *= groundFriction;
+    }
+    // --- APPLY X SPEED
+    this.x += this.speedX / 4;
+    this.rotation += this.spin;
+    this.spin *= 0.9;
+    // resetting full rotations
+    while (this.rotation > 6) {
+      this.rotation -= 6;
+    }
+    while (this.rotation < -6) {
+      this.rotation += 6;
+    }
+
+    // adjusting speed in the air if we are going in the wrong direction
+    if (!this.onSurface && (diffx > 0 && this.speedX < 0) || (diffx < 0 && this.speedX > 0)) {
+      let correctionFactor = chittenBaseCoordination * (0.95 + (this.coordination * 0.05));
+      this.speedX *= correctionFactor;
+    }
+    if (this.inCatBox && !this.onSurface) {
+      this.inCatBox.checkBounce(this);
+    }
+    if (!this.inCatBox) {
+      this.physicsCheck();
+    }
+    applySpeedLimit(this);
+
+    // update which firefly is the closest for drawing eye glow
+    let closestFireflyIndex = this.findClosestFireFly();
+    if (closestFireflyIndex !== 'X' && closestFireflyIndex < fireflies.length) {
+      this.closestFirefly = fireflies[closestFireflyIndex];
+    } else {
+      this.closestFirefly = null;
+    }
   };
   this.render = function () {
+    // Calculate angle to focus every frame (no caching for smooth animation)
+    if (!this.beingHeld && !this.onSurface && this.speedY > 0 && this.jumpHeight && this.originalAngleToFocus !== null) {
+      // Falling - lerp from original angle to straight down based on fall progress
+      const currentHeight = trueBottom - this.y;
+      const fallProgress = Math.max(0, Math.min(1, (this.jumpHeight - currentHeight) / this.jumpHeight));
+      // Smooth lerp from original angle to straight down (Math.PI / 2) in shortest direction
+      const targetAngle = Math.PI / 2; // Straight down
+
+      function lerpAngleShortest(from, to, progress) {
+        let diff = to - from;
+        // Normalize difference to [-π, π] for shortest path
+        if (diff > Math.PI) {
+          diff -= 2 * Math.PI;
+        } else if (diff < -Math.PI) {
+          diff += 2 * Math.PI;
+        }
+        return from + diff * progress;
+      }
+
+      this.angleToFocus = lerpAngleShortest(this.originalAngleToFocus, targetAngle, fallProgress);
+    } else {
+      // Normal angle calculation - going up, on surface, or no jump state
+      if (!this.beingHeld && this.focus) {
+        this.angleToFocus = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
+      } else {
+        this.angleToFocus = Math.PI / 2;
+      }
+    }
 
     /* focus lines for debug*/
     // if (this.focus !== null) {
@@ -2322,71 +2386,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     //   ctx.stroke();
     // }
 
-    // update which firefly is the closest for drawing eye glow
-    let closestFireflyIndex = this.findClosestFireFlyForEyes();
-    if (closestFireflyIndex !== 'X' && closestFireflyIndex < fireflies.length) {
-      this.closestFirefly = fireflies[closestFireflyIndex];
-    } else {
-      this.closestFirefly = null;
-    }
-
-    ctx.save();
-    let pat = pat0;
-    if (this.pattern == 1) {
-      pat = pat1;
-    } else if (this.pattern == 2) {
-      pat = pat2;
-    } else if (this.pattern == 3) {
-      pat = pat3;
-    } else if (this.pattern == 6) {
-      pat = pat6;
-    } else if (this.pattern == 7) {
-      pat = pat7;
-    }
-    ctx.setTransform(100 / this.size, 0, 0, 100 / this.size, 0, 0);
-    ctx.restore();
-    /* new gradient opps */
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    let bodyGradient = trueWhite;
-    // Hairless
-    if (this.hairless) {
-      if (this.bodypartCode[5] == 0) {
-        bodyGradient = this.skinColour1;
-      } else if (this.bodypartCode[5] == 1) {
-        bodyGradient = this.skinColour2;
-      } else {
-        bodyGradient = this.skinColour3;
-      }
-    }
-    if (!this.albino && !this.hairless) {
-      let s = this.size * 6;
-      let maxWidth = Math.sqrt(s * s + s * s) / 2;
-      bodyGradient = ctx.createLinearGradient(
-        + Math.cos(this.coatMod[1] * 6) * maxWidth, // start pos
-        + Math.sin(this.coatMod[1] * 6) * maxWidth,
-        - Math.cos(this.coatMod[1] * 6) * maxWidth, // end pos
-        - Math.sin(this.coatMod[1] * 6) * maxWidth
-      );
-      if (this.bodypartCode[5] == 0) {
-        bodyGradient.addColorStop(0, this.secondColour);
-        bodyGradient.addColorStop(this.coatMod[0], this.firstColour);
-        bodyGradient.addColorStop(1, this.firstColour);
-      } else if (this.bodypartCode[5] == 1) {
-        bodyGradient.addColorStop(0, this.thirdColour);
-        bodyGradient.addColorStop(this.coatMod[0], this.secondColour);
-        bodyGradient.addColorStop(1, this.secondColour);
-      } else {
-        bodyGradient.addColorStop(0, this.firstColour);
-        bodyGradient.addColorStop(this.coatMod[0], this.thirdColour);
-        bodyGradient.addColorStop(1, this.thirdColour);
-      }
-    } else if (this.albino && this.hairless) {
-      bodyGradient = nosePink;
-    }
-    ctx.restore();
-
-    this.hitFocus = this.focus ? detectCollision(this, this.focus) : false;
+    // Calculate positioning and gradients
     let backendShiftX = this.size * this.speedX / 30;
     let backendShiftY = this.size * this.speedY / 30;
     if (backendShiftY > trueBottom - this.y) {
@@ -2395,186 +2395,117 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (this.awake && !this.onSurface && this.hitFocus) {
       backendShiftY = -this.size / 4;
     }
-    // calculate angle to focus
-    if (this.focus) {
-      this.angleToFocus = Math.atan2(this.focus.y - this.y, this.focus.x - this.x);
-      diffx = Math.cos(this.angleToFocus) * 4;
-      diffy = Math.sin(this.angleToFocus) * 4;
+
+    // Smooth leg animation for jumping/falling based on distance to ground
+    if (!this.onSurface) {
+      // Store original angle when jumping up  
+      if (!this.originalAngleToFocus && this.speedY <= 0) {
+        this.originalAngleToFocus = this.angleToFocus;
+      }
+
+      if (this.speedY <= 0) {
+        // Going up or at peak - use original angle to focus
+        this.angleToFocus = this.originalAngleToFocus || this.angleToFocus;
+      } else {
+        // Coming down - lerp legs based on distance to ground
+        const distanceToGround = trueBottom - this.y;
+        const lerpDistance = 50; // pixels from ground to start lerping
+        const lerpProgress = Math.max(0, Math.min(1, (lerpDistance - distanceToGround) / lerpDistance));
+
+        // Smooth lerp from original angle to straight down (Math.PI / 2)
+        const originalAngle = this.originalAngleToFocus || this.angleToFocus;
+        const targetAngle = Math.PI / 2; // Straight down  
+        this.angleToFocus = originalAngle + (targetAngle - originalAngle) * lerpProgress;
+      }
     } else {
-      // For cats without focus (like those in catboxes), use a neutral downward angle
-      this.angleToFocus = Math.PI / 2;
-      diffx = 0;
-      diffy = 0;
-    }
-    // setting leg angle
-    let sameDirection = false;
-    let offsetX = this.focus ? Math.abs(this.focus.x - this.x) : 0;
-    let legAngle = Math.atan2(this.speedY, this.speedX);
-    // if a kitten collides with tis mother
-    if (this.age < maturesAt && this.inCatBox == null && this.awake
-      && this.mother !== null && this.onSurface && this.mother.snuggling == -1 && detectMotherCollision(this, this.mother)) {
-      this.speedX = 0;
-      this.speedY = 0;
-      if (this.mother.awake && this.eatingChewsRemaining == 0 && this.health < 50) {
-        this.mother.resetJumpCoolDown();
-        this.mother.energy -= 5;
-        this.mother.love += 5;
-        this.mother.speedX = 0;
-        this.mother.speedY = 0;
-        this.mother.sitting = true;
-        this.eatingChewsRemaining = eatingTotalChews; // Start suckling
-        this.eatingChewTimer = 0;
-        this.eatingChewState = 'closed'; // Start with mouth closed
-        this.mother.facingForwards = true;
-        // sendMessage(this.mother.name + ' fed '+ this.name);
-        gainMeter(this);
-      }
-    }
-    for (let f = 0; f < fireflies.length; f++) {
-      if (this.inCatBox == null && this.focus == fireflies[f] && !this.onSurface && !fireflies[f].touchedThisFrame
-        && this.awake && this.energy > 0 && this.snuggling == -1 && this.eatingChewsRemaining == 0 && detectCollision(this, fireflies[f])) {
-        fireflies[f].touchedThisFrame = true;
-        fireflies[f].chooseNewTarget(); // Force firefly to choose new target when touched
-        this.resetRotation(true);
-        fireflies[f].speedX += (this.speedX * this.size) / 1500;
-        fireflies[f].speedY += (this.speedY * this.size) / 2000;// + (0.002 * this.size);
-        gainMeter(this);
-        this.facingForwards = true;
-        if (this.health >= 100 && this.love >= 100 && this.energy >= 100) {
-          // let go of the FireFly
-          this.speedY = -this.size * 2;
-        } else {
-          let thisMiddleX = this.x;
-          let thisMiddleY = this.y;
-          let otherMiddleX = this.focus.x;
-          let otherMiddleY = this.focus.y;
-          let diffx = otherMiddleX - thisMiddleX;
-          let diffy = otherMiddleY - thisMiddleY;
-
-          if ((diffx > 0 && this.speedX > 0) || (diffx < 0 && this.speedX < 0)) {
-            // if we are going right and it's to our right
-            // if we are going left and it's to our left
-          } else {
-            this.speedX *= 0.1;
-          }
-          if ((diffy > 0 && this.speedY > 0) || (diffy < 0 && this.speedY < 0)) {
-            // if we are going up and it's above
-            // if we are going down and it's below
-          } else {
-            this.speedY *= 0.1;
-          }
-          let targetangle = Math.atan2(otherMiddleY - thisMiddleY, otherMiddleX - thisMiddleX);
-          this.speedX += Math.cos(targetangle);
-          this.speedY += Math.sin(targetangle);
-          if (this.speedX < 10 && this.speedX > -10 && this.speedY < 10 & this.speedY > -10) {
-            // legAngle = -1.6;
-          }
-        }
-      }
-    }
-    legAngle = this.focus ? Math.atan2(this.focus.y - this.y, offsetX) : Math.atan2(this.speedY, this.speedX);
-    if (legAngle < -0.2) {
-      sameDirection = true;
+      // Reset animation state when landing
+      this.originalAngleToFocus = null;
     }
 
-    // Preparing to draw the chitten
-    ctx = myGameArea.context;
-    ctx.globalAlpha = 1;
-    let sleepshift = 0;
-    if (!this.awake) {
-      sleepshift = this.limbLength;
-    }
-    if (this.facingForwards) {
-      this.drawBackLegs(pat, backendShiftX, backendShiftY, bodyGradient, sameDirection, legAngle);
-    }
-    // translate before drawing again
-    ctx.save(); // 0 open - rotated
+    // Single translate to chitten position - all drawing happens in relative coordinates from here
+    ctx.save();
     ctx.translate(this.x, this.y);
+
+    // Create body gradient (needs to be done after translate)
+    let s = this.size * 6;
+    let maxWidth = Math.sqrt(s * s + s * s) / 2;
+    let bodyGradient = this.createBodyGradient(maxWidth);
+
+    // Prepare drawing state
+    ctx.globalAlpha = 1;
+    // Draw tail (for facing forwards)  
     if (this.facingForwards) {
-      this.drawTail(pat, backendShiftX, backendShiftY, sleepshift);
+      ctx.save();
+      ctx.translate(0, - this.thicknessModL);
+      this.drawTail(backendShiftX, backendShiftY, 0);
+      ctx.restore();
     }
-    if (this.onSurface && this.sittingProgress > 0) {
-      ctx.translate(0, ((this.limbLength + (this.size / 4)) / 2) * this.sittingProgress);
+
+    // Draw back legs (for facing forwards)
+    if (this.facingForwards) {
+      this.drawBackLegs(backendShiftX, backendShiftY);
     }
+
+    // Apply backward facing adjustment
     if (!this.facingForwards) {
       ctx.translate(0, this.size);
     }
-    if (this.facingForwards) {
-      this.drawBody(pat, backendShiftX, backendShiftY, bodyGradient);
+    ctx.save();
+    // Apply sitting adjustment
+    if (this.onSurface && this.sittingProgress > 0) {
+      ctx.translate(0, ((this.frontLegLength) / 2) * this.sittingProgress);
     }
-    ctx.translate(-this.x, -this.y);
-    if (!this.facingForwards) {
-      this.drawFrontFeet(pat);
-    }
-    this.drawFrontLegs(bodyGradient, pat);
-    // move a bit before drawing head parts
-    ctx.translate(this.x, this.y - (this.size / 2));
+
+    // Draw body (for facing forwards)
     if (this.facingForwards) {
-      this.drawChest(pat, backendShiftX, backendShiftY, bodyGradient);
+      ctx.translate(0, - this.thicknessModL);
+      // save the front feet information so we can draw them later
+      this.drawBody(backendShiftX, backendShiftY, bodyGradient);
+    }
+    ctx.restore();
+    let frontFootData = [];
+    frontFootData = this.drawFrontLegs() || [];
+    ctx.save();
+    if (this.onSurface && this.sittingProgress > 0) {
+      ctx.translate(0, ((this.frontLegLength + this.frontLegOriginY) / 2) * this.sittingProgress);
+    }
+
+    // Move to head position and draw head and chest parts
+    ctx.translate(0, -(this.size / 2) - this.thicknessModL);
+    if (this.facingForwards) {
+      this.drawChest(bodyGradient);
     }
     ctx.rotate(this.rotation);
-    this.drawHead(pat, sleepshift);
+    this.drawHead();
     ctx.rotate(-this.rotation);
+
+    ctx.restore();
+    if (frontFootData.length !== 0) {
+      // left
+      this.drawSingleFoot(0, frontFootData[0], frontFootData[2], 0, frontFootData[3], true, frontFootData[5]);
+      // right
+      this.drawSingleFoot(1, frontFootData[1], frontFootData[2], 0, frontFootData[4], true, frontFootData[6]);
+    }
+
     if (!this.facingForwards) {
-      this.drawChest(pat, backendShiftX, backendShiftY, bodyGradient);
+      this.drawChest(bodyGradient);
     }
+
+    // Draw back parts (for facing backwards)
     if (!this.facingForwards) {
-      ctx.translate(-this.x, -this.y);
-      this.drawBackLegs(pat, backendShiftX, backendShiftY, bodyGradient, sameDirection, legAngle);
-      ctx.translate(this.x, this.y);
-      bodyGradient = trueWhite;
-      // sphynx
-      if (this.hairless) {
-        if (this.bodypartCode[5] == 0) {
-          bodyGradient = this.skinColour1;
-        } else if (this.bodypartCode[5] == 1) {
-          bodyGradient = this.skinColour2;
-        } else {
-          bodyGradient = this.skinColour3;
-        }
+      // Reset to base position for back legs
+      ctx.translate(0, this.size / 2);  // Undo head translate
+      if (this.onSurface && this.sittingProgress > 0) {
+        ctx.translate(0, -((this.frontLegLength + (this.size / 4)) / 2) * this.sittingProgress);
       }
-      if (!this.albino && !this.hairless) {
-        let s = this.size * 6;
-        let maxWidth = Math.sqrt(s * s + s * s) / 2;
-        bodyGradient = ctx.createLinearGradient(
-          + Math.cos(this.coatMod[1] * 6) * maxWidth, // start pos
-          + Math.sin(this.coatMod[1] * 6) * maxWidth,
-          - Math.cos(this.coatMod[1] * 6) * maxWidth, // end pos
-          - Math.sin(this.coatMod[1] * 6) * maxWidth
-        );
-        if (this.bodypartCode[5] == 0) {
-          bodyGradient.addColorStop(0, this.secondColour);
-          bodyGradient.addColorStop(this.coatMod[0], this.firstColour);
-          bodyGradient.addColorStop(1, this.firstColour);
-        } else if (this.bodypartCode[5] == 1) {
-          bodyGradient.addColorStop(0, this.thirdColour);
-          bodyGradient.addColorStop(this.coatMod[0], this.secondColour);
-          bodyGradient.addColorStop(1, this.secondColour);
-        } else {
-          bodyGradient.addColorStop(0, this.firstColour);
-          bodyGradient.addColorStop(this.coatMod[0], this.thirdColour);
-          bodyGradient.addColorStop(1, this.thirdColour);
-        }
-      } else if (this.albino && this.hairless) {
-        bodyGradient = skinPink;
-      }
-
-      this.drawBody(pat, backendShiftX, backendShiftY, bodyGradient);
-      this.drawTail(pat, backendShiftX, backendShiftY, sleepshift);
+      this.drawBackLegs(backendShiftX, backendShiftY);
+      this.drawBody(backendShiftX, backendShiftY, bodyGradient);
+      this.drawTail(backendShiftX, backendShiftY);
     }
-
-    ctx.restore(); // close
-    if (this.facingForwards) {
-      this.drawFrontFeet(pat);
-    }
-
     this.drawIcons();
+    ctx.restore(); // Single restore - back to global coordinates
     ctx.globalAlpha = 1;
-
   };
-
-  // Initialize mass and other size-dependent properties
-  this.reinitSizeAndColour();
 }
 
 function updateMatesCache() {
@@ -2625,7 +2556,7 @@ function initChoiceBoxes() {
 function adoptChitten(who) {
   who.onSurface = false;
   who.love = 100;
-  addSpeech(who, neutralWord());
+  speak(who, neutralWord());
   who.sitting = false;
   createGlyphs(who.x, who.y, unicodeHeart, 1);
   seeds.push(new Seed(randomColourFruity(), who));
@@ -2633,8 +2564,10 @@ function adoptChitten(who) {
   who.inCatBox = null;
   // Update mates cache so new chittens can find partners immediately
   updateMatesCache();
+  if (who.age < maturesAt) {
+    initKitten(who);
+  }
 }
-
 function initLitter(mParent, fParent) {
   parentBoxes = [];
   parentBoxes.push(new CatBox((canvasWidth / 2) - (boxSize * 3), (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2), boxSize, boxThickness));
@@ -2663,7 +2596,7 @@ function initLitter(mParent, fParent) {
   fParent.speedY = 0;
   mParent.speedX = 0;
   mParent.speedY = 0;
-  // Parent cats should not target fireflies during litter selection
+  // Parent cats should not target anything during litter picking
   fParent.focus = null;
   mParent.focus = null;
   parentBoxes[0].colour = genderPink;
@@ -2682,7 +2615,7 @@ function initLitter(mParent, fParent) {
   maleParent.litters++;
   femaleParent.litters++;
   // random number of chittens (6-9)
-  let numberInLitter = Math.round(6 + (Math.random() * 3));
+  let numberInLitter = Math.round(minLitterSize + (Math.random() * 3));
   let count = 0;
   for (let j = 0; j < boxRows; j++) {
     for (let i = 0; i < boxColumns && count < numberInLitter; i++) {
@@ -2693,13 +2626,23 @@ function initLitter(mParent, fParent) {
       chittens[thisCatBox + currentChittens].inCatBox = boxes[thisCatBox];
       chittens[thisCatBox + currentChittens].name = generateBreedBasedName(maleParent.breed, femaleParent.breed, chittens[thisCatBox + currentChittens].gender);
       chittens[thisCatBox + currentChittens].mother = fParent;
-      chittens[thisCatBox + currentChittens].size *= 2;
-      chittens[thisCatBox + currentChittens].reinitSizeAndColour();
       chittens[thisCatBox + currentChittens].x = (canvasWidth / 2) - (((boxSize * 3) + (boxPadding * 2)) / 2) + (i * boxPadding) + (i * boxSize) + (boxSize / 2);
       chittens[thisCatBox + currentChittens].y = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) + (j * boxPadding) + (j * boxSize) + (boxSize / 2);
-      count++;
-      initKitten(chittens[thisCatBox + currentChittens]);
-      // setting the box colour
+      // increase size here so that we can see the kittens better:
+      chittens[thisCatBox + currentChittens].size *= kittenPreviewSizeMod;
+      // Pick of litter
+      if (thisCatBox + currentChittens == currentChittens) {
+        chittens[currentChittens].size *= 1.2;
+        boxes[0].text = 'Pick';
+        // Runt of litter
+      } else if (thisCatBox + currentChittens == currentChittens + numberInLitter - 1) {
+        // Runt of litter
+        chittens[currentChittens + numberInLitter - 1].size *= 0.85;
+        chittens[currentChittens + numberInLitter - 1].maxSize *= 0.85;
+        chittens[currentChittens + numberInLitter - 1].health *= 0.85;
+        boxes[boxes.length - 1].text = 'Runt';
+      }
+      // setting the box colour by gender
       if (chittens[thisCatBox + currentChittens].gender == 'Female') {
         boxes[thisCatBox].colour = genderPink;
       } else if (chittens[thisCatBox + currentChittens].gender == 'Male') {
@@ -2710,30 +2653,20 @@ function initLitter(mParent, fParent) {
       // don't mutate the pick of the litter, or the runt
       if (thisCatBox !== 0 && thisCatBox !== boxes.length - 1) {
         mutate(chittens[thisCatBox + currentChittens]);
-        determineTraitExpression(chittens[thisCatBox + currentChittens], true, maleParent, femaleParent);
       }
+      // reinit sizes and kitten variables
+      determineTraitExpression(chittens[thisCatBox + currentChittens], true, maleParent, femaleParent);
+      chittens[thisCatBox + currentChittens].reinitSizeAndColour();
+      count++;
     }
   }
-  // Pick of litter
-  chittens[currentChittens].size *= 1.2;
-  chittens[currentChittens].reinitSizeAndColour();
-  boxes[0].text = 'Pick';
-  // Runt of litter
-  chittens[chittens.length - 1].size *= 0.85;
-  chittens[chittens.length - 1].maxSize *= 0.85;
-  chittens[chittens.length - 1].health *= 0.85;
-  chittens[chittens.length - 1].firstColour = mixTwoColours(chittens[chittens.length - 1].firstColour, randomColourRealistic(Math.random()), 1 - (Math.random() * 0.15));
-  chittens[chittens.length - 1].secondColour = mixTwoColours(chittens[chittens.length - 1].secondColour, randomColourRealistic(Math.random()), 1 - (Math.random() * 0.15));
-  chittens[chittens.length - 1].thirdColour = mixTwoColours(chittens[chittens.length - 1].thirdColour, randomColourRealistic(Math.random()), 1 - (Math.random() * 0.15));
-  boxes[boxes.length - 1].text = 'Runt';
-  chittens[chittens.length - 1].reinitSizeAndColour();
 }
 
 // Main adoption cat generator based on filter
 function generateAdoptionCat(who, breedFilter) {
   if (breedFilter === mixedBreed) {
-    // Mixed filter: 50% mixed, 50% crossbreed
-    if (Math.random() < 0.5) {
+    // Mixed filter: 30% mixed, 70% crossbreed
+    if (Math.random() < proportionOfRandomChittens) {
       randomiseGeneticsBase(who, false, null); // Pure mixed
     } else {
       generateCrossbreed(who); // Crossbreed
@@ -2746,28 +2679,25 @@ function generateAdoptionCat(who, breedFilter) {
     let rand = Math.random();
     if (rand < 0.4) {
       randomiseGeneticsBase(who, true, null); // Random purebred
-    } else if (rand < 0.7) {
+    } else if (Math.random() < proportionOfRandomChittens) { // reroll this number to set distibution
       randomiseGeneticsBase(who, false, null); // Pure mixed
     } else {
       generateCrossbreed(who); // Crossbreed
     }
   }
-}
-
-// Legacy wrapper function for backward compatibility (used only by experimental kittens in devmode)
-function randomiseGenetics(who) {
-  randomiseGeneticsBase(who, true, null); // Random purebred with mutations
+  who.name = generateBreedBasedName(who.breed, who.breed, who.gender);
+  who.reinitSizeAndColour();
 }
 
 // function to generate a random size for a new chitten
 function getRandomChittenSize(gender) {
-  const scale = ((Math.random() * chittenMinSize) + (chittenMaxSize - chittenMinSize)) * (gender === 'Female' ? 1 / 1.1 : 1);
+  const scale = ((Math.random() * chittenMinSize) + (chittenSizeVariation)) * (gender === 'Female' ? 1 / 1.1 : 1);
   return scale;
 }
 
 // Function to generate a random max size for a new chitten 
 function getRandomChittenMaxSize(gender) {
-  const scale = ((Math.random() * chittenBaseSize) + chittenSizeVariation) * (gender === 'Female' ? 1 / 1.1 : 1);
+  const scale = ((Math.random() * chittenMinSize) + chittenSizeVariation) * (gender === 'Female' ? 1 / 1.1 : 1);
   return scale;
 }
 
@@ -2787,9 +2717,9 @@ function initCattery(gender) {
 
       boxes.push(new CatBox(x, y, boxSize, boxThickness));
 
-      // Gender-specific size scaling
-      const currentSize = getRandomChittenSize(gender);
+      // Size scaling
       const maximumSize = getRandomChittenMaxSize(gender);
+      let currentSize = Math.min(getRandomChittenSize(gender), maximumSize);
 
       chittens.push(new Chitten(x + (boxSize / 2), y + (boxSize / 2), currentSize, maximumSize, gender));
 
@@ -2802,13 +2732,7 @@ function initCattery(gender) {
 
       // Generate adoption cat based on breed filter
       generateAdoptionCat(chittens[thisCatBox + currentChittens], selectedBreedFilter);
-
       const chit = chittens[thisCatBox + currentChittens];
-      chit.speedX = 0;
-      chit.speedY = 0;
-      chit.awake = false;
-
-      generateBreedAppropiateName(chit);
     }
   }
 }
@@ -2853,7 +2777,7 @@ function CatBox(x, y, size, thickness) {
   };
   // function to check if we have hit the edge of the catbox
   this.checkBounce = function (who) {
-    if (who.inCatBox == this) {
+    if (who.inCatBox == this && !who.onSurface) {
       // if we bounce off a side wall
       if (who.x < this.x + who.size || who.x >= this.x + this.size - who.size) {
         who.speedX *= -0.9;
@@ -2869,8 +2793,8 @@ function CatBox(x, y, size, thickness) {
         who.speedY *= -0.99;
         who.y = this.y + who.size;
       }
-      if (who.y >= this.y + this.size - (who.size) - (who.limbLength / 2.5)) {
-        who.y = this.y + this.size - (who.size) - (who.limbLength / 2.5);
+      if (who.y >= this.y + this.size - who.bodyToFeetDistance) {
+        who.y = this.y + this.size - who.bodyToFeetDistance;
         who.landedOnSurface();
       }
     }
@@ -2909,6 +2833,10 @@ function drawChittenTooltip(chitten) {
       let c3 = ntc.name(chitten.skinColour3)[1];
       cString = c1 + ', ' + c2 + ' & ' + c3;
     }
+    // unknown colours for chittens whos colours change over time
+  } else if ((chitten.colourpointExpressed || chitten.pattern == 3)
+    && chitten.age < maturesAt) {
+    cString = unicodeUnknown;
   } else {
     let c1 = ntc.name(chitten.firstColour)[1];
     let c2 = ntc.name(chitten.secondColour)[1];
@@ -2921,19 +2849,42 @@ function drawChittenTooltip(chitten) {
   }
   maxWidth = Math.max(maxWidth, ctx.measureText('Coat: ' + cString).width);
 
+  // pattern colours
+  let pString = 'None';
+  if (chitten.albino
+    || ((chitten.colourpointExpressed || chitten.pattern == 3)
+      && chitten.age < maturesAt)) {
+    pString = unicodeUnknown;
+  } else if (chitten.pattern == 1) {
+    pString = getPatternName(1);
+  } else if (chitten.pattern == 7) {
+    pString = getPatternName(7);
+  } else if (chitten.pattern == 3 || chitten.pattern == 6) {
+    if (chitten.hairless) {
+      pString = '';
+    } else {
+      pString = ntc.name(chitten.patternColour)[1];
+    }
+    pString += ' ' + getPatternName(chitten.pattern);
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Pattern: ' + pString).width);
+
   // Pre-calculate eye string for width measurement
   let eString = '';
-  if (chitten.eyeColour == chitten.eyeColour2 && !chitten.albino) {
-    eString = ntc.name(chitten.eyeColour)[1];
-  } else if (chitten.albino) {
-    eString = 'Pink';
+  if (chitten.age < maturesAt) {
+    eString = unicodeUnknown;
   } else {
-    let color1Name = ntc.name(chitten.eyeColour)[1];
-    let color2Name = ntc.name(chitten.eyeColour2)[1];
-    eString = 'Heterochromic ' + color1Name + ' & ' + color2Name;
+    if (chitten.eyeColour == chitten.eyeColour2 && !chitten.albino) {
+      eString = ntc.name(chitten.eyeColour)[1];
+    } else if (chitten.albino) {
+      eString = 'Pink';
+    } else {
+      let color1Name = ntc.name(chitten.eyeColour)[1];
+      let color2Name = ntc.name(chitten.eyeColour2)[1];
+      eString = 'Heterochromic ' + color1Name + ' & ' + color2Name;
+    }
   }
   maxWidth = Math.max(maxWidth, ctx.measureText('Eyes: ' + eString).width);
-  maxWidth = Math.max(maxWidth, ctx.measureText('Size: ' + Math.round(chitten.maxSize)).width);
 
   ctx.font = 'bold 11px ' + globalFont;
   maxWidth = Math.max(maxWidth, ctx.measureText('GENETICS').width);
@@ -2974,7 +2925,7 @@ function drawChittenTooltip(chitten) {
   // Draw tooltip background with border
   ctx.fillStyle = trueBlack;
   ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.strokeStyle = tooltipBackgroundColour;
   ctx.lineWidth = 1;
   ctx.strokeRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
 
@@ -3006,7 +2957,7 @@ function drawChittenTooltip(chitten) {
   ctx.fillText('Age: ' + chitten.age, tooltipX + 10, tooltipY + 55);
   ctx.fillText('Coat: ' + cString, tooltipX + 10, tooltipY + 70);
   ctx.fillText('Eyes: ' + eString, tooltipX + 10, tooltipY + 85);
-  ctx.fillText('Size: ' + Math.round(chitten.size), tooltipX + 10, tooltipY + 100);
+  ctx.fillText('Pattern: ' + pString, tooltipX + 10, tooltipY + 100);
 
   ctx.font = 'bold 11px ' + globalFont;
   ctx.fillText('GENETICS', tooltipX + 10, tooltipY + 125);
@@ -3053,16 +3004,8 @@ removeRelationships = function (who) {
       chittens[i].snuggling = -1;
     }
   }
-  // kill fruit that is being consumed
-  for (let i = 0; i < fruits.length; i++) {
-    if (fruits[i].eater == who) {
-      fruits.splice(i, 1);
-      i--;
-    }
-  }
   // decrease currentchittens if chosing a chitten to compensate for losing this one
   if (choosingChitten) {
-    currentChittens--;
     // shift all catbox IDs down by 1
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].id--;
@@ -3110,8 +3053,8 @@ function recalculateChittenNumbers() {
 
 // function to spawn a random chitten of a specific gender in endless mode
 function spawnRandomChitten(gender) {
-  const currentSize = getRandomChittenSize(gender);
   const maximumSize = getRandomChittenMaxSize(gender);
+  let currentSize = Math.min(getRandomChittenSize(gender), maximumSize);
   let offsetX = 0;
   if (gender == 'Male') {
     offsetX = canvasWidth - 20;
@@ -3123,14 +3066,13 @@ function spawnRandomChitten(gender) {
   const tempChitten = new Chitten(offsetX, trueBottom - 20, currentSize, maximumSize, gender);
   generateAdoptionCat(tempChitten, 'All');
   chittens.push(tempChitten);
-  generateBreedAppropiateName(chittens[chittens.length - 1]);
   // Adoption handling
   sendMessage(chittens[chittens.length - 1].name + ' wandered in');
   adoptChitten(chittens[chittens.length - 1]);
 }
 
 // Function to add speech and trigger mouth animation
-function addSpeech(chitten, word) {
+function speak(chitten, word) {
   // Don't allow speech while eating
   if (chitten.eatingChewsRemaining > 0) {
     return;
@@ -3146,4 +3088,15 @@ function addSpeech(chitten, word) {
   speech.push(new Speak(chitten, word));
   // Trigger mouth opening animation
   chitten.targetMouthOpenState = true;
+}
+
+function initGeneEditing() {
+  // gene editing
+  experiment = new Chitten(70, 90, chittenBaseSize, chittenMaxSize, 'Female');
+  experiment.name = getFemaleName(Math.floor(Math.random() * numlibs * namesinlib));
+  randomiseGeneticsBase(experiment, true, null)
+  experiment.awake = true;
+  experiment.onSurface = true;
+  experiment.reinitSizeAndColour();
+  initSliders();
 }

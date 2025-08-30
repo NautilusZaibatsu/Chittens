@@ -1,7 +1,20 @@
 // arrays
-
 ghosts = [];
 gravestones = [];
+
+// images
+// graves
+const tombstone = new Image();
+tombstone.src = 'img/grave.png';
+const tombstone2 = new Image();
+tombstone2.src = 'img/grave2.png';
+const tombstone3 = new Image();
+tombstone3.src = 'img/grave3.png';
+const obelisk = new Image();
+obelisk.src = 'img/obelisk.png';
+// Ghosts
+const spectre = new Image();
+spectre.src = 'img/ghost.png';
 
 /**
 * function for a Ghost

@@ -219,6 +219,14 @@ function detectCollision(thisobj, otherobj) {
   return distance < minDistance;
 }
 
+function detectCollisionPointerChitten(chitten) {
+  let dx = pointerPos.x - chitten.x;
+  let dy = pointerPos.y - chitten.y;
+  let distance = Math.sqrt(dx * dx + dy * dy);
+  let minDistance = ((pointerPos.size * 2) + chitten.size) / 2;
+  return distance < minDistance;
+}
+
 // more forgiving collision detection for kittens trying to touch their mothers
 function detectMotherCollision(thisobj, otherobj) {
   let dx = thisobj.x - otherobj.x;
@@ -257,7 +265,7 @@ function detectFruitCollision(chitten, fruit) {
   let dx = Math.abs(chitten.x - fruit.x);
   let dy = chitten.y - fruit.y; // Vertical distance (fruit should be below chitten)
   let horizontalRange = chitten.size + fruit.size;
-  let verticalRange = chitten.size + chitten.limbLength;
+  let verticalRange = chitten.size + chitten.frontLegLength;
 
   let horizontalOK = dx < horizontalRange;
   let verticalOK = dy > -verticalRange && dy < verticalRange;
@@ -293,10 +301,6 @@ function collide(obj1, obj2) {
 
   let p = 2 * (obj1.speedX * nx + obj1.speedY * ny - obj2.speedX * nx - obj2.speedY * ny) / (mass1 + mass2);
 
-  // calculate collision point (still use size for positioning)
-  let colPointX = ((obj1.x * obj2.size) + (obj2.x * obj1.size)) / (obj1.size + obj2.size);
-  let colPointY = ((obj1.y * obj2.size) + (obj2.y * obj1.size)) / (obj1.size + obj2.size);
-
   // separate overlapping objects (still use size for collision detection)
   let overlap = (obj1.size + obj2.size) / 2 - d;
   if (overlap > 0) {
@@ -319,12 +323,11 @@ function collide(obj1, obj2) {
 
   // calculate rotation (reuse calculated angle components)
   if (!obj1.onSurface) {
-    obj1.spin += Math.atan2(ny, nx) / 20;
+    obj1.spin += Math.atan2(ny, nx) / 40;
   }
   if (!obj2.onSurface) {
-    obj2.spin -= Math.atan2(ny, nx) / 20;
+    obj2.spin -= Math.atan2(ny, nx) / 40;
   }
-
   applySpeedLimit(obj1);
   applySpeedLimit(obj2);
 }

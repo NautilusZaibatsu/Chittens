@@ -1,0 +1,903 @@
+// Dynamic layout system
+const LAYOUT_CONFIG = {
+  startX: 100,
+  startY: 60,
+  columnWidth: 250, // Increased for better spacing
+  titleHeight: 20,
+  controlSpacing: 5,
+  groupSpacing: 25,
+  previewScale: 2.5, // 150% increase
+  colorPickerScale: 2.0, // 100% increase
+  // Color system positioning (left-aligned stack)
+  colorSystemX: 20,
+  spliceBoxY: 30,
+  spliceBoxSize: 250,
+  colorSystemWidth: 250,
+  colorSystemGap: 10
+};
+
+// Control type dimensions
+const CONTROL_DIMENSIONS = {
+  slider: { width: 120, height: 25 },
+  colorPicker: { width: 50 * LAYOUT_CONFIG.colorPickerScale, height: 50 * LAYOUT_CONFIG.colorPickerScale },
+  boolean: { width: 100, height: 25 },
+  pattern: { width: 150, height: 25 },
+  text: { width: 120, height: 25 },
+  breed: { width: 150, height: 25 },
+  bodypart: { width: 120, height: 25 },
+  preview: { width: 150 * LAYOUT_CONFIG.previewScale, height: 150 * LAYOUT_CONFIG.previewScale },
+  button: { width: 80, height: 30 }
+};
+
+// Redesigned editor layout - WIP
+const EDITOR_GROUPS = [
+  {
+    title: "Physical Traits",
+    x: LAYOUT_CONFIG.columnWidth * 2, y: LAYOUT_CONFIG.startY, spacing: 30,
+    properties: [
+      { prop: 'size', type: 'slider', min: 5, max: 20, label: 'Size' },
+      { prop: 'thickness', type: 'slider', min: 0.5, max: 1, label: 'Thickness' },
+      { prop: 'legginess', type: 'slider', min: 0, max: 1, label: 'Legginess' },
+      { prop: 'coordination', type: 'slider', min: 0, max: 1, label: 'Coordination' },
+      { prop: 'frontLegLength', type: 'slider', min: 0, max: 1, label: 'Limb Length' },
+      { prop: 'tailLength', type: 'slider', min: 0, max: 1, label: 'Tail Length' }
+    ]
+  },
+  {
+    title: "Head Features",
+    x: LAYOUT_CONFIG.columnWidth * 2, y: LAYOUT_CONFIG.startY + (6 * 30), spacing: 30,
+    properties: [
+      { prop: 'headWidth', type: 'slider', min: 0, max: 1, label: 'Head Width' },
+      { prop: 'headHeight', type: 'slider', min: 0, max: 1, label: 'Head Height' },
+      { prop: 'earWidth', type: 'slider', min: 0, max: 1, label: 'Ear Width' },
+      { prop: 'earHeight', type: 'slider', min: 0, max: 1, label: 'Ear Height' },
+      { prop: 'eyeSize', type: 'slider', min: 0, max: 1, label: 'Eye Size' },
+      { prop: 'eyePosX', type: 'slider', min: 0, max: 1, label: 'Eye Width' },
+      { prop: 'eyePosY', type: 'slider', min: 0, max: 1, label: 'Eye Height' },
+      { prop: 'nosePos', type: 'slider', min: 0, max: 1, label: 'Nose Height' },
+      { prop: 'fangs', type: 'slider', min: 0, max: 1, label: 'Fang Size' },
+      { prop: 'mawSize', type: 'slider', min: 0, max: 1, label: 'Maw Size' }
+    ]
+  },
+  {
+    title: "Coat & Pattern",
+    x: LAYOUT_CONFIG.columnWidth * 3, y: LAYOUT_CONFIG.startY, spacing: 30,
+    properties: [
+      { prop: 'pattern', type: 'pattern', label: 'Pattern Type' },
+      { prop: 'patternAlpha', type: 'slider', min: 0, max: 1, label: 'Pattern Opacity' },
+      { prop: 'coatMod[3]', type: 'slider', min: 0, max: 1, label: 'Coat Solid' },
+      { prop: 'coatMod[0]', type: 'slider', min: 0, max: 1, label: 'Coat Fade' },
+      { prop: 'coatMod[1]', type: 'slider', min: 0, max: 1, label: 'Coat Angle' },
+      { prop: 'coatMod[2]', type: 'slider', min: 0, max: 1, label: 'Pattern Angle' },
+    ]
+  },
+  {
+    title: "Body Part Colors",
+    x: LAYOUT_CONFIG.columnWidth * 3, y: LAYOUT_CONFIG.startY + (6 * 30), spacing: 30,
+    properties: [
+      { prop: 'bodypartCode[2]', type: 'bodypart', label: 'Head' },
+      { prop: 'bodypartCode[3]', type: 'bodypart', label: 'L Ear' },
+      { prop: 'bodypartCode[4]', type: 'bodypart', label: 'R Ear' },
+      { prop: 'bodypartCode[5]', type: 'bodypart', label: 'Body' },
+      { prop: 'bodypartCode[6]', type: 'bodypart', label: 'Tail' },
+      { prop: 'bodypartCode[0]', type: 'bodypart', label: 'L Front Foot' },
+      { prop: 'bodypartCode[1]', type: 'bodypart', label: 'R Front Foot' },
+      { prop: 'bodypartCode[7]', type: 'bodypart', label: 'L Back Foot' },
+      { prop: 'bodypartCode[8]', type: 'bodypart', label: 'R Back Foot' },
+      { prop: 'bodypartCode[9]', type: 'bodypart', label: 'L Jowl' },
+      { prop: 'bodypartCode[10]', type: 'bodypart', label: 'R Jowl' },
+      { prop: 'bodypartCode[11]', type: 'bodypart', label: 'Chin' },
+      { prop: 'bodypartCode[12]', type: 'bodypart', label: 'Chest' }
+    ]
+  },
+   {
+    title: "Templates & Info",
+    x: LAYOUT_CONFIG.columnWidth * 4, y: LAYOUT_CONFIG.startY, spacing: 30,
+    properties: [
+      { prop: 'breedTemplate', type: 'breed', label: 'Apply Breed' },
+      { prop: 'name', type: 'text', label: 'Name' },
+      { prop: 'age', type: 'slider', min: 0, max: 10, label: 'Age' },
+      { prop: 'maxAge', type: 'slider', min: 10, max: 25, label: 'Max Age' }
+    ]
+  },
+  {
+    title: "Genetics",
+    x: LAYOUT_CONFIG.columnWidth * 4, y: LAYOUT_CONFIG.startY + (4 * 30), spacing: 30,
+    properties: [
+      { prop: 'albino', type: 'boolean', label: 'Albino' },
+      { prop: 'albinoGene', type: 'boolean', label: 'Albino Gene' },
+      { prop: 'hairless', type: 'boolean', label: 'Hairless' },
+      { prop: 'hairlessGene', type: 'boolean', label: 'Hairless Gene' },
+      { prop: 'lykoi', type: 'boolean', label: 'Lykoi' },
+      { prop: 'lykoiGene', type: 'boolean', label: 'Lykoi Gene' },
+      { prop: 'colourpointExpressed', type: 'boolean', label: 'Colorpoint' },
+      { prop: 'colourpointGene', type: 'boolean', label: 'Colorpoint Gene' },
+      { prop: 'heterochromicGene', type: 'boolean', label: 'Heterochromic' }
+    ]
+  }
+];
+
+// Simplified layout - no complex calculations needed since we're using the original EDITOR_GROUPS structure
+
+/**
+* Auto-generate editor controls from configuration
+*/
+function initSliders() {
+  sliders = [];
+  colorPickers = [];
+  booleanToggles = [];
+  patternSelector = null;
+  breedSelector = null;
+  textInputs = [];
+
+  let controlIndex = 0;
+
+  EDITOR_GROUPS.forEach(group => {
+    let currentY = group.y;
+
+    // Draw group title
+    group.titleY = currentY - 15;
+
+    group.properties.forEach(propDef => {
+      const control = createControl(propDef, group.x, currentY, controlIndex);
+
+      switch (propDef.type) {
+        case 'slider':
+        case 'bodypart':
+          sliders.push(control);
+          break;
+        case 'color':
+          colorPickers.push(control);
+          break;
+        case 'boolean':
+          booleanToggles.push(control);
+          break;
+        case 'pattern':
+          patternSelector = control;
+          break;
+        case 'text':
+        case 'gender':
+          textInputs.push(control);
+          break;
+        case 'breed':
+          breedSelector = control;
+          break;
+      }
+
+      currentY += group.spacing;
+      controlIndex++;
+    });
+  });
+}
+
+/**
+* Create a control based on property definition
+*/
+function createControl(propDef, x, y, index) {
+  const value = getPropertyValue(experiment, propDef.prop);
+
+  switch (propDef.type) {
+    case 'slider':
+      return new Slider(propDef.min, propDef.max, value, x, y, propDef.label, propDef.prop, index);
+
+    case 'bodypart':
+      return new Slider(0, 2, value, x, y, propDef.label, propDef.prop, index);
+
+    case 'color':
+      return new ColorPicker(x, y, propDef.label, propDef.prop, value);
+
+    case 'boolean':
+      return new BooleanToggle(x, y, propDef.label, propDef.prop, value);
+
+    case 'pattern':
+      return new PatternSelector(x, y, propDef.label, value);
+
+    case 'text':
+    case 'gender':
+      return new TextInput(x, y, propDef.label, propDef.prop, value, propDef.type);
+
+    case 'breed':
+      return new BreedSelector(x, y, propDef.label);
+  }
+}
+
+/**
+* Get property value from object using dot notation or array notation
+*/
+function getPropertyValue(obj, propPath) {
+  if (propPath.includes('[')) {
+    // Handle array properties like 'bodypartCode[0]'
+    const [arrayName, indexStr] = propPath.split('[');
+    const index = parseInt(indexStr.replace(']', ''));
+    return obj[arrayName][index];
+  } else if (propPath.includes('.')) {
+    // Handle nested properties
+    return propPath.split('.').reduce((o, p) => o && o[p], obj);
+  } else {
+    return obj[propPath];
+  }
+}
+
+/**
+* Set property value on object using dot notation or array notation  
+*/
+function setPropertyValue(obj, propPath, value) {
+  if (propPath.includes('[')) {
+    // Handle array properties like 'bodypartCode[0]'
+    const [arrayName, indexStr] = propPath.split('[');
+    const index = parseInt(indexStr.replace(']', ''));
+    obj[arrayName][index] = value;
+  } else if (propPath.includes('.')) {
+    // Handle nested properties
+    const props = propPath.split('.');
+    const lastProp = props.pop();
+    const target = props.reduce((o, p) => o[p], obj);
+    target[lastProp] = value;
+  } else {
+    obj[propPath] = value;
+  }
+}
+
+/**
+* Update all controls with current experiment values
+*/
+function reinitSliders() {
+  // Update sliders
+  sliders.forEach(slider => {
+    if (slider.property) {
+      slider.currentPos = getPropertyValue(experiment, slider.property);
+    }
+  });
+
+  // Update color pickers
+  if (colorPickers) {
+    colorPickers.forEach(picker => {
+      if (picker.property) {
+        picker.currentColor = getPropertyValue(experiment, picker.property);
+      }
+    });
+  }
+
+  // Update boolean toggles
+  if (booleanToggles) {
+    booleanToggles.forEach(toggle => {
+      if (toggle.property) {
+        toggle.value = getPropertyValue(experiment, toggle.property);
+      }
+    });
+  }
+
+  // Update pattern selector
+  if (patternSelector) {
+    patternSelector.selectedPattern = experiment.pattern;
+  }
+
+  // Update text inputs
+  if (textInputs) {
+    textInputs.forEach(input => {
+      if (input.property) {
+        input.value = getPropertyValue(experiment, input.property);
+      }
+    });
+  }
+}
+
+/**
+* function to describe a slider
+*/
+function Slider(lowerLimit, upperLimit, currentPos, x, y, txt, property, index) {
+  this.id = index;
+  this.lowerLimit = lowerLimit;
+  this.upperLimit = upperLimit;
+  this.currentPos = currentPos;
+  this.relativePosition = 0;
+  this.proportion = 1;
+  this.x = x;
+  this.y = y;
+  this.text = txt;
+  this.property = property; // Property path like 'thickness' or 'bodypartCode[0]'
+  this.sBar = new SliderBar(this);
+
+  this.update = function () {
+    // bar base is 0 to 100
+    this.proportion = 100 / (Math.abs(this.upperLimit - this.lowerLimit));
+    this.relativePosition = this.proportion * (this.currentPos - this.lowerLimit);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = trueBlack;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x + 100, this.y);
+    ctx.stroke();
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px' + ' ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.text, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+    this.sBar.update();
+  };
+}
+
+/**
+* function to describe a slider bar
+*/
+function SliderBar(parent) {
+  this.parent = parent;
+  this.dragged = false;
+  this.colour = trueWhite;
+  this.x = this.parent.x;
+  this.y = this.parent.y;
+  this.size = 10;
+
+  this.update = function () {
+    if (this.dragged) {
+      let correctMouseX = pointerPos.x;
+      if (correctMouseX < this.parent.x) {
+        correctMouseX = this.parent.x;
+      } else if (correctMouseX > this.parent.x + 100) {
+        correctMouseX = this.parent.x + 100;
+      }
+
+      let score = (correctMouseX - this.parent.x);
+      this.parent.currentPos = (score / this.parent.proportion) + this.parent.lowerLimit;
+      this.x = correctMouseX;
+
+      // Update the experiment property using the property path
+      if (this.parent.property) {
+        let value = this.parent.currentPos;
+
+        // Round integer values for bodypart codes and patterns
+        if (this.parent.property.includes('bodypartCode') || this.parent.property === 'pattern') {
+          value = Math.round(value);
+        }
+
+        // Special case for size - also update maxSize
+        if (this.parent.property === 'size') {
+          experiment.maxSize = value;
+        }
+
+        setPropertyValue(experiment, this.parent.property, value);
+        experiment.reinitSizeAndColour();
+      }
+    } else {
+      this.x = this.parent.x + this.parent.relativePosition;
+    }
+
+    ctx.fillStyle = this.colour;
+    ctx.fillRect(this.x - 2.5, this.y - 10, 5, 20);
+  };
+}
+
+/**
+* Render group titles and main editor title
+*/
+function renderGroupTitles() {
+  // Main editor title
+  ctx.fillStyle = trueWhite;
+  ctx.font = 'bold 18px ' + globalFont;
+  ctx.fillText('Genetic Editor', 20, 25);
+
+  // Group titles
+  ctx.fillStyle = trueWhite;
+  ctx.font = 'bold 14px ' + globalFont;
+
+  EDITOR_GROUPS.forEach(group => {
+    if (group.titleY) {
+      ctx.fillText(group.title, group.x, group.titleY);
+    }
+  });
+}
+
+// Preview box and color system positioning handled by existing spliceBox and colourBars/colourBlock
+
+// Save/close buttons handled by existing UI system
+
+/**
+* ColorPicker control for color properties - now with increased size
+*/
+function ColorPicker(x, y, label, property, currentColor) {
+  this.x = x;
+  this.y = y;
+  this.label = label;
+  this.property = property;
+  this.currentColor = currentColor;
+  this.width = CONTROL_DIMENSIONS.colorPicker.width;
+  this.height = CONTROL_DIMENSIONS.colorPicker.height;
+  this.clicked = false;
+
+  this.update = function () {
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.label, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = this.currentColor;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.strokeStyle = trueWhite;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+  };
+
+  this.handleClick = function (mousePos) {
+    if (mousePos.x >= this.x && mousePos.x <= this.x + this.width &&
+      mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
+      // Set this color as selected in the color picker
+      if (colourBars) {
+        colourBars.selectedProperty = this.property;
+      }
+      return true;
+    }
+    return false;
+  };
+}
+
+/**
+* BooleanToggle control for boolean properties
+*/
+function BooleanToggle(x, y, label, property, value) {
+  this.x = x;
+  this.y = y;
+  this.label = label;
+  this.property = property;
+  this.value = value;
+  this.width = 20;
+  this.height = 20;
+
+  this.update = function () {
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.label, this.x + 25, this.y + 15);
+    ctx.globalAlpha = 1;
+
+    // Draw checkbox
+    ctx.strokeStyle = trueWhite;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+    if (this.value) {
+      ctx.fillStyle = trueWhite;
+      ctx.fillRect(this.x + 3, this.y + 3, this.width - 6, this.height - 6);
+    }
+  };
+
+  this.handleClick = function (mousePos) {
+    if (mousePos.x >= this.x && mousePos.x <= this.x + this.width &&
+      mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
+      this.value = !this.value;
+      setPropertyValue(experiment, this.property, this.value);
+      experiment.reinitSizeAndColour();
+      return true;
+    }
+    return false;
+  };
+}
+
+/**
+* PatternSelector control for pattern selection
+*/
+function PatternSelector(x, y, label, selectedPattern) {
+  this.x = x;
+  this.y = y;
+  this.label = label;
+  this.selectedPattern = selectedPattern;
+  this.width = 150;
+  this.height = 25;
+  this.open = false;
+
+  this.update = function () {
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.label, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+
+    // Draw dropdown box
+    ctx.strokeStyle = trueWhite;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+    // Show selected pattern
+    const selectedPatternData = validPatterns.find(p => p.value === this.selectedPattern);
+    ctx.fillStyle = trueWhite;
+    ctx.fillText(selectedPatternData ? selectedPatternData.label : 'Unknown', this.x + 5, this.y + 18);
+
+    // Draw dropdown options if open
+    if (this.open) {
+      validPatterns.forEach((pattern, index) => {
+        const optionY = this.y + this.height + (index * this.height);
+        ctx.fillStyle = pattern.value === this.selectedPattern ? '#444444' : '#222222';
+        ctx.fillRect(this.x, optionY, this.width, this.height);
+        ctx.strokeStyle = trueWhite;
+        ctx.strokeRect(this.x, optionY, this.width, this.height);
+        ctx.fillStyle = trueWhite;
+        ctx.fillText(pattern.label, this.x + 5, optionY + 18);
+      });
+    }
+  };
+
+  this.handleClick = function (mousePos) {
+    if (mousePos.x >= this.x && mousePos.x <= this.x + this.width) {
+      if (mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
+        this.open = !this.open;
+        return true;
+      } else if (this.open) {
+        // Check dropdown options
+        validPatterns.forEach((pattern, index) => {
+          const optionY = this.y + this.height + (index * this.height);
+          if (mousePos.y >= optionY && mousePos.y <= optionY + this.height) {
+            this.selectedPattern = pattern.value;
+            setPropertyValue(experiment, 'pattern', pattern.value);
+            experiment.reinitSizeAndColour();
+            this.open = false;
+          }
+        });
+        return true;
+      }
+    }
+    return false;
+  };
+}
+
+/**
+* TextInput control for text properties
+*/
+function TextInput(x, y, label, property, value, inputType) {
+  this.x = x;
+  this.y = y;
+  this.label = label;
+  this.property = property;
+  this.value = value || '';
+  this.inputType = inputType;
+  this.width = 120;
+  this.height = 25;
+  this.active = false;
+
+  this.update = function () {
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.label, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+
+    // Draw input box
+    ctx.strokeStyle = this.active ? '#ffff00' : trueWhite;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
+
+    // Show value
+    ctx.fillStyle = trueWhite;
+    ctx.fillText(this.value, this.x + 5, this.y + 18);
+  };
+
+  this.handleClick = function (mousePos) {
+    if (mousePos.x >= this.x && mousePos.x <= this.x + this.width &&
+      mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
+      this.active = true;
+      // Focus logic would go here in a full implementation
+      return true;
+    } else {
+      this.active = false;
+    }
+    return false;
+  };
+}
+
+/**
+* BreedSelector control for applying breed templates
+*/
+function BreedSelector(x, y, label) {
+  this.x = x;
+  this.y = y;
+  this.label = label;
+  this.width = 150;
+  this.height = 25;
+  this.open = false;
+  this.breeds = Object.keys(BREED_DATA).sort(); // Get all breeds from BREED_DATA
+
+  this.update = function () {
+    ctx.fillStyle = trueWhite;
+    ctx.font = '12px ' + globalFont;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.label, this.x, this.y - 8);
+    ctx.globalAlpha = 1;
+
+    // Draw dropdown box
+    ctx.strokeStyle = trueWhite;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
+
+    // Show "Select Breed" text
+    ctx.fillStyle = trueWhite;
+    ctx.fillText('Select Breed', this.x + 5, this.y + 18);
+
+    // Draw dropdown indicator
+    ctx.fillStyle = trueWhite;
+    ctx.fillText('▼', this.x + this.width - 15, this.y + 18);
+
+    // Draw dropdown options if open
+    if (this.open) {
+      this.breeds.forEach((breedName, index) => {
+        const optionY = this.y + this.height + (index * this.height);
+        ctx.fillStyle = '#222222';
+        ctx.fillRect(this.x, optionY, this.width, this.height);
+        ctx.strokeStyle = trueWhite;
+        ctx.strokeRect(this.x, optionY, this.width, this.height);
+        ctx.fillStyle = trueWhite;
+        ctx.fillText(breedName, this.x + 5, optionY + 18);
+      });
+    }
+  };
+
+  this.handleClick = function (mousePos) {
+    if (mousePos.x >= this.x && mousePos.x <= this.x + this.width) {
+      if (mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
+        this.open = !this.open;
+        return true;
+      } else if (this.open) {
+        // Check dropdown options
+        this.breeds.forEach((breedName, index) => {
+          const optionY = this.y + this.height + (index * this.height);
+          if (mousePos.y >= optionY && mousePos.y <= optionY + this.height) {
+            // Apply the selected breed to the experiment chitten
+            applyBreed(experiment, breedName);
+            experiment.reinitSizeAndColour();
+            // Update all controls with new values
+            reinitSliders();
+            this.open = false;
+          }
+        });
+        return true;
+      }
+    }
+
+    // Close dropdown if clicked elsewhere
+    if (this.open) {
+      this.open = false;
+    }
+
+    return false;
+  };
+}
+
+function ColourBar(x, y) {
+  // Position under color picker, same width as spliceBox and color picker
+  this.x = LAYOUT_CONFIG.colorSystemX;
+  // Calculate color picker height: 20 rows + 1 extra row for grays, each row is pixelSize tall
+  const pixelSize = LAYOUT_CONFIG.colorSystemWidth / 24; // Same as in ColourPixelBlock
+  const colorPickerHeight = 21 * pixelSize; // 20 color rows + 1 gray row
+  this.y = LAYOUT_CONFIG.spliceBoxY + LAYOUT_CONFIG.spliceBoxSize + LAYOUT_CONFIG.colorSystemGap + colorPickerHeight + LAYOUT_CONFIG.colorSystemGap;
+  this.text = 'Colors - Click to Select';
+  this.selected = 0;
+  this.colorWidth = LAYOUT_CONFIG.colorSystemWidth / 6; // Divide total width by 6 colors
+  this.colorHeight = 30; // Make them a bit taller
+
+  // Define all 6 colors with labels
+  this.colors = [
+    { prop: 'firstColour', label: 'Primary' },
+    { prop: 'secondColour', label: 'Secondary' },
+    { prop: 'thirdColour', label: 'Third' },
+    { prop: 'patternColour', label: 'Pattern' },
+    { prop: 'eyeColour', label: 'Left Eye' },
+    { prop: 'eyeColour2', label: 'Right Eye' }
+  ];
+
+  this.update = function () {
+    ctx.font = '12px' + ' ' + globalFont;
+    ctx.fillStyle = trueWhite;
+    ctx.globalAlpha = 0.7;
+    ctx.fillText(this.text, this.x, this.y - 25);
+    ctx.globalAlpha = 1;
+
+    // Draw color swatches
+    this.colors.forEach((color, index) => {
+      const colorX = this.x + (index * this.colorWidth);
+      ctx.fillStyle = experiment[color.prop];
+      ctx.fillRect(colorX, this.y, this.colorWidth, this.colorHeight);
+
+      // Draw selection border
+      if (this.selected === index) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = trueWhite;
+        ctx.strokeRect(colorX, this.y, this.colorWidth, this.colorHeight);
+      }
+
+      // Draw color label
+      ctx.font = '9px' + ' ' + globalFont;
+      ctx.fillStyle = trueWhite;
+      ctx.globalAlpha = 0.8;
+      ctx.fillText(color.label, colorX, this.y + this.colorHeight + 12);
+      ctx.globalAlpha = 1;
+    });
+
+    ctx.font = '12px' + ' ' + globalFont; // Reset font
+  };
+}
+
+function ColourPixelBlock() {
+  // Position directly under spliceBox using constants
+  this.x = LAYOUT_CONFIG.colorSystemX;
+  this.y = LAYOUT_CONFIG.spliceBoxY + LAYOUT_CONFIG.spliceBoxSize + LAYOUT_CONFIG.colorSystemGap;
+  // Calculate pixel size to make total picker same width as spliceBox
+  this.pixelRows = 20;
+  this.pixelColumns = 24;
+  this.pixelSize = LAYOUT_CONFIG.colorSystemWidth / this.pixelColumns;
+  this.huePixels = [];
+  this.dragged = false;
+  // convert x axis  
+  let lrInterval = (rgbMax * 6) / (this.pixelColumns - 1); // divide by columns-1 for hue spectrum
+  // generate hue gradient
+  for (let i = 0; i < this.pixelColumns - 1; i++) {
+    this.huePixels.push((i * lrInterval) + (lrInterval / 2));
+  }
+  // convert gradient positions to hex values
+  for (let i = 0; i < this.huePixels.length; i++) {
+    if (this.huePixels[i] < rgbMax) {
+      let tmp = [rgbMax, 0, Math.round(this.huePixels[i])];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < rgbMax * 2) {
+      let tmp = [rgbMax + 256 - Math.round(this.huePixels[i]), 0, rgbMax];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < rgbMax * 3) {
+      let tmp = [0, Math.round(this.huePixels[i] - (256 * 2)), rgbMax];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < rgbMax * 4) {
+      let tmp = [0, rgbMax, rgbMax + (rgbMax * 3) - Math.round(this.huePixels[i])];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < rgbMax * 5) {
+      let tmp = [Math.round(this.huePixels[i]) - (256 * 4), rgbMax, 0];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    } else if (this.huePixels[i] < rgbMax * 6) {
+      let tmp = [rgbMax, rgbMax + (rgbMax * 5) - Math.round(this.huePixels[i]), 0];
+      this.huePixels[i] = rgbToHex(tmp[0], tmp[1], tmp[2]);
+    }
+  }
+  let outputPixels = [];
+  // create all rows and populate white - transparent - black fade
+  let tmpPix = [];
+  for (let i = 0; i < this.pixelRows; i++) {
+    tmpPix = []; // Clear array for each row
+    if (i < this.pixelRows / 2) {
+      for (let j = 0; j < this.huePixels.length; j++) {
+        tmpPix[j] = mixTwoColours(trueWhite, this.huePixels[j], 1 - (i / this.pixelRows * 2));
+      }
+      outputPixels = outputPixels.concat(tmpPix);
+    } else if (i > this.pixelRows / 2) {
+      for (let j = 0; j < this.huePixels.length; j++) {
+        tmpPix[j] = mixTwoColours(trueBlack, this.huePixels[j], (i - (this.pixelRows / 2)) / this.pixelRows * 2);
+      }
+      outputPixels = outputPixels.concat(tmpPix);
+    } else {
+      outputPixels = outputPixels.concat(this.huePixels);
+    }
+  }
+
+  // make a set of pixels that are greys (black to white)
+  let factor = 256 / this.huePixels.length;
+  for (let i = 0; i < this.huePixels.length; i++) {
+    let tmp = Math.round(i * factor);
+    outputPixels.push(rgbToHex(tmp, tmp, tmp));
+  }
+
+  this.pixels = outputPixels;
+
+  this.updateHoverColour = function () {
+    const actualCols = this.huePixels.length;
+    let xPoint = pointerPos.x - this.x;
+    let yPoint = pointerPos.y - this.y;
+    let xCoord = Math.round(xPoint / this.pixelSize);
+    let yCoord = Math.round(yPoint / this.pixelSize);
+    let newIndex = (yCoord * actualCols) + xCoord;
+    if (newIndex < this.pixels.length) {
+      let midPointX = xCoord + (this.pixelSize / 2);
+      let midPointY = yCoord + (this.pixelSize / 2);
+      let perfectColour = this.pixels[newIndex];
+      let diffx = midPointX - xPoint; // 0 to pixelSize/2
+      let diffy = midPointY - yPoint;
+
+      // now get the exact colour by combining boxes
+      let newC1 = perfectColour;
+      let newC2 = perfectColour;
+      if (diffx < 0 && xCoord > 0 && xCoord < actualCols) {
+        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex - 1], Math.abs((this.pixelSize / 2) / diffx));
+      } else if (diffx > 0 && xCoord > 0 && xCoord < actualCols) {
+        newC1 = mixTwoColours(perfectColour, this.pixels[newIndex + 1], Math.abs((this.pixelSize / 2) / diffx));
+      }
+
+      if (diffy < 0 && yCoord > 0 && yCoord < this.pixelRows - 1) {
+        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex - actualCols], Math.abs((this.pixelSize / 2) / diffy));
+      } else if (diffy > 0 && yCoord > 0 && yCoord < this.pixelRows - 1) {
+        newC2 = mixTwoColours(perfectColour, this.pixels[newIndex + actualCols], Math.abs((this.pixelSize / 2) / diffy));
+      }
+      perfectColour = mixTwoColours(newC1, newC2, 0.5);
+
+      // Update color based on selected property from ColorPicker or ColourBar
+      if (colourBars && colourBars.selectedProperty) {
+        setPropertyValue(experiment, colourBars.selectedProperty, perfectColour);
+      } else if (colourBars && colourBars.colors) {
+        // Use new 6-color system
+        const selectedColor = colourBars.colors[colourBars.selected];
+        if (selectedColor) {
+          experiment[selectedColor.prop] = perfectColour;
+        }
+      }
+      console.log("updateHoverColour");
+      experiment.reinitSizeAndColour();
+    }
+  };
+  this.update = function () {
+    const actualCols = this.huePixels.length;
+    ctx.strokeStyle = uiColourArray[3];
+    ctx.strokeRect(this.x, this.y, this.pixelSize * actualCols, this.pixelSize * (this.pixelRows + 1));
+
+    for (let i = 0; i < this.pixels.length; i++) {
+      let row = Math.floor(i / actualCols);
+      let col = i % actualCols;
+      ctx.fillStyle = this.pixels[i];
+      ctx.fillRect(this.x + (col * this.pixelSize), this.y + (row * this.pixelSize), this.pixelSize, this.pixelSize);
+    }
+  };
+}
+
+/**
+* Render all new editor controls
+*/
+function renderEditorControls() {
+  // Render group titles
+  renderGroupTitles();
+
+  // Render all control types
+  if (colorPickers) {
+    colorPickers.forEach(picker => picker.update());
+  }
+
+  if (booleanToggles) {
+    booleanToggles.forEach(toggle => toggle.update());
+  }
+
+  if (patternSelector) {
+    patternSelector.update();
+  }
+
+  if (breedSelector) {
+    breedSelector.update();
+  }
+
+  if (textInputs) {
+    textInputs.forEach(input => input.update());
+  }
+}
+
+/**
+* Handle clicks for new editor controls
+*/
+function handleEditorControlClicks(mousePos) {
+  let clickHandled = false;
+
+  if (colorPickers) {
+    colorPickers.forEach(picker => {
+      if (picker.handleClick(mousePos)) clickHandled = true;
+    });
+  }
+
+  if (booleanToggles) {
+    booleanToggles.forEach(toggle => {
+      if (toggle.handleClick(mousePos)) clickHandled = true;
+    });
+  }
+
+  if (patternSelector && patternSelector.handleClick(mousePos)) {
+    clickHandled = true;
+  }
+
+  if (breedSelector && breedSelector.handleClick(mousePos)) {
+    clickHandled = true;
+  }
+
+  if (textInputs) {
+    textInputs.forEach(input => {
+      if (input.handleClick(mousePos)) clickHandled = true;
+    });
+  }
+
+  return clickHandled;
+}
