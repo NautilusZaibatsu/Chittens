@@ -1,22 +1,18 @@
-// mutation and genes
-const albinoMutateChance = 0.04; // chance to mutate
-const albinoGeneExpression = 0.25; // chance to be expressed
-const hairlessMutateChance = 0.0001;
-const hairlessGeneExpression = 0.5;
-const colourpointMutateChance = 0.0001;
-const colourpointGeneExpression = 0.5;
-const heterochromicMutateChance = 0.03; // chance to mutate
-const heterochromicGeneExpression = 0.5; //chance to be expressed
-const lykoiMutateChance = 0.0001;
-const lykoiGeneExpression = 0.5;
+// Gene configuration is centralized in genes.js
+
+const runtText = 'Runt of the litter';
+const pickText = 'Pick of the litter';
+const breedStandardText = 'Breed standard';
+const notBreedStandardText = 'Not breed standard';
 
 // function to init a kitten once it has been adopted
 function initKitten(who) {
-  who.health = 50;
+  who.health = maxHealth / 2;
   who.matureModifier = 0;
   who.birthday = daytimeCounter;
   who.size /= kittenPreviewSizeMod;
-  who.reinitSizeAndColour();
+  who.recalculateSizes();
+  who.recalculateColours();
 }
 
 /**
@@ -85,11 +81,10 @@ function generateKitten(parent1, parent2, childBreed) {
     chittens[chittens.length-1].eyeColour2 = shuffledColours[1];
   }
   // genetic conditions (they are actually expressed in determineTraitExpression())
-  chittens[chittens.length-1].albinoGene = inheritGenes(parent1.albinoGene, parent2.albinoGene);
-  chittens[chittens.length-1].hairlessGene = inheritGenes(parent1.hairlessGene, parent2.hairlessGene);
-  chittens[chittens.length-1].lykoiGene = inheritGenes(parent1.lykoiGene, parent2.lykoiGene);
-  chittens[chittens.length-1].heterochromicGene = inheritGenes(parent1.heterochromicGene, parent2.heterochromicGene);
-  chittens[chittens.length-1].colourpointGene = inheritGenes(parent1.colourpointGene, parent2.colourpointGene);
+  // Auto-inherit all genes using GENE_DATA
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    chittens[chittens.length-1][geneData.geneProp] = inheritGenes(parent1[geneData.geneProp], parent2[geneData.geneProp]);
+  }
   if (chittens[chittens.length-1].colourpointGene) {
     chittens[chittens.length-1].colourpointMap = selectGenesFromArraysBools(parent1.colourpointMap, parent2.colourpointMap);
   } else {
@@ -106,60 +101,26 @@ function generateKitten(parent1, parent2, childBreed) {
  * Should be called after genes are set but before trait expression is determined
  */
 function determineTraitExpression(who, bredInGame, parent1, parent2) {
-  // Albino expression: 25% of gene carriers express albinism
-  if (who.albinoGene && !who.albino) {
-    if (Math.random() <= albinoGeneExpression) {
-      who.albino = true;
-    }
-  }
-
-  // Hairless expression: 30% of gene carriers express hairlessness
-  // Exception: hairless breeds like Sphynx always express it
-  if (who.hairlessGene && !who.hairless) {
-    if (who.breed === 'Sphynx' || Math.random() <= hairlessGeneExpression) {
-      who.hairless = true;
-    }
-  }
-
-  // Lykoi expression: 30% of gene carriers express Lykoi trait
-  // Exception: Lykoi breed always expresses it
-  // NOTE: If hairless is also expressed, hairless wins (total hairlessness)
-  if (who.lykoiGene && !who.lykoi && !who.hairless) {
-    if (who.breed === 'Lykoi' || Math.random() <= lykoiGeneExpression) {
-      who.lykoi = true;
-    }
-  }
-
-  // colourpoint genes
-  const colourpointBreeds = ['Siamese', 'Burmese', 'Ragdoll'];
-  // if purebred, force it
-  if (colourpointBreeds.includes(who.breed)) {
-    who.colourpointGene = true;
-    who.colourpointExpressed = true;
-  }
-  // Colorpoint expression: more likely to inherit the more parents of the specific breeds you have, including crossbreeds
-  if (who.colourpointGene && !who.colourpointExpressed) {
-    let colourpointChance = 0;
-
-    [parent1.breed, parent2.breed].forEach(breedName => {
-      if (colourpointBreeds.includes(breedName)) {
-        colourpointChance += 1;
-      } else {
-        splitCrossbreedNames(breedName).forEach(breed => {
-          if (colourpointBreeds.includes(breed)) {
-            colourpointChance += 0.5;
-          }
-        });
+  // Process gene expression using centralized GENE_DATA
+  const breed = BREED_DATA[who.breed];
+  
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    // Check if chitten has gene but not expression
+    if (who[geneData.geneProp] && !who[geneData.expressedProp]) {
+      let expressionChance = geneData.baseExpressionChance;
+      
+      // Check if this is a breed standard (95%+ expression for purebreds)
+      if (breed?.breedStandardGenes?.includes(geneKey)) {
+        expressionChance = geneData.breedStandardChance;
       }
-    });
-
-    if (colourpointChance == 2) {
-      who.colourpointGene = true;
-      who.colourpointExpressed = true;
-    } else if (colourpointChance > 0) {
-      if (Math.random() * 2 < colourpointChance) {
-        who.colourpointGene = true;
-        who.colourpointExpressed = true;
+      
+      // Skip bald faced / sparse coat expression if already hairless
+      if ((geneKey === 'baldFaced' || geneKey === 'sparseCoat') && who.hairlessExpressed) {
+        continue;
+      }
+      
+      if (Math.random() <= expressionChance) {
+        who[geneData.expressedProp] = true;
       }
     }
   }
@@ -182,68 +143,17 @@ function determineTraitExpression(who, bredInGame, parent1, parent2) {
     who.secondColour = colors[1].color;  // medium
     who.thirdColour = colors[2].color;   // darkest
   }
-
-  if (!bredInGame) {
-    // Heterochromic expression: 40% of gene carriers express heterochromia
-    if (who.heterochromicGene && who.eyeColour === who.eyeColour2) {
-      if (Math.random() <= heterochromicGeneExpression) {
-        // Create different eye colors
-        let secondEyeColor = getRandomEyeColour();
-        // Ensure the second eye color is different
-        while (secondEyeColor === who.eyeColour) {
-          secondEyeColor = getRandomEyeColour();
-        }
-        who.eyeColour2 = secondEyeColor;
-      }
-    }
-  } else {
-    // determine if it's actually expressed
-    if (Math.random() <= heterochromicGeneExpression) {
-      // For bred kittens, use realistic parent-based heterochromia
-      // Choose between parent eye colors with some variation
-      // If parents have different eye colors, use them as the base
-      if (parent1.eyeColour !== parent2.eyeColour) {
-        let useParent1First = Math.random() < 0.5; // 50/50 chance for each eye to be inherited from each parent
-        if (useParent1First) {
-          who.eyeColour = mixTwoColours(parent1.eyeColour, getRandomEyeColour(), 0.9);
-          who.eyeColour2 = mixTwoColours(parent2.eyeColour, getRandomEyeColour(), 0.9);
-        } else {
-          who.eyeColour = mixTwoColours(parent2.eyeColour, getRandomEyeColour(), 0.9);
-          who.eyeColour2 = mixTwoColours(parent1.eyeColour, getRandomEyeColour(), 0.9);
-        }
-      } else {
-        // If parents have same eye color, one eye follows inheritance, other is different
-        // eyeColour is already set from normal inheritance above
-        who.eyeColour2 = getRandomEyeColour();
-        // Ensure they're actually different
-        while (who.eyeColour2 === who.eyeColour) {
-          who.eyeColour2 = getRandomEyeColour();
-        }
-      }
-    } else {
-      who.eyeColour2 = who.eyeColour;
-    }
-  }
 }
 
 /** function to apply genetics and disorders to Chittens
 * @param {Chitten} who - the chitten
 */
 mutate = function (who) {
-  if (Math.random() <= albinoMutateChance) {
-    who.albinoGene = true;
-  }
-  if (Math.random() <= heterochromicMutateChance) {
-    who.heterochromicGene = true;
-  }
-  if (Math.random() <= lykoiMutateChance) {
-    who.lykoiGene = true;
-  }
-  if (Math.random() <= colourpointMutateChance) {
-    who.colourpointGene = true;
-  }
-  if (Math.random() <= hairlessMutateChance) {
-    who.hairlessGene = true;
+  // Apply mutations based on centralized GENE_DATA
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    if (Math.random() <= geneData.mutationChance) {
+      who[geneData.geneProp] = true;
+    }
   }
 };
 
@@ -308,7 +218,6 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   // Set basic properties
   who.inCatBox = boxes[thisCatBox];
   who.birthday = Math.floor(Math.random() * ticksPerDay);
-  who.love = 50 + Math.round((Math.random() * 50));
   who.tailLength = (Math.random() * 0.75) + 0.25;
   who.bodypartCode = randomBodyPartCode();
   who.nosePos = Math.random();
@@ -329,18 +238,21 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   // Handle breed application
   if (who !== experiment && shouldApplyBreedTemplate) {
     if (specificBreed) {
-      // Clear inappropriate genes for purebreds
-      who.hairlessGene = false;
-      who.hairless = false;
-      who.lykoiGene = false;
-      who.lykoi = false;
+      // Clear inappropriate genes for purebreds (except for breeds that need them)
+      if (specificBreed !== 'Sphynx') {
+        who.hairlessGene = false;
+        who.hairlessExpressed = false;
+      }
+      if (specificBreed !== 'Bald Faced') {
+        who.baldFacedGene = false;
+        who.baldFacedExpressed = false;
+      }
 
       // Apply specific breed
       applySpecificBreedTemplate(who, specificBreed);
 
       // Only apply allowed mutations for purebreds
-      if (Math.random() < albinoMutateChance) who.albinoGene = true;
-      if (Math.random() < heterochromicMutateChance) who.heterochromicGene = true;
+      mutate(who);
     } else {
       // Apply random breed template
       applyBreedTemplate(who);
@@ -468,12 +380,9 @@ function splitCrossbreedNames(breedName) {
 }
 
 function getBreedDepth(breedName) {
-  if (!breedName || breedName === mixedBreed) return 0;
-
+  if (!breedName || breedName === mixedBreed) return 2;
   // Count ' x ' patterns (with spaces) to determine crossing depth
-  // This avoids counting 'x' in breed names like "Sphynx"
   const crossCount = (breedName.match(/\s+x\s+/g) || []).length;
-
   if (crossCount === 0) return 0; // Pure breed
   if (crossCount === 1) return 1; // First generation cross
   return 2; // Complex cross (simplified to avoid infinite complexity)

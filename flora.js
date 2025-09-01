@@ -6,7 +6,6 @@ fruits = [];
 seeds = [];
 glyphs = [];
 
-let fruitSet = new Set(fruits);
 
 // tree parameters
 let minTrees;
@@ -15,6 +14,13 @@ let startingTrees;
 const treeGrowthRate = 1.5;
 const treeWitherRate = 1;
 const treeStrength = 40; // how strong a tree is, how much it resists being pushed down by chittens
+const treeMinWidth = 35;
+const treeMaxWidth = 80;
+const treeSizeVariation = treeMaxWidth - treeMinWidth;
+
+// fruits
+let fruitSet = new Set(fruits);
+const fruitTreeSizeRatio = 0.05; // how big a fruit is compared to the tree it's on
 
 // seed parameters
 const minSeeds = 10;
@@ -39,7 +45,7 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
     this.x = x;
     this.y = y;
     this.width = width;
-    this.height = height;
+    this.height = height; // the current height the tree has grown to
     this.maxHeight = maxHeight;
     this.fruitColour = fruitColour;
     this.fruitCount = 0;
@@ -61,7 +67,9 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
             while (fruitsOnTree < target) {
                 let posTemp = Math.round(Math.random() * 3);
                 if (!positions.includes(posTemp)) {
-                    fruits.push(new Fruit(this.fruitColour, this, posTemp));
+                    fruits.push(new Fruit(this.fruitColour));
+                    fruits[fruits.length - 1].parent = this;
+                    fruits[fruits.length - 1].treePos = posTemp;
                     fruitsOnTree++;
                 }
             }
@@ -76,20 +84,11 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
     };
     this.update = function () {
         // respawning fruit twice a day
-        if (this.birthday == daytimeCounter || Math.abs(this.birthday - daytimeCounter) == ticksPerDay/2) {
+        if (this.birthday == daytimeCounter || Math.abs(this.birthday - daytimeCounter) == ticksPerDay / 2) {
             this.spawnFruit();
         }
-        // Update position and growth logic
-        // don't go below the floor
-        if (this.y < floorLevel) {
-            this.y = floorLevel;
-            //stop growing when reach max height
-        } else if (this.y < trueBottom - this.maxHeight) {
-            this.y = trueBottom - this.maxHeight;
-            this.reachedMaxHeight = true;
-        }
         // tree dies if it reaches the bottom after hitting it's max height
-        if (this.reachedMaxHeight && this.y > trueBottom) {
+        if (this.reachedMaxHeight && this.y >= trueBottom) {
             // mark tree for removal
             this.dead = true;
         } else {
@@ -99,7 +98,38 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
             if (this.reachedMaxHeight) {
                 this.y += treeWitherRate * (((this.loadthisframe / treeStrength) / this.width) + (0.0125 * (75 / this.width)));
             } else if (this.y <= canvasHeight && this.y >= trueBottom - this.maxHeight) {
-                this.y += treeGrowthRate * (((this.loadthisframe / treeStrength) / this.width) - (0.025 * (75 / this.width)));
+                // Check if any chittens are blocking tree growth upward
+                let growthBlocked = false;
+                let potentialGrowth = treeGrowthRate * (((this.loadthisframe / treeStrength) / this.width) - (0.025 * (75 / this.width)));
+                if (potentialGrowth < 0) { // Only check if tree wants to grow upward (negative y)
+                    // Check if any chittens are standing on the surface above this tree
+                    for (let c = 0; c < chittens.length && !growthBlocked; c++) {
+                        if (chittens[c].inCatBox) continue; // Skip chittens in cat boxes
+                        
+                        // Check if chitten is on surface above this tree's position
+                        if (chittens[c].onSurface && 
+                            chittens[c].x >= this.x - (this.width / 2) - (chittens[c].size / 2) &&
+                            chittens[c].x <= this.x + (this.width / 2) + (chittens[c].size / 2) &&
+                            Math.abs(chittens[c].y - trueBottom + chittens[c].bodyToFeetDistance) < chittens[c].size) {
+                            growthBlocked = true;
+                        }
+                    }
+                }
+                
+                if (!growthBlocked) {
+                    this.y += potentialGrowth;
+                } else if (potentialGrowth < 0) {
+                    // Tree wants to emerge but is blocked - this helps identify the issue
+                }
+            }
+            // Update position and growth logic
+            // don't go below the floor
+            if (this.y > trueBottom) {
+                this.y = trueBottom;
+                //stop growing when reach max height
+            } else if (this.y < trueBottom - this.maxHeight) {
+                this.y = trueBottom - this.maxHeight;
+                this.reachedMaxHeight = true;
             }
         }
         this.loadthisframe = 0;
@@ -112,7 +142,7 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
         // Flip horizontally if needed
         if (this.imageFlipped) ctx.scale(-1, 1);
         // Draw image relative to the new origin
-        ctx.drawImage( acacia, -this.width * 0.5, this.y - 10, this.width, 200 / (300 / this.width));
+        ctx.drawImage(acacia, -this.width * 0.5, this.y - 10, this.width, 200 / (300 / this.width));
         ctx.restore();
         ctx.fillStyle = trueBlack;
         ctx.fillRect(this.x - (this.width / 30), this.y + (this.width / 4.5), this.width / 12.5, trueBottom - this.y - this.height);
@@ -122,11 +152,11 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
 /**
 * function to describe a piece of fruit on a tree
 */
-function Fruit(colour, parent, treePos) {
+function Fruit(colour) {
     this.colour = colour;
-    this.parent = parent;
-    this.treePos = treePos; // 0 to 3
-    this.size = this.parent.width / 20;
+    this.parent;
+    this.treePos; // 0 to 3
+    this.size = 0;
     this.x = 0;
     this.y = 0;
     this.eater = null;
@@ -135,16 +165,18 @@ function Fruit(colour, parent, treePos) {
     //physics
     this.mass = 2;
     this.update = function () {
+        if (this.size == 0) {
+            this.size = this.parent.width * fruitTreeSizeRatio;
+        }
         // Update position in tree if not fumbled
         if (!this.fumbled) {
-            if (this.eater !== null) {
-                // stick to the chitten that has grabbed it
-                this.x = this.eater.x;
-                this.y = this.eater.y + this.eater.bodyToFeetDistance;
-            } else {
-                this.x = this.parent.x - (this.size * 2.5) + ((treePos - 1) * this.parent.width) / 4;
-                this.y = this.parent.y + this.size + (this.parent.width / 10);
-            }
+            this.x = this.parent.x - (this.size * 2.5) + ((this.treePos - 1) * this.parent.width) / 4;
+            this.y = this.parent.y + this.size + (this.parent.width / 10);
+        }
+        if (this.eater !== null) {
+            // stick to the chitten that has grabbed it
+            this.x = this.eater.x;
+            this.y = this.eater.y + this.eater.bodyToFeetDistance;
         }
         // If fumbled, position is controlled by physics system in the main loop
     };
@@ -177,13 +209,14 @@ function Fruit(colour, parent, treePos) {
         this.onSurface = false; // Enable physics
         this.x = currentX; // Set fixed position for physics
         this.y = currentY;
-        this.speedX = spdX +  ((Math.random() - 0.5) * 2); // Small random horizontal velocity
+        this.speedX = spdX + ((Math.random() - 0.5) * 2); // Small random horizontal velocity
         this.speedY = spdY + (Math.random() * 1); // Small downward velocity
         // Remove fruit from tree slot (if it has a parent tree)
         if (this.parent && this.treePos !== undefined) {
             this.treePos = null;
             this.parent = null;
         }
+        this.eater = null; // Clear the eater when fumbling
         removeFocusFrom(this);
     }
 };
@@ -210,7 +243,7 @@ function Seed(colour, owner) {
         if (trees.length < maxTrees && eaten) {
             if (this.timer <= 0) {
                 if (this.owner.snuggling <= 0 && this.owner.eatingChewsRemaining == 0
-                    && this.owner.y >= trueBottom - this.owner.size - this.owner.frontLegLength
+                    && this.owner.y >= trueBottom - this.owner.bodyToFeetDistance
                     && tryToPlantaTree(this.owner.x, this.colour)) {
                     this.planted = true;
                     // sendMessage(this.owner.name + ' planted a seed');
@@ -295,7 +328,7 @@ function Glyph(x, y, speedX, speedY, symbol, alpha) {
 function tryToPlantaTree(x, fruitColour) {
     let allow = true;
     let maxHeight = trueBottom * 0.30 + (Math.random() * (trueBottom * 0.30));
-    let treeWidth = 35 + (Math.random() * 45);
+    let treeWidth = treeMinWidth + (Math.random() * treeSizeVariation);
     for (let j = 0; j < trees.length; j++) {
         if (trees[j].x == x
             || ((x - (treeWidth / 4) < trees[j].x + (trees[j].width / 4) && trees[j].x - (trees[j].width / 4) < x + (treeWidth / 4)))

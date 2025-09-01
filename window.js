@@ -1,4 +1,4 @@
-const version = 0.072;
+const version = 0.073;
 
 // canvas - now dynamic for resize support with constraints
 let rawWidth = (window.innerWidth || document.body.clientWidth) - 20;
@@ -42,7 +42,7 @@ const UPS = 50; // updates per second
 const fixedTimeStep = 1000 / UPS; // 20ms timesteps
 let deltaTime = 0;
 const ticksPerDay = 1000; // game ticks per day (not UPS), see dayTicksPerFrame below
-const seasonLength = ticksPerDay / 4;
+const timeOfDayLength = ticksPerDay / 4;
 const sunSetStart = ticksPerDay * 0.7;
 const sunRiseStart = ticksPerDay * 0.3;
 // how fast a day goes by, incrementing dayTimeCounter by this value each frame
@@ -57,7 +57,7 @@ let gameSpeedMultiplier = 1.0; // Speed multiplier for scaling game speed
 
 // game modes
 let endlessMode = false; // endless modes ensures we always have at least one male and female chitten of breeding age and autospawns kittens
-const devMode = false; // turn devmode on or off
+const devMode = true;//false; // turn devmode on or off
 
 // game setup
 secondTimer = 0;
@@ -90,10 +90,11 @@ const albinoRed = '#ee4433';
 const genderPink = '#f27bfe';
 const genderBlue = '#78c7fc';
 const genderPurple = '#9978f1';
-const energyBlue = '#1e6ee9';
-const hungerOrange = '#e9af4e';
+// const energyBlue = '#1e6ee9';
+// const hungerOrange = '#e9af4e';
 const heartsPink = '#e94db5';
-const tooltipBackgroundColour = 'rgba(255, 255, 255, 0.3)';
+const tickColour = '#5be94e';
+const crossColour = '#e94e4e';
 
 // unicode symbols
 const unicodeHeart = '\u2764'; // love heart - used in many places
@@ -140,7 +141,8 @@ const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 const seasonNames = ['Winter', 'Spring', 'Summer', 'Autumn'];
 // starting season
 season = 1; // spring
-seasonNext = season + 1; // summer
+nextSeason = 2; // summer
+prevSeason = 4; // winter
 const seasonColour = ['#5ec3ed', '#65bf4f', '#fae10b', '#ee7f17'];
 
 // set background gradient colours by time of day
@@ -149,12 +151,14 @@ const morningColour = ['#6ad7db', '#89b83f', '#c24728', '#ffff00'];
 const middayColour = ['#4381cc', '#42adb4', '#3e9225', '#59a86a'];
 const midnightColour = ['#020421', '#020423', '#020e2b', '#010005'];
 
-// set seasonal colours and temperatures
-temperature = 30;
-tempSpring = 15;
-tempSummer = 30;
-tempAutumn = 10;
-tempWinter = 0;
+// seasonal colours and temperatures
+let temperature = 30;
+const maxTemperature = 30;
+const minTemperature = 0;
+const tempSpring = 15;
+const tempSummer = maxTemperature;
+const tempAutumn = 10;
+const tempWinter = minTemperature;
 
 /**
 * function to start the game
@@ -185,7 +189,7 @@ function startGame() {
       trees[trees.length - 1].reachedMaxHeight = true;
       trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * 0.5) + (Math.random() * 0.5);
     } else {
-      trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * Math.random() * 0.66);
+      trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * Math.random() * 0.8);
     }
     // spawn tree with random amount of fruit
     let numFruit = Math.round(Math.random() * 3);
@@ -458,7 +462,7 @@ function updateGameObjects() {
     }
 
     // Apply physics to fumbled fruits
-    if (fruits[i].fumbled && !fruits[i].onSurface) {
+    if (fruits[i].fumbled) {
       // Apply gravity
       let massGravity = gravity * fruits[i].mass;
       fruits[i].speedY += massGravity;
@@ -477,14 +481,11 @@ function updateGameObjects() {
       let hitTree = false;
       if (fruits[i].speedY >= 0) {
         for (let t = 0; t < trees.length && !hitTree; t++) {
-          if (fruits[i].x >= trees[t].x - trees[t].width / 2 - fruits[i].size / 2 &&
-            fruits[i].x <= trees[t].x + trees[t].width / 2 + fruits[i].size / 2 &&
-            fruits[i].y >= trees[t].y - (fruits[i].size * 2) &&
-            fruits[i].y <= trees[t].y + trees[t].height) {
+          if (detectTreeCollision(fruits[i], trees[t], fruits[i].size * 2)) {
             // Fruit lands on tree
             fruits[i].y = trees[t].y - (fruits[i].size * 2);
             fruits[i].speedY *= -0.2; // Small bounce or settle
-            fruits[i].speedX *= 0.9; // Tree friction
+            fruits[i].speedX *= 0.5; // Tree friction
             if (Math.abs(fruits[i].speedY) < 1) {
               fruits[i].onSurface = true; // Settled on tree
               fruits[i].landedOnTree = trees[t]; // Remember which tree we're on
@@ -623,7 +624,7 @@ function updateGameArea() {
       let rj = 0;
       let gj = 0;
       let bj = 0;
-      if (daytimeCounter < seasonLength) {
+      if (daytimeCounter < timeOfDayLength) {
         timeMod = daytimeCounter;
         ri = hexToRgb(midnightColour[tick]).r;
         gi = hexToRgb(midnightColour[tick]).g;
@@ -631,16 +632,16 @@ function updateGameArea() {
         rj = hexToRgb(morningColour[tick]).r;
         gj = hexToRgb(morningColour[tick]).g;
         bj = hexToRgb(morningColour[tick]).b;
-      } else if (daytimeCounter < (seasonLength * 2)) {
-        timeMod = daytimeCounter - seasonLength;
+      } else if (daytimeCounter < (timeOfDayLength * 2)) {
+        timeMod = daytimeCounter - timeOfDayLength;
         ri = hexToRgb(morningColour[tick]).r;
         gi = hexToRgb(morningColour[tick]).g;
         bi = hexToRgb(morningColour[tick]).b;
         rj = hexToRgb(middayColour[tick]).r;
         gj = hexToRgb(middayColour[tick]).g;
         bj = hexToRgb(middayColour[tick]).b;
-      } else if (daytimeCounter < (seasonLength * 3)) {
-        timeMod = daytimeCounter - (seasonLength * 2);
+      } else if (daytimeCounter < (timeOfDayLength * 3)) {
+        timeMod = daytimeCounter - (timeOfDayLength * 2);
         ri = hexToRgb(middayColour[tick]).r;
         gi = hexToRgb(middayColour[tick]).g;
         bi = hexToRgb(middayColour[tick]).b;
@@ -648,7 +649,7 @@ function updateGameArea() {
         gj = hexToRgb(nightColour[tick]).g;
         bj = hexToRgb(nightColour[tick]).b;
       } else {
-        timeMod = daytimeCounter - (seasonLength * 3);
+        timeMod = daytimeCounter - (timeOfDayLength * 3);
         ri = hexToRgb(nightColour[tick]).r;
         gi = hexToRgb(nightColour[tick]).g;
         bi = hexToRgb(nightColour[tick]).b;
@@ -656,33 +657,30 @@ function updateGameArea() {
         gj = hexToRgb(midnightColour[tick]).g;
         bj = hexToRgb(midnightColour[tick]).b;
       }
-      let dayR = Math.floor(ri - ((((ri - rj) / seasonLength)) * timeMod));
-      let dayG = Math.floor(gi - ((((gi - gj) / seasonLength)) * timeMod));
-      let dayB = Math.floor(bi - ((((bi - bj) / seasonLength)) * timeMod));
+      let dayR = Math.floor(ri - ((((ri - rj) / timeOfDayLength)) * timeMod));
+      let dayG = Math.floor(gi - ((((gi - gj) / timeOfDayLength)) * timeMod));
+      let dayB = Math.floor(bi - ((((bi - bj) / timeOfDayLength)) * timeMod));
 
       // create seasonal colour shading
-      let tempColour = mixTwoColours(seasonColour[seasonNext], seasonColour[season], daytimeCounter / ticksPerDay);
+      let tempColour = mixTwoColours(seasonColour[nextSeason], seasonColour[season], daytimeCounter / ticksPerDay);
       // shade backgrouund
       uiColourArray[tick] = mixTwoColours(rgbToHex(dayR, dayG, dayB), tempColour, 0.75);
     }
-    // detect temperature
-    let temp1 = 0;
-    let temp2 = 0;
-    if (season == 0) {
-      temp1 = tempAutumn;
-      temp2 = tempWinter;
-    } else if (season == 1) {
-      temp1 = tempWinter;
-      temp2 = tempSpring;
-    } else if (season == 2) {
-      temp1 = tempSpring;
-      temp2 = tempSummer;
-    } else if (season == 3) {
-      temp1 = tempSummer;
-      temp2 = tempAutumn;
-    }
-    temperature = (temp2 * (daytimeCounter / ticksPerDay)) + (temp1 * (1 - (daytimeCounter / ticksPerDay)));
-    temperature = ('0' + Math.round(temperature)).slice(-2);
+    // update temperature
+    // simple lerp helper
+    const lerp = (a, b, t) => a * (1 - t) + b * t;
+    // anchor temps
+    const tPrev = getSeasonTemp(prevSeason);
+    const tCurr = getSeasonTemp(season);
+    const tNext = getSeasonTemp(nextSeason);
+    // half-season progress (0..1)
+    const half = ticksPerDay / 2;
+    const inFirstHalf = daytimeCounter < half;
+    const f = (daytimeCounter % half) / half;
+    // choose endpoints depending on half
+    const start = inFirstHalf ? (tPrev + tCurr) / 2 : tCurr;
+    const end = inFirstHalf ? tCurr : (tCurr + tNext) / 2;
+    temperature = Math.round(lerp(start, end, f));
   }
 
   // countdown timer, used when choosing from a litter
@@ -776,7 +774,7 @@ function updateGameArea() {
           fruits[i].eater.eatingChewsRemaining = 4;
           fruits[i].eater.eatingChewTimer = 0;
           fruits[i].eater.eatingChewState = 'closed';
-          fruits[i].eater.sitting = true;
+          fruits[i].eater.targetSittingState = true; // Ensure chitten sits while eating
           fruits[i].eater.preparingToEat = false; // Reset the flag
         }
       }
@@ -791,22 +789,22 @@ function updateGameArea() {
 
   // draw the glow coming off the floor
   ctx.globalAlpha = 0.15;
-  let floorGlow = ctx.createLinearGradient(0, canvasHeight - floorLevel - 200, 0, canvasHeight);
+  let floorGlow = ctx.createLinearGradient(0, trueBottom - 200, 0, canvasHeight);
   floorGlow.addColorStop(0, 'rgba(0, 0, 0, 0)');
   floorGlow.addColorStop(1, mixTwoColours(trueWhite, uiColourArray[1], 0.5));
   ctx.fillStyle = floorGlow;
-  ctx.fillRect(0, canvasHeight - floorLevel - 5 - 200, canvasWidth, 5 + floorLevel + 200);
+  ctx.fillRect(0, trueBottom - 5 - 200, canvasWidth, 5 + floorLevel + 200);
 
   // draw the floor
   ctx.globalAlpha = 1;
-  let horizon = ctx.createLinearGradient(0, canvasHeight - floorLevel - 100, 0, canvasHeight - floorLevel);
+  let horizon = ctx.createLinearGradient(0, trueBottom - 100, 0, trueBottom);
   horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
   horizon.addColorStop(1, trueBlack);
   ctx.fillStyle = horizon;
-  ctx.fillRect(0, canvasHeight - floorLevel - 5, canvasWidth, 5 + floorLevel);
+  ctx.fillRect(0, trueBottom - 5, canvasWidth, 5 + floorLevel);
 
   // draw the message history
-  if (pointerPos.y > canvasHeight - floorLevel - 5) {
+  if (pointerPos.y > trueBottom - 5) {
     let fade = ctx.createLinearGradient(0, 0, 0, trueBottom);
     let rMessage = Math.round(hexToRgb(uiColourArray[2]).r);
     let gMessage = Math.round(hexToRgb(uiColourArray[2]).g);
@@ -1058,9 +1056,27 @@ function updateGameArea() {
   for (let i = 0; i < fireflies.length; i++) {
     for (let j = i + 1; j < fireflies.length; j++) {
       if (detectCollision(fireflies[i], fireflies[j])) {
-        collide(fireflies[i], fireflies[j]);
+        collide(fireflies[i], fireflies[j], true, true);
         fireflies[i].chooseNewTarget();
         fireflies[j].chooseNewTarget();
+      }
+    }
+  }
+
+  // Fumbled fruit - chitten and fruit collisions (affects fruit physics only)
+  for (let i = 0; i < fruits.length; i++) {
+    if (fruits[i].fumbled && fruits[i].eater === null) {
+      for (let j = 0; j < chittens.length; j++) {
+        if (detectCollision(fruits[i], chittens[j])) {
+          collide(fruits[i], chittens[j], true, false); // Only affect fruit physics
+        }
+      }
+      for (let j = i + 1; j < fruits.length; j++) {
+        if (fruits[j].fumbled && fruits[j].eater === null) {
+          if (detectCollision(fruits[i], fruits[j])) {
+            collide(fruits[i], fruits[j], true, true);
+          }
+        }
       }
     }
   }
@@ -1289,9 +1305,10 @@ function recalcSeasonVariables() {
   let glyph = 'Error';
   let glyphAlpha = 1;
   // clamp season if too high, wrap around to winter
+  // work out next and previous season
   if (season > 3) season = 0;
-  // work out next season
-  seasonNext = (season === 3) ? 0 : season + 1;
+  nextSeason = (season === 3) ? 0 : season + 1;
+  prevSeason = (season === 0) ? 3 : season - 1;
   sendMessage(seasonNames[season] + ' began');
   // trees spawn glyphs
   switch (season) {
@@ -1316,7 +1333,7 @@ function recalcSeasonVariables() {
         const g = glyphs[glyphs.length - j];
         if (season === 0) {
           // white glyphs in winter
-          g.colour = mixTwoColours(trueWhite, seasonColour[seasonNext], 0.5);
+          g.colour = mixTwoColours(trueWhite, seasonColour[nextSeason], 0.5);
         }
         g.timer *= 2 + (Math.random() * 2.5);
       }
@@ -1330,4 +1347,11 @@ function selectLeftOrRightEdge() {
     x = canvasWidth;
   }
   return x;
+}
+
+function getSeasonTemp(season) {
+  if (season === 0) return tempWinter;
+  if (season === 1) return tempSpring;
+  if (season === 2) return tempSummer;
+  if (season === 3) return tempAutumn;
 }

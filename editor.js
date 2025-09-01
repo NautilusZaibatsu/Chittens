@@ -7,7 +7,7 @@ const LAYOUT_CONFIG = {
   controlSpacing: 5,
   groupSpacing: 25,
   previewScale: 2.5, // 150% increase
-  colorPickerScale: 2.0, // 100% increase
+  colorPickerScale: 1.0, // 100% increase
   // Color system positioning (left-aligned stack)
   colorSystemX: 20,
   spliceBoxY: 30,
@@ -16,17 +16,32 @@ const LAYOUT_CONFIG = {
   colorSystemGap: 10
 };
 
+// gene editing
+geneEditing = false;
+spliceBox = new CatBox(20, 30, 250, 5); // Increased size by 150% (100 * 2.5) for editor preview
+sliderIndex = 0;
+colourBars = null; // Will be initialized in startGame()
+colourPicker = null; // Will be initialized in startGame()
+editorButtons = []; // Editor save/close buttons
+
 // Control type dimensions
 const CONTROL_DIMENSIONS = {
   slider: { width: 120, height: 25 },
-  colorPicker: { width: 50 * LAYOUT_CONFIG.colorPickerScale, height: 50 * LAYOUT_CONFIG.colorPickerScale },
   boolean: { width: 100, height: 25 },
   pattern: { width: 150, height: 25 },
   text: { width: 120, height: 25 },
   breed: { width: 150, height: 25 },
   bodypart: { width: 120, height: 25 },
   preview: { width: 150 * LAYOUT_CONFIG.previewScale, height: 150 * LAYOUT_CONFIG.previewScale },
-  button: { width: 80, height: 30 }
+  button: { width: 80, height: 30 },
+  colorPicker: {
+    width: LAYOUT_CONFIG.colorSystemWidth,
+    height: 21 * (LAYOUT_CONFIG.colorSystemWidth / 24) * LAYOUT_CONFIG.colorPickerScale
+  },
+  colorBar: {
+    width: LAYOUT_CONFIG.colorSystemWidth,
+    height: 30 + 12 // colorHeight + text space
+  }
 };
 
 // Redesigned editor layout - WIP
@@ -90,7 +105,7 @@ const EDITOR_GROUPS = [
       { prop: 'bodypartCode[12]', type: 'bodypart', label: 'Chest' }
     ]
   },
-   {
+  {
     title: "Templates & Info",
     x: LAYOUT_CONFIG.columnWidth * 4, y: LAYOUT_CONFIG.startY, spacing: 30,
     properties: [
@@ -101,34 +116,73 @@ const EDITOR_GROUPS = [
     ]
   },
   {
+    title: "Colors",
+    x: LAYOUT_CONFIG.colorSystemX, y: LAYOUT_CONFIG.spliceBoxY + LAYOUT_CONFIG.spliceBoxSize + LAYOUT_CONFIG.colorSystemGap, spacing: LAYOUT_CONFIG.colorSystemGap,
+    properties: [
+      { type: 'colorPicker' },
+      { type: 'colorBar' }
+    ]
+  },
+  {
     title: "Genetics",
     x: LAYOUT_CONFIG.columnWidth * 4, y: LAYOUT_CONFIG.startY + (4 * 30), spacing: 30,
-    properties: [
-      { prop: 'albino', type: 'boolean', label: 'Albino' },
-      { prop: 'albinoGene', type: 'boolean', label: 'Albino Gene' },
-      { prop: 'hairless', type: 'boolean', label: 'Hairless' },
-      { prop: 'hairlessGene', type: 'boolean', label: 'Hairless Gene' },
-      { prop: 'lykoi', type: 'boolean', label: 'Lykoi' },
-      { prop: 'lykoiGene', type: 'boolean', label: 'Lykoi Gene' },
-      { prop: 'colourpointExpressed', type: 'boolean', label: 'Colorpoint' },
-      { prop: 'colourpointGene', type: 'boolean', label: 'Colorpoint Gene' },
-      { prop: 'heterochromicGene', type: 'boolean', label: 'Heterochromic' }
-    ]
+    properties: [] // Will be populated dynamically from GENE_DATA
   }
 ];
 
-// Simplified layout - no complex calculations needed since we're using the original EDITOR_GROUPS structure
+function initGeneEditing() {
+  // gene editing
+  experiment = new Chitten(LAYOUT_CONFIG.spliceBoxSize/2, LAYOUT_CONFIG.spliceBoxSize/2, chittenBaseSize, chittenMaxSize, 'Female');
+  experiment.name = getFemaleName(Math.floor(Math.random() * numlibs * namesinlib));
+  randomiseGeneticsBase(experiment, true, null)
+  experiment.awake = true;
+  experiment.onSurface = true;
+  experiment.recalculateSizes();
+  experiment.recalculateColours();
+  initGeneticsEditorProperties();
+  initSliders();
+}
+
+/**
+* Populate genetics properties from GENE_DATA
+*/
+function initGeneticsEditorProperties() {
+  // Find the genetics group
+  const geneticsGroup = EDITOR_GROUPS.find(group => group.title === "Genetics");
+  if (!geneticsGroup) return;
+
+  // Clear existing properties
+  geneticsGroup.properties = [];
+
+  // Add properties for each gene from GENE_DATA
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    // Add the expression property first (what the user sees)
+    geneticsGroup.properties.push({
+      prop: geneData.expressedProp,
+      type: 'boolean',
+      label: geneData.name
+    });
+
+    // Add the gene property (for debugging)
+    geneticsGroup.properties.push({
+      prop: geneData.geneProp,
+      type: 'boolean',
+      label: geneData.tooltip
+    });
+  }
+}
 
 /**
 * Auto-generate editor controls from configuration
 */
 function initSliders() {
   sliders = [];
-  colorPickers = [];
   booleanToggles = [];
   patternSelector = null;
   breedSelector = null;
   textInputs = [];
+  colourBars = null;
+  colourPicker = null;
 
   let controlIndex = 0;
 
@@ -146,9 +200,6 @@ function initSliders() {
         case 'bodypart':
           sliders.push(control);
           break;
-        case 'color':
-          colorPickers.push(control);
-          break;
         case 'boolean':
           booleanToggles.push(control);
           break;
@@ -162,6 +213,12 @@ function initSliders() {
         case 'breed':
           breedSelector = control;
           break;
+        case 'colorPicker':
+          colourPicker = control;
+          break;
+        case 'colorBar':
+          colourBars = control;
+          break;
       }
 
       currentY += group.spacing;
@@ -174,7 +231,7 @@ function initSliders() {
 * Create a control based on property definition
 */
 function createControl(propDef, x, y, index) {
-  const value = getPropertyValue(experiment, propDef.prop);
+  const value = propDef.prop ? getPropertyValue(experiment, propDef.prop) : undefined;
 
   switch (propDef.type) {
     case 'slider':
@@ -183,8 +240,11 @@ function createControl(propDef, x, y, index) {
     case 'bodypart':
       return new Slider(0, 2, value, x, y, propDef.label, propDef.prop, index);
 
-    case 'color':
-      return new ColorPicker(x, y, propDef.label, propDef.prop, value);
+    case 'colorPicker':
+      return new ColourPixelBlock();
+
+    case 'colorBar':
+      return new ColourBar();
 
     case 'boolean':
       return new BooleanToggle(x, y, propDef.label, propDef.prop, value);
@@ -242,6 +302,9 @@ function setPropertyValue(obj, propPath, value) {
 * Update all controls with current experiment values
 */
 function reinitSliders() {
+  // First ensure genetics properties are up to date
+  initGeneticsEditorProperties();
+
   // Update sliders
   sliders.forEach(slider => {
     if (slider.property) {
@@ -249,14 +312,6 @@ function reinitSliders() {
     }
   });
 
-  // Update color pickers
-  if (colorPickers) {
-    colorPickers.forEach(picker => {
-      if (picker.property) {
-        picker.currentColor = getPropertyValue(experiment, picker.property);
-      }
-    });
-  }
 
   // Update boolean toggles
   if (booleanToggles) {
@@ -356,7 +411,8 @@ function SliderBar(parent) {
         }
 
         setPropertyValue(experiment, this.parent.property, value);
-        experiment.reinitSizeAndColour();
+        experiment.recalculateSizes();
+        experiment.recalculateColours();
       }
     } else {
       this.x = this.parent.x + this.parent.relativePosition;
@@ -387,48 +443,9 @@ function renderGroupTitles() {
   });
 }
 
-// Preview box and color system positioning handled by existing spliceBox and colourBars/colourBlock
+// Preview box and color system positioning handled by existing spliceBox and colourBars/colourPicker
 
 // Save/close buttons handled by existing UI system
-
-/**
-* ColorPicker control for color properties - now with increased size
-*/
-function ColorPicker(x, y, label, property, currentColor) {
-  this.x = x;
-  this.y = y;
-  this.label = label;
-  this.property = property;
-  this.currentColor = currentColor;
-  this.width = CONTROL_DIMENSIONS.colorPicker.width;
-  this.height = CONTROL_DIMENSIONS.colorPicker.height;
-  this.clicked = false;
-
-  this.update = function () {
-    ctx.fillStyle = trueWhite;
-    ctx.font = '12px ' + globalFont;
-    ctx.globalAlpha = 0.5;
-    ctx.fillText(this.label, this.x, this.y - 8);
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = this.currentColor;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.strokeStyle = trueWhite;
-    ctx.strokeRect(this.x, this.y, this.width, this.height);
-  };
-
-  this.handleClick = function (mousePos) {
-    if (mousePos.x >= this.x && mousePos.x <= this.x + this.width &&
-      mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
-      // Set this color as selected in the color picker
-      if (colourBars) {
-        colourBars.selectedProperty = this.property;
-      }
-      return true;
-    }
-    return false;
-  };
-}
 
 /**
 * BooleanToggle control for boolean properties
@@ -464,7 +481,8 @@ function BooleanToggle(x, y, label, property, value) {
       mousePos.y >= this.y && mousePos.y <= this.y + this.height) {
       this.value = !this.value;
       setPropertyValue(experiment, this.property, this.value);
-      experiment.reinitSizeAndColour();
+      experiment.recalculateSizes();
+      experiment.recalculateColours();
       return true;
     }
     return false;
@@ -525,7 +543,8 @@ function PatternSelector(x, y, label, selectedPattern) {
           if (mousePos.y >= optionY && mousePos.y <= optionY + this.height) {
             this.selectedPattern = pattern.value;
             setPropertyValue(experiment, 'pattern', pattern.value);
-            experiment.reinitSizeAndColour();
+            experiment.recalculateSizes();
+            experiment.recalculateColours();
             this.open = false;
           }
         });
@@ -640,7 +659,8 @@ function BreedSelector(x, y, label) {
           if (mousePos.y >= optionY && mousePos.y <= optionY + this.height) {
             // Apply the selected breed to the experiment chitten
             applyBreed(experiment, breedName);
-            experiment.reinitSizeAndColour();
+            experiment.recalculateSizes();
+            experiment.recalculateColours();
             // Update all controls with new values
             reinitSliders();
             this.open = false;
@@ -666,7 +686,6 @@ function ColourBar(x, y) {
   const pixelSize = LAYOUT_CONFIG.colorSystemWidth / 24; // Same as in ColourPixelBlock
   const colorPickerHeight = 21 * pixelSize; // 20 color rows + 1 gray row
   this.y = LAYOUT_CONFIG.spliceBoxY + LAYOUT_CONFIG.spliceBoxSize + LAYOUT_CONFIG.colorSystemGap + colorPickerHeight + LAYOUT_CONFIG.colorSystemGap;
-  this.text = 'Colors - Click to Select';
   this.selected = 0;
   this.colorWidth = LAYOUT_CONFIG.colorSystemWidth / 6; // Divide total width by 6 colors
   this.colorHeight = 30; // Make them a bit taller
@@ -675,19 +694,14 @@ function ColourBar(x, y) {
   this.colors = [
     { prop: 'firstColour', label: 'Primary' },
     { prop: 'secondColour', label: 'Secondary' },
-    { prop: 'thirdColour', label: 'Third' },
+    { prop: 'thirdColour', label: 'Tertiary' },
     { prop: 'patternColour', label: 'Pattern' },
     { prop: 'eyeColour', label: 'Left Eye' },
     { prop: 'eyeColour2', label: 'Right Eye' }
   ];
 
   this.update = function () {
-    ctx.font = '12px' + ' ' + globalFont;
-    ctx.fillStyle = trueWhite;
-    ctx.globalAlpha = 0.7;
-    ctx.fillText(this.text, this.x, this.y - 25);
     ctx.globalAlpha = 1;
-
     // Draw color swatches
     this.colors.forEach((color, index) => {
       const colorX = this.x + (index * this.colorWidth);
@@ -720,9 +734,11 @@ function ColourPixelBlock() {
   // Calculate pixel size to make total picker same width as spliceBox
   this.pixelRows = 20;
   this.pixelColumns = 24;
-  this.pixelSize = LAYOUT_CONFIG.colorSystemWidth / this.pixelColumns;
+  this.pixelSize = (LAYOUT_CONFIG.colorSystemWidth / this.pixelColumns) * LAYOUT_CONFIG.colorPickerScale;
+  this.width = this.pixelColumns * this.pixelSize;
+  this.height = (this.pixelRows + 1) * this.pixelSize; // +1 for grayscale row
   this.huePixels = [];
-  this.dragged = false;
+  this.clicked = false;
   // convert x axis  
   let lrInterval = (rgbMax * 6) / (this.pixelColumns - 1); // divide by columns-1 for hue spectrum
   // generate hue gradient
@@ -780,12 +796,20 @@ function ColourPixelBlock() {
 
   this.pixels = outputPixels;
 
-  this.updateHoverColour = function () {
+  this.detectPointer = function () {
+    if (pointerPos.x >= this.x && pointerPos.x < this.x + this.width
+      && pointerPos.y >= this.y && pointerPos.y < this.y + this.height) {
+      return true;
+    }
+    else return false;
+  }
+
+  this.updateColour = function () {
     const actualCols = this.huePixels.length;
     let xPoint = pointerPos.x - this.x;
     let yPoint = pointerPos.y - this.y;
-    let xCoord = Math.round(xPoint / this.pixelSize);
-    let yCoord = Math.round(yPoint / this.pixelSize);
+    let xCoord = Math.floor(xPoint / this.pixelSize);
+    let yCoord = Math.floor(yPoint / this.pixelSize);
     let newIndex = (yCoord * actualCols) + xCoord;
     if (newIndex < this.pixels.length) {
       let midPointX = xCoord + (this.pixelSize / 2);
@@ -820,8 +844,8 @@ function ColourPixelBlock() {
           experiment[selectedColor.prop] = perfectColour;
         }
       }
-      console.log("updateHoverColour");
-      experiment.reinitSizeAndColour();
+      experiment.recalculateSizes();
+      experiment.recalculateColours();
     }
   };
   this.update = function () {
@@ -845,11 +869,6 @@ function renderEditorControls() {
   // Render group titles
   renderGroupTitles();
 
-  // Render all control types
-  if (colorPickers) {
-    colorPickers.forEach(picker => picker.update());
-  }
-
   if (booleanToggles) {
     booleanToggles.forEach(toggle => toggle.update());
   }
@@ -865,6 +884,14 @@ function renderEditorControls() {
   if (textInputs) {
     textInputs.forEach(input => input.update());
   }
+
+  if (colourPicker) {
+    colourPicker.update();
+  }
+
+  if (colourBars) {
+    colourBars.update();
+  }
 }
 
 /**
@@ -872,12 +899,6 @@ function renderEditorControls() {
 */
 function handleEditorControlClicks(mousePos) {
   let clickHandled = false;
-
-  if (colorPickers) {
-    colorPickers.forEach(picker => {
-      if (picker.handleClick(mousePos)) clickHandled = true;
-    });
-  }
 
   if (booleanToggles) {
     booleanToggles.forEach(toggle => {
@@ -897,6 +918,10 @@ function handleEditorControlClicks(mousePos) {
     textInputs.forEach(input => {
       if (input.handleClick(mousePos)) clickHandled = true;
     });
+  }
+
+  if (colourBars && colourBars.handleClick) {
+    if (colourBars.handleClick(mousePos)) clickHandled = true;
   }
 
   return clickHandled;

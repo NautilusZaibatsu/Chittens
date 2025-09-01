@@ -15,19 +15,52 @@ bodypartCode[12] = 'chest'
 
 PATTERNS
 0 - no pattern
-1 - tortoiseshell (image)
+1 - tortoiseshell 
 2 - NOT USED
-3 - tabby (image)
+3 - tabby
 4 - NOT USED
 5 - NOT USED
-6 - bengal / mau (image)
-7 - tick / abyssinian (image)
+6 - rosette
+7 - ticked
+SPECIAL PATTERNS
+sparseCoat for sparseCoat gene
 
 COATMOD
 [0] = y midpoint position for gradients
 [1] = angle of the gradient
 [2] = rotation of the pattern
 [3] = the strength of the gradients (0, none, 1 max)
+
+MUTATIONS
+albino
+hairless
+baldFaced
+sparseCoat
+colourpoint
+brachycephalic
+heterochromic
+
+ADDING MUTATIONS
+- add to chittens class
+- make inheritable in generateKitten
+- add mutation chance constant
+- add gene expression constant
+- add to mutate() function
+- add to determineTraitExpression() function
+- add to applyBreed() function
+- add to tool tip
+- add to editor
+
+ADDING MUTATIONS
+- add to GENE_DATA 
+- add matching gene and expression booleans to chittens class
+They are then automatically added to:
+- mutate() function
+- inheritability in generateKitten()
+- chitten tool tip
+- editor
+
+Also, please confirm heterochromia is no longer a special case
 
 COATMOD ANGLES
 0 vector points right.
@@ -51,3 +84,8 @@ Colourpoint gene expression:
 
 Albino gene:
 ~ Eyes glow a faint red instead of the normal glow colour if the albino gene is present
+
+Adding animations:
+~ Linear:
+1. add a state variable to the chittens class where 0 = no animation and 1 = end animation state
+2. use getAnimationValue and correctly select one shot and linear bools if required

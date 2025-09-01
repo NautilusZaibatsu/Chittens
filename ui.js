@@ -8,11 +8,22 @@ const buttonPadding = 20;
 const hoverIndicatorSize = 60;
 const hoverIndicatorStroke = 3;
 const tooltipCharacterWrapLimit = 40;
+const buttonMargin = 5;
+const breedFilterXMargin = 20;
+// chitten tooltip
+const cTooltipPMarginX = 60;
+const cTooltipMargin = 10;
+const cTooltipPadding = 20;
+const tooltipBorderColour = 'rgba(255, 255, 255, 0.3)';
+const tooltipBackgroundColour = trueBlack;
+let buttonsInTopBar = 0;
+let topBarButtonsXTotal = 0;
 
 // font
 const globalFont = 'Consolas';
 // scaling fonts
 fontSize = 15;
+fontSizeSmall = 12;
 fontWidth = 8.4;
 
 // init
@@ -24,6 +35,133 @@ uiColourArray = [];
 let selectedBreedFilter = 'All'; // Current breed filter
 let breedFilterButtons = []; // Array to hold breed filter buttons
 let breedFilterVisible = false; // Whether breed filter buttons are shown
+
+/**
+* function to initialise all the buttons and labels / dynamic ui elements
+*/
+function initUi() {
+
+  buttons.push(new Button(0, 15, 'Show more', 'See another 9 chittens'));
+  buttons[0].visible = false;
+  buttons[0].canvasSizeDependent = true;
+  buttons[0].reinitPosition();
+
+  buttons.push(new Button(0, -20, 'Adopt', 'Adopt the selected chitten'));
+  buttons[1].visible = false;
+  buttons[1].canvasSizeDependent = true;
+  buttons[1].reinitPosition();
+
+  buttons.push(new Button(0, 15, 'Rehome all', 'Give away this litter'));
+  buttons[2].visible = false;
+  buttons[2].canvasSizeDependent = true;
+  buttons[2].reinitPosition();
+
+  buttons.push(new Button(0, buttonMargin, unicodeThunderstorm, 'Rehome the selected Chitten'));
+  buttons[3].topBarPosition = 5;
+  buttons.push(new Button(canvasWidth / 2, 370, 'DUMMY', 'DUMMY')); // not currently being used
+  buttons[4].visible = false;
+  // upload / download and editing
+  buttons.push(new Button(0, buttonMargin, unicodeArrowDown, 'Download the selected Chitten to your device'));
+  buttons[5].topBarPosition = 4;
+  buttons.push(new Button(0, buttonMargin, unicodeArrowUp, 'Upload a Chitten from your device'));
+  buttons[6].topBarPosition = 3;
+
+  // gene editing
+  buttons.push(new Button(60, 595, 'Save Female', 'Save a Female clone of this Chitten'));
+  buttons[7].visible = false;
+  buttons.push(new Button(60, 630, 'Save Male', 'Save a Male clone of this Chitten'));
+  buttons[8].visible = false;
+  buttons.push(new Button(60, 665, 'Close', 'Close the genetic editor'));
+  buttons[9].visible = false;
+  // menu items
+  // devmode button
+  buttons.push(new Button(canvasWidth - 20, canvasHeight - 25, '&!', 'Dev mode - open genetic editor'));
+  if (!devMode) {
+    buttons[10].visible = false;
+  }
+  buttons[10].canvasSizeDependent = true;
+  buttons.push(new Button(0, buttonMargin, unicodeFemale, 'Adopt a female Chitten'));
+  buttons[11].topBarPosition = 1;
+  buttons.push(new Button(0, buttonMargin, unicodeMale, 'Adopt a male Chitten'));
+  buttons[12].topBarPosition = 2;
+  buttons.push(new Button(0, 85, 'Close', 'Close the adoption centre'));
+  buttons[13].visible = false;
+  buttons[13].canvasSizeDependent = true;
+  buttons[13].reinitPosition();
+
+  // Pause button
+  buttons.push(new Button(0, buttonMargin, unicodeBar + unicodeBar, 'Pause the game'));
+  buttons[14].fixedSize = true;
+  buttons[14].topBarPosition = 0;
+
+  // Add breed filter toggle button (positioned under "Show me more")
+  buttons.push(new Button(0, 50, 'Filter by breed', 'Choose specific breeds to view'));
+  buttons[15].visible = false; // Hide breed filter button initially
+  buttons[15].canvasSizeDependent = true;
+  buttons[15].reinitPosition();
+
+  // Button for endless mode
+  buttons.push(new Button(0, buttonMargin, unicodeInfinity, 'Turn on endless mode'));
+  buttons[16].topBarPosition = 6;
+
+  // adoption centre label
+  labels.push(new Button(0, - 105, 'Adoption Centre', ''));
+  labels[0].visible = false;
+  labels[0].canvasSizeDependent = true;
+  labels[0].aboveCattery = true;
+  labels[0].reinitPosition();
+
+  // choose a ....
+  labels.push(new Button(0, - 70, 'Choose a ....', '')); // text populated later
+  labels[1].visible = false;
+  labels[1].canvasSizeDependent = true;
+  labels[1].aboveCattery = true;
+  labels[1].reinitPosition();
+
+  // litter choice timer label
+  labels.push(new Button(0, - 70, 'X', ''));
+  labels[2].visible = false;
+  labels[2].canvasSizeDependent = true;
+  labels[2].aboveCattery = true;
+  labels[2].reinitPosition();
+
+  // litter centre label
+  labels.push(new Button(0, - 140, 'Choose one of ....', '')); // text populated later
+  labels[3].visible = false;
+  labels[3].canvasSizeDependent = true;
+  labels[3].aboveCattery = true;
+  labels[3].reinitPosition();
+
+  // rehoming info label
+  labels.push(new Button(0, - 105, 'The rest will be adopted by nice people', ''));
+  labels[4].visible = false;
+  labels[4].canvasSizeDependent = true;
+  labels[4].aboveCattery = true;
+  labels[4].reinitPosition();
+
+  // place all the buttons in the top bar correctly according to their topBarPosition index
+  positionTopBar();
+}
+
+/**
+* function for a piece of plain text
+* @param {int} size - the size
+* @param {string} colour - the colour
+* @param {int} x - the x pos
+* @param {int} y - the y pos
+*/
+function TextElement(size, colour, x, y) {
+  this.size = size;
+  this.x = x;
+  this.y = y;
+  this.colour = colour;
+  this.update = function () {
+    ctx.font = this.size + ' ' + globalFont;
+    ctx.fillStyle = this.colour;
+    ctx.fillText(this.text, this.x, this.y);
+    ctx.globalAlpha = 1;
+  };
+}
 
 // Create breed filter buttons
 function createBreedFilterButtons(gender) {
@@ -37,8 +175,14 @@ function createBreedFilterButtons(gender) {
   const buttonsPerRow = 1;
   const buttonWidth = 140;
   const buttonHeight = 25;
-  const startY = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2);
-  const startX = (canvasWidth / 2) + (boxSize * 2) - 20;
+
+  // Calculate rightmost edge of catboxes: center + half of grid width + box width
+  const rightmostBoxEdge = (canvasWidth / 2) + (((boxSize * 3) + (boxPadding * 2)) / 2);
+  const startX = rightmostBoxEdge + breedFilterXMargin;
+
+  // Center the group of buttons vertically on canvas
+  const totalHeight = (availableBreeds.length - 1) * (buttonHeight + 5) + buttonHeight;
+  const startY = (canvasHeight / 2) - (totalHeight / 2);
 
   availableBreeds.forEach((breed, index) => {
     const row = Math.floor(index / buttonsPerRow);
@@ -91,124 +235,24 @@ function resetBreedFilter() {
   }
 }
 
-/**
-* function to initialise all the buttons and labels / dynamic ui elements
-*/
-function initUi() {
-  // devmode specific:
-  colourBars = new ColourBar(200, 175);
-  colourBlock = new ColourPixelBlock();
-
-  buttons.push(new Button(0, 15, 'Show more', 'See another 9 chittens'));
-  buttons[0].visible = false;
-  buttons[0].canvasSizeDependent = true;
-  buttons[0].reinitPosition();
-
-  buttons.push(new Button(0, -20, 'Adopt', 'Adopt the selected chitten'));
-  buttons[1].visible = false;
-  buttons[1].canvasSizeDependent = true;
-  buttons[1].reinitPosition();
-
-  buttons.push(new Button(0, 15, 'Rehome all', 'Give away this litter'));
-  buttons[2].visible = false;
-  buttons[2].canvasSizeDependent = true;
-  buttons[2].reinitPosition();
-
-  buttons.push(new Button(195, 0, unicodeThunderstorm, 'Rehome the selected Chitten'));
-
-  buttons.push(new Button(canvasWidth / 2, 370, 'DUMMY', 'DUMMY')); // not currently being used
-  buttons[4].visible = false;
-  // upload / download and editing
-  buttons.push(new Button(164, 0, unicodeArrowDown, 'Download the selected Chitten to your device'));
-  buttons.push(new Button(133, 0, unicodeArrowUp, 'Upload a Chitten from your device'));
-  // gene editing
-  buttons.push(new Button(60, 595, 'Save Female', 'Save a Female clone of this Chitten'));
-  buttons[7].visible = false;
-  buttons.push(new Button(60, 630, 'Save Male', 'Save a Male clone of this Chitten'));
-  buttons[8].visible = false;
-  buttons.push(new Button(60, 665, 'Close', 'Close the genetic editor'));
-  buttons[9].visible = false;
-  // menu items
-  // devmode button
-  buttons.push(new Button(canvasWidth - 20, canvasHeight - 25, '&!', 'Dev mode - open genetic editor'));
-  if (!devMode) {
-    buttons[10].visible = false;
+function positionTopBar() {
+  // reset counters if they're globals
+  buttonsInTopBar = 0;
+  // collect indices with a numeric topBarPosition (includes 0)
+  const tbIndices = buttons
+    .map((btn, idx) => ({ idx, pos: Number(btn.topBarPosition) }))
+    .filter(({ pos }) => Number.isFinite(pos))
+    .sort((a, b) => a.pos - b.pos)
+    .map(({ idx }) => idx);
+  buttonsInTopBar = tbIndices.length;
+  // lay out left -> right
+  let x = 0; // left edge cursor
+  for (const i of tbIndices) {
+    const btn = buttons[i];
+    btn.x = buttonMargin + x + btn.width / 2;      // center at current segment
+    x += buttonMargin + btn.width;  // advance cursor
   }
-  buttons[10].canvasSizeDependent = true;
-  buttons.push(new Button(59, 0, unicodeFemale, 'Adopt a female Chitten'));
-  buttons.push(new Button(98, 0, unicodeMale, 'Adopt a male Chitten'));
-  buttons.push(new Button(0, 85, 'Close', 'Close the adoption centre'));
-  buttons[13].visible = false;
-  buttons[13].canvasSizeDependent = true;
-  buttons[13].reinitPosition();
-
-  // Pause button
-  buttons.push(new Button(20, 0, unicodeBar + unicodeBar, 'Pause the game'));
-  buttons[14].fixedSize = true;
-
-  // Add breed filter toggle button (positioned under "Show me more")
-  buttons.push(new Button(0, 50, 'Filter by breed', 'Choose specific breeds to view'));
-  buttons[15].visible = false; // Hide breed filter button initially
-  buttons[15].canvasSizeDependent = true;
-  buttons[15].reinitPosition();
-
-  // Button for endless mode
-  buttons.push(new Button(225, 0, unicodeInfinity, 'Turn on endless mode'));
-
-  // adoption centre label
-  labels.push(new Button(0, - 105, 'Adoption Centre', ''));
-  labels[0].visible = false;
-  labels[0].canvasSizeDependent = true;
-  labels[0].aboveCattery = true;
-  labels[0].reinitPosition();
-
-  // choose a ....
-  labels.push(new Button(0, - 70, 'Choose a ....', '')); // text populated later
-  labels[1].visible = false;
-  labels[1].canvasSizeDependent = true;
-  labels[1].aboveCattery = true;
-  labels[1].reinitPosition();
-
-  // litter choice timer label
-  labels.push(new Button(0, - 70, 'X', ''));
-  labels[2].visible = false;
-  labels[2].canvasSizeDependent = true;
-  labels[2].aboveCattery = true;
-  labels[2].reinitPosition();
-
-  // litter centre label
-  labels.push(new Button(0, - 140, 'Choose one of ....', '')); // text populated later
-  labels[3].visible = false;
-  labels[3].canvasSizeDependent = true;
-  labels[3].aboveCattery = true;
-  labels[3].reinitPosition();
-
-  // rehoming info label
-  labels.push(new Button(0, - 105, 'The rest will be adopted by nice people', ''));
-  labels[4].visible = false;
-  labels[4].canvasSizeDependent = true;
-  labels[4].aboveCattery = true;
-  labels[4].reinitPosition();
-}
-
-/**
-* function for a piece of plain text
-* @param {int} size - the size
-* @param {string} colour - the colour
-* @param {int} x - the x pos
-* @param {int} y - the y pos
-*/
-function TextElement(size, colour, x, y) {
-  this.size = size;
-  this.x = x;
-  this.y = y;
-  this.colour = colour;
-  this.update = function () {
-    ctx.font = this.size + ' ' + globalFont;
-    ctx.fillStyle = this.colour;
-    ctx.fillText(this.text, this.x, this.y);
-    ctx.globalAlpha = 1;
-  };
+  topBarButtonsXTotal = x + buttonMargin; // total width consumed, including last margin
 }
 
 /**
@@ -225,6 +269,7 @@ function Button(x, y, text, toolTip, alignment) {
   this.width = (this.text.length * fontWidth) + buttonPadding;
   this.size = ((this.text.length * fontWidth) + buttonPadding);
   this.fixedSize = false;
+  this.topBarPosition;
   this.height = 25;
   this.visible = true;
   this.available = true;
@@ -291,7 +336,6 @@ function Button(x, y, text, toolTip, alignment) {
     }
     return lines;
   };
-
   this.drawToolTip = function () {
     ctx.fillStyle = mixTwoColours(uiColourArray[3], trueBlack, 0.5);
     ctx.fillRect(pointerPos.x, pointerPos.y + buttonPadding, this.toolTipWidth, this.toolTipHeight || buttonPadding);
@@ -346,13 +390,13 @@ function Button(x, y, text, toolTip, alignment) {
       ctx.globalAlpha = 0.25;
       if (this.highlighted) {
         ctx.globalAlpha = 1;
-        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2]);
+        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
       } else if (!this.available) {
-        ctx.fillStyle = uiColourArray[3];
+        ctx.fillStyle = mixTwoColours(trueBlack, uiColourArray[2], 0.5);
       } else if (this.on) {
-        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[1]);
+        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[0], 0.5);
       } else {
-        ctx.fillStyle = uiColourArray[2];
+        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.3);
       }
       ctx.fillRect(0, 0, this.width, this.height);
       // label
@@ -683,10 +727,6 @@ function click() {
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].selected = false;
     }
-    let genderString = 'female';
-    if (chosenChittenF) {
-      genderString = 'male';
-    }
     if (!chosenChittenM || !chosenChittenF) {
       buttons[1].available = false;
     }
@@ -697,16 +737,25 @@ function click() {
   // Picking up Chittens
   if (!paused && !clickedSomething && !choosingChitten) {
     for (let i = chittens.length - 1; i >= 0 && !clickedSomething; i--) {
-      if (detectCollisionPointerChitten(chittens[i])) {
+      if (detectCollisionPointerObject(chittens[i])) {
         clickedSomething = true;
+        updateCursor('grabbing');
         selection = chittens[i];
+        selection.beingHeld = true;
         selection.targetSittingState = false;
         selection.focus = null;
-        selection.beingHeld = true;
-        // wake up sleeping chittens when you pick them up
-        if (!selection.awake) {
-          selection.awake = true;
-        }
+        selection.onSurface = false;
+        selection.onTree = false;
+        selection.awake = true;
+      }
+    }
+  }
+
+  if (!paused && !clickedSomething && !choosingChitten) {
+    for (let i = 0; i < fruits.length && !clickedSomething; i++) {
+      if (!fruits[i].fumbled && fruits[i].y < trueBottom && detectCollisionPointerObject(fruits[i])) {
+        clickedSomething = true;
+        fruits[i].fumbleFruit(0, 0);
       }
     }
   }
@@ -737,9 +786,10 @@ function click() {
       }
     }
     // colour picker
-    if (pointerPos.x >= colourBlock.x && pointerPos.x < colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y < colourBlock.y + 100) {
-      colourBlock.dragged = true;
-      colourBlock.updateHoverColour();
+    if (!clickedSomething && colourPicker.detectPointer()) {
+      colourPicker.updateColour();
+      colourPicker.dragging = true;
+      clickedSomething = true;
     }
   }
   if (!clickedSomething && chittens.includes(selection)) {
@@ -752,6 +802,7 @@ function unclick() {
     selection.beingHeld = false;
     selection.focus = null;
     selection.resetJumpCooldown();
+    updateCursor('default');
   }
 
   if (geneEditing) {
@@ -764,8 +815,8 @@ function unclick() {
         }
       }
     }
-    if (colourBlock.dragged) {
-      colourBlock.dragged = false;
+    if (colourPicker.dragging) {
+      colourPicker.dragging = false;
     }
   }
 }
@@ -775,67 +826,75 @@ function unclick() {
 */
 function hover() {
   let hovered = false;
-  // highlighting buttons
+
+  // Reset all highlights first
   for (let i = 0; i < buttons.length; i++) {
+    buttons[i].highlighted = false;
+  }
+  for (let i = 0; i < breedFilterButtons.length; i++) {
+    breedFilterButtons[i].highlighted = false;
+  }
+  for (let i = 0; i < boxes.length; i++) {
+    boxes[i].highlighted = false;
+  }
+  if (typeof parentBoxes !== 'undefined') {
+    for (let i = 0; i < parentBoxes.length; i++) {
+      parentBoxes[i].highlighted = false;
+    }
+  }
+
+  // highlighting buttons
+  for (let i = 0; i < buttons.length && !hovered; i++) {
     // tooltip creation on hover is handled in window.js
     if (buttons[i].available && buttons[i].detectButtonClick()) {
       buttons[i].highlighted = true;
+      buttons[i].drawToolTip();
+      updateCursor('help');
       hovered = true;
-    } else {
-      buttons[i].highlighted = false;
     }
   }
 
   // highlighting breed filter buttons
-  for (let i = 0; i < breedFilterButtons.length; i++) {
+  for (let i = 0; i < breedFilterButtons.length && !hovered; i++) {
     if (breedFilterButtons[i].detectButtonClick()) {
       breedFilterButtons[i].highlighted = true;
+      breedFilterButtons[i].drawToolTip();
+      updateCursor('help');
       hovered = true;
-    } else {
-      breedFilterButtons[i].highlighted = false;
     }
   }
   // highlighting catboxes
-  for (let i = 0; i < boxes.length; i++) {
+  for (let i = 0; i < boxes.length && !hovered; i++) {
     if (detectRectCollision(pointerPos, boxes[i])) {
+      drawChittenTooltip(chittens[boxes[i].id]);
+      updateCursor('help');
       boxes[i].highlighted = true;
       hovered = true;
-    } else {
-      boxes[i].highlighted = false;
     }
   }
   // highlighting parent boxes in litter selection
   if (typeof parentBoxes !== 'undefined') {
-    for (let i = 0; i < parentBoxes.length; i++) {
+    for (let i = 0; i < parentBoxes.length && !hovered; i++) {
       if (detectRectCollision(pointerPos, parentBoxes[i])) {
+        drawChittenTooltip(chittens[parentBoxes[i].id]);
+        updateCursor('help');
         parentBoxes[i].highlighted = true;
         hovered = true;
-      } else {
-        parentBoxes[i].highlighted = false;
       }
     }
   }
+
   // colour picker
-  if (colourBlock.dragged && pointerPos.x >= colourBlock.x && pointerPos.x < colourBlock.x + 100 && pointerPos.y >= colourBlock.y && pointerPos.y < colourBlock.y + 100) {
-    colourBlock.updateHoverColour();
-  } else if (colourBlock.dragged && pointerPos.x < colourBlock.x && pointerPos.x >= colourBlock.x + 100 && pointerPos.y < colourBlock.y && pointerPos.y >= colourBlock.y + 100) {
-    colourBlock.dragged = false;
+  if (!hovered && colourPicker.dragging && colourPicker.detectPointer()) {
+    hovered = true;
+    colourPicker.dragging = true;
+    colourPicker.updateColour();
   }
+
   // chittens hover label
-  for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
-    // DEBUG HOVER TOOL
-    // if(detectCollisionPointerChitten(chittens[i])) {
-    // ctx.fillStyle = trueWhite;
-    // ctx.font = '20px' + ' ' + globalFont;
-    // ctx.fillText("btf: "+Math.round(chittens[i].bodyToFeetDistance) 
-    // + " fll: "+Math.round(chittens[i].frontLegLength) 
-    // + " thk: "+Math.round(chittens[i].thickness*100)/100
-    // + " leg: "+Math.round(chittens[i].legginess*100)/100, pointerPos.x+20, pointerPos.y+30);
-    // }
-
-
-    if (!chittens[i].inCatBox && chittens[i] !== experiment && detectCollisionPointerChitten(chittens[i])) {
-      stop = true;
+  for (let i = 0; i < chittens.length && !hovered; i++) {
+    if (!chittens[i].inCatBox && chittens[i] !== experiment && detectCollisionPointerObject(chittens[i])) {
+      hovered = true;
       let labelText = chittens[i].name;
       let shift = (2 + chittens[i].name.length) * 6.72 / 2;
       ctx.save();
@@ -855,16 +914,31 @@ function hover() {
         ctx.fillText(labelText + ' ' + unicodeNonBinary, -shift, - 25 - (chittens[i].size * 2.75));
       }
       ctx.restore();
-      // hover indicator
-      ctx.globalAlpha = 0.1;
-      ctx.strokeStyle = mixTwoColours(uiColourArray[0], trueWhite, 0.5);
-      ctx.lineWidth = hoverIndicatorStroke;
-      ctx.beginPath();
-      ctx.arc(chittens[i].x, chittens[i].y, hoverIndicatorSize, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-
+      if (!chittens[i].beingHeld) {
+        updateCursor('grab');
+        // hover indicator
+        ctx.globalAlpha = 0.1;
+        ctx.strokeStyle = mixTwoColours(uiColourArray[0], trueWhite, 0.5);
+        ctx.lineWidth = hoverIndicatorStroke;
+        ctx.beginPath();
+        ctx.arc(chittens[i].x, chittens[i].y, hoverIndicatorSize, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
     }
+  }
+
+  if (!paused && !hovered && !choosingChitten) {
+    for (let i = 0; i < fruits.length && !hovered; i++) {
+      if (!fruits[i].fumbled && fruits[i].y < trueBottom && detectCollisionPointerObject(fruits[i])) {
+        hovered = true;
+        updateCursor('grab');
+      }
+    }
+  }
+
+  if (!hovered && document.body.style.cursor !== 'grabbing') {
+    updateCursor();
   }
 }
 
@@ -913,9 +987,9 @@ function renderUi() {
   topLabel.text = 'v' + version + ' FPS ' + fps;
   topLabel.update();
   // day of the week and the season
-  leftLabel = new TextElement(fontSize + 'px', textColour, 250, 17);
-  leftLabel.text = dayNames[today] + ', ' + seasonNames[season] + ' ' + temperature + unicodeDegrees;
-  leftLabel.update();
+  topLabelLeft = new TextElement(fontSize + 'px', textColour, topBarButtonsXTotal, 17 + buttonMargin);
+  topLabelLeft.text = dayNames[today] + ', ' + seasonNames[season] + ' ' + temperature + unicodeDegrees;
+  topLabelLeft.update();
   newestMessage = new TextElement(fontSize + 'px', textColour, 10, canvasHeight - 25);
   if (!paused) {
     newestMessage.text = currentMessage.timeStamp + ' ' + currentMessage.text;
@@ -930,7 +1004,7 @@ function renderUi() {
     // experiment.update();
     experiment.render();
     colourBars.update();
-    colourBlock.update();
+    colourPicker.update();
     for (let i = 0; i < sliders.length; i++) {
       sliders[i].update();
     }
@@ -951,46 +1025,249 @@ function renderUi() {
   for (let i = 0; i < breedFilterButtons.length; i++) {
     breedFilterButtons[i].update();
   }
-  for (let i = 0; i < buttons.length; i++) {
-    // tool tip - draw on top of buttons and labels
-    if (buttons[i].detectButtonClick()) {
-      buttons[i].drawToolTip();
-    }
-  }
-
-  // Tooltips for breed filter buttons
-  for (let i = 0; i < breedFilterButtons.length; i++) {
-    if (breedFilterButtons[i].detectButtonClick()) {
-      breedFilterButtons[i].drawToolTip();
-    }
-  }
 
   // hover operations
-  hover();
-
-  // Tooltip section
-  // Draw tooltip for selected chitten LAST - on top of everything
   if (selection !== null && selection.beingHeld) {
-    drawChittenTooltip(selection, pointerPos.x, pointerPos.y);
+    drawChittenTooltip(selection);
+  } else {
+    hover();
   }
-  // Draw tooltip for chittens and parents in catboxes if hovered on
-  if (parentBoxes.length !== 0 || boxes.length !== 0) {
-    let stop = false; // can only hover on one at a time
-    if (boxes.length > 0) {
-      for (let i = 0; i < boxes.length && !stop; i++) {
-        if (boxes[i].highlighted) {
-          drawChittenTooltip(chittens[boxes[i].id]);
-          stop = true;
-        }
-      }
+}
+
+// Helper function to draw text with colored tick/cross symbols
+function drawTextWithColoredSymbols(text, x, y) {
+  let currentX = x;
+  let i = 0;
+
+  while (i < text.length) {
+    if (text[i] === unicodeTick) {
+      // Draw green tick
+      ctx.fillStyle = tickColour;
+      ctx.fillText(unicodeTick, currentX, y);
+      currentX += ctx.measureText(unicodeTick).width;
+      ctx.fillStyle = trueWhite; // Reset to white
+    } else if (text[i] === unicodeCross) {
+      // Draw red cross
+      ctx.fillStyle = crossColour;
+      ctx.fillText(unicodeCross, currentX, y);
+      currentX += ctx.measureText(unicodeCross).width;
+      ctx.fillStyle = trueWhite; // Reset to white
+    } else {
+      // Find the next symbol or end of string
+      let nextSymbolIndex = text.length;
+      let nextTick = text.indexOf(unicodeTick, i);
+      let nextCross = text.indexOf(unicodeCross, i);
+
+      if (nextTick !== -1) nextSymbolIndex = Math.min(nextSymbolIndex, nextTick);
+      if (nextCross !== -1) nextSymbolIndex = Math.min(nextSymbolIndex, nextCross);
+
+      // Draw text segment up to next symbol
+      let segment = text.substring(i, nextSymbolIndex);
+      ctx.fillText(segment, currentX, y);
+      currentX += ctx.measureText(segment).width;
+      i = nextSymbolIndex - 1; // -1 because loop will increment
     }
-    if (!stop && parentBoxes.length > 0) {
-      for (let i = 0; i < parentBoxes.length && !stop; i++) {
-        if (parentBoxes[i].highlighted) {
-          drawChittenTooltip(chittens[parentBoxes[i].id]);
-          stop = true;
-        }
-      }
+    i++;
+  }
+  return currentX; // Return final x position
+}
+
+/**
+ * Draws a tooltip for any chitten at specified coordinates
+ * @param {Chitten} chitten - The chitten to show tooltip for
+ */
+function drawChittenTooltip(chitten) {
+  ctx.save();
+
+  // Calculate dynamic tooltip size based on content
+  let maxWidth = 200; // Maximum width
+  let lineHeight = 15;
+  let contentHeight = 20; // Top padding
+
+  // Measure text widths to find max width needed
+  ctx.font = 'bold 14px ' + globalFont;
+  maxWidth = Math.max(maxWidth, ctx.measureText(chitten.name).width);
+
+  ctx.font = '12px ' + globalFont;
+  let bString = chitten.breed;
+  if (getBreedDepth(chitten.breed) == 0) {
+    if (meetsBreedStandard(chitten)) {
+      bString += " " + unicodeTick + " " + breedStandardText;
+    } else {
+      bString += " " + unicodeCross + " " + notBreedStandardText;
     }
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Breed: ' + bString).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Age: ' + chitten.age).width);
+  maxWidth = Math.max(maxWidth, ctx.measureText('Gender: ' + chitten.gender).width);
+
+  // Pre-calculate coat string for width measurement
+  let cString = '';
+  if (chitten.sparseCoatExpressed && !chitten.hairlessExpressed) {
+    cString += 'Sparse '
+  }
+  if (chitten.albinoExpressed || chitten.hairlessExpressed) {
+    if (chitten.albinoExpressed) {
+      cString += 'Albino White';
+    } else if (chitten.hairlessExpressed) {
+      let c1 = ntc.name(chitten.skinColour1)[1];
+      let c2 = ntc.name(chitten.skinColour2)[1];
+      let c3 = ntc.name(chitten.skinColour3)[1];
+      cString += c1 + ', ' + c2 + ' & ' + c3;
+    }
+    // unknown colours for chittens whos colours change over time
+  } else if ((chitten.colourpointExpressed || chitten.pattern == 3)
+    && chitten.age < maturesAt) {
+    cString = unicodeUnknown;
+  } else {
+    let c1 = ntc.name(chitten.firstColour)[1];
+    let c2 = ntc.name(chitten.secondColour)[1];
+    let c3 = ntc.name(chitten.thirdColour)[1];
+    if (chitten.secondColour == chitten.thirdColour) {
+      cString += c1 + ' & ' + c2;
+    } else {
+      cString += c1 + ', ' + c2 + ' & ' + c3;
+    }
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Coat: ' + cString).width);
+
+  // pattern colours
+  let pString = 'None';
+  if ((chitten.albinoExpressed && !this.sparseCoatExpressed)
+    || ((chitten.colourpointExpressed || chitten.pattern == 3)
+      && chitten.age < maturesAt)) {
+    pString = unicodeUnknown;
+  } else if (chitten.pattern == 1) {
+    pString = getPatternName(1);
+  } else if (chitten.pattern == 5) {
+    pString = getPatternName(5);
+  } else if (chitten.pattern == 7) {
+    pString = getPatternName(7);
+  } else if (chitten.pattern == 3 || chitten.pattern == 6) {
+    if (chitten.hairlessExpressed) {
+      pString = '';
+    } else {
+      pString = ntc.name(chitten.patternColour)[1];
+    }
+    pString += ' ' + getPatternName(chitten.pattern);
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Pattern: ' + pString).width);
+
+  // Pre-calculate eye string for width measurement
+  let eString = '';
+  if (chitten.age < maturesAt) {
+    eString = unicodeUnknown;
+  } else {
+    if (!chitten.heterochromicExpressed && !chitten.albinoExpressed) {
+      eString = ntc.name(chitten.eyeColour)[1];
+    } else if (chitten.albinoExpressed) {
+      eString = 'Pink';
+    } else {
+      let color1Name = ntc.name(chitten.eyeColour)[1];
+      let color2Name = ntc.name(chitten.eyeColour2)[1];
+      eString = 'Heterochromic ' + color1Name + ' & ' + color2Name;
+    }
+  }
+  maxWidth = Math.max(maxWidth, ctx.measureText('Eyes: ' + eString).width);
+
+  ctx.font = 'bold 11px ' + globalFont;
+  maxWidth = Math.max(maxWidth, ctx.measureText('GENETICS').width);
+
+  // Auto-generate genetics section from GENE_DATA
+  let geneLines = [];
+  ctx.font = '10px ' + globalFont;
+
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    let geneSymbol = chitten[geneData.geneProp] ? unicodeTick : unicodeCross;
+    let expressedSymbol = chitten[geneData.expressedProp] ? unicodeTick : unicodeCross;
+    let lineText = `${geneData.tooltip}: ${geneSymbol} Expressed: ${expressedSymbol}`;
+
+    geneLines.push(lineText);
+    maxWidth = Math.max(maxWidth, ctx.measureText(lineText).width);
+  }
+
+  contentHeight = cTooltipPadding + (lineHeight * (7 + geneLines.length)); // 7 basic lines + gene count + GENETICS spacing
+
+  const tooltipWidth = maxWidth + cTooltipPadding;
+  const tooltipHeight = contentHeight;
+
+  // Position tooltip near mouse
+  let tooltipX, tooltipY;
+  tooltipX = pointerPos.x + cTooltipPMarginX; // Offset from mouse
+  tooltipY = pointerPos.y - (tooltipHeight / 2); // Above mouse
+  // Keep tooltip on screen, and don't block held chittens
+  if (tooltipX + tooltipWidth > canvasWidth) {
+    tooltipX = pointerPos.x - cTooltipPMarginX - tooltipWidth;
+  }
+  if (tooltipY < 0) tooltipY = cTooltipMargin; // Below mouse if no room above
+  if (tooltipX < 0) tooltipX = cTooltipMargin;
+  if (tooltipY + tooltipHeight > canvasHeight) {
+    tooltipY = canvasHeight - tooltipHeight - cTooltipMargin;
+  }
+
+  // Draw tooltip background with border
+  ctx.fillStyle = tooltipBackgroundColour;
+  ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+  ctx.strokeStyle = tooltipBorderColour;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+
+  // Header with cat name
+  ctx.fillStyle = trueWhite;
+  ctx.font = 'bold 14px ' + globalFont;
+  ctx.fillText(chitten.name, tooltipX + 10, tooltipY + 20);
+
+  // Gender symbol in top right with color coding
+  let genderSymbol = unicodeNonBinary;
+  let genderColor = genderPurple;
+  if (chitten.gender == 'Male') {
+    genderSymbol = unicodeMale;
+    genderColor = genderBlue;
+  } else if (chitten.gender == 'Female') {
+    genderSymbol = unicodeFemale;
+    genderColor = genderPink;
+  }
+
+  ctx.fillStyle = genderColor;
+  ctx.font = 'bold 18px ' + globalFont;
+  let genderWidth = ctx.measureText(genderSymbol).width;
+  ctx.fillText(genderSymbol, tooltipX + tooltipWidth - genderWidth - 10, tooltipY + 20);
+
+  // Basic info with smaller font (moved up one line)
+  ctx.font = '12px ' + globalFont;
+  ctx.fillStyle = trueWhite;
+  drawTextWithColoredSymbols('Breed: ' + bString, tooltipX + 10, tooltipY + 40);
+  ctx.fillText('Age: ' + chitten.age, tooltipX + 10, tooltipY + 55);
+  ctx.fillText('Coat: ' + cString, tooltipX + 10, tooltipY + 70);
+  ctx.fillText('Eyes: ' + eString, tooltipX + 10, tooltipY + 85);
+  ctx.fillText('Pattern: ' + pString, tooltipX + 10, tooltipY + 100);
+
+  ctx.font = 'bold 11px ' + globalFont;
+  ctx.fillText('GENETICS', tooltipX + 10, tooltipY + 125);
+
+  ctx.font = '10px ' + globalFont;
+  // Auto-generate genetics display from GENE_DATA with colored symbols
+  let currentY = tooltipY + 140;
+  for (const geneLine of geneLines) {
+    drawTextWithColoredSymbols(geneLine, tooltipX + 10, currentY);
+    currentY += 13; // Line spacing
+  }
+
+  ctx.restore();
+}
+
+function updateCursor(state) {
+  switch (state) {
+    case 'grabbing':
+      document.body.style.cursor = 'grabbing';
+      break;
+    case 'grab':
+      document.body.style.cursor = 'grab';
+      break;
+    case 'help':
+      document.body.style.cursor = 'help';
+      break;
+    default:
+      document.body.style.cursor = 'default';
   }
 }

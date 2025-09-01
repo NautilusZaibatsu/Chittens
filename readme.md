@@ -2,6 +2,22 @@
 
 changelog
 
+01/09/2025 = 0.073
+~ Redesigned genetics system to make gene inheritance and expression more realistic for both pure and cross breds.
+~ Breeds now have basic standards, you can see whether a purebred chitten meets the breed standard in the chitten tooltip.
+~ The sparse goat genetic condition has been added. 
+-- Chittens with a sparse coat have sunlight sensitive skin that changes from pink to brown depending on the season.
+-- The Lykoi breed has this genetic condition by default. 
+~ Chittens now have different animations depending on whether they are asleep in a tree or asleep on the ground.
+~ Picked up chittens now look like they're being held by the scruff of their necks.
+~ The nutritional value of a fruit scales now with its size.
+~ You can now click a fruit that is in a tree to make it fall to the ground.
+~ Fruit now bounces on each other and chittens.
+~ Added contextual cursors to help the user understand what they can do while hovering.
+~ Improvements and bugfixes for tree collisions.
+~ Fixed some issues relating to bald faces when crossbreeding.
+~ Temperature now falls and rises from the midpoint of the season rather than the start of it.
+
 30/08/2025 = 0.072
 ~ Big graphical update, chittens now look and animate much better
 -- This has however "broken" some breeds as they haven't been updated yet.

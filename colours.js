@@ -73,58 +73,65 @@ function randomColourRealistic(seed) {
   return colour;
 }
 
-getSkinColourFromColour = function (theColour) {
+getSkinColourFromColour = function (theColour, forceSkintan) {
   let rgb = hexToRgb(theColour);
   let r = rgb.r;
   let g = rgb.g;
   let b = rgb.b;
+  let output = trueWhite;
+  // special case - the sparseCoat gene makes the skin tan when exposed to sunlight
 
-  // Check for white cats (high brightness across all channels)
-  if (r > skinColourBrightnessthreshold && g > skinColourBrightnessthreshold && b > skinColourBrightnessthreshold) {
-    return skinPink;
+  if (r > rgbMax / 2 && g > rgbMax / 2 && b > rgbMax / 2) {
+    // Check for white cats (high brightness across all channels)
+    output = skinPink;
+  } else if (r > 150 && r > g * 1.3 && r > b * 1.5) {
+    // Check for ginger/orange cats (red dominance)
+    output = skinPink;
+  } else if (r < 50 && g < 50 && b < 50) {
+    // check for very dark cats
+    output = skinBlack;
+  } else {
+    // everything else gets grey skin
+    output = skinGrey;
   }
-
-  // Check for ginger/orange cats (red dominance)
-  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
-    return skinPink;
+  if (forceSkintan) {
+    let temperatureMod = temperature / (maxTemperature - minTemperature); // 0 (cold) to 1 (hot)
+    if (output == skinPink) {
+      return mixTwoColours(skinBrown, skinPink, temperatureMod);
+    } else  {
+      return mixTwoColours(skinDarkBrown, skinGrey, temperatureMod);
+    }
   }
-
-  // Check for brown cats (balanced warm tones)
-  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
-    return skinPink;
-  }
-
   // All other colors (grey, black, etc.) get grey skin
-  return skinGrey;
+  return output;
 };
 
-getNoseColourFromColour = function (theColour) {
+getNoseColourFromColour = function (theColour, forceSkintan) {
   let rgb = hexToRgb(theColour);
   let r = rgb.r;
   let g = rgb.g;
   let b = rgb.b;
-
-  if ((r + g + b) / 6 > rgbMax / 2) {
-    return nosePink
+  let output = trueWhite;
+  // special case - the sparseCoat gene makes the skin tan when exposed to sunlight
+  if (forceSkintan) {
+    let temperatureMod = temperature / (maxTemperature - minTemperature); // 0 (cold) to 1 (hot)
+    return mixTwoColours(noseBrown, skinPink, temperatureMod);
   }
-
-  // Check for white cats (high brightness across all channels)
-  if (r > 200 && g > 200 && b > 175) {
-    return nosePink;
+  if (r > rgbMax / 2 && g > rgbMax / 2 && b > rgbMax / 2) {
+    // Check for white cats (high brightness across all channels)
+    output = skinPink;
+  } else if (r > 150 && r > g * 1.3 && r > b * 1.5) {
+    // Check for ginger/orange cats (red dominance)
+    output = skinPink;
+  } else if (r < 50 && g < 50 && b < 50) {
+    // check for very dark cats
+    output = noseBlack;
+  } else {
+    // everything else gets grey skin
+    output = noseGrey;
   }
-
-  // Check for ginger/orange cats (red dominance)
-  if (r > 150 && r > g * 1.3 && r > b * 1.5) {
-    return nosePink;
-  }
-
-  // Check for brown cats (balanced warm tones)
-  if (r > 80 && g > 60 && b < 100 && r >= g && g >= b) {
-    return nosePink;
-  }
-
-  // All other colors (grey, black, etc.) get black nose
-  return noseBlack;
+  // All other colors (grey, black, etc.) get grey skin
+  return output;
 };
 
 /** function to create a random bodypartCode

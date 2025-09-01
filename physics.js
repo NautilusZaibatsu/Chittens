@@ -5,28 +5,26 @@ const groundFriction = 0.9; // ground friction coefficient (0.9 means 10% speed 
 const airResistance = 0.999; // air resistance coefficient (0.999 means 0.001% speed loss per frame)
 const dragFactor = 1 - airResistance; // factor
 
-dummypointerPos = new DummyPointer();
-
-
-/**
-* function to describe the pointer, for calculating the speed.
-*/
-function DummyPointer() {
-  this.x = pointerPos.x;
-  this.y = pointerPos.y;
-  this.lastX = pointerPos.x;
-  this.lastY = pointerPos.y;
-  this.speedX = 0;
-  this.speedY = 0;
-  this.update = function () {
-    this.x = pointerPos.x;
-    this.y = pointerPos.y;
-    this.speedX = this.lastX - this.x;
-    this.speedY = this.lastY - this.y;
-    this.lastX = this.x;
-    this.lastY = this.y;
-  };
-}
+// dummypointerPos = new DummyPointer();
+// /**
+// * function to describe the pointer, for calculating the speed.
+// */
+// function DummyPointer() {
+//   this.x = pointerPos.x;
+//   this.y = pointerPos.y;
+//   this.lastX = pointerPos.x;
+//   this.lastY = pointerPos.y;
+//   this.speedX = 0;
+//   this.speedY = 0;
+//   this.update = function () {
+//     this.x = pointerPos.x;
+//     this.y = pointerPos.y;
+//     this.speedX = this.lastX - this.x;
+//     this.speedY = this.lastY - this.y;
+//     this.lastX = this.x;
+//     this.lastY = this.y;
+//   };
+// }
 
 /**
 * function to limit the speed of an object
@@ -139,9 +137,9 @@ function produceExplosion(ex, ey) {
         // if the guy is within range;
         let range = 200;
         if (Math.abs(diffx) < range && Math.abs(diffy) < range) {
-          chittens[i].love += 25;
-          chittens[i].energy -= 50;
-          chittens[i].health -= 10;
+          chittens[i].love += maxLove / 4;
+          chittens[i].energy -= maxEnergy / 2;
+          chittens[i].health -= maxHealth / 10;
           diffx /= 5;
           diffy /= 5;
           if (diffx >= 0) {
@@ -215,11 +213,21 @@ function detectCollision(thisobj, otherobj) {
   let dx = thisobj.x - otherobj.x;
   let dy = thisobj.y - otherobj.y;
   let distance = Math.sqrt(dx * dx + dy * dy);
-  let minDistance = (thisobj.size + otherobj.size) / 2;
+  let minDistance = (thisobj.size + otherobj.size);
   return distance < minDistance;
 }
 
-function detectCollisionPointerChitten(chitten) {
+function detectChittenCollision(thisobj, otherobj) {
+  let dx = thisobj.x - otherobj.x;
+  let dy = thisobj.y - otherobj.y;
+  let distance = Math.sqrt(dx * dx + dy * dy);
+  let minDistance = (((thisobj.size + thisobj.thicknessModL) + (otherobj.size + otherobj.thicknessModL)));
+  return distance < minDistance;
+}
+
+
+// more forgiving collision detection for trying to hover over or pick up chittens
+function detectCollisionPointerObject(chitten) {
   let dx = pointerPos.x - chitten.x;
   let dy = pointerPos.y - chitten.y;
   let distance = Math.sqrt(dx * dx + dy * dy);
@@ -227,13 +235,22 @@ function detectCollisionPointerChitten(chitten) {
   return distance < minDistance;
 }
 
-// more forgiving collision detection for kittens trying to touch their mothers
-function detectMotherCollision(thisobj, otherobj) {
-  let dx = thisobj.x - otherobj.x;
-  let dy = thisobj.y - otherobj.y;
-  let distance = Math.sqrt(dx * dx + dy * dy);
-  let minDistance = thisobj.size + otherobj.size;
-  return distance < minDistance;
+/**
+* Detect collision between an object and a tree
+* @param {object} obj - the object (chitten, fruit, etc.)
+* @param {Tree} tree - the tree
+* @param {number} objFootOffset - offset from obj center to feet (default 0)
+* @return {boolean} whether collision occurred
+*/
+function detectTreeCollision(obj, tree, objFootOffset = 0) {
+  // Match the old working inline collision code
+  if (obj.x >= tree.x + (obj.size / 2) - (tree.width / 2)
+    && obj.x <= tree.x - (obj.size / 2) + (tree.width / 2)
+    && obj.y >= tree.y - objFootOffset - (obj.size / 2) 
+    && obj.y <= tree.y + tree.height) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -278,8 +295,11 @@ function detectFruitCollision(chitten, fruit) {
 * function to collide two objects using physics
 * @param {object} obj1 - the first object
 * @param {object} obj2 - the second object
+* @param {boolean} affect1 - whether obj1 be affected by the physics
+* @param {boolean} affect2 - whether obj2 be affected by the physics
+* @param {boolean} chittens - whether this is a chitten to chitten collision
 */
-function collide(obj1, obj2) {
+function collide(obj1, obj2, affect1, affect2, chittens) {
   // calculate distance once and reuse
   let distX = obj1.x - obj2.x;
   let distY = obj1.y - obj2.y;
@@ -301,35 +321,42 @@ function collide(obj1, obj2) {
 
   let p = 2 * (obj1.speedX * nx + obj1.speedY * ny - obj2.speedX * nx - obj2.speedY * ny) / (mass1 + mass2);
 
+  let separation1 = 0
+  let separation2 = 0;
   // separate overlapping objects (still use size for collision detection)
-  let overlap = (obj1.size + obj2.size) / 2 - d;
+  let oS1 = obj1.size * 2;
+  let oS2 = obj2.size * 2;
+  if (chittens) {
+    oS1 += obj1.thicknessModL * 2;
+    oS2 += obj2.thicknessModL * 2;
+  }
+  let overlap = (oS1 + oS2) / 2 - d;
   if (overlap > 0) {
     // Separate based on mass ratio - heavier objects move less
     let totalMass = mass1 + mass2;
-    let separation1 = overlap * (mass2 / totalMass);
-    let separation2 = overlap * (mass1 / totalMass);
-
-    obj1.x += nx * separation1;
-    obj1.y += ny * separation1;
-    obj2.x -= nx * separation2;
-    obj2.y -= ny * separation2;
+    separation1 = overlap * (mass2 / totalMass);
+    separation2 = overlap * (mass1 / totalMass);
   }
 
   // update velocities using mass for more realistic physics
-  obj1.speedX -= p * mass1 * nx * elasticity;
-  obj1.speedY -= p * mass1 * ny * elasticity;
-  obj2.speedX += p * mass2 * nx * elasticity;
-  obj2.speedY += p * mass2 * ny * elasticity;
-
-  // calculate rotation (reuse calculated angle components)
-  if (!obj1.onSurface) {
-    obj1.spin += Math.atan2(ny, nx) / 40;
+  if (affect1) {
+    obj1.x += nx * separation1;
+    obj1.y += ny * separation1;
+    obj1.speedX -= p * mass2 * nx * elasticity;
+    obj1.speedY -= p * mass2 * ny * elasticity;
+    if (!obj1.onSurface) {
+      obj1.spin += Math.atan2(ny, nx) / 500;
+    }
   }
-  if (!obj2.onSurface) {
-    obj2.spin -= Math.atan2(ny, nx) / 40;
+  if (affect2) {
+    obj2.x -= nx * separation2;
+    obj2.y -= ny * separation2;
+    obj2.speedX += p * mass1 * nx * elasticity;
+    obj2.speedY += p * mass1 * ny * elasticity;
+    if (!obj2.onSurface) {
+      obj2.spin -= Math.atan2(ny, nx) / 500;
+    }
   }
-  applySpeedLimit(obj1);
-  applySpeedLimit(obj2);
 }
 
 // Estimate extra height gained above the launch point until apex (speedY ~ 0)

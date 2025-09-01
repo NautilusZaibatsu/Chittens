@@ -94,11 +94,11 @@ const BREED_DATA = {
         { first: '#e0e0c3', second: '#bda962', third: '#bda962', patternColour: '#2c2713' }, // brown
         { first: '#86603e', second: '#754d2b', third: '#754d2b', patternColour: '#312208' }, // chocolate
         { first: '#bb894d', second: '#b07631', third: '#b07631', patternColour: '#503412' }, // cinnamon
-        { first: '#ecca8f', second: '#f8ac25', third: '#f8ac25', patternColour: ['#e3811e', '#47290a']}, // red
+        { first: '#ecca8f', second: '#f8ac25', third: '#f8ac25', patternColour: ['#e3811e', '#47290a'] }, // red
         { first: '#c2c2c7', second: ['#a6a6b0', '#ccd1d7'], third: ['#a6a6b0', '#ccd1d7'], patternColour: ['#3e3e4a', '#5d5c6c', '#161616'] }, // blue/lilac
         { first: '#ffffee', second: '#f0f2e4', third: '#f0f2e4', patternColour: '#e9d9ac' }, // cream
         { first: '#e4d6be', second: '#e0d7d0', third: '#e0d7d0', patternColour: ['#71695b', '#706768', '#242323'] }, // fawn
-        { first: ['#d5cebe', '#f2ebdb'], second: ['#c5beae', '#e2dbcb'],  third: '#f8ac25', patternColour: ['#554d41', '#544f4c', '#181717'] }, // caramel
+        { first: ['#d5cebe', '#f2ebdb'], second: ['#c5beae', '#e2dbcb'], third: '#f8ac25', patternColour: ['#554d41', '#544f4c', '#181717'] }, // caramel
         { first: '#f9f0e2', second: '#f9f0e2', third: '#f9f0e2', patternColour: '#eccb9c' }, // light amber
         { first: ['#525258', '#36363a'], second: '#29292b', third: '#29292b', patternColour: '#222222' } // black
       ]
@@ -171,7 +171,7 @@ const BREED_DATA = {
     coatMod: ['random', 0.25, 'random', 1],
     nameLibrary: 13,
     desaturate: 0.5, // 50% chance to desaturate
-    colourpointGene: true
+    breedStandardGenes: ['colourpoint']
   },
 
   'Lykoi': {
@@ -180,10 +180,16 @@ const BREED_DATA = {
     maxSize: 14,
     size: [13.5, 18],
     colors: {
-      first: ['#1a120f', '#4f4e4d'],
-      second: ['#000000', '#343434'],
-      third: '#999999',
-      eye: ['#876d4f', '#f9c96c', '#f9c96c']
+      variants: [
+        { first: '#342f2c', second: '#342f2c', third: '#342f2c', patternColour: '#342f2c' }, // brown
+        { first: '#c5c3c1', second: '#c5c3c1', third: '#c5c3c1', patternColour: '#c5c3c1' }, // light grey
+        { first: '#8e999e', second: '#8e999e', third: '#8e999e', patternColour: '#8e999e' }, // grey
+        { first: '#41454d', second: '#41454d', third: '#41454d', patternColour: '#41454d' }, // dark grey
+        { first: '#343434', second: '#343434', third: '#343434', patternColour: '#343434' }, // grey brown
+        { first: '#222222', second: '#222222', third: '#222222', patternColour: '#222222' }, // black
+
+      ],
+      eye: ['#6c6b53', '#c5c473', '#e6c337', '#a38d33'],
     },
     traits: {
       thickness: 0.5,
@@ -203,9 +209,8 @@ const BREED_DATA = {
     bodypartCodeVariants: [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0]
     ],
-    patternAlpha: 1.0,
     nameLibrary: 1,
-    lykoiGene: true
+    breedStandardGenes: ['baldFaced', 'sparseCoat']
   },
 
   'Burmese': {
@@ -251,7 +256,7 @@ const BREED_DATA = {
     coatMod: [[0, 0.6], 0.25, 'random', 1],
     nameLibrary: 13,
     desaturate: 0.5,
-    colourpointGene: true
+    breedStandardGenes: ['colourpoint']
   },
 
   'Persian': {
@@ -289,7 +294,8 @@ const BREED_DATA = {
     ],
     patternAlpha: 0,
     coatMod: ['random*0.6', 0.29, 'random', 'random*0.3'],
-    nameLibrary: 2
+    nameLibrary: 2,
+    breedStandardGenes: ['brachycephalic']
   },
 
   'Black and white shorthair': {
@@ -326,6 +332,8 @@ const BREED_DATA = {
     pattern: 0, // Can be various patterns, not just tabby
     maxSize: 13,
     size: [10.5, 17.5], // Medium-sized breed
+    customHeadHeight: 'proportional', // Special head height calculation
+    customHeadRatio: 1.4,
     colors: {
       variants: [
         { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Brown tabby - gets tabby pattern
@@ -362,7 +370,9 @@ const BREED_DATA = {
     description: "Tailless cats from Isle of Man with powerful hind legs and round bodies. Moderate coordination affected by spine mutation but excellent jumpers.",
     pattern: 0, // Various coat patterns
     maxSize: 12,
-    size: [10.5, 9], // Medium-sized, stocky breed  
+    size: [10.5, 9], // Medium-sized, stocky breed
+    customHeadHeight: 'proportional', // Special head height calculation
+    customHeadRatio: 50 / 35, // headHeight = headWidth / 50 * 35
     colors: {
       variants: [
         { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Brown tabby
@@ -515,7 +525,7 @@ const BREED_DATA = {
     ],
     coatMod: [0.3, 0.2, 'random'],
     nameLibrary: 5, // Egyptian
-    hairlessGene: true // All true Sphynx cats have the hairless gene
+    breedStandardGenes: ['hairless'] // All true Sphynx cats have the hairless gene
   },
 
   'Abyssinian': {
@@ -597,7 +607,7 @@ const BREED_DATA = {
     patternAlpha: [0.6, 0.9],
     coatMod: [0.5, 0.8, 'random'],
     nameLibrary: 'random', // No specific cultural origin
-    colourpointGene: true
+    breedStandardGenes: ['colourpoint']
   },
 
   'Angora': {
@@ -669,9 +679,10 @@ const BREED_DATA = {
       eyeSize: [0.7, 0.9], // Large, round eyes
       fangs: [0.2, 0.4], // Gentle expression
       tailLength: [0.6, 0.8], // Medium tail, thick
-      nosePos: 0.4, // Short nose
       mawSize: 0.3,
-      coordination: 0.5
+      coordination: 0.5,
+      breedStandardGenes: ['brachycephalic']
+
     },
     bodypartCodeVariants: [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Solid British Shorthair
@@ -871,20 +882,21 @@ function applyBreed(who, breedName) {
   }
   // Set breed name
   who.breed = breedName;
-  // Apply hairless gene if specified by breed
-  if (breed.hairlessGene) {
-    who.hairlessGene = true;
-    who.hairless = true; // Hairless breeds always express the trait
+  // Clear all previous genes first (for breed switching in editor)
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    who[geneData.geneProp] = false;
+    who[geneData.expressedProp] = false;
   }
-  // Apply lykoi gene if specified by breed
-  if (breed.lykoiGene) {
-    who.lykoiGene = true;
-    who.lykoi = true; // Lykoi breeds always express the trait
-  }
-  // Apply colorpoint gene if specified by breed
-  if (breed.colourpointGene) {
-    who.colourpointGene = true;
-    who.colourpointExpressed = true; // Colorpoint breeds always express the trait
+
+  // Apply breed standard genes and their expressions (purebreds should always express their standard traits)
+  if (breed.breedStandardGenes) {
+    for (const geneKey of breed.breedStandardGenes) {
+      const geneData = GENE_DATA[geneKey];
+      if (geneData) {
+        who[geneData.geneProp] = true;
+        who[geneData.expressedProp] = true; // Breed standard genes should always be expressed
+      }
+    }
   }
   // Force pattern colour if specified by breed (e.g., tortoiseshells always have black patterns)
   if (breed.forcePatternColour) {
@@ -903,53 +915,15 @@ function applyBreed(who, breedName) {
       who.heterochromicGene = true;
     }
   }
+
+  // Apply custom breed traits
+  if (breed.customHeadHeight === 'proportional' && breed.customHeadRatio) {
+    who.headHeight = who.headWidth / breed.customHeadRatio;
+  }
 }
 
-// Legacy function wrappers for backward compatibility
-function breedBengal(who) { applyBreed(who, 'Bengal'); }
-function breedEgyptianMau(who) { applyBreed(who, 'Egyptian Mau'); }
-function breedTabby(who) { applyBreed(who, 'Tabby'); }
-function breedSiamese(who) { applyBreed(who, 'Siamese'); }
-function breedLykoi(who) { applyBreed(who, 'Lykoi'); }
-
-function breedTwoTone(who) {
-  applyBreed(who, 'Black and white shorthair');
-}
-
-function breedScottishFold(who) {
-  applyBreed(who, 'Scottish Fold');
-  // Special proportional head height
-  who.headHeight = who.headWidth / 1.4;
-}
-
-function breedManx(who) {
-  applyBreed(who, 'Manx');
-  // Special proportional head height
-  who.headHeight = who.headWidth / 50 * 35;
-}
-
-function breedPersian(who) { applyBreed(who, 'Persian'); }
-
-function breedRussianBlue(who) { applyBreed(who, 'Russian Blue'); }
-
-function breedCalico(who) { applyBreed(who, 'Calico'); }
-
-function breedTortoiseShell(who) { applyBreed(who, 'Tortoiseshell'); }
-
-function breedBurmese(who) { applyBreed(who, 'Burmese'); }
-
-function breedAbyssinian(who) { applyBreed(who, 'Abyssinian'); }
-
-function breedRagdoll(who) { applyBreed(who, 'Ragdoll'); }
-
-function breedAngora(who) { applyBreed(who, 'Angora'); }
-
-function breedBritishShorthair(who) { applyBreed(who, 'British Shorthair'); }
-
-function breedManxTortoiseshell(who) {
-  // Apply base Manx characteristics
-  applyBreed(who, 'Manx');
-  // Override with tortoiseshell pattern and colors
+// Apply tortoiseshell pattern and colors
+function applyTortoiseshellPattern(who) {
   who.pattern = 1; // Tortoiseshell pattern
   who.patternAlpha = randomBetween(0.5, 1);
   // Use tortoiseshell color scheme
@@ -965,157 +939,60 @@ function breedManxTortoiseshell(who) {
   who.thirdColour = mixRandomCoatColor(variant.third);
 }
 
-function breedBritishShorthairTortoiseshell(who) {
-  // Apply base British Shorthair characteristics
-  applyBreed(who, 'British Shorthair');
-  // Override with tortoiseshell pattern and colors
-  who.pattern = 1; // Tortoiseshell pattern
-  who.patternAlpha = randomBetween(0.5, 1);
-  // Use tortoiseshell color scheme
-  const tortVariants = [
-    { first: trueWhite, second: '#e8831e', third: '#000000' },       // W-O-B
-    { first: '#e8831e', second: trueWhite, third: '#222222' },       // O-W-G
-    { first: trueWhite, second: '#c89c7a', third: '#000000' },       // W-LO-B
-    { first: '#c89c7a', second: trueWhite, third: '#222222' }        // LO-W-G
-  ];
-  const variant = tortVariants[Math.floor(Math.random() * tortVariants.length)];
-  who.firstColour = mixRandomCoatColor(variant.first);
-  who.secondColour = mixRandomCoatColor(variant.second);
-  who.thirdColour = mixRandomCoatColor(variant.third);
-}
-
-// Special breed functions that need custom logic
-
-function breedSphynx(who) {
-  applyBreed(who, 'Sphynx');
-  // Sphynx breed automatically gets hairless gene via BREED_DATA
-}
-
-// Breed spawn configuration - easily extensible
-const BREED_SPAWN_CONFIG = {
-  // Regular breeds (any gender)
-  regularBreeds: [
-    {
-      name: 'Siamese',
-      func: breedSiamese
-    },
-    {
-      name: 'Burmese',
-      func: breedBurmese
-    },
-    {
-      name: 'Russian Blue',
-      func: breedRussianBlue
-    },
-    {
-      name: 'Persian',
-      func: breedPersian
-    },
-    {
-      name: 'Manx',
-      func: breedManx,
-      femaleVariants: [
-        { name: 'Manx Tortoiseshell', func: breedManxTortoiseshell, chance: 0.15 }
-      ]
-    },
-    {
-      name: 'Tabby',
-      func: breedTabby
-    },
-    {
-      name: 'Scottish Fold',
-      func: breedScottishFold
-    },
-    {
-      name: 'Lykoi',
-      func: breedLykoi
-    },
-    {
-      name: 'Sphynx',
-      func: breedSphynx
-    },
-    {
-      name: 'Bengal',
-      func: breedBengal
-    },
-    {
-      name: 'Egyptian Mau',
-      func: breedEgyptianMau
-    },
-    {
-      name: 'Black and white shorthair',
-      func: breedTwoTone
-    },
-    {
-      name: 'Abyssinian',
-      func: breedAbyssinian
-    },
-    {
-      name: 'Ragdoll',
-      func: breedRagdoll
-    },
-    {
-      name: 'Angora',
-      func: breedAngora
-    },
-    {
-      name: 'British Shorthair',
-      func: breedBritishShorthair,
-      femaleVariants: [
-        { name: 'British Shorthair Tortoiseshell', func: breedBritishShorthairTortoiseshell, chance: 0.15 }
-      ]
-    }
-  ],
-
-  // Female-only breeds with rare male occurrence (discrete breeds, not variants)
-  femaleOnlyBreeds: [
-    { name: 'Calico', func: breedCalico, maleChance: 1 / 3000 },
-    { name: 'Tortoiseshell', func: breedTortoiseShell, maleChance: 1 / 3000 }
-  ],
-
-  // What percentage of cats should get female-only breeds (when female)
-  femaleOnlyChance: 0.15 // 15% of females get Calico/Tortoiseshell
+// Female-only tortoiseshell variants configuration
+const FEMALE_TORTOISESHELL_VARIANTS = {
+  'Manx': { chance: 0.15, name: 'Manx Tortoiseshell' },
+  'British Shorthair': { chance: 0.15, name: 'British Shorthair Tortoiseshell' }
 };
 
+
 applyBreedTemplate = function (who) {
-  const config = BREED_SPAWN_CONFIG;
+  // Get all available breed names from BREED_DATA
+  const regularBreeds = Object.keys(BREED_DATA).filter(breedName => {
+    const breed = BREED_DATA[breedName];
+    return !breed.genderRestriction; // Exclude gender-restricted breeds from random selection
+  });
+
+  const femaleOnlyBreeds = ['Calico', 'Tortoiseshell'];
+  const femaleOnlyChance = 0.15; // 15% of females get Calico/Tortoiseshell
+  const maleChance = 1 / 3000; // Very rare for males
+
   // First, check if this should be a female-only breed
   if (who.gender !== 'Male') {
     // For females/non-binary: chance of getting female-only breed
-    if (Math.random() < config.femaleOnlyChance) {
-      const femaleBreed = config.femaleOnlyBreeds[Math.floor(Math.random() * config.femaleOnlyBreeds.length)];
-      femaleBreed.func(who);
+    if (Math.random() < femaleOnlyChance) {
+      const femaleBreed = femaleOnlyBreeds[Math.floor(Math.random() * femaleOnlyBreeds.length)];
+      applyBreed(who, femaleBreed);
       return;
     }
   } else {
     // For males: very rare chance of female-only breeds
-    for (const femaleBreed of config.femaleOnlyBreeds) {
-      if (Math.random() < femaleBreed.maleChance) {
-        femaleBreed.func(who);
+    for (const femaleBreed of femaleOnlyBreeds) {
+      if (Math.random() < maleChance) {
+        applyBreed(who, femaleBreed);
         return;
       }
     }
   }
+
   // Otherwise, pick from regular breeds with equal distribution
-  const regularBreed = config.regularBreeds[Math.floor(Math.random() * config.regularBreeds.length)];
+  const breedName = regularBreeds[Math.floor(Math.random() * regularBreeds.length)];
+  applyBreed(who, breedName);
 
-  // Check if this breed has female variants and if this cat is female
-  if (who.gender !== 'Male' && regularBreed.femaleVariants) {
-    for (const variant of regularBreed.femaleVariants) {
-      if (Math.random() < variant.chance) {
-        variant.func(who);
-        return;
-      }
+  // Check if this breed has female tortoiseshell variants and if this cat is female
+  if (who.gender !== 'Male' && FEMALE_TORTOISESHELL_VARIANTS[breedName]) {
+    const variant = FEMALE_TORTOISESHELL_VARIANTS[breedName];
+    if (Math.random() < variant.chance) {
+      applyTortoiseshellPattern(who);
+      who.breed = variant.name;
     }
   }
-
-  // Apply the base breed
-  regularBreed.func(who);
 };
 
 // Apply specific breed template for adoption center filtering
 applySpecificBreedTemplate = function (who, breedName) {
-  const config = BREED_SPAWN_CONFIG;
+  const femaleOnlyBreeds = ['Calico', 'Tortoiseshell'];
+  const maleChance = 1 / 3000; // Very rare for males
 
   // Handle 'All' filter - use normal random selection
   if (breedName === 'All') {
@@ -1124,11 +1001,10 @@ applySpecificBreedTemplate = function (who, breedName) {
   }
 
   // Check if it's a female-only breed
-  const femaleOnlyBreed = config.femaleOnlyBreeds.find(breed => breed.name === breedName);
-  if (femaleOnlyBreed) {
+  if (femaleOnlyBreeds.includes(breedName)) {
     // Only apply if gender allows it (respecting male chance)
-    if (who.gender !== 'Male' || Math.random() < femaleOnlyBreed.maleChance) {
-      femaleOnlyBreed.func(who);
+    if (who.gender !== 'Male' || Math.random() < maleChance) {
+      applyBreed(who, breedName);
       return;
     } else {
       // Fall back to random regular breed for males when they can't get female-only breed
@@ -1137,21 +1013,18 @@ applySpecificBreedTemplate = function (who, breedName) {
     }
   }
 
-  // Check regular breeds
-  const regularBreed = config.regularBreeds.find(breed => breed.name === breedName);
-  if (regularBreed) {
-    // Check if this breed has female variants and if this cat is female
-    if (who.gender !== 'Male' && regularBreed.femaleVariants) {
-      for (const variant of regularBreed.femaleVariants) {
-        if (Math.random() < variant.chance) {
-          variant.func(who);
-          return;
-        }
+  // Check if it exists in BREED_DATA
+  if (BREED_DATA[breedName]) {
+    applyBreed(who, breedName);
+
+    // Check if this breed has female tortoiseshell variants and if this cat is female
+    if (who.gender !== 'Male' && FEMALE_TORTOISESHELL_VARIANTS[breedName]) {
+      const variant = FEMALE_TORTOISESHELL_VARIANTS[breedName];
+      if (Math.random() < variant.chance) {
+        applyTortoiseshellPattern(who);
+        who.breed = variant.name;
       }
     }
-
-    // Apply the base breed
-    regularBreed.func(who);
     return;
   }
 
@@ -1159,22 +1032,54 @@ applySpecificBreedTemplate = function (who, breedName) {
   applyBreedTemplate(who);
 };
 
-// Get available breeds based on gender from BREED_SPAWN_CONFIG
+// Check if a chitten meets breed standard requirements
+function meetsBreedStandard(chitten) {
+  // First check if it's a purebred
+  if (getBreedDepth(chitten.breed) !== 0) {
+    return false; // Not purebred, fails breed standard
+  }
+
+  // Get the breed data
+  const breed = BREED_DATA[chitten.breed];
+  if (!breed) {
+    return false; // Invalid breed
+  }
+
+  const allowedGenes = breed.breedStandardGenes || [];
+
+  // Check if chitten has all required breed standard gene expressions
+  for (const geneKey of allowedGenes) {
+    const geneData = GENE_DATA[geneKey];
+    if (geneData && !chitten[geneData.expressedProp]) {
+      return false; // Missing a required breed standard expression
+    }
+  }
+
+  // Check if chitten has any unwanted gene expressions not in breed standard
+  for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
+    if (chitten[geneData.expressedProp] && !allowedGenes.includes(geneKey)) {
+      return false; // Has unwanted gene expression not in breed standard
+    }
+  }
+
+  return true; // Has all required expressions and no unwanted expressions
+}
+
+// Get available breeds based on gender from BREED_DATA
 function getAvailableBreeds(gender) {
   let breeds = ['All', mixedBreed]; // Always include 'All' and mixedBreed at the top
-  // Collect all breed names
-  let breedNames = [];
-  // Add regular breeds (available to all genders)
-  BREED_SPAWN_CONFIG.regularBreeds.forEach(breed => {
-    breedNames.push(breed.name);
-  });
 
-  // Add female-only breeds only for female adoption center
-  if (gender === 'Female') {
-    BREED_SPAWN_CONFIG.femaleOnlyBreeds.forEach(breed => {
-      breedNames.push(breed.name);
+  // Get all breed names from BREED_DATA
+  let breedNames = Object.keys(BREED_DATA);
+
+  // Filter out female-only breeds if gender is not Female
+  if (gender !== 'Female') {
+    breedNames = breedNames.filter(breedName => {
+      const breed = BREED_DATA[breedName];
+      return breed.genderRestriction !== 'female';
     });
   }
+
   // Sort breed names alphabetically
   breedNames.sort();
   // Add sorted breeds to the list
