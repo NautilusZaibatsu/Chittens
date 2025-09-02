@@ -26,10 +26,10 @@ SPECIAL PATTERNS
 sparseCoat for sparseCoat gene
 
 COATMOD
-[0] = y midpoint position for gradients
-[1] = angle of the gradient
+[0] = smoothness of gradiaent (y midpoint position of gradient)
+[1] = rotation of the gradient
 [2] = rotation of the pattern
-[3] = the strength of the gradients (0, none, 1 max)
+[3] = coat gradient amount (0 = none, 1 = max)
 
 MUTATIONS
 albino
@@ -37,8 +37,9 @@ hairless
 baldFaced
 sparseCoat
 colourpoint
-brachycephalic
+brachycephalic - inheritable but not implemented
 heterochromic
+dwarfism
 
 ADDING MUTATIONS
 - add to chittens class

@@ -6,22 +6,23 @@ const BREED_DATA = {
   'Bengal': {
     description: "Athletic wildcats with leopard-like spotted coats. Highly coordinated hunters with muscular builds and excellent jumping ability. Known for their wild ancestry and love of climbing.",
     pattern: 6,
-    size: [16, 19],
+    minSize: 16,
+    maxSize: 19,
     colors: {
       variants: [
-        { first: '#deb99c', second: '#c39471', third: '#361f19', patternColour: '#170f06', eye: '#ae8b33' }, // brown
+        { first: '#eec9ac', second: '#c39471', third: '#361f19', patternColour: '#170f06', eye: '#ae8b33' }, // brown
         { first: '#e8dfd4', second: '#f6d8c3', third: '#b38165', patternColour: '#b39e94', eye: '#7ba2ba' }, // snow lynx
         { first: '#dbd2cb', second: '#c3beb8', third: '#c3beb8', patternColour: '#b7835b', eye: '#639bad' }, // snow mink
         { first: '#d8c8c2', second: '#9c8b84', third: '#9c8b84', patternColour: '#654f44', eye: '#b8863a' }, // snow sepia
         { first: '#d4cbca', second: '#bdbbb8', third: '#bdbbb8', patternColour: '#0f1006', eye: '#95b896' }, // silver
-        { first: '#99958b', second: '#99958b', third: '#3a322b', patternColour: '#2c1716', eye: '#ad773b' }, // charcoal
+        { first: '#cacaca', second: '#99958b', third: '#3a322b', patternColour: '#2c1716', eye: '#ad773b' }, // charcoal
         { first: '#cfced9', second: '#948c9d', third: '#948c9d', patternColour: '#322e32', eye: '#c9d9a6' }, // blue
-        { first: '#331d12', second: '#261919', third: '#261919', patternColour: '#4e3b36', eye: '#a87638' }  // black
+        { first: '#4c3a35', second: '#1b1413', third: '#1b1413', patternColour: '#271c19', eye: '#a87638' }  // black
       ]
     },
     traits: {
       thickness: 0.7,
-      tailLength: 1,
+      tailLength: [0.5, 0.8],
       fangs: 0.85,
       eyePosY: 0.8,
       eyePosX: 1,
@@ -40,14 +41,15 @@ const BREED_DATA = {
     ],
     // coats
     patternAlpha: [0.1, 0.8],
-    coatMod: [0.76, 0.25, 'random'],
+    coatMod: [[0.5, 1], 0.75, 'random', [0.3, 0.6]],
     nameLibrary: 8
   },
 
   'Egyptian Mau': {
     description: "Ancient Egyptian breed and fastest domestic cat, reaching 30mph. Exceptionally coordinated with natural spotted coats and distinctive 'M' forehead marking.",
     pattern: 6,
-    size: [8, 15],
+    minSize: 8,
+    maxSize: 15,
     colors: {
       variants: [
         { first: '#f1f1f1', second: '#bfb9bb', third: '#bfb9bb', patternColour: '#645e60' }, // silver
@@ -61,7 +63,7 @@ const BREED_DATA = {
     },
     traits: {
       thickness: 0.6,
-      tailLength: 1,
+      tailLength: [0.6, 0.9],
       fangs: 0.5,
       eyePosY: 0.65,
       eyePosX: 0.6,
@@ -81,21 +83,22 @@ const BREED_DATA = {
     ],
     // coats    
     patternAlpha: [0.5, 1.0],
-    coatMod: [0.25, 0.25, 'random', 1],
+    coatMod: [0.25, 0.75, 'random', 1],
     nameLibrary: 5
   },
 
   'Tabby': {
     description: "Common striped cats with varied coordination and mixed genetics. Classic 'M' forehead markings come in orange, brown, and silver varieties with diverse personalities.",
     pattern: 3,
-    size: [chittenMinSize, chittenMaxSize],
+    minSize: chittenMinSize,
+    maxSize: chittenMaxSize,
     colors: {
       variants: [
         { first: '#e0e0c3', second: '#bda962', third: '#bda962', patternColour: '#2c2713' }, // brown
         { first: '#86603e', second: '#754d2b', third: '#754d2b', patternColour: '#312208' }, // chocolate
         { first: '#bb894d', second: '#b07631', third: '#b07631', patternColour: '#503412' }, // cinnamon
         { first: '#ecca8f', second: '#f8ac25', third: '#f8ac25', patternColour: ['#e3811e', '#47290a'] }, // red
-        { first: '#c2c2c7', second: ['#a6a6b0', '#ccd1d7'], third: ['#a6a6b0', '#ccd1d7'], patternColour: ['#3e3e4a', '#5d5c6c', '#161616'] }, // blue/lilac
+        { first: '#ccd1d7', second: ['#a6a6b0', '#c2c2c7'], third: ['#a6a6b0', '#ccd1d7'], patternColour: ['#3e3e4a', '#5d5c6c', '#161616'] }, // blue/lilac
         { first: '#ffffee', second: '#f0f2e4', third: '#f0f2e4', patternColour: '#e9d9ac' }, // cream
         { first: '#e4d6be', second: '#e0d7d0', third: '#e0d7d0', patternColour: ['#71695b', '#706768', '#242323'] }, // fawn
         { first: ['#d5cebe', '#f2ebdb'], second: ['#c5beae', '#e2dbcb'], third: '#f8ac25', patternColour: ['#554d41', '#544f4c', '#181717'] }, // caramel
@@ -114,36 +117,35 @@ const BREED_DATA = {
     },
     bodypartCodeVariants: [
       [0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1], // white foot and chin tabby with light chest
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] // Classic tabby - mostly first color with pattern overlay
-      // [0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 0], // High contrast tabby - feet, ears, tail darker, head/chin/chest lighter  
-      // [2, 2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0], // Inverse tabby - face, ears, body, tail, jowls, chest darker
-      // [1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1]  // Bengal-style tabby - feet, jowls, chin, chest use third color
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Classic tabby - mostly first color with pattern overlay
+      [1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0] // Inverse tabby - face, ears, body, tail, jowls, chest darker
     ],
     // coats
     patternAlpha: [0.8, 1],
-    coatMod: ['random', 0.25, 'random', 1],
+    coatMod: ['random', 0.75, 'random', 1],
     nameLibrary: 'random'
   },
 
   'Siamese': {
     description: "Elegant colorpoint cats with brilliant blue eyes. Highly coordinated and athletic with distinctive temperature-sensitive coat coloring. Vocal and intelligent.",
     pattern: 0,
-    maxSize: 12,
-    size: [10.5, 17.5], // Medium-sized, elegant breed 
+    minSize: 10.5, // Medium-sized, elegant breed 
+    maxSize: 17.6,
     colors: {
       variants: [
-        { first: '#e4c5a8', second: '#e4c5a8', third: '#4d312d', patternColour: '#4d312d' }, // classic
-        { first: '#a5938f', second: '#a5938f', third: '#7b6761', patternColour: '#7b6761' }, // traditional
-        { first: '#e8e3dd', second: '#e8e3dd', third: '#a49381', patternColour: '#a49381' }, // modern
-        { first: '#f0e3db', second: '#f0e3db', third: '#d6ad94', patternColour: '#d6ad94' }, // colourpoint
-        { first: '#e5ded8', second: '#e5ded8', third: '#cac6c2', patternColour: '#cac6c2' }, // balinese light
-        { first: '#b0a9a3', second: '#b0a9a3', third: '#383735', patternColour: '#383735' } // balinese dark
+        { first: '#e4c5a8', second: '#e4c5a8', third: '#3d211d', patternColour: '#3d211d' }, // classic
+        { first: '#a5938f', second: '#a5938f', third: '#6b5751', patternColour: '#6b5751' }, // traditional
+        { first: '#e8e3dd', second: '#e8e3dd', third: '#948371', patternColour: '#948371' }, // modern
+        { first: '#f0e3db', second: '#f0e3db', third: '#c69d84', patternColour: '#c69d84' }, // colourpoint
+        { first: '#e5ded8', second: '#e5ded8', third: '#bab6b2', patternColour: '#bab6b2' }, // balinese light
+        { first: '#b0a9a3', second: '#b0a9a3', third: '#282725', patternColour: '#282725' } // balinese dark
       ],
       eye: ['#99e7ff', '#008cb8']
     },
     traits: {
       headHeight: 0,
       headWidth: 0.2,
+      tailLength: [0.7, 0.9],
       thickness: 0.5,
       fangs: [0.3, 0.8],
       legginess: [0.6, 0.85],
@@ -157,8 +159,7 @@ const BREED_DATA = {
       coordination: 0.9
     },
     bodypartCodeVariants: [
-      [0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 0], // Moderate colorpoint - face, ears, body darker  
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]  // Face and tail focus colorpoint
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // standard
     ],
     colourpointMapVariants: [
       [false, true, true, true], // Classic Siamese - ears, feet, tail only
@@ -168,7 +169,7 @@ const BREED_DATA = {
     ],
     // coats
     patternAlpha: [0.5, 1.0],
-    coatMod: ['random', 0.25, 'random', 1],
+    coatMod: ['random', 0.75, 'random', 'random'],
     nameLibrary: 13,
     desaturate: 0.5, // 50% chance to desaturate
     breedStandardGenes: ['colourpoint']
@@ -177,8 +178,8 @@ const BREED_DATA = {
   'Lykoi': {
     description: "The 'Werewolf Cat' with sparse, wiry fur and bold personality. Poor coordination due to genetic mutations affecting their unique patchy coat and wild appearance.",
     pattern: 0,
-    maxSize: 14,
-    size: [13.5, 18],
+    minSize: 13.5,
+    maxSize: 18,
     colors: {
       variants: [
         { first: '#342f2c', second: '#342f2c', third: '#342f2c', patternColour: '#342f2c' }, // brown
@@ -216,8 +217,8 @@ const BREED_DATA = {
   'Burmese': {
     description: "Compact muscular cats with golden eyes and solid coats. Well-coordinated with strong builds, originally from Myanmar. Friendly and people-oriented.",
     pattern: 0,
-    maxSize: 12,
-    size: [10.5, 17.5], // Compact, medium-sized breed
+    minSize: 10.5,
+    maxSize: 17.5, // Compact, medium-sized breed
     colors: {
       variants: [
         { first: '#8a5223', second: '#8a5223', third: '#220f04', patternColour: '#220f04' }, // sable
@@ -230,6 +231,7 @@ const BREED_DATA = {
     traits: {
       headHeight: 0,
       headWidth: 0.4,
+      tailLength: [0.7, 0.9],
       thickness: [0.5, 0.7],
       fangs: [0, 0.5],
       legginess: [0.8, 1.0],
@@ -253,7 +255,7 @@ const BREED_DATA = {
     ],
     // coats
     patternAlpha: [0.3, 1.0],
-    coatMod: [[0, 0.6], 0.25, 'random', 1],
+    coatMod: [[0, 0.6], 0.75, 'random', 1],
     nameLibrary: 13,
     desaturate: 0.5,
     breedStandardGenes: ['colourpoint']
@@ -262,8 +264,8 @@ const BREED_DATA = {
   'Persian': {
     description: "Luxurious long-haired cats with flat faces and gentle temperaments. Poor coordination due to their brachycephalic features but beloved for their calm nature.",
     pattern: 0,
-    maxSize: 13,
-    size: [10.5, 18.5], // Medium-large, fluffy breed
+    minSize: 10.5, // Medium-large, fluffy breed
+    maxSize: 18.5,
     colors: {
       variants: [
         { first: '#efefef', second: '#efefef', third: '#efefef' }, // white
@@ -301,15 +303,12 @@ const BREED_DATA = {
   'Black and white shorthair': {
     description: "Classic tuxedo cats with varied coordination from mixed genetics. Hardy and adaptable with distinctive black and white patterns. Common house cats.",
     pattern: 0,
-    size: [8, chittenMaxSize],
+    minSize: 8,
+    maxSize: chittenMaxSize,
     colors: {
       variants: [
-        { first: '#000000', second: trueWhite, third: '#000000' }, // B-W-B
-        { first: '#000000', second: trueWhite, third: trueWhite }, // B-W-W  
-        { first: trueWhite, second: '#000000', third: '#000000' }, // W-B-B
-        { first: trueWhite, second: '#000000', third: trueWhite }, // W-B-W
-        { first: '#000000', second: '#000000', third: trueWhite }, // B-B-W
-        { first: trueWhite, second: trueWhite, third: '#000000' }  // W-W-B
+        { first: '#ffffff', second: '#000000', third: '#000000' }, // W-B-B
+        { first: '#ffffff', second: '#ffffff', third: '#000000' }  // W-W-B
       ]
     },
     traits: {
@@ -323,26 +322,26 @@ const BREED_DATA = {
     bodypartCodeVariants: [
       'random' // Special case for random body parts
     ],
-    coatMod: [0, 0.25, 'random'],
+    coatMod: [0, 0.75, 'random'],
     nameLibrary: 'random'
   },
 
   'Scottish Fold': {
     description: "Round-faced cats with unique folded ears and sweet expressions. Moderate coordination despite ear cartilage mutation. Originally from Scottish barn cat.",
     pattern: 0, // Can be various patterns, not just tabby
-    maxSize: 13,
-    size: [10.5, 17.5], // Medium-sized breed
+    minSize: 10.5, // Medium-sized breed 
+    maxSize: 17.5,
     customHeadHeight: 'proportional', // Special head height calculation
     customHeadRatio: 1.4,
     colors: {
       variants: [
-        { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Brown tabby - gets tabby pattern
-        { first: '#C0C0C0', second: '#333339', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Silver tabby - gets tabby pattern
-        { first: '#D2B48C', second: '#FFA500', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Orange tabby - gets tabby pattern
-        { first: '#696969', second: '#C0C0C0', third: trueWhite }, // Blue - solid
-        { first: '#16100c', second: '#16100c', third: trueWhite }, // Black and white - solid 
+        { first: '#ffffff', second: '#D2B48C', third: '#8B4513', pattern: 3, patternColour: '#3b1e09' }, // Brown tabby - gets tabby pattern
+        { first: '#ffffff', second: '#C0C0C0', third: '#555555', pattern: 3, patternColour: '#333339' }, // Silver tabby - gets tabby pattern
+        { first: '#ffffff', second: '#D2B48C', third: '#FFA500', pattern: 3, patternColour: '#915a12' }, // Orange tabby - gets tabby pattern
+        { first: '#ffffff', second: '#C0C0C0', third: '#696969' }, // Blue - solid
+        { first: '#ffffff', second: '#16100c', third: '#16100c' }, // Black and white - solid 
         { first: '#16100c', second: '#16100c', third: '#16100c' }, // Solid black
-        { first: trueWhite, second: trueWhite, third: trueWhite }  // Solid white
+        { first: '#ffffff', second: '#ffffff', third: '#ffffff' }  // Solid white
       ],
       eye: ['#c4e256', '#549e54', '#4169E1'] // Gold, green, blue
     },
@@ -369,17 +368,17 @@ const BREED_DATA = {
   'Manx': {
     description: "Tailless cats from Isle of Man with powerful hind legs and round bodies. Moderate coordination affected by spine mutation but excellent jumpers.",
     pattern: 0, // Various coat patterns
+    minSize: 10.5, // Medium-sized, stocky breed
     maxSize: 12,
-    size: [10.5, 9], // Medium-sized, stocky breed
     customHeadHeight: 'proportional', // Special head height calculation
     customHeadRatio: 50 / 35, // headHeight = headWidth / 50 * 35
     colors: {
       variants: [
-        { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Brown tabby
-        { first: '#C0C0C0', second: '#16100c', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Silver tabby
-        { first: trueWhite, second: '#FFA500', third: '#FFE4B5', pattern: 3, patternColour: '#000000' }, // Orange tabby
-        { first: '#16100c', second: trueWhite, third: trueWhite }, // Black and white
-        { first: '#696969', second: '#C0C0C0', third: trueWhite }, // Blue/gray
+        { first: '#ffffff', second: '#D2B48C', third: '#8B4513', pattern: 3, patternColour: '#3b1e09' }, // Brown tabby
+        { first: '#ffffff', second: '#C0C0C0', third: '#16100c', pattern: 3, patternColour: '#333339' }, // Silver tabby
+        { first: '#ffffff', second: '#FFE4B5', third: '#FFA500', pattern: 3, patternColour: '#915a12' }, // Orange tabby
+        { first: '#ffffff', second: '#16100c', third: '#16100c' }, // Black and white
+        { first: '#ffffff', second: '#C0C0C0', third: '#696969' }, // Blue/gray
         { first: '#16100c', second: '#16100c', third: '#16100c' } // Solid black
       ],
       eye: ['#c4e256', '#549e54', '#4169E1'] // Gold, green, blue
@@ -404,8 +403,8 @@ const BREED_DATA = {
   'Russian Blue': {
     description: "Elegant silver-blue cats with vivid green eyes and plush double coats. Highly coordinated and athletic with shy but affectionate personalities.",
     pattern: 0, // Solid color only
-    maxSize: 11,
-    size: [10.5, 16], // Medium-sized, elegant breed
+    minSize: 10.5, // Medium-sized, elegant breed
+    maxSize: 16,
     colors: {
       variants: [
         { first: '#9a9aa3', second: '#9a9aa3', third: '#9a9aa3' }, // lighter
@@ -420,7 +419,7 @@ const BREED_DATA = {
       thickness: [0.4, 0.6], // Elegant, not stocky
       legginess: [0.7, 0.9], // Long, graceful legs
       fangs: [0.3, 0.5], // Small fangs
-      tailLength: [0.8, 1.0], // Long tail
+      tailLength: [0.6, 0.9],
       nosePos: 0.65,
       mawSize: 0.5,
       coordination: 0.8
@@ -435,21 +434,14 @@ const BREED_DATA = {
   'Calico': {
     description: "Tri-colored females with white, black, and orange patches. Variable coordination from complex genetics. Males extremely rare due to X-chromosome linkage.",
     pattern: 0,
-    size: [10.5, 17],
+    minSize: 10.5,
+    maxSize: 17,
     colors: {
       variants: [
-        { first: trueWhite, second: '#000000', third: '#e8831e' },        // W-B-O
-        { first: trueWhite, second: '#222222', third: '#e8831e' },       // W-G-O
-        { first: trueWhite, second: '#000000', third: '#a77047' },       // W-B-LO
-        { first: trueWhite, second: '#222222', third: '#a77047' },       // W-G-LO
-        { first: '#000000', second: trueWhite, third: '#e8831e' },       // B-W-O
-        { first: '#222222', second: trueWhite, third: '#e8831e' },       // G-W-O
-        { first: '#000000', second: trueWhite, third: '#a77047' },       // B-W-LO
-        { first: '#222222', second: trueWhite, third: '#a77047' },       // G-W-LO
-        { first: '#e8831e', second: trueWhite, third: '#000000' },       // O-W-B
-        { first: '#e8831e', second: trueWhite, third: '#222222' },       // O-W-G
-        { first: '#a77047', second: trueWhite, third: '#000000' },       // LO-W-B
-        { first: '#a77047', second: trueWhite, third: '#222222' }        // LO-W-G
+        { first: '#ffffff', second: '#e8831e', third: '#000000' },        // W-B-O
+        { first: '#ffffff', second: '#e8831e', third: '#222222' },       // W-G-O
+        { first: '#ffffff', second: '#a77047', third: '#000000' },       // W-B-LO
+        { first: '#ffffff', second: '#a77047', third: '#222222' },       // W-G-LO
       ],
       eye: 'random'
     },
@@ -472,13 +464,14 @@ const BREED_DATA = {
   'Tortoiseshell': {
     description: "Mottled black and orange females with fiery personalities. Variable coordination from mixed genetics. Also called 'torties' with strong-willed nature.",
     pattern: 1,
-    size: [10, 17],
+    minSize: 10,
+    maxSize: 17,
     colors: {
       variants: [
-        { first: trueWhite, second: '#e8831e', third: '#000000' },       // W-O-B
-        { first: '#e8831e', second: trueWhite, third: '#222222' },       // O-W-G
-        { first: trueWhite, second: '#c89c7a', third: '#000000' },       // W-LO-B
-        { first: '#c89c7a', second: trueWhite, third: '#222222' }        // LO-W-G
+        { first: '#ffffff', second: '#e8831e', third: '#000000' },        // W-B-O
+        { first: '#ffffff', second: '#e8831e', third: '#222222' },       // W-G-O
+        { first: '#ffffff', second: '#a77047', third: '#000000' },       // W-B-LO
+        { first: '#ffffff', second: '#a77047', third: '#222222' }       // W-G-LO
       ],
       eye: 'random'
     },
@@ -503,12 +496,14 @@ const BREED_DATA = {
   'Sphynx': {
     description: "Hairless cats with wrinkled skin and extroverted personalities. Moderate coordination despite unique appearance. Feel warm to touch and love attention.",
     pattern: 0, // Hairless, so pattern doesn't matter much
-    maxSize: 14,
-    size: [10.5, 18.5], // Medium sized breed
+    minSize: 10.5, // Medium sized breed
+    maxSize: 18.5,
     colors: {
-      first: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#2F2F2F'],
-      second: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#2F2F2F'],
-      third: ['#FAD6CF', '#F5C6AA', trueWhite, '#EEEEEE', '#DDDDDD', '#2F2F2F'],
+      variants: [
+        { first: '#EEEEEE', second: '#bdaaa0', third: '#888482' },
+        { first: '#d3c5b8', second: '#9b928e', third: '#555555' },
+        { first: '#555555', second: '#555555', third: '#555555' }
+      ],
       eye: ['#1E90FF', '#60b64f', '#e7d156'] // Vivid eyes common in Sphynx
     },
     traits: {
@@ -531,14 +526,14 @@ const BREED_DATA = {
   'Abyssinian': {
     description: "Ancient athletic breed with ticked coats and alert expressions. Exceptionally coordinated and active, often called the 'athlete of the cat world'.",
     pattern: 7, // ticked pattern - each hair has multiple colors
-    maxSize: 11,
-    size: [10.5, 16], // Medium-sized, athletic breed
+    minSize: 10.5,
+    maxSize: 16, // Medium-sized, athletic breed
     colors: {
       variants: [
-        { first: ['#a87132', '#cb734a'], second: ['#36220b', '#531d07'], third: trueWhite, patternColour: '#000000' }, // Ruddy (classic)
-        { first: '#d6784c', second: '#ac4500', third: trueWhite, patternColour: '#000000' }, // Red/Sorrel
-        { first: '#c7b8af', second: ['#68646b', '#252525'], third: trueWhite, patternColour: '#000000' }, // Blue
-        { first: '#e6ca9d', second: '#bda47f', third: trueWhite, patternColour: '#000000' }  // Fawn
+        { first: '#ffffff', second: ['#a87132', '#cb734a'], third: ['#36220b', '#531d07'] }, // Ruddy (classic)
+        { first: '#ffffff', second: '#d6784c', third: '#ac4500' }, // Red/Sorrel
+        { first: '#ffffff', second: '#c7b8af', third: ['#68646b', '#252525'] }, // Blue
+        { first: '#ffffff', second: '#e6ca9d', third: '#bda47f' }  // Fawn
       ],
       eye: ['#ffd700', '#daa520', '#45cf45'] // Gold to green eyes
     },
@@ -551,23 +546,23 @@ const BREED_DATA = {
       earHeight: [0.7, 0.9],
       eyeSize: [0.6, 0.8], // Large, almond eyes
       fangs: [0.3, 0.5],
-      tailLength: [0.8, 1.0], // Long tail
+      tailLength: [0.8, 0.9], // Long tail
       coordination: 0.9
     },
     bodypartCodeVariants: [
-      [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 2, 0]
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1]
     ],
     // coats
     patternAlpha: [0.7, 1],
-    coatMod: [[0.4, 0.6], 0.25, 'random'],
+    coatMod: [[0.4, 0.6], 0.75, 'random'],
     nameLibrary: 14 // Ethiopian names
   },
 
   'Ragdoll': {
     description: "Large docile cats that go limp when picked up. Poor coordination due to relaxed nature and large size. Known for blue eyes and colorpoint patterns.",
     pattern: 0,
-    maxSize: 15, // One of the largest breeds
-    size: [16, 20],
+    minSize: 16,
+    maxSize: 20,
     colors: {
       variants: [
         { first: '#f0d9cb', second: '#f0d9cb', third: '#9d7665', patternColour: '#9d7665' }, // Seal point
@@ -587,7 +582,7 @@ const BREED_DATA = {
       earHeight: [0.5, 0.7],
       eyeSize: [0.7, 0.9], // Large, oval eyes
       fangs: [0.2, 0.4], // Gentle expression
-      tailLength: [0.9, 1.1], // Long, fluffy tail
+      tailLength: [0.5, 0.8],
       coordination: 0.4
     },
     bodypartCode: [0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0],
@@ -613,15 +608,14 @@ const BREED_DATA = {
   'Angora': {
     description: "Silky long-haired cats from Turkey with graceful builds. Good coordination and often odd-colored eyes. Ancient breed with flowing coats.",
     pattern: 0, // Solid or various patterns
-    maxSize: 12,
-    size: [9, 15], // Medium-sized, elegant
+    minSize: 9,
+    maxSize: 15, // Medium-sized, elegant
     colors: {
       variants: [
-        { first: trueWhite, second: trueWhite, third: trueWhite }, // Classic white
+        { first: '#ffffff', second: '#ffffff', third: '#ffffff' }, // Classic white
         { first: '#1c1714', second: '#1c1714', third: '#1c1714' }, // Black
         { first: '#d2bbad', second: '#d2bbad', third: '#d2bbad' }, // Red
         { first: '#6d7580', second: '#6d7580', third: '#6d7580' }, // Blue
-        { first: trueWhite, second: trueWhite, third: trueWhite, }, // white
         { first: '#f8e7d7', second: '#f8e7d7', third: '#f8e7d7' }  // Cream
       ],
       eye: ['#7b8867', '#6b8da6', '#967749'] // Often odd-eyed
@@ -635,7 +629,7 @@ const BREED_DATA = {
       earHeight: [0.6, 0.8],
       eyeSize: [0.6, 0.8], // Large, almond eyes
       fangs: [0.3, 0.5],
-      tailLength: [0.9, 1.1], // Long, plumed tail
+      tailLength: [0.5, 0.9], // Long, plumed tail
       mawSize: 0.6,
       coordination: 0.7
     },
@@ -655,17 +649,17 @@ const BREED_DATA = {
   'British Shorthair': {
     description: "Stocky round cats with dense plush coats and copper eyes. Moderate coordination despite sturdy build. The classic 'British Blue' is most famous.",
     pattern: 0, // Usually solid colors
-    maxSize: 15,
-    size: [10, 17], // Medium to large, stocky
+    minSize: 10, // Medium to large, stocky
+    maxSize: 17,
     colors: {
       variants: [
         { first: '#708090', second: '#708090', third: '#708090' }, // British Blue (classic)
         { first: '#16100c', second: '#16100c', third: '#16100c' }, // Black
-        { first: trueWhite, second: trueWhite, third: trueWhite }, // White
+        { first: '#ffffff', second: '#ffffff', third: '#ffffff' }, // White
         { first: '#deb887', second: '#deb887', third: '#deb887' }, // Cream
         { first: '#d2691e', second: '#d2691e', third: '#d2691e' }, // Red
-        { first: '#c0c0c0', second: '#333333', third: trueWhite, pattern: 3, patternColour: '#000000' }, // Silver tabby
-        { first: '#D2B48C', second: '#8B4513', third: trueWhite, pattern: 3, patternColour: '#000000' } // Brown tabby
+        { first: '#ffffff', second: '#c0c0c0', third: '#555555', pattern: 3, patternColour: '#333333' }, // Silver tabby
+        { first: '#ffffff', second: '#D2B48C', third: '#8B4513', pattern: 3, patternColour: '#3b1e09' } // Brown tabby
       ],
       eye: ['#ffd700', '#ff8c00', '#4fc44f'] // Gold to green eyes  
     },
@@ -749,12 +743,8 @@ function applyBreed(who, breedName) {
   if (breed.pattern !== undefined) who.pattern = breed.pattern;
 
   // Apply size
-  if (breed.size) {
-    who.size = randomBetween(breed.size[0], breed.size[1]);
-  }
-  if (breed.maxSize) {
-    who.maxSize = breed.maxSize;
-  }
+  who.maxSize = randomBetween(breed.minSize, breed.maxSize);
+  who.size = randomBetween(breed.minSize, who.maxSize);
 
   // Apply pattern alpha
   if (breed.patternAlpha !== undefined) {
@@ -928,10 +918,10 @@ function applyTortoiseshellPattern(who) {
   who.patternAlpha = randomBetween(0.5, 1);
   // Use tortoiseshell color scheme
   const tortVariants = [
-    { first: trueWhite, second: '#e8831e', third: '#000000' },       // W-O-B
-    { first: '#e8831e', second: trueWhite, third: '#222222' },       // O-W-G
-    { first: trueWhite, second: '#c89c7a', third: '#000000' },       // W-LO-B
-    { first: '#c89c7a', second: trueWhite, third: '#222222' }        // LO-W-G
+    { first: '#ffffff', second: '#e8831e', third: '#000000' },       // W-O-B
+    { first: '#e8831e', second: '#ffffff', third: '#222222' },       // O-W-G
+    { first: '#ffffff', second: '#c89c7a', third: '#000000' },       // W-LO-B
+    { first: '#c89c7a', second: '#ffffff', third: '#222222' }        // LO-W-G
   ];
   const variant = tortVariants[Math.floor(Math.random() * tortVariants.length)];
   who.firstColour = mixRandomCoatColor(variant.first);
@@ -1045,6 +1035,26 @@ function meetsBreedStandard(chitten) {
     return false; // Invalid breed
   }
 
+  // Check maxSize is within breed range (no leniency)
+  if (chitten.maxSize < breed.minSize || chitten.maxSize > breed.maxSize) {
+    return false; // Size out of breed range
+  }
+
+  // Check pattern matches (no leniency)
+  // Only skip if variants actually override the pattern
+  if (breed.pattern !== undefined && chitten.pattern !== breed.pattern) {
+    // Check if any variants override the pattern
+    let hasVariantPatternOverrides = false;
+    if (breed.colors?.variants) {
+      hasVariantPatternOverrides = breed.colors.variants.some(variant => variant.pattern !== undefined);
+    }
+    
+    // Only fail if no variants override patterns (meaning main breed pattern should be used)
+    if (!hasVariantPatternOverrides) {
+      return false; // Pattern doesn't match breed standard
+    }
+  }
+
   const allowedGenes = breed.breedStandardGenes || [];
 
   // Check if chitten has all required breed standard gene expressions
@@ -1059,6 +1069,73 @@ function meetsBreedStandard(chitten) {
   for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
     if (chitten[geneData.expressedProp] && !allowedGenes.includes(geneKey)) {
       return false; // Has unwanted gene expression not in breed standard
+    }
+  }
+
+  // Check body part code matches breed standard
+  if (breed.bodypartCodeVariants && breed.bodypartCodeVariants.length > 0) {
+    const allowedBodypartCodes = breed.bodypartCodeVariants.filter(variant => variant !== 'random');
+    if (allowedBodypartCodes.length > 0) {
+      // Check if chitten's bodypart code matches any of the allowed variants
+      const chittenBodypartCode = chitten.bodypartCode || [];
+      const hasMatchingBodypartCode = allowedBodypartCodes.some(allowedCode =>
+        allowedCode.length === chittenBodypartCode.length &&
+        allowedCode.every((value, index) => value === chittenBodypartCode[index])
+      );
+      if (!hasMatchingBodypartCode) {
+        return false; // Bodypart code doesn't match breed standard
+      }
+    }
+  }
+
+  // Check physical traits (skip coordination as it's behavioral, not appearance)
+  if (breed.traits) {
+    for (const [traitName, breedValue] of Object.entries(breed.traits)) {
+      // Skip coordination - breed standards only care about physical appearance
+      if (traitName === 'coordination') continue;
+
+      // Skip if trait is 'random' or undefined - no breed standard to check
+      if (breedValue === 'random' || breedValue === undefined) continue;
+
+      const chittenValue = chitten[traitName];
+      if (chittenValue === undefined) continue;
+
+      if (Array.isArray(breedValue)) {
+        // Range values: expand range by leniency
+        const expansion = (breedValue[1] - breedValue[0]) * breedStandardLeniency;
+        const minAllowed = breedValue[0] - expansion;
+        const maxAllowed = breedValue[1] + expansion;
+        if (chittenValue < minAllowed || chittenValue > maxAllowed) {
+          return false; // Trait outside acceptable range
+        }
+      } else if (typeof breedValue === 'number') {
+        // Fixed values: apply tolerance based on leniency
+        let tolerance;
+        if (breedValue === 0) {
+          // Special case for zero values (like earHeight: 0 for Scottish Fold)
+          tolerance = 0.1 * breedStandardLeniency;
+        } else {
+          tolerance = Math.abs(breedValue) * breedStandardLeniency;
+        }
+        const minAllowed = breedValue - tolerance;
+        const maxAllowed = breedValue + tolerance;
+        if (chittenValue < minAllowed || chittenValue > maxAllowed) {
+          return false; // Trait outside acceptable tolerance
+        }
+      }
+    }
+  }
+
+  // Check eye colour matches breed standard (with leniency) 
+  // Only check if eye colours are specified at breed level, not within variants
+  if (breed.colors && breed.colors.eye && breed.colors.eye !== 'random' && !breed.colors.variants) {
+    const allowedEyeColours = Array.isArray(breed.colors.eye) ? breed.colors.eye : [breed.colors.eye];
+    const maxDistance = 15 * (1 + breedStandardLeniency); // Base threshold + leniency
+    const hasValidEyeColour = allowedEyeColours.some(allowedColour => 
+      colourDistance(chitten.eyeColour, allowedColour) <= maxDistance
+    );
+    if (!hasValidEyeColour) {
+      return false; // Eye colour doesn't match breed standard
     }
   }
 

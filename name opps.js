@@ -135,10 +135,20 @@ function extractBreedNames(breedString) {
  * @return {number|null} The name library index, or null if not found
  */
 function getBreedNameLibrary(breedName) {
-  // First check BREED_DATA
+  // First check BREED_DATA with the full breed name
   if (typeof BREED_DATA !== 'undefined' && BREED_DATA[breedName] && BREED_DATA[breedName].nameLibrary !== undefined) {
     const nameLib = BREED_DATA[breedName].nameLibrary;
     // If nameLibrary is 'random', return a special value to indicate random names should be used
+    if (nameLib === 'random') {
+      return 'random';
+    }
+    return nameLib;
+  }
+  
+  // If not found, try to extract base breed name for variants (e.g., "British Shorthair Tortoiseshell" -> "British Shorthair")
+  const baseBreedName = breedName.split(' ').slice(0, 2).join(' '); // Take first two words as base breed
+  if (baseBreedName !== breedName && typeof BREED_DATA !== 'undefined' && BREED_DATA[baseBreedName] && BREED_DATA[baseBreedName].nameLibrary !== undefined) {
+    const nameLib = BREED_DATA[baseBreedName].nameLibrary;
     if (nameLib === 'random') {
       return 'random';
     }

@@ -1,9 +1,16 @@
+// gene editing
+geneEditing = false;
+spliceBox = new CatBox(20, 30, 250, 5); // Increased size by 150% (100 * 2.5) for editor preview
+sliderIndex = 0;
+colourBars = null; // Will be initialized in startGame()
+colourPicker = null; // Will be initialized in startGame()
+editorButtons = []; // Editor save/close buttons
+
+
 // Dynamic layout system
 const LAYOUT_CONFIG = {
   startX: 100,
-  startY: 60,
-  columnWidth: 250, // Increased for better spacing
-  titleHeight: 20,
+  startY: 100,
   controlSpacing: 5,
   groupSpacing: 25,
   previewScale: 2.5, // 150% increase
@@ -13,27 +20,24 @@ const LAYOUT_CONFIG = {
   spliceBoxY: 30,
   spliceBoxSize: 250,
   colorSystemWidth: 250,
-  colorSystemGap: 10
+  colorSystemGap: 20,
+  columnStartX: 300,
+  columnWidth: 150,
+  titleHeight: 30,
+  sliderHeight: 30, // slider, bodypart
+  dropdownHeight: 50, // pattern, breed
+  textboxHeight: 50 // text
 };
 
-// gene editing
-geneEditing = false;
-spliceBox = new CatBox(20, 30, 250, 5); // Increased size by 150% (100 * 2.5) for editor preview
-sliderIndex = 0;
-colourBars = null; // Will be initialized in startGame()
-colourPicker = null; // Will be initialized in startGame()
-editorButtons = []; // Editor save/close buttons
 
 // Control type dimensions
 const CONTROL_DIMENSIONS = {
-  slider: { width: 120, height: 25 },
-  boolean: { width: 100, height: 25 },
-  pattern: { width: 150, height: 25 },
+  slider: { width: 100, height: 25 },
+  boolean: { width: 20, height: 20 },
+  pattern: { width: 120, height: 25 },
   text: { width: 120, height: 25 },
-  breed: { width: 150, height: 25 },
+  breed: { width: 120, height: 25 },
   bodypart: { width: 120, height: 25 },
-  preview: { width: 150 * LAYOUT_CONFIG.previewScale, height: 150 * LAYOUT_CONFIG.previewScale },
-  button: { width: 80, height: 30 },
   colorPicker: {
     width: LAYOUT_CONFIG.colorSystemWidth,
     height: 21 * (LAYOUT_CONFIG.colorSystemWidth / 24) * LAYOUT_CONFIG.colorPickerScale
@@ -48,19 +52,20 @@ const CONTROL_DIMENSIONS = {
 const EDITOR_GROUPS = [
   {
     title: "Physical Traits",
-    x: LAYOUT_CONFIG.columnWidth * 2, y: LAYOUT_CONFIG.startY, spacing: 30,
+    column: 1,
+    y: LAYOUT_CONFIG.startY, spacing: 30,
     properties: [
       { prop: 'size', type: 'slider', min: 5, max: 20, label: 'Size' },
       { prop: 'thickness', type: 'slider', min: 0.5, max: 1, label: 'Thickness' },
       { prop: 'legginess', type: 'slider', min: 0, max: 1, label: 'Legginess' },
       { prop: 'coordination', type: 'slider', min: 0, max: 1, label: 'Coordination' },
-      { prop: 'frontLegLength', type: 'slider', min: 0, max: 1, label: 'Limb Length' },
       { prop: 'tailLength', type: 'slider', min: 0, max: 1, label: 'Tail Length' }
     ]
   },
   {
     title: "Head Features",
-    x: LAYOUT_CONFIG.columnWidth * 2, y: LAYOUT_CONFIG.startY + (6 * 30), spacing: 30,
+    column: 1,
+    spacing: 30,
     properties: [
       { prop: 'headWidth', type: 'slider', min: 0, max: 1, label: 'Head Width' },
       { prop: 'headHeight', type: 'slider', min: 0, max: 1, label: 'Head Height' },
@@ -76,19 +81,21 @@ const EDITOR_GROUPS = [
   },
   {
     title: "Coat & Pattern",
-    x: LAYOUT_CONFIG.columnWidth * 3, y: LAYOUT_CONFIG.startY, spacing: 30,
+    column: 2,
+    y: LAYOUT_CONFIG.startY, spacing: 30,
     properties: [
       { prop: 'pattern', type: 'pattern', label: 'Pattern Type' },
       { prop: 'patternAlpha', type: 'slider', min: 0, max: 1, label: 'Pattern Opacity' },
-      { prop: 'coatMod[3]', type: 'slider', min: 0, max: 1, label: 'Coat Solid' },
-      { prop: 'coatMod[0]', type: 'slider', min: 0, max: 1, label: 'Coat Fade' },
+      { prop: 'coatMod[3]', type: 'slider', min: 0, max: 1, label: 'Coat Gradient' },
+      { prop: 'coatMod[0]', type: 'slider', min: 0, max: 1, label: 'Smooth Gradient' },
       { prop: 'coatMod[1]', type: 'slider', min: 0, max: 1, label: 'Coat Angle' },
       { prop: 'coatMod[2]', type: 'slider', min: 0, max: 1, label: 'Pattern Angle' },
     ]
   },
   {
     title: "Body Part Colors",
-    x: LAYOUT_CONFIG.columnWidth * 3, y: LAYOUT_CONFIG.startY + (6 * 30), spacing: 30,
+    column: 2,
+    spacing: 30,
     properties: [
       { prop: 'bodypartCode[2]', type: 'bodypart', label: 'Head' },
       { prop: 'bodypartCode[3]', type: 'bodypart', label: 'L Ear' },
@@ -107,7 +114,8 @@ const EDITOR_GROUPS = [
   },
   {
     title: "Templates & Info",
-    x: LAYOUT_CONFIG.columnWidth * 4, y: LAYOUT_CONFIG.startY, spacing: 30,
+    column: 3,
+    y: LAYOUT_CONFIG.startY, spacing: 30,
     properties: [
       { prop: 'breedTemplate', type: 'breed', label: 'Apply Breed' },
       { prop: 'name', type: 'text', label: 'Name' },
@@ -116,7 +124,8 @@ const EDITOR_GROUPS = [
     ]
   },
   {
-    title: "Colors",
+    title: '',
+    column: 0,
     x: LAYOUT_CONFIG.colorSystemX, y: LAYOUT_CONFIG.spliceBoxY + LAYOUT_CONFIG.spliceBoxSize + LAYOUT_CONFIG.colorSystemGap, spacing: LAYOUT_CONFIG.colorSystemGap,
     properties: [
       { type: 'colorPicker' },
@@ -125,14 +134,15 @@ const EDITOR_GROUPS = [
   },
   {
     title: "Genetics",
-    x: LAYOUT_CONFIG.columnWidth * 4, y: LAYOUT_CONFIG.startY + (4 * 30), spacing: 30,
+    column: 3,
+    spacing: 30,
     properties: [] // Will be populated dynamically from GENE_DATA
   }
 ];
 
 function initGeneEditing() {
   // gene editing
-  experiment = new Chitten(LAYOUT_CONFIG.spliceBoxSize/2, LAYOUT_CONFIG.spliceBoxSize/2, chittenBaseSize, chittenMaxSize, 'Female');
+  experiment = new Chitten(LAYOUT_CONFIG.spliceBoxSize / 2, LAYOUT_CONFIG.spliceBoxSize / 2, chittenBaseSize, chittenMaxSize, 'Female');
   experiment.name = getFemaleName(Math.floor(Math.random() * numlibs * namesinlib));
   randomiseGeneticsBase(experiment, true, null)
   experiment.awake = true;
@@ -186,11 +196,51 @@ function initSliders() {
 
   let controlIndex = 0;
 
+  // Track Y position for each column
+  const columnYPositions = {};
+
   EDITOR_GROUPS.forEach(group => {
+    // Calculate dynamic x position based on column property
+    if (group.column !== undefined && group.column > 0) {
+      group.x = LAYOUT_CONFIG.columnStartX + LAYOUT_CONFIG.columnWidth * (group.column - 1);
+
+      // Calculate dynamic Y position based on what's already in this column
+      if (!columnYPositions[group.column]) {
+        // First group in this column
+        columnYPositions[group.column] = LAYOUT_CONFIG.startY;
+      }
+
+      group.y = columnYPositions[group.column];
+
+      // Calculate height needed for this group
+      let groupHeight = LAYOUT_CONFIG.titleHeight; // Space for title
+      group.properties.forEach(propDef => {
+        switch (propDef.type) {
+          case 'slider':
+          case 'bodypart':
+            groupHeight += LAYOUT_CONFIG.sliderHeight;
+            break;
+          case 'pattern':
+          case 'breed':
+            groupHeight += LAYOUT_CONFIG.dropdownHeight;
+            break;
+          case 'text':
+            groupHeight += LAYOUT_CONFIG.textboxHeight;
+            break;
+          default:
+            groupHeight += LAYOUT_CONFIG.sliderHeight; // Default fallback
+            break;
+        }
+      });
+
+      // Update column Y position for next group
+      columnYPositions[group.column] += groupHeight + LAYOUT_CONFIG.groupSpacing;
+    }
+
     let currentY = group.y;
 
     // Draw group title
-    group.titleY = currentY - 15;
+    group.titleY = currentY - LAYOUT_CONFIG.titleHeight;
 
     group.properties.forEach(propDef => {
       const control = createControl(propDef, group.x, currentY, controlIndex);
@@ -221,7 +271,32 @@ function initSliders() {
           break;
       }
 
-      currentY += group.spacing;
+      // Use appropriate spacing based on control type
+      switch (propDef.type) {
+        case 'slider':
+        case 'bodypart':
+          currentY += LAYOUT_CONFIG.sliderHeight;
+          break;
+        case 'pattern':
+        case 'breed':
+          currentY += LAYOUT_CONFIG.dropdownHeight;
+          break;
+        case 'text':
+        case 'gender':
+          currentY += LAYOUT_CONFIG.textboxHeight;
+          break;
+        case 'boolean':
+          currentY += LAYOUT_CONFIG.sliderHeight; // Use slider height as default for booleans
+          break;
+        case 'colorPicker':
+        case 'colorBar':
+          currentY += group.spacing; // These use custom spacing from the group
+          break;
+        default:
+          currentY += LAYOUT_CONFIG.sliderHeight; // Default fallback
+          break;
+      }
+
       controlIndex++;
     });
   });
@@ -235,6 +310,10 @@ function createControl(propDef, x, y, index) {
 
   switch (propDef.type) {
     case 'slider':
+      // Special case for age slider - use chitten's maxAge as upper limit
+      if (propDef.prop === 'age') {
+        return new Slider(propDef.min, experiment.maxAge, value, x, y, propDef.label, propDef.prop, index);
+      }
       return new Slider(propDef.min, propDef.max, value, x, y, propDef.label, propDef.prop, index);
 
     case 'bodypart':
@@ -351,45 +430,53 @@ function Slider(lowerLimit, upperLimit, currentPos, x, y, txt, property, index) 
   this.y = y;
   this.text = txt;
   this.property = property; // Property path like 'thickness' or 'bodypartCode[0]'
-  this.sBar = new SliderBar(this);
+  this.width = CONTROL_DIMENSIONS.slider.width;
+  this.height = CONTROL_DIMENSIONS.slider.height;
+  this.sThumb = new SliderThumb(this);
 
   this.update = function () {
-    // bar base is 0 to 100
-    this.proportion = 100 / (Math.abs(this.upperLimit - this.lowerLimit));
+    // Calculate proportion based on actual slider width
+    this.proportion = this.width / (Math.abs(this.upperLimit - this.lowerLimit));
     this.relativePosition = this.proportion * (this.currentPos - this.lowerLimit);
+    
+    // Draw slider track
     ctx.lineWidth = 2;
     ctx.strokeStyle = trueBlack;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.x + 100, this.y);
+    ctx.lineTo(this.x + this.width, this.y);
     ctx.stroke();
+    
+    // Draw label
     ctx.fillStyle = trueWhite;
     ctx.font = '12px' + ' ' + globalFont;
     ctx.globalAlpha = 0.5;
     ctx.fillText(this.text, this.x, this.y - 8);
     ctx.globalAlpha = 1;
-    this.sBar.update();
+    
+    this.sThumb.update();
   };
 }
 
 /**
 * function to describe a slider bar
 */
-function SliderBar(parent) {
+function SliderThumb(parent) {
   this.parent = parent;
   this.dragged = false;
   this.colour = trueWhite;
   this.x = this.parent.x;
   this.y = this.parent.y;
-  this.size = 10;
+  this.size = Math.max(8, this.parent.height * 0.4); // Dynamic thumb size based on slider height
 
   this.update = function () {
     if (this.dragged) {
       let correctMouseX = pointerPos.x;
+      // Constrain to slider bounds
       if (correctMouseX < this.parent.x) {
         correctMouseX = this.parent.x;
-      } else if (correctMouseX > this.parent.x + 100) {
-        correctMouseX = this.parent.x + 100;
+      } else if (correctMouseX > this.parent.x + this.parent.width) {
+        correctMouseX = this.parent.x + this.parent.width;
       }
 
       let score = (correctMouseX - this.parent.x);
@@ -411,6 +498,26 @@ function SliderBar(parent) {
         }
 
         setPropertyValue(experiment, this.parent.property, value);
+
+        // Round bodypart sliders to whole numbers (0, 1, 2)
+        if (this.parent.property && this.parent.property.includes('bodypartCode')) {
+          this.parent.currentPos = Math.round(this.parent.currentPos);
+          setPropertyValue(experiment, this.parent.property, Math.round(value));
+        }
+        // Handle maxAge slider - update age slider's upper limit and constrain age if needed
+        if (this.parent.property === 'maxAge') {
+          // Find the age slider and update its upper limit
+          const ageSlider = sliders.find(slider => slider.property === 'age');
+          if (ageSlider) {
+            ageSlider.upperLimit = value;
+            // If current age exceeds new max age, reduce it
+            if (ageSlider.currentPos > value) {
+              ageSlider.currentPos = value;
+              setPropertyValue(experiment, 'age', value);
+            }
+          }
+        }
+
         experiment.recalculateSizes();
         experiment.recalculateColours();
       }
@@ -418,8 +525,11 @@ function SliderBar(parent) {
       this.x = this.parent.x + this.parent.relativePosition;
     }
 
+    // Draw thumb with dynamic sizing
     ctx.fillStyle = this.colour;
-    ctx.fillRect(this.x - 2.5, this.y - 10, 5, 20);
+    const thumbWidth = Math.max(4, this.size * 0.4);
+    const thumbHeight = this.size;
+    ctx.fillRect(this.x - thumbWidth/2, this.y - thumbHeight/2, thumbWidth, thumbHeight);
   };
 }
 
@@ -456,8 +566,8 @@ function BooleanToggle(x, y, label, property, value) {
   this.label = label;
   this.property = property;
   this.value = value;
-  this.width = 20;
-  this.height = 20;
+  this.width = CONTROL_DIMENSIONS.boolean.width;
+  this.height = CONTROL_DIMENSIONS.boolean.height;
 
   this.update = function () {
     ctx.fillStyle = trueWhite;
@@ -497,8 +607,8 @@ function PatternSelector(x, y, label, selectedPattern) {
   this.y = y;
   this.label = label;
   this.selectedPattern = selectedPattern;
-  this.width = 150;
-  this.height = 25;
+  this.width = CONTROL_DIMENSIONS.pattern.width;
+  this.height = CONTROL_DIMENSIONS.pattern.height;
   this.open = false;
 
   this.update = function () {
@@ -511,11 +621,19 @@ function PatternSelector(x, y, label, selectedPattern) {
     // Draw dropdown box
     ctx.strokeStyle = trueWhite;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = uiDarkGrey;
+    ctx.fillRect(this.x +1 , this.y +1 , this.width -2, this.height - 2);
+
 
     // Show selected pattern
     const selectedPatternData = validPatterns.find(p => p.value === this.selectedPattern);
     ctx.fillStyle = trueWhite;
     ctx.fillText(selectedPatternData ? selectedPatternData.label : 'Unknown', this.x + 5, this.y + 18);
+
+    // Draw dropdown indicator
+    ctx.fillStyle = trueWhite;
+    ctx.fillText(unicodeDropdown, this.x + this.width - 15, this.y + 18);
+
 
     // Draw dropdown options if open
     if (this.open) {
@@ -565,8 +683,8 @@ function TextInput(x, y, label, property, value, inputType) {
   this.property = property;
   this.value = value || '';
   this.inputType = inputType;
-  this.width = 120;
-  this.height = 25;
+  this.width = CONTROL_DIMENSIONS.text.width;
+  this.height = CONTROL_DIMENSIONS.text.height;
   this.active = false;
 
   this.update = function () {
@@ -607,8 +725,8 @@ function BreedSelector(x, y, label) {
   this.x = x;
   this.y = y;
   this.label = label;
-  this.width = 150;
-  this.height = 25;
+  this.width = CONTROL_DIMENSIONS.breed.width;
+  this.height = CONTROL_DIMENSIONS.breed.height;
   this.open = false;
   this.breeds = Object.keys(BREED_DATA).sort(); // Get all breeds from BREED_DATA
 
@@ -622,7 +740,7 @@ function BreedSelector(x, y, label) {
     // Draw dropdown box
     ctx.strokeStyle = trueWhite;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
-    ctx.fillStyle = '#333333';
+    ctx.fillStyle = uiDarkGrey;
     ctx.fillRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
 
     // Show "Select Breed" text
@@ -631,7 +749,7 @@ function BreedSelector(x, y, label) {
 
     // Draw dropdown indicator
     ctx.fillStyle = trueWhite;
-    ctx.fillText('▼', this.x + this.width - 15, this.y + 18);
+    ctx.fillText(unicodeDropdown, this.x + this.width - 15, this.y + 18);
 
     // Draw dropdown options if open
     if (this.open) {

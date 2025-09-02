@@ -73,67 +73,6 @@ function randomColourRealistic(seed) {
   return colour;
 }
 
-getSkinColourFromColour = function (theColour, forceSkintan) {
-  let rgb = hexToRgb(theColour);
-  let r = rgb.r;
-  let g = rgb.g;
-  let b = rgb.b;
-  let output = trueWhite;
-  // special case - the sparseCoat gene makes the skin tan when exposed to sunlight
-
-  if (r > rgbMax / 2 && g > rgbMax / 2 && b > rgbMax / 2) {
-    // Check for white cats (high brightness across all channels)
-    output = skinPink;
-  } else if (r > 150 && r > g * 1.3 && r > b * 1.5) {
-    // Check for ginger/orange cats (red dominance)
-    output = skinPink;
-  } else if (r < 50 && g < 50 && b < 50) {
-    // check for very dark cats
-    output = skinBlack;
-  } else {
-    // everything else gets grey skin
-    output = skinGrey;
-  }
-  if (forceSkintan) {
-    let temperatureMod = temperature / (maxTemperature - minTemperature); // 0 (cold) to 1 (hot)
-    if (output == skinPink) {
-      return mixTwoColours(skinBrown, skinPink, temperatureMod);
-    } else  {
-      return mixTwoColours(skinDarkBrown, skinGrey, temperatureMod);
-    }
-  }
-  // All other colors (grey, black, etc.) get grey skin
-  return output;
-};
-
-getNoseColourFromColour = function (theColour, forceSkintan) {
-  let rgb = hexToRgb(theColour);
-  let r = rgb.r;
-  let g = rgb.g;
-  let b = rgb.b;
-  let output = trueWhite;
-  // special case - the sparseCoat gene makes the skin tan when exposed to sunlight
-  if (forceSkintan) {
-    let temperatureMod = temperature / (maxTemperature - minTemperature); // 0 (cold) to 1 (hot)
-    return mixTwoColours(noseBrown, skinPink, temperatureMod);
-  }
-  if (r > rgbMax / 2 && g > rgbMax / 2 && b > rgbMax / 2) {
-    // Check for white cats (high brightness across all channels)
-    output = skinPink;
-  } else if (r > 150 && r > g * 1.3 && r > b * 1.5) {
-    // Check for ginger/orange cats (red dominance)
-    output = skinPink;
-  } else if (r < 50 && g < 50 && b < 50) {
-    // check for very dark cats
-    output = noseBlack;
-  } else {
-    // everything else gets grey skin
-    output = noseGrey;
-  }
-  // All other colors (grey, black, etc.) get grey skin
-  return output;
-};
-
 /** function to create a random bodypartCode
 * this code is used to denote the zones of colour on a Chitten
 * @return {array} - the bodypart code
@@ -229,6 +168,16 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function clampHsl(hsl) {
+  if (hsl[0] > 1) hsl[0] = 1;
+  if (hsl[1] > 1) hsl[1] = 1;
+  if (hsl[2] > 1) hsl[2] = 1;
+  if (hsl[0] < 0) hsl[0] = 0;
+  if (hsl[1] < 0) hsl[1] = 0;
+  if (hsl[2] < 0) hsl[2] = 0;
+  return hsl;
+}
+
 /**
 * Converts an RGB color value to HSL
 * @param  {int}  r - The red color value
@@ -284,19 +233,32 @@ function hslToRgb(h, s, l) {
   return [r * rgbMax, g * rgbMax, b * rgbMax];
 }
 
+// increases saturation to max
 function increaseSaturationHEX(hex) {
   let rgb = hexToRgb(hex);
   let rgbhsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
   let hslrgb = hslToRgb(rgbhsl[0], 1, rgbhsl[2]);
-  // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
+  hslrgb = clampHsl(rgbhsl);
   return rgbToHex(Math.round(hslrgb[0]), 1, Math.round(hslrgb[2]));
 }
 
+// decreases saturation by a fraction
 function decreaseSaturationHEX(hex, fraction) {
   let rgb = hexToRgb(hex);
   let rgbhsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+  rgbhsl[1] /= fraction
+  rgbhsl = clampHsl(rgbhsl);
   let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1] / fraction, rgbhsl[2]);
-  // console.log('returning '+hslrgb+' / '+rgbToHex(hslrgb[0], hslrgb[1], hslrgb[2]));
+  return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
+}
+
+// increases brightness by a multiple
+function increaseBrightnessHEX(hex, multiply) {
+  let rgb = hexToRgb(hex);
+  let rgbhsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+  rgbhsl[2] *= multiply;
+  rgbhsl = clampHsl(rgbhsl);
+  let hslrgb = hslToRgb(rgbhsl[0], rgbhsl[1], rgbhsl[2]);
   return rgbToHex(Math.round(hslrgb[0]), Math.round(hslrgb[1]), Math.round(hslrgb[2]));
 }
 
@@ -385,4 +347,35 @@ function getBrightness(color) {
   }
   // Calculate perceived brightness using luminance formula
   return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+}
+
+/**
+* Calculate the distance between two colours in RGB space
+* @param {string} colour1 - First hex colour (e.g., '#ff0000')
+* @param {string} colour2 - Second hex colour (e.g., '#00ff00') 
+* @return {number} Distance between colours (0-100 scale, 0 = identical, 100 = completely different)
+*/
+function colourDistance(colour1, colour2) {
+  // Handle identical colours
+  if (colour1 === colour2) return 0;
+  
+  // Convert hex colours to RGB
+  const rgb1 = hexToRgb(colour1);
+  const rgb2 = hexToRgb(colour2);
+  
+  if (!rgb1 || !rgb2) {
+    console.warn('colourDistance received invalid hex colour:', colour1, colour2);
+    return 100; // Maximum distance for invalid colours
+  }
+  
+  // Calculate Euclidean distance in RGB space
+  const deltaR = rgb1.r - rgb2.r;
+  const deltaG = rgb1.g - rgb2.g;
+  const deltaB = rgb1.b - rgb2.b;
+  
+  const distance = Math.sqrt(deltaR * deltaR + deltaG * deltaG + deltaB * deltaB);
+  
+  // Normalize to 0-100 scale (max possible distance is sqrt(3 * 255^2) ≈ 441.67)
+  const maxDistance = Math.sqrt(3 * 255 * 255);
+  return Math.round((distance / maxDistance) * 100);
 }

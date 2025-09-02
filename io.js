@@ -11,12 +11,12 @@ function copyChitten(chitten) {
     'rotation', 'skinColour', 'skinColour1', 'skinColour2', 'skinColour3',
     'outlineColour', 'outlineThickness', 'noseColour', 'mouthOpen',
     'speech', 'speechCounter', 'jumpCooldown', 'sittingCooldown',
-    'partner', 'snuggling', 'holding', 'focusX', 'focusY', 'matureModifier',
-    'oldAgeModifier', 'flaggedForDeath', 'originalAngleToFocus', 'angleToFocus', 'jumpHeight', 'onTree',
+    'partner', 'snuggling', 'holding', 'matureModifier','oldAgeModifier', 
+    'flaggedForDeath', 'originalAngleToFocus', 'angleToFocus', 'jumpHeight', 'onTree',
     'focus', 'ultimateTarget', 'target', 'bodyToFeetDistance', 'thicknessModL', 'thicknessModS', 'tailLengthY',
     'legWidth', 'frontLegLength', 'frontLegOriginX', 'frontLegOriginY', 'backLegLength', 'backLegOriginX',
     'backLegOriginY', 'footSize', 'frontFootOriginX', 'frontFootOriginY', 'backFootOriginX', 'backFootOriginY',
-    'treeSleepPosProgress'
+    'treeSleepPosProgress', 'hitFocus', 'mother'
   ];
 
   const saveData = {};

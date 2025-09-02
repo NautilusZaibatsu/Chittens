@@ -1,4 +1,4 @@
-const version = 0.073;
+const version = 0.074;
 
 // canvas - now dynamic for resize support with constraints
 let rawWidth = (window.innerWidth || document.body.clientWidth) - 20;
@@ -84,13 +84,14 @@ femaleParent = null;
 // set global colours
 const trueWhite = '#FFFFFF';
 const trueBlack = '#000000';
+const uiDarkGrey = '#333333'
 const glowColour = '#FFFF88';
 const explosionColour = glowColour;
 const albinoRed = '#ee4433';
 const genderPink = '#f27bfe';
 const genderBlue = '#78c7fc';
 const genderPurple = '#9978f1';
-// const energyBlue = '#1e6ee9';
+const energyBlue = '#1e6ee9';
 // const hungerOrange = '#e9af4e';
 const heartsPink = '#e94db5';
 const tickColour = '#5be94e';
@@ -108,6 +109,7 @@ const unicodeArrowDown = '\u21E9';
 const unicodeArrowUp = '\u21E7';
 const unicodeInfinity = '\u221e';
 const unicodeUnknown = '???'; // ??? used for places the information is not clear to the player yet
+const unicodeDropdown = '\u25BC'; // used to indicate a dropdown menu
 // gender
 const unicodeNonBinary = '\u26A5';
 const unicodeMale = '\u2642';
@@ -178,7 +180,7 @@ function startGame() {
   // initial fireflies
   for (let i = 0; i < startingFireflies; i++) {
     let x = selectLeftOrRightEdge();
-    fireflies.push(new FireFly(x, Math.random() * trueBottom, pointerPos, 1, glowColour));
+    fireflies.push(new FireFly(x, Math.random() * trueBottom, pointerPos, glowColour));
   }
   // plant starter trees
   for (let i = 0; i < startingTrees; i++) {
@@ -282,18 +284,19 @@ function pushObjectsInBounds() {
       for (let j = fruits.length - 1; j >= 0; j--) {
         // remove their fruits too
         if (fruits[j].parent == trees[i]) {
-          fruits.splice(j, 1);
+          fruits[i].remove();
         }
       }
       trees.splice(i, 1);
     }
   }
-
-  // Push fruits back in bounds
   for (let i = 0; i < fruits.length; i++) {
-    if (fruits[i].x > canvasWidth - (fruits[i].size * 2)) {
-      fruits[i].x = canvasWidth - (fruits[i].size * 2);
+    // remove fruits that are out of bounds on the x axis
+    if (!fruits[i].flaggedForRemoval && fruits[i].x < -fruits[i].size || fruits[i].x > canvasWidth + fruits[i].size ||
+      fruits[i].y < -fruits[i].size || fruits[i].y > trueBottom - (fruits[i].size * 2)) {
+      fruits[i].remove();
     }
+    // move fruits that are out of bounds on they axis
     if (fruits[i].y > trueBottom - (fruits[i].size * 2)) {
       fruits[i].y = trueBottom - (fruits[i].size * 2);
     }
@@ -323,16 +326,6 @@ function pushObjectsInBounds() {
     }
   }
 
-  // Remove offscreen fruits on resize (especially fumbled ones that may have bounced off screen)
-  for (let i = 0; i < fruits.length; i++) {
-    if (fruits[i].x < -fruits[i].size || fruits[i].x > canvasWidth + fruits[i].size ||
-      fruits[i].y < -fruits[i].size || fruits[i].y > trueBottom - (fruits[i].size * 2)) {
-      // Remove fruit from focus if any chitten was targeting it
-      removeFocusFrom(fruits[i]);
-      fruits.splice(i, 1);
-      i--;
-    }
-  }
 
   // Push ghosts back in bounds
   for (let i = 0; i < ghosts.length; i++) {
@@ -406,9 +399,10 @@ function setGameSpeed(multiplier) {
 * Update all game objects at fixed timestep
 **/
 function updateGameObjects() {
-  // update the fruit set
-  fruitSet = new Set(fruits);
-
+  // Update all fireflies logic
+  for (let i = 0; i < fireflies.length; i++) {
+    fireflies[i].update();
+  }
   // Update all chittens logic
   for (let i = 0; i < chittens.length; i++) {
     if (chittens[i].flaggedForDeath) {
@@ -418,7 +412,6 @@ function updateGameObjects() {
       chittens[i].update();
     }
   }
-
   // Update all trees logic
   for (let i = 0; i < trees.length; i++) {
     trees[i].update();
@@ -429,104 +422,28 @@ function updateGameObjects() {
     }
   }
 
+  // ensure minimum number of trees
   if (trees.length < minTrees && seeds.length == 0) {
     // No seeds in bellies, spawn random tree
     tryToPlantaTree(Math.abs(Math.random() * canvasWidth), randomColourFruity());
   }
 
-  // Update all fruits logic
-  for (let i = 0; i < fruits.length; i++) {
-    fruits[i].update();
-
-    // Update position for fruits on trees (like chittens do)
-    if (fruits[i].onSurface && fruits[i].landedOnTree) {
-      fruits[i].y = fruits[i].landedOnTree.y - (fruits[i].size * 2);
-    }
-
-    // Handle fruit rotting for fruits on surface
-    if (fruits[i].onSurface && fruits[i].rotTimer > 0) {
-      fruits[i].rotTimer -= dayTicksPerFrame;
-      // Check if fruit has rotted
-      if (fruits[i].rotTimer <= 0) {
-        // Only try to plant tree if fruit is on the floor (not in a tree)
-        if (!fruits[i].landedOnTree && fruits[i].y >= trueBottom - (fruits[i].size * 2) - 10) {
-          // Fruit rotted on the ground - try to plant a tree
-          tryToPlantaTree(fruits[i].x, fruits[i].colour);
-        }
-        // Remove the rotted fruit
-        removeFocusFrom(fruits[i]);
-        fruits.splice(i, 1);
-        i--;
-        continue; // Skip the rest of the loop for this fruit
-      }
-    }
-
-    // Apply physics to fumbled fruits
-    if (fruits[i].fumbled) {
-      // Apply gravity
-      let massGravity = gravity * fruits[i].mass;
-      fruits[i].speedY += massGravity;
-
-      // Apply drag
-      let dragX = fruits[i].speedX * dragFactor * (fruits[i].size / 15);
-      let dragY = fruits[i].speedY * dragFactor * (fruits[i].size / 15);
-      fruits[i].speedX -= dragX;
-      fruits[i].speedY -= dragY;
-
-      // Update position
-      fruits[i].x += fruits[i].speedX / 4;
-      fruits[i].y += fruits[i].speedY / 4;
-
-      // Check tree collision first (only when falling downward)
-      let hitTree = false;
-      if (fruits[i].speedY >= 0) {
-        for (let t = 0; t < trees.length && !hitTree; t++) {
-          if (detectTreeCollision(fruits[i], trees[t], fruits[i].size * 2)) {
-            // Fruit lands on tree
-            fruits[i].y = trees[t].y - (fruits[i].size * 2);
-            fruits[i].speedY *= -0.2; // Small bounce or settle
-            fruits[i].speedX *= 0.5; // Tree friction
-            if (Math.abs(fruits[i].speedY) < 1) {
-              fruits[i].onSurface = true; // Settled on tree
-              fruits[i].landedOnTree = trees[t]; // Remember which tree we're on
-              // Don't start rot timer for fruits in trees - they're safe there
-            }
-            hitTree = true;
-          }
-        }
-      }
-
-      // Check ground collision (if didn't hit tree)
-      if (!hitTree && fruits[i].y >= trueBottom - (fruits[i].size * 2)) {
-        fruits[i].y = trueBottom - (fruits[i].size * 2);
-        fruits[i].speedY *= -0.3; // Bounce with some energy loss
-        fruits[i].speedX *= 0.8; // Friction on ground
-        if (Math.abs(fruits[i].speedY) < 0.5) {
-          fruits[i].onSurface = true; // Stop physics when settled
-          // Start rot timer for fruits on the ground
-          if (fruits[i].rotTimer === -1) {
-            fruits[i].rotTimer = ticksPerDay; // One day to rot
-          }
-        }
-      }
-
-      // Check wall collisions
-      if (fruits[i].x <= fruits[i].size) {
-        fruits[i].x = fruits[i].size;
-        fruits[i].speedX *= -0.4; // Bounce off left wall with energy loss
-      } else if (fruits[i].x >= canvasWidth - fruits[i].size) {
-        fruits[i].x = canvasWidth - fruits[i].size;
-        fruits[i].speedX *= -0.4; // Bounce off right wall with energy loss
-      }
-
-      // Apply speed limits
-      applySpeedLimit(fruits[i]);
+  // update the seeds
+  for (let i = seeds.length - 1; i >= 0; i--) {
+    seeds[i].update();
+    if (seeds[i].planted || seeds[i].kill) {
+      seeds.splice(i, 1);
     }
   }
 
-  // Update all fireflies logic
-  for (let i = 0; i < fireflies.length; i++) {
-    fireflies[i].update();
+  // Update all fruits logic
+  for (let i = 0; i < fruits.length; i++) {
+    if (fruits[i].flaggedForRemoval) {
+      fruits.splice(i, 1);
+      i--;
+    } else {
+      fruits[i].update();
+    }
   }
 
   // Update all glyphs logic
@@ -534,8 +451,6 @@ function updateGameObjects() {
     glyphs[i].update();
   }
 
-  // Update starfield physics
-  recalculateStarfield();
 
   // Update trails timers
   for (let i = trails.length - 1; i >= 0; i--) {
@@ -549,6 +464,9 @@ function updateGameObjects() {
   for (let i = 0; i < ghosts.length; i++) {
     ghosts[i].update();
   }
+
+  // Update starfield physics
+  recalculateStarfield();
 }
 
 /**
@@ -563,31 +481,23 @@ function updateGameArea() {
     frameCount = 0;
     lastTime = now;
   }
-
   // Calculate delta time and update game logic with fixed timestep
   deltaTime = now - gameLastTime;
   gameLastTime = now;
-
   // Cap delta time to prevent spiral of death when tab switching
   if (deltaTime > 100) { // Cap at 100ms (10 FPS equivalent)
     deltaTime = fixedTimeStep; // Just run one frame worth of updates
   }
-
   accumulator += deltaTime;
-
   // Only run game logic when we've accumulated enough time
   let logicUpdates = 0;
-
   while (accumulator >= fixedTimeStep && logicUpdates < 5) {
     // Run one game logic update at 50 UPS
     myGameArea.frameNo += 1;
     touchOnorOffThisFrame = false;
-
     // Always track total time for rendering calculations
     gameTimeElapsed += fixedTimeStep;
-
     if (!paused && gameSpeedMultiplier > 0) {
-
       // increase daytime counter and make seasons rotate (scaled by speed)
       daytimeCounter += dayTicksPerFrame * gameSpeedMultiplier;
       if (daytimeCounter >= ticksPerDay) {
@@ -602,86 +512,16 @@ function updateGameArea() {
         season++;
         recalcSeasonVariables();
       }
-
+      updateTempAndTime();
       // Update all game objects at fixed timestep (50 UPS)
       updateGameObjects();
     }
-
     accumulator -= fixedTimeStep;
     logicUpdates++;
   }
   // Now clear the canvas and prepare for rendering
   myGameArea.clear();
   ctx = myGameArea.context;
-
-  // change the colour by time of day (must run every frame)
-  if (true) { // Always run to ensure uiColourArray is populated
-    for (let tick = 0; tick < nightColour.length; tick++) {
-      let timeMod;
-      let ri = 0;
-      let gi = 0;
-      let bi = 0;
-      let rj = 0;
-      let gj = 0;
-      let bj = 0;
-      if (daytimeCounter < timeOfDayLength) {
-        timeMod = daytimeCounter;
-        ri = hexToRgb(midnightColour[tick]).r;
-        gi = hexToRgb(midnightColour[tick]).g;
-        bi = hexToRgb(midnightColour[tick]).b;
-        rj = hexToRgb(morningColour[tick]).r;
-        gj = hexToRgb(morningColour[tick]).g;
-        bj = hexToRgb(morningColour[tick]).b;
-      } else if (daytimeCounter < (timeOfDayLength * 2)) {
-        timeMod = daytimeCounter - timeOfDayLength;
-        ri = hexToRgb(morningColour[tick]).r;
-        gi = hexToRgb(morningColour[tick]).g;
-        bi = hexToRgb(morningColour[tick]).b;
-        rj = hexToRgb(middayColour[tick]).r;
-        gj = hexToRgb(middayColour[tick]).g;
-        bj = hexToRgb(middayColour[tick]).b;
-      } else if (daytimeCounter < (timeOfDayLength * 3)) {
-        timeMod = daytimeCounter - (timeOfDayLength * 2);
-        ri = hexToRgb(middayColour[tick]).r;
-        gi = hexToRgb(middayColour[tick]).g;
-        bi = hexToRgb(middayColour[tick]).b;
-        rj = hexToRgb(nightColour[tick]).r;
-        gj = hexToRgb(nightColour[tick]).g;
-        bj = hexToRgb(nightColour[tick]).b;
-      } else {
-        timeMod = daytimeCounter - (timeOfDayLength * 3);
-        ri = hexToRgb(nightColour[tick]).r;
-        gi = hexToRgb(nightColour[tick]).g;
-        bi = hexToRgb(nightColour[tick]).b;
-        rj = hexToRgb(midnightColour[tick]).r;
-        gj = hexToRgb(midnightColour[tick]).g;
-        bj = hexToRgb(midnightColour[tick]).b;
-      }
-      let dayR = Math.floor(ri - ((((ri - rj) / timeOfDayLength)) * timeMod));
-      let dayG = Math.floor(gi - ((((gi - gj) / timeOfDayLength)) * timeMod));
-      let dayB = Math.floor(bi - ((((bi - bj) / timeOfDayLength)) * timeMod));
-
-      // create seasonal colour shading
-      let tempColour = mixTwoColours(seasonColour[nextSeason], seasonColour[season], daytimeCounter / ticksPerDay);
-      // shade backgrouund
-      uiColourArray[tick] = mixTwoColours(rgbToHex(dayR, dayG, dayB), tempColour, 0.75);
-    }
-    // update temperature
-    // simple lerp helper
-    const lerp = (a, b, t) => a * (1 - t) + b * t;
-    // anchor temps
-    const tPrev = getSeasonTemp(prevSeason);
-    const tCurr = getSeasonTemp(season);
-    const tNext = getSeasonTemp(nextSeason);
-    // half-season progress (0..1)
-    const half = ticksPerDay / 2;
-    const inFirstHalf = daytimeCounter < half;
-    const f = (daytimeCounter % half) / half;
-    // choose endpoints depending on half
-    const start = inFirstHalf ? (tPrev + tCurr) / 2 : tCurr;
-    const end = inFirstHalf ? tCurr : (tCurr + tNext) / 2;
-    temperature = Math.round(lerp(start, end, f));
-  }
 
   // countdown timer, used when choosing from a litter
   if (!paused && !chosenKitten) {
@@ -703,60 +543,11 @@ function updateGameArea() {
       }
     }
   }
+  drawBackground();
 
-  let tankGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-  tankGradient.addColorStop(0, uiColourArray[0]);
-  tankGradient.addColorStop(0.4, uiColourArray[1]);
-  tankGradient.addColorStop(0.75, uiColourArray[2]);
-  tankGradient.addColorStop(1, uiColourArray[3]);
-  ctx.fillStyle = tankGradient;
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-  textColour = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
-
-  // Render starfield
+  // draw the starfield
   for (i = starfield.length - 1; i >= 0; i--) {
     starfield[i].render();
-  }
-  // trails
-  for (i = 0; i < trails.length; i++) {
-    trails[i].render();
-  }
-
-  // background
-  // draw the clouds - disappearing at nighttime
-  ctx.globalAlpha = 0.3;
-  if (daytimeCounter <= 300) {
-    ctx.globalAlpha = 0.3 - (0.3 * ((sunRiseStart - daytimeCounter) / sunRiseStart));
-  } else if (daytimeCounter > sunSetStart) {
-    ctx.globalAlpha = 0.3 - (0.3 * ((daytimeCounter - sunSetStart) / sunRiseStart));
-  }
-  let cloudWidth = canvasHeight / 540 * 2160;
-  let offsetX = daytimeCounter * cloudWidth / ticksPerDay;
-
-  // Wrap the offset to create seamless looping
-  offsetX = offsetX % cloudWidth;
-
-  // Draw first cloud image
-  ctx.drawImage(clouds, -offsetX, 0, cloudWidth, canvasHeight);
-
-  // Draw second cloud image for seamless looping
-  ctx.drawImage(clouds, cloudWidth - offsetX, 0, cloudWidth, canvasHeight);
-
-  ctx.globalAlpha = 1;
-
-  // draw the background
-  // center and translate the image
-  ctx.save();
-  ctx.translate((canvasWidth - idealX) / 2, (canvasHeight - idealY) / 2);
-  ctx.drawImage(newtree, 0, 0, newtree.width, newtree.height);
-  ctx.restore();
-
-  // update the seeds
-  for (let i = seeds.length - 1; i >= 0; i--) {
-    seeds[i].update();
-    if (seeds[i].planted || seeds[i].kill) {
-      seeds.splice(i, 1);
-    }
   }
 
   // draw the trees
@@ -764,23 +555,7 @@ function updateGameArea() {
     trees[i].render();
   }
 
-  // update the fruit
-  for (let i = 0; i < fruits.length; i++) {
-    if (fruits[i].eater !== null) {
-      if (fruits[i].eater !== 'X' && fruits[i].eater.onSurface && fruits[i].eater.eatingChewsRemaining == 0) {
-        // Only allow eating if chitten is fully sitting (or if they weren't preparing)
-        if (!fruits[i].eater.preparingToEat || fruits[i].eater.sittingProgress >= 1) {
-          // sendMessage(fruits[i].eater.name+' ate a piece of fruit');
-          fruits[i].eater.eatingChewsRemaining = 4;
-          fruits[i].eater.eatingChewTimer = 0;
-          fruits[i].eater.eatingChewState = 'closed';
-          fruits[i].eater.targetSittingState = true; // Ensure chitten sits while eating
-          fruits[i].eater.preparingToEat = false; // Reset the flag
-        }
-      }
-    }
-  }
-  // draw the fruit that should be drawn BEHIND chittens and the floor
+  // draw the fruit that should be drawn BEHIND chittens
   for (let i = 0; i < fruits.length; i++) {
     if ((fruits[i].eater == null && !fruits[i].fumbled)) {
       fruits[i].render();
@@ -829,9 +604,7 @@ function updateGameArea() {
     }
   }
 
-  ctx.globalAlpha = 1;
-
-  // for gravestones
+  // draw gravestones
   for (let d = 0; d < gravestones.length; d++) {
     // combine adjacent gravestones
     for (let e = 0; e < gravestones.length; e++) {
@@ -858,13 +631,9 @@ function updateGameArea() {
   // draw and kill the ghosts
   for (let i = 0; i < ghosts.length; i++) {
     if (ghosts[i].y < 0 - ghosts[i].size * 20) {
-      let fireFlySize = ghosts[i].size / 8;
-      if (fireFlySize < 0.4) {
-        fireFlySize = 0.4;
-      }
       if (fireflies.length < maxFireflies) {
         sendMessage('A ghost became a FireFly');
-        fireflies.push(new FireFly(ghosts[i].x, ghosts[i].y, fireflies[fireflies.length - 1], fireFlySize, ghosts[i].firstColour));
+        fireflies.push(new FireFly(ghosts[i].x, ghosts[i].y, fireflies[fireflies.length - 1], ghosts[i].firstColour));
       }
       ghosts.splice(i, 1);
       i--;
@@ -884,21 +653,15 @@ function updateGameArea() {
     }
   }
 
-  // draw boxes
-  for (let i = 0; i < boxes.length; i++) {
-    boxes[i].update();
+  // draw the firefly trails
+  for (i = 0; i < trails.length; i++) {
+    trails[i].render();
   }
-  for (let i = 0; i < parentBoxes.length; i++) {
-    parentBoxes[i].update();
-  }
-
-  // Create fruit Set for O(1) lookups instead of O(n) - major performance optimization
-  const fruitSet = new Set(fruits);
 
   // Render sleeping chittens first (background)
   for (let i = 0; i < chittens.length; i++) {
     const chitten = chittens[i];
-    if (selection !== chitten && !chitten.awake) {
+    if (selection !== chitten && !chitten.awake && !chitten.inCatBox) {
       const catSize = chitten.size || 20;
       const bounceBuffer = catSize * 2;
 
@@ -913,7 +676,7 @@ function updateGameArea() {
   // Render awake chittens second (foreground)
   for (let i = 0; i < chittens.length; i++) {
     const chitten = chittens[i];
-    if (selection !== chitten && chitten.awake) {
+    if ((selection == chittens[i] && !chittens[i].beingHeld) || chitten.awake && !chitten.inCatBox) {
       const catSize = chitten.size || 20;
       const bounceBuffer = catSize * 2;
 
@@ -925,18 +688,10 @@ function updateGameArea() {
     }
   }
 
-  // render the selected chitten last
-  for (let i = 0; i < chittens.length; i++) {
-    const chitten = chittens[i];
-    if (selection == chitten) {
-      const catSize = chitten.size || 20;
-      const bounceBuffer = catSize * 2;
-
-      // Only render chittens that are on-screen
-      if (chitten.x >= -bounceBuffer && chitten.x <= canvasWidth + bounceBuffer &&
-        chitten.y >= -bounceBuffer && chitten.y <= canvasHeight + bounceBuffer) {
-        chitten.render();
-      }
+  // draw fireflies that aren't being held by chittens, we can just ignore the ones that are
+  for (let i = 0; i < fireflies.length; i++) {
+    if (!fireflies[i].touchedThisFrame) {
+      fireflies[i].render();
     }
   }
 
@@ -947,7 +702,10 @@ function updateGameArea() {
     }
   }
 
-  // draw the speech bubble
+  // render the selected chitten last
+  if (selection && selection.beingHeld) selection.render();
+
+  // draw the speech bubbles
   for (let i = 0; i < speech.length; i++) {
     for (let j = i + 1; j < speech.length; j++) {
       if (speech[i].who == speech[j].who) {
@@ -965,119 +723,17 @@ function updateGameArea() {
     }
   }
 
-  // Firefly logic
-  for (let f = 0; f < fireflies.length; f++) {
-    // setting focus for fireflies
-    if (!fireflies[f].justAte && !fruitSet.has(fireflies[f].focus)) {
-      fireflies[f].chooseNewTarget();
-    } else if (fireflies[f].focus.y > trueBottom - fireflies[f].focus.size - fireflyMinSeekHeight) {
-      fireflies[f].chooseNewTarget();
-    } else {
-      if ((Math.abs(fireflies[f].speedX) + Math.abs(fireflies[f].speedY)) / 2 < fireflyMaxEatingSpeed) {
-        // fireflies eating (must be moving slowly enough)
-        if (fruitSet.has(fireflies[f].focus) && (detectCollision(fireflies[f], fireflies[f].focus))) {
-
-          // Check if firefly fumbles the fruit
-          if (Math.random() < fireflyFumbleRate) {
-            fireflies[f].focus.fumbleFruit(fireflies[f].speedX, fireflies[f].speedY);
-          } else {
-
-            fireflies[f].stomach++;
-            fireflies[f].justAte = true;
-            // spawning another firefly when this one has eaten enough fruit
-            if (fireflies[f].stomach >= 25 && fireflies.length <= maxFireflies) {
-              fireflies[f].stomach = 0;
-              let x = selectLeftOrRightEdge();
-              fireflies.push(new FireFly(fireflies[f].x, fireflies[f].y, null, 0.8, fireflies[f].firstColour));
-              fireflies[fireflies.length - 1].chooseNewTarget();
-            }
-            // consume the fruit and reset the focus
-            let victimIndex = fruits.indexOf(fireflies[f].focus);
-            fireflies[f].lastTreeVisited = fireflies[f].focus.parent;
-            removeFocusFrom(fireflies[f].focus);
-            fireflies[f].chooseNewTarget();
-            fruits.splice(victimIndex, 1);
-            let glyphsSpawned = createGlyphs(fireflies[f].x, fireflies[f].y, '.', 1)
-            for (let i = 1; i <= glyphsSpawned; i++) {
-              glyphs[glyphs.length - i].colour = trueWhite;
-              glyphs[glyphs.length - i].timer *= 0.25;
-            }
-          }
-          fireflies[f].speedX *= 0.5;
-          fireflies[f].speedY *= 0.5;
-        }
-      }
-    }
-
-    // draw firefly trails, log touches, then update
-    trails.push(new Particle(fireflies[f].size / 10, glowColour, fireflies[f].x, fireflies[f].y, fireflies[f].speedX, fireflies[f].speedY));
-    if (fireflies[f].touchedThisFrame) {
-      // spawn a new firefly if there are less than or close to the minimum, and it is nearly dead
-      if (fireflies[f].touches >= 0.8 * fireflyTouchLimit && fireflies.length <= minFireflies && fireflies.length < maxFireflies) {
-        let x = selectLeftOrRightEdge();
-        fireflies.push(new FireFly(x, Math.random() * trueBottom, pointerPos, 1, glowColour));
-      }
-      fireflies[f].touches += 1;
-      fireflies[f].chooseNewTarget();
-    }
-    fireflies[f].render();
+  // draw adoption/litter picking boxes
+  for (let i = 0; i < boxes.length; i++) {
+    boxes[i].update();
+  }
+  for (let i = 0; i < parentBoxes.length; i++) {
+    parentBoxes[i].update();
   }
 
-  // killing fireflies
-  for (let f = 0; f < fireflies.length; f++) {
-    fireflies[f].touchedThisFrame = false;
-    if (fireflies[f].touches >= fireflyTouchLimit) {
-      // create the explosion
-      explosions.push(new Explosion(fireflies[f].x, fireflies[f].y, explosionColour, glowColour));
-      produceExplosion(fireflies[f].x, fireflies[f].y);
-      let targets = [];
-      for (let i = 0; i < chittens.length; i++) {
-        if (fireflies[f] == chittens[i].focus) {
-          targets.push(chittens[i]);
-        }
-      }
-      fireflies.splice(f, 1);
-      f--;
-      if (targets > 0) {
-        for (let i = 0; i < targets.length; i++) {
-          targets[i].focus = null;
-        }
-      }
-    }
-  }
-
-  // if we get below the minimum required fireflies, spawn one
-  if (fireflies.length < minFireflies) {
-    let x = selectLeftOrRightEdge();
-    fireflies.push(new FireFly(x, Math.random() * trueBottom, pointerPos, 1, glowColour));
-  }
-
-  // firefly-to-firefly collisions
-  for (let i = 0; i < fireflies.length; i++) {
-    for (let j = i + 1; j < fireflies.length; j++) {
-      if (detectCollision(fireflies[i], fireflies[j])) {
-        collide(fireflies[i], fireflies[j], true, true);
-        fireflies[i].chooseNewTarget();
-        fireflies[j].chooseNewTarget();
-      }
-    }
-  }
-
-  // Fumbled fruit - chitten and fruit collisions (affects fruit physics only)
-  for (let i = 0; i < fruits.length; i++) {
-    if (fruits[i].fumbled && fruits[i].eater === null) {
-      for (let j = 0; j < chittens.length; j++) {
-        if (detectCollision(fruits[i], chittens[j])) {
-          collide(fruits[i], chittens[j], true, false); // Only affect fruit physics
-        }
-      }
-      for (let j = i + 1; j < fruits.length; j++) {
-        if (fruits[j].fumbled && fruits[j].eater === null) {
-          if (detectCollision(fruits[i], fruits[j])) {
-            collide(fruits[i], fruits[j], true, true);
-          }
-        }
-      }
+  for (let i = 0; i < chittens.length; i++) {
+    if (chittens[i].inCatBox) {
+      chittens[i].render();
     }
   }
 
@@ -1354,4 +1010,106 @@ function getSeasonTemp(season) {
   if (season === 1) return tempSpring;
   if (season === 2) return tempSummer;
   if (season === 3) return tempAutumn;
+}
+
+function updateTempAndTime() {
+  // change the colour by time of day (must run every frame)
+  for (let tick = 0; tick < nightColour.length; tick++) {
+    let timeMod;
+    let ri = 0;
+    let gi = 0;
+    let bi = 0;
+    let rj = 0;
+    let gj = 0;
+    let bj = 0;
+    if (daytimeCounter < timeOfDayLength) {
+      timeMod = daytimeCounter;
+      ri = hexToRgb(midnightColour[tick]).r;
+      gi = hexToRgb(midnightColour[tick]).g;
+      bi = hexToRgb(midnightColour[tick]).b;
+      rj = hexToRgb(morningColour[tick]).r;
+      gj = hexToRgb(morningColour[tick]).g;
+      bj = hexToRgb(morningColour[tick]).b;
+    } else if (daytimeCounter < (timeOfDayLength * 2)) {
+      timeMod = daytimeCounter - timeOfDayLength;
+      ri = hexToRgb(morningColour[tick]).r;
+      gi = hexToRgb(morningColour[tick]).g;
+      bi = hexToRgb(morningColour[tick]).b;
+      rj = hexToRgb(middayColour[tick]).r;
+      gj = hexToRgb(middayColour[tick]).g;
+      bj = hexToRgb(middayColour[tick]).b;
+    } else if (daytimeCounter < (timeOfDayLength * 3)) {
+      timeMod = daytimeCounter - (timeOfDayLength * 2);
+      ri = hexToRgb(middayColour[tick]).r;
+      gi = hexToRgb(middayColour[tick]).g;
+      bi = hexToRgb(middayColour[tick]).b;
+      rj = hexToRgb(nightColour[tick]).r;
+      gj = hexToRgb(nightColour[tick]).g;
+      bj = hexToRgb(nightColour[tick]).b;
+    } else {
+      timeMod = daytimeCounter - (timeOfDayLength * 3);
+      ri = hexToRgb(nightColour[tick]).r;
+      gi = hexToRgb(nightColour[tick]).g;
+      bi = hexToRgb(nightColour[tick]).b;
+      rj = hexToRgb(midnightColour[tick]).r;
+      gj = hexToRgb(midnightColour[tick]).g;
+      bj = hexToRgb(midnightColour[tick]).b;
+    }
+    let dayR = Math.floor(ri - ((((ri - rj) / timeOfDayLength)) * timeMod));
+    let dayG = Math.floor(gi - ((((gi - gj) / timeOfDayLength)) * timeMod));
+    let dayB = Math.floor(bi - ((((bi - bj) / timeOfDayLength)) * timeMod));
+
+    // create seasonal colour shading
+    let tempColour = mixTwoColours(seasonColour[nextSeason], seasonColour[season], daytimeCounter / ticksPerDay);
+    // shade backgrouund
+    uiColourArray[tick] = mixTwoColours(rgbToHex(dayR, dayG, dayB), tempColour, 0.75);
+  }
+  // update temperature
+  // simple lerp helper
+  const lerp = (a, b, t) => a * (1 - t) + b * t;
+  // anchor temps
+  const tPrev = getSeasonTemp(prevSeason);
+  const tCurr = getSeasonTemp(season);
+  const tNext = getSeasonTemp(nextSeason);
+  // half-season progress (0..1)
+  const half = ticksPerDay / 2;
+  const inFirstHalf = daytimeCounter < half;
+  const f = (daytimeCounter % half) / half;
+  // choose endpoints depending on half
+  const start = inFirstHalf ? (tPrev + tCurr) / 2 : tCurr;
+  const end = inFirstHalf ? tCurr : (tCurr + tNext) / 2;
+  temperature = Math.round(lerp(start, end, f));
+}
+
+function drawBackground() {
+  // set the bg colours
+  let backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+  backgroundGradient.addColorStop(0, uiColourArray[0]);
+  backgroundGradient.addColorStop(0.4, uiColourArray[1]);
+  backgroundGradient.addColorStop(0.75, uiColourArray[2]);
+  backgroundGradient.addColorStop(1, uiColourArray[3]);
+  ctx.fillStyle = backgroundGradient;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  textColour = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
+  // draw the clouds - disappearing at nighttime
+  ctx.globalAlpha = 0.3;
+  if (daytimeCounter <= 300) {
+    ctx.globalAlpha = 0.3 - (0.3 * ((sunRiseStart - daytimeCounter) / sunRiseStart));
+  } else if (daytimeCounter > sunSetStart) {
+    ctx.globalAlpha = 0.3 - (0.3 * ((daytimeCounter - sunSetStart) / sunRiseStart));
+  }
+  let cloudWidth = canvasHeight / 540 * 2160;
+  let offsetX = daytimeCounter * cloudWidth / ticksPerDay;
+  // Wrap the offset to create seamless looping
+  offsetX = offsetX % cloudWidth;
+  // Draw first cloud image
+  ctx.drawImage(clouds, -offsetX, 0, cloudWidth, canvasHeight);
+  // Draw second cloud image for seamless looping
+  ctx.drawImage(clouds, cloudWidth - offsetX, 0, cloudWidth, canvasHeight);
+  ctx.globalAlpha = 1;
+  // center and translate the background
+  ctx.save();
+  ctx.translate((canvasWidth - idealX) / 2, (canvasHeight - idealY) / 2);
+  ctx.drawImage(newtree, 0, 0, newtree.width, newtree.height);
+  ctx.restore();
 }

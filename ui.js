@@ -760,6 +760,19 @@ function click() {
     }
   }
 
+  if (!paused && !clickedSomething && !choosingChitten) {
+    for (let i = 0; i < fireflies.length && !clickedSomething; i++) {
+      if (detectCollisionPointerObject(fireflies[i])) {
+        clickedSomething = true;
+        fireflies[i].speedX = (Math.random() - 0.5) * 2; // Small random horizontal velocity
+        fireflies[i].speedY = (Math.random() - 0.5) * 2; // Small random vertical velocity
+        if (fireflies[i].landed) {
+          fireflies[i].takeOffFromLanded();
+        }
+      }
+    }
+  }
+
   // if we are gene editing, turn on click checkers
   if (geneEditing) {
     // Handle new editor control clicks
@@ -769,11 +782,11 @@ function click() {
 
     // now check sliders
     for (let i = 0; i < sliders.length; i++) {
-      if (detectCollision(sliders[i].sBar, pointerPos)) {
-        sliders[i].sBar.dragged = true;
+      if (detectCollision(sliders[i].sThumb, pointerPos)) {
+        sliders[i].sThumb.dragged = true;
         clickedSomething = true;
       } else {
-        sliders[i].sBar.dragged = false;
+        sliders[i].sThumb.dragged = false;
       }
     }
 
@@ -808,11 +821,8 @@ function unclick() {
   if (geneEditing) {
     // check sliders
     for (let i = 0; i < sliders.length; i++) {
-      if (sliders[i].sBar.dragged) {
-        sliders[i].sBar.dragged = false;
-        if ((i > 6 && i < 18) || i == 26 || i == 29) {
-          sliders[i].currentPos = Math.round(sliders[i].currentPos);
-        }
+      if (sliders[i].sThumb.dragged) {
+        sliders[i].sThumb.dragged = false;
       }
     }
     if (colourPicker.dragging) {
@@ -931,6 +941,14 @@ function hover() {
   if (!paused && !hovered && !choosingChitten) {
     for (let i = 0; i < fruits.length && !hovered; i++) {
       if (!fruits[i].fumbled && fruits[i].y < trueBottom && detectCollisionPointerObject(fruits[i])) {
+        hovered = true;
+        updateCursor('grab');
+      }
+    }
+  }
+  if (!paused && !hovered && !choosingChitten) {
+    for (let i = 0; i < fireflies.length && !hovered; i++) {
+      if (detectCollisionPointerObject(fireflies[i])) {
         hovered = true;
         updateCursor('grab');
       }

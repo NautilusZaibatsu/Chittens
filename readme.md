@@ -2,10 +2,31 @@
 
 changelog
 
+02/09/2025 = 0.074
+~ Firefly update:
+-- Now have wings that they beat in order to fly, giving more realistic motion.
+-- Can decide to land on a tree or a sleeping chitten.
+-- Can now be clicked, causing them to buzz off!
+-- Chittens now gleefully hang onto the fireflies if they catch them.
+~ Colourpoint colours are now temperature sensitive: more pronounced in winter and less so in summer.
+~ Elderly chitten's eyes become foggy and their colours desaturate the older they get
+~ Added dwarfism mutation:
+-- Chittens with this condition have very short legs and poor jumping ability.
+~ Added melanism.
+-- Chittens with this condition are pure black or very dark with black skin.
+-- Melanistic chitten's eyes have no blue present in them.
+~ Improved detection of whether a chitten meets the breed standard, and adoption boxes now have a symbol if the chitten is purebred to denote whether it meets the breed standard or not.
+~ There is more purebreed variation in the adoption centre.
+
+~ Bug Fixes
+-- Fixed a bug that prevented chittens from having a different coloured body and chest.
+-- Fixed a bug preventing fruit from colliding properly with each other.
+-- Fixed a bug that soft locked the firefly.
+
 01/09/2025 = 0.073
 ~ Redesigned genetics system to make gene inheritance and expression more realistic for both pure and cross breds.
 ~ Breeds now have basic standards, you can see whether a purebred chitten meets the breed standard in the chitten tooltip.
-~ The sparse goat genetic condition has been added. 
+~ The sparse coat genetic condition has been added. 
 -- Chittens with a sparse coat have sunlight sensitive skin that changes from pink to brown depending on the season.
 -- The Lykoi breed has this genetic condition by default. 
 ~ Chittens now have different animations depending on whether they are asleep in a tree or asleep on the ground.
@@ -30,7 +51,7 @@ changelog
  ~ Coat / markings:
  -- Can now be in all manner of colours, and are genetically inherited.
  -- Are more varied in terms of pattern placement.
- -- markings by the Chitten size.
+ -- Vary by Chitten size.
  -- New pattern for tortoiseshell coats.
  -- More variation between solid colour body parts and those with smooth gradients.
  ~ Foot pad and toe colours are now defined by the colour of the paw.

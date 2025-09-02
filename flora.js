@@ -6,7 +6,6 @@ fruits = [];
 seeds = [];
 glyphs = [];
 
-
 // tree parameters
 let minTrees;
 let maxTrees;
@@ -18,8 +17,7 @@ const treeMinWidth = 35;
 const treeMaxWidth = 80;
 const treeSizeVariation = treeMaxWidth - treeMinWidth;
 
-// fruits
-let fruitSet = new Set(fruits);
+// fruit parameters
 const fruitTreeSizeRatio = 0.05; // how big a fruit is compared to the tree it's on
 
 // seed parameters
@@ -74,13 +72,6 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
                 }
             }
         }
-        // check that all fruits are on screen
-        for (let i = fruits.length - 1; i >= 0; i--) {
-            if (fruits[i].x < 0 || fruits[i].x > canvasWidth) {
-                removeFocusFrom(fruits[i]);
-                fruits.splice(i, 1);
-            }
-        }
     };
     this.update = function () {
         // respawning fruit twice a day
@@ -105,9 +96,9 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
                     // Check if any chittens are standing on the surface above this tree
                     for (let c = 0; c < chittens.length && !growthBlocked; c++) {
                         if (chittens[c].inCatBox) continue; // Skip chittens in cat boxes
-                        
+
                         // Check if chitten is on surface above this tree's position
-                        if (chittens[c].onSurface && 
+                        if (chittens[c].onSurface &&
                             chittens[c].x >= this.x - (this.width / 2) - (chittens[c].size / 2) &&
                             chittens[c].x <= this.x + (this.width / 2) + (chittens[c].size / 2) &&
                             Math.abs(chittens[c].y - trueBottom + chittens[c].bodyToFeetDistance) < chittens[c].size) {
@@ -115,7 +106,7 @@ function Tree(x, y, width, height, maxHeight, fruitColour) {
                         }
                     }
                 }
-                
+
                 if (!growthBlocked) {
                     this.y += potentialGrowth;
                 } else if (potentialGrowth < 0) {
@@ -162,8 +153,15 @@ function Fruit(colour) {
     this.eater = null;
     this.fumbled = false;
     this.rotTimer = -1; // Timer for rotting when on surface (-1 = not started)
+    this.flaggedForRemoval = false;
+    this.onSurface = false;
     //physics
     this.mass = 2;
+    this.remove = function () {
+        // fruits get spliced in the main loop
+        this.flaggedForRemoval = true;
+        removeFocusFrom(this);
+    };
     this.update = function () {
         if (this.size == 0) {
             this.size = this.parent.width * fruitTreeSizeRatio;
@@ -178,7 +176,116 @@ function Fruit(colour) {
             this.x = this.eater.x;
             this.y = this.eater.y + this.eater.bodyToFeetDistance;
         }
-        // If fumbled, position is controlled by physics system in the main loop
+        // Update position for fruits on trees (like chittens do)
+        if (this.onSurface && this.landedOnTree) {
+            this.y = this.landedOnTree.y - (this.size * 2);
+        }
+
+        // Handle fruit rotting for fruits on surface
+        if (this.onSurface && this.rotTimer > 0) {
+            this.rotTimer -= dayTicksPerFrame;
+            // Check if fruit has rotted
+            if (this.rotTimer <= 0) {
+                // Only try to plant tree if fruit is on the floor (not in a tree)
+                if (!this.landedOnTree && this.y >= trueBottom - (this.size * 2) - 10) {
+                    // Fruit rotted on the ground - try to plant a tree
+                    tryToPlantaTree(this.x, this.colour);
+                }
+                this.remove();
+                return;
+            }
+        }
+        // when a fruit starts to get eaten
+        if (this.eater !== null) {
+            if (this.eater !== 'X' && this.eater.onSurface && this.eater.eatingChewsRemaining == 0) {
+                // Only allow eating if chitten is fully sitting (or if they weren't preparing)
+                if (!this.eater.preparingToEat || this.eater.sittingProgress >= 1) {
+                    // sendMessage(this.eater.name+' ate a piece of fruit');
+                    this.eater.eatingChewsRemaining = 4;
+                    this.eater.eatingChewTimer = 0;
+                    this.eater.eatingChewState = 'closed';
+                    this.eater.targetSittingState = true; // Ensure chitten sits while eating
+                    this.eater.preparingToEat = false; // Reset the flag
+                }
+            }
+        }
+        // check for collisions with other fruits
+        let thisIndex = fruits.indexOf(this, fruits);
+        if (this.fumbled && this.eater === null) {
+            for (let j = thisIndex + 1; j < fruits.length; j++) {
+                if (fruits[j].fumbled && fruits[j].eater === null && detectCollision(this, fruits[j])) {
+                    collide(this, fruits[j], true, true, false);
+                    // Both fruits are now moving, disable surface state and clear tree landing
+                    this.onSurface = false;
+                    fruits[j].onSurface = false;
+                    this.landedOnTree = null;
+                    fruits[j].landedOnTree = null;
+                }
+            }
+        }
+        // Apply physics to fumbled fruits
+        if (!this.onSurface && !this.parent) {
+            // Apply gravity
+            let massGravity = gravity * this.mass;
+            this.speedY += massGravity;
+            // Apply drag
+            let dragX = this.speedX * dragFactor * (this.size / 15);
+            let dragY = this.speedY * dragFactor * (this.size / 15);
+            this.speedX -= dragX;
+            this.speedY -= dragY;
+            // Update position
+            this.x += this.speedX / 4;
+            this.y += this.speedY / 4;
+            // Check tree collision first (only when falling downward)
+            let hitTree = false;
+            if (this.speedY >= 0) {
+                for (let t = 0; t < trees.length && !hitTree; t++) {
+                    if (detectTreeCollision(this, trees[t], this.size * 2)) {
+                        // Fruit lands on tree
+                        this.y = trees[t].y - (this.size * 2);
+                        this.speedY *= -0.2; // Small bounce or settle
+                        this.speedX *= 0.5; // Tree friction
+                        if (Math.abs(this.speedY) < 1) {
+                            this.onSurface = true; // Settled on tree
+                            this.landedOnTree = trees[t]; // Remember which tree we're on
+                            // Don't start rot timer for fruits in trees - they're safe there
+                        }
+                        hitTree = true;
+                    }
+                }
+            }
+            // Check ground collision (if didn't hit tree)
+            if (!hitTree && this.y >= trueBottom - (this.size * 2)) {
+                this.y = trueBottom - (this.size * 2);
+                this.speedY *= -0.3; // Bounce with some energy loss
+                this.speedX *= 0.8; // Friction on ground
+                if (Math.abs(this.speedY) < 0.5) {
+                    this.onSurface = true; // Stop physics when settled
+                    this.landedOnTree = null; // Clear tree reference when on ground
+                    // Start rot timer for fruits on the ground
+                    if (this.rotTimer === -1) {
+                        this.rotTimer = ticksPerDay; // One day to rot
+                    }
+                }
+            }
+            // Ensure fruit never goes below ground (safety check after all physics)
+            if (this.y > trueBottom - (this.size * 2)) {
+                this.y = trueBottom - (this.size * 2);
+                if (this.speedY > 0) {
+                    this.speedY = 0; // Stop downward movement
+                }
+            }
+            // Check wall collisions
+            if (this.x <= this.size) {
+                this.x = this.size;
+                this.speedX *= -0.4; // Bounce off left wall with energy loss
+            } else if (this.x >= canvasWidth - this.size) {
+                this.x = canvasWidth - this.size;
+                this.speedX *= -0.4; // Bounce off right wall with energy loss
+            }
+            // Apply speed limits
+            applySpeedLimit(this);
+        }
     };
     this.render = function () {
         ctx.save();
@@ -223,7 +330,6 @@ function Fruit(colour) {
 
 /**
 * function to handle chittens
-* @param {Set} fruitSet - Set of fruits for O(1) lookups
 */
 
 /** function to describe a seed for a tree
@@ -329,10 +435,16 @@ function tryToPlantaTree(x, fruitColour) {
     let allow = true;
     let maxHeight = trueBottom * 0.30 + (Math.random() * (trueBottom * 0.30));
     let treeWidth = treeMinWidth + (Math.random() * treeSizeVariation);
-    for (let j = 0; j < trees.length; j++) {
+    
+    // Check boundary conditions first
+    if (x < 0 + (treeWidth / 2) || x > canvasWidth - (treeWidth / 2)) {
+        allow = false;
+    }
+    
+    // Check overlap with existing trees
+    for (let j = 0; j < trees.length && allow; j++) {
         if (trees[j].x == x
-            || ((x - (treeWidth / 4) < trees[j].x + (trees[j].width / 4) && trees[j].x - (trees[j].width / 4) < x + (treeWidth / 4)))
-            || (x < 0 + (treeWidth / 2) || x > canvasWidth - (treeWidth / 2))) {
+            || ((x - (treeWidth / 4) < trees[j].x + (trees[j].width / 4) && trees[j].x - (trees[j].width / 4) < x + (treeWidth / 4)))) {
             allow = false;
         }
     }

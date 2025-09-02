@@ -217,6 +217,7 @@ function detectCollision(thisobj, otherobj) {
   return distance < minDistance;
 }
 
+// function to detech a collision between two chittens
 function detectChittenCollision(thisobj, otherobj) {
   let dx = thisobj.x - otherobj.x;
   let dy = thisobj.y - otherobj.y;
@@ -224,7 +225,6 @@ function detectChittenCollision(thisobj, otherobj) {
   let minDistance = (((thisobj.size + thisobj.thicknessModL) + (otherobj.size + otherobj.thicknessModL)));
   return distance < minDistance;
 }
-
 
 // more forgiving collision detection for trying to hover over or pick up chittens
 function detectCollisionPointerObject(chitten) {
@@ -246,7 +246,7 @@ function detectTreeCollision(obj, tree, objFootOffset = 0) {
   // Match the old working inline collision code
   if (obj.x >= tree.x + (obj.size / 2) - (tree.width / 2)
     && obj.x <= tree.x - (obj.size / 2) + (tree.width / 2)
-    && obj.y >= tree.y - objFootOffset - (obj.size / 2) 
+    && obj.y >= tree.y - objFootOffset - (obj.size / 2)
     && obj.y <= tree.y + tree.height) {
     return true;
   }
@@ -264,6 +264,14 @@ function detectRectCollision(point, rect) {
     point.x <= rect.x + rect.size &&
     point.y >= rect.y &&
     point.y <= rect.y + rect.size;
+}
+
+function detectFireflyToFireflyCollision(thisobj, otherobj) {
+  let dx = thisobj.x - otherobj.x;
+  let dy = thisobj.y - otherobj.y;
+  let distance = Math.sqrt(dx * dx + dy * dy);
+  let minDistance = (thisobj.renderedSize + otherobj.renderedSize);
+  return distance < minDistance;
 }
 
 /**

@@ -1,5 +1,8 @@
 // Gene configuration is centralized in genes.js
 
+const baseMutationRate = 0.1; // controls how often random properties are introduced into offspring
+const breedStandardLeniency = 0.3;
+
 const runtText = 'Runt of the litter';
 const pickText = 'Pick of the litter';
 const breedStandardText = 'Breed standard';
@@ -25,9 +28,9 @@ function generateKitten(parent1, parent2, childBreed) {
   // male is parent1
   // female is parent2
   let kGender = randomGender();
-  let kMaxSize = selectGeneInteger(parent1.maxSize, parent2.maxSize, Math.random());
+  let kMaxSize = selectGeneInteger(parent1.maxSize, parent2.maxSize, getRandomChittenMaxSize(randomGender));
   kMaxSize = Math.min(kMaxSize, chittenMaxSize);
-    let babySize = (kMaxSize / 2) + (Math.random() * 2);
+  let babySize = (kMaxSize / 2) + (Math.random() * 2);
   // make sure the baby is not too big for the mother
   let babySizeRandom = (Math.random() * 0.1) + 0.3;
   if (babySize > parent2.size * babySizeRandom) {
@@ -35,64 +38,64 @@ function generateKitten(parent1, parent2, childBreed) {
   }
 
   chittens.push(new Chitten(parent1.x + ((parent2.x - parent1.x) / 2), parent1.y + ((parent2.y - parent1.y) / 2), babySize, kMaxSize, kGender));
-  chittens[chittens.length-1].breed = childBreed;
+  chittens[chittens.length - 1].breed = childBreed;
 
   // physical traits
-  chittens[chittens.length-1].thickness = selectGeneInteger(parent1.thickness, parent2.thickness, Math.random());
-  chittens[chittens.length-1].legginess = selectGeneInteger(parent1.legginess, parent2.legginess, Math.random());
-  chittens[chittens.length-1].tailLength = selectGeneInteger(parent1.tailLength, parent2.tailLength, Math.random());
-  chittens[chittens.length-1].fangs = selectGeneInteger(parent1.fangs, parent2.fangs, Math.random());
-  chittens[chittens.length-1].mawSize = selectGeneInteger(parent1.mawSize, parent2.mawSize, Math.random());
-  chittens[chittens.length-1].nosePos = selectGeneInteger(parent1.nosePos, parent2.nosePos, Math.random());
-  chittens[chittens.length-1].eyeSize = selectGeneInteger(parent1.eyeSize, parent2.eyeSize, Math.random());
-  chittens[chittens.length-1].eyePosX = selectGeneInteger(parent1.eyePosX, parent2.eyePosX, Math.random());
-  chittens[chittens.length-1].eyePosY = selectGeneInteger(parent1.eyePosY, parent2.eyePosY, Math.random());
-  chittens[chittens.length-1].headWidth = selectGeneInteger(parent1.headWidth, parent2.headWidth, Math.random());
-  chittens[chittens.length-1].headHeight = selectGeneInteger(parent1.headHeight, parent2.headHeight, Math.random());
-  chittens[chittens.length-1].earWidth = selectGeneInteger(parent1.earWidth, parent2.earWidth, Math.random());
-  chittens[chittens.length-1].earHeight = selectGeneInteger(parent1.earHeight, parent2.earHeight, Math.random());
+  chittens[chittens.length - 1].thickness = selectGeneInteger(parent1.thickness, parent2.thickness, Math.random());
+  chittens[chittens.length - 1].legginess = selectGeneInteger(parent1.legginess, parent2.legginess, Math.random());
+  chittens[chittens.length - 1].tailLength = selectGeneInteger(parent1.tailLength, parent2.tailLength, Math.random());
+  chittens[chittens.length - 1].fangs = selectGeneInteger(parent1.fangs, parent2.fangs, Math.random());
+  chittens[chittens.length - 1].mawSize = selectGeneInteger(parent1.mawSize, parent2.mawSize, Math.random());
+  chittens[chittens.length - 1].nosePos = selectGeneInteger(parent1.nosePos, parent2.nosePos, Math.random());
+  chittens[chittens.length - 1].eyeSize = selectGeneInteger(parent1.eyeSize, parent2.eyeSize, Math.random());
+  chittens[chittens.length - 1].eyePosX = selectGeneInteger(parent1.eyePosX, parent2.eyePosX, Math.random());
+  chittens[chittens.length - 1].eyePosY = selectGeneInteger(parent1.eyePosY, parent2.eyePosY, Math.random());
+  chittens[chittens.length - 1].headWidth = selectGeneInteger(parent1.headWidth, parent2.headWidth, Math.random());
+  chittens[chittens.length - 1].headHeight = selectGeneInteger(parent1.headHeight, parent2.headHeight, Math.random());
+  chittens[chittens.length - 1].earWidth = selectGeneInteger(parent1.earWidth, parent2.earWidth, Math.random());
+  chittens[chittens.length - 1].earHeight = selectGeneInteger(parent1.earHeight, parent2.earHeight, Math.random());
   // physicals abilities
-  chittens[chittens.length-1].coordination = selectGeneInteger(parent1.coordination, parent2.coordination, Math.random());
+  chittens[chittens.length - 1].coordination = selectGeneInteger(parent1.coordination, parent2.coordination, Math.random());
   // coat
-  chittens[chittens.length-1].pattern = selectGeneFrom([parent1.pattern, parent2.pattern]);
-  chittens[chittens.length-1].patternAlpha = selectGeneInteger(parent1.patternAlpha, parent2.patternAlpha, Math.random());
-  chittens[chittens.length-1].coatMod[0] = selectGeneInteger(parent1.coatMod[0], parent2.coatMod[0], Math.random());
-  chittens[chittens.length-1].coatMod[1] = selectGeneInteger(parent1.coatMod[1], parent2.coatMod[1], Math.random());
-  chittens[chittens.length-1].coatMod[2] = selectGeneInteger(parent1.coatMod[2], parent2.coatMod[2], Math.random());
-  chittens[chittens.length-1].coatMod[3] = selectGeneInteger(parent1.coatMod[3], parent2.coatMod[3], Math.random());
-  chittens[chittens.length-1].bodypartCode = selectGenesFromArraysInts(parent1.bodypartCode, parent2.bodypartCode, 2);
+  chittens[chittens.length - 1].pattern = selectGeneFrom([parent1.pattern, parent2.pattern]);
+  chittens[chittens.length - 1].patternAlpha = selectGeneInteger(parent1.patternAlpha, parent2.patternAlpha, Math.random());
+  chittens[chittens.length - 1].coatMod[0] = selectGeneInteger(parent1.coatMod[0], parent2.coatMod[0], Math.random());
+  chittens[chittens.length - 1].coatMod[1] = selectGeneInteger(parent1.coatMod[1], parent2.coatMod[1], Math.random());
+  chittens[chittens.length - 1].coatMod[2] = selectGeneInteger(parent1.coatMod[2], parent2.coatMod[2], Math.random());
+  chittens[chittens.length - 1].coatMod[3] = selectGeneInteger(parent1.coatMod[3], parent2.coatMod[3], Math.random());
+  chittens[chittens.length - 1].bodypartCode = selectGenesFromArraysInts(parent1.bodypartCode, parent2.bodypartCode, 2);
   // colours
-  chittens[chittens.length-1].firstColour = selectGeneColour(parent1.firstColour, parent2.firstColour);
-  chittens[chittens.length-1].secondColour = selectGeneColour(parent1.secondColour, parent2.secondColour);
-  chittens[chittens.length-1].thirdColour = selectGeneColour(parent1.thirdColour, parent2.thirdColour);
-  chittens[chittens.length-1].patternColour = selectGeneColour(parent1.patternColour, parent2.patternColour);
-  chittens[chittens.length-1].eyeColour = selectGeneColour(parent1.eyeColour, parent2.eyeColour);
-  chittens[chittens.length-1].eyeColour2 = selectGeneColour(parent1.eyeColour2, parent2.eyeColour2);
+  chittens[chittens.length - 1].firstColour = selectGeneColour(parent1.firstColour, parent2.firstColour);
+  chittens[chittens.length - 1].secondColour = selectGeneColour(parent1.secondColour, parent2.secondColour);
+  chittens[chittens.length - 1].thirdColour = selectGeneColour(parent1.thirdColour, parent2.thirdColour);
+  chittens[chittens.length - 1].patternColour = selectGeneColour(parent1.patternColour, parent2.patternColour);
+  chittens[chittens.length - 1].eyeColour = selectGeneColour(parent1.eyeColour, parent2.eyeColour);
+  chittens[chittens.length - 1].eyeColour2 = selectGeneColour(parent1.eyeColour2, parent2.eyeColour2);
   // shuffle colours
-  if (Math.random() < 1 / 8) {
-    let shuffledColours = shuffleGenes([chittens[chittens.length-1].firstColour, chittens[chittens.length-1].secondColour, chittens[chittens.length-1].thirdColour]);
-    chittens[chittens.length-1].firstColour = shuffledColours[0];
-    chittens[chittens.length-1].secondColour = shuffledColours[1];
-    chittens[chittens.length-1].thirdColour = shuffledColours[2];
+  if (Math.random() < baseMutationRate) {
+    let shuffledColours = shuffleGenes([chittens[chittens.length - 1].firstColour, chittens[chittens.length - 1].secondColour, chittens[chittens.length - 1].thirdColour]);
+    chittens[chittens.length - 1].firstColour = shuffledColours[0];
+    chittens[chittens.length - 1].secondColour = shuffledColours[1];
+    chittens[chittens.length - 1].thirdColour = shuffledColours[2];
   }
-  if (Math.random() < 1 / 8) {
-    let shuffledColours = shuffleGenes([chittens[chittens.length-1].eyeColour, chittens[chittens.length-1].eyeColour2]);
-    chittens[chittens.length-1].eyeColour = shuffledColours[0];
-    chittens[chittens.length-1].eyeColour2 = shuffledColours[1];
+  if (Math.random() < baseMutationRate) {
+    let shuffledColours = shuffleGenes([chittens[chittens.length - 1].eyeColour, chittens[chittens.length - 1].eyeColour2]);
+    chittens[chittens.length - 1].eyeColour = shuffledColours[0];
+    chittens[chittens.length - 1].eyeColour2 = shuffledColours[1];
   }
   // genetic conditions (they are actually expressed in determineTraitExpression())
   // Auto-inherit all genes using GENE_DATA
   for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
-    chittens[chittens.length-1][geneData.geneProp] = inheritGenes(parent1[geneData.geneProp], parent2[geneData.geneProp]);
+    chittens[chittens.length - 1][geneData.geneProp] = inheritGenes(parent1[geneData.geneProp], parent2[geneData.geneProp]);
   }
-  if (chittens[chittens.length-1].colourpointGene) {
-    chittens[chittens.length-1].colourpointMap = selectGenesFromArraysBools(parent1.colourpointMap, parent2.colourpointMap);
+  if (chittens[chittens.length - 1].colourpointGene) {
+    chittens[chittens.length - 1].colourpointMap = selectGenesFromArraysBools(parent1.colourpointMap, parent2.colourpointMap);
   } else {
     // No colourpoint gene, set all colourpointMap to false
-    chittens[chittens.length-1].colourpointMap = [false, false, false, false];
+    chittens[chittens.length - 1].colourpointMap = [false, false, false, false];
   }
   // Determine trait expression for inherited genes
-  determineTraitExpression(chittens[chittens.length - 1], true, parent1, parent2);
+  determineTraitExpression(chittens[chittens.length - 1]);
   return kGender;
 }
 
@@ -100,27 +103,35 @@ function generateKitten(parent1, parent2, childBreed) {
  * Determine trait expression for cats that carry genes
  * Should be called after genes are set but before trait expression is determined
  */
-function determineTraitExpression(who, bredInGame, parent1, parent2) {
+function determineTraitExpression(who) {
   // Process gene expression using centralized GENE_DATA
   const breed = BREED_DATA[who.breed];
-  
+
   for (const [geneKey, geneData] of Object.entries(GENE_DATA)) {
     // Check if chitten has gene but not expression
     if (who[geneData.geneProp] && !who[geneData.expressedProp]) {
       let expressionChance = geneData.baseExpressionChance;
-      
+
       // Check if this is a breed standard (95%+ expression for purebreds)
       if (breed?.breedStandardGenes?.includes(geneKey)) {
         expressionChance = geneData.breedStandardChance;
       }
-      
+
       // Skip bald faced / sparse coat expression if already hairless
       if ((geneKey === 'baldFaced' || geneKey === 'sparseCoat') && who.hairlessExpressed) {
         continue;
       }
-      
+
       if (Math.random() <= expressionChance) {
         who[geneData.expressedProp] = true;
+      }
+    }
+    // melanism and albinism cannot be present together
+    if (who.melanismExpressed && who.albinoExpressed) {
+      if (Math.random() < 0.5) {
+        who.melanismExpressed = false;
+      } else {
+        who.albinismExpressed = false;
       }
     }
   }
@@ -130,19 +141,17 @@ function determineTraitExpression(who, bredInGame, parent1, parent2) {
     who.colourpointMap = [false, false, false, false];
   }
 
-  // Sort colors by brightness for colorpoint and 75% of tabby cats (lightest to darkest)
-  if (who.colourpointExpressed) {
-    let colors = [
-      { color: who.firstColour, brightness: getBrightness(who.firstColour) },
-      { color: who.secondColour, brightness: getBrightness(who.secondColour) },
-      { color: who.thirdColour, brightness: getBrightness(who.thirdColour) }
-    ];
-    // Sort by brightness (lightest first)
-    colors.sort((a, b) => b.brightness - a.brightness);
-    who.firstColour = colors[0].color;   // lightest
-    who.secondColour = colors[1].color;  // medium
-    who.thirdColour = colors[2].color;   // darkest
-  }
+  // Sort colors by brightness
+  let colors = [
+    { color: who.firstColour, brightness: getBrightness(who.firstColour) },
+    { color: who.secondColour, brightness: getBrightness(who.secondColour) },
+    { color: who.thirdColour, brightness: getBrightness(who.thirdColour) }
+  ];
+  // Sort by brightness (lightest first)
+  colors.sort((a, b) => b.brightness - a.brightness);
+  who.firstColour = colors[0].color;   // lightest
+  who.secondColour = colors[1].color;  // medium
+  who.thirdColour = colors[2].color;   // darkest
 }
 
 /** function to apply genetics and disorders to Chittens
@@ -204,7 +213,7 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   who.coatMod[2] = Math.random();
   who.coatMod[3] = Math.random();
   who.thickness = (Math.random() * 0.5) + 0.5;
-  who.legginess = (Math.random() * 0.9) + 0.1;
+  who.legginess = (Math.random() * 0.5) + 0.5;
   who.coordination = Math.random(); // Random coordination from 0.0 to 1.0
   who.pattern = validPatterns[Math.floor(Math.random() * validPatterns.length)].value;
   who.patternAlpha = Math.random();
@@ -238,19 +247,8 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   // Handle breed application
   if (who !== experiment && shouldApplyBreedTemplate) {
     if (specificBreed) {
-      // Clear inappropriate genes for purebreds (except for breeds that need them)
-      if (specificBreed !== 'Sphynx') {
-        who.hairlessGene = false;
-        who.hairlessExpressed = false;
-      }
-      if (specificBreed !== 'Bald Faced') {
-        who.baldFacedGene = false;
-        who.baldFacedExpressed = false;
-      }
-
       // Apply specific breed
       applySpecificBreedTemplate(who, specificBreed);
-
       // Only apply allowed mutations for purebreds
       mutate(who);
     } else {
@@ -266,7 +264,7 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
 
   // Apply trait expression for all adoption cats
   if (who !== experiment) {
-    determineTraitExpression(who, false);
+    determineTraitExpression(who);
   }
 
   // Ensure heterochromia produces visible different eye colors
@@ -282,29 +280,39 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
 }
 
 // Generate a crossbreed cat (two breeds mixed together)
-function generateCrossbreed(who) {
+function generateCrossbreed(who, specifiedBreed1 = null) {
   // Store the original adoption cat data
   const originalWho = { ...who };
 
   // Pick two different breeds to mix
   const availableBreeds = Object.keys(BREED_DATA);
-  const breed1 = availableBreeds[Math.floor(Math.random() * availableBreeds.length)];
-  let breed2;
-  do {
-    breed2 = availableBreeds[Math.floor(Math.random() * availableBreeds.length)];
-  } while (breed2 === breed1);
+
+  let breed1, breed2;
+
+  if (specifiedBreed1) {
+    // If breed is specified, use it directly (can be same as original chitten's breed)
+    breed1 = who.breed;
+    breed2 = specifiedBreed1;
+  } else {
+    // If no breed specified, pick two different random breeds
+    breed1 = availableBreeds[Math.floor(Math.random() * availableBreeds.length)];
+    do {
+      breed2 = availableBreeds[Math.floor(Math.random() * availableBreeds.length)];
+    } while (breed2 === breed1);
+  }
 
   // Create temporary parent cats
   const tempParent1 = new Chitten(0, 0, 6, 10, 'Male');
   const tempParent2 = new Chitten(0, 0, 6, 10, 'Female');
 
   // Apply breeds to temp parents
-  applyBreed(tempParent1, breed1);
-  applyBreed(tempParent2, breed2);
+  randomiseGeneticsBase(tempParent1, true, breed1);
+  randomiseGeneticsBase(tempParent2, true, breed2);
 
   // Generate baby using the existing breeding system
   const crossbreedName = generateChildBreedText(tempParent1, tempParent2);
   generateKitten(tempParent1, tempParent2, crossbreedName);
+
 
   // Replace who entirely with the baby
   const baby = chittens[chittens.length - 1];
@@ -390,8 +398,8 @@ function getBreedDepth(breedName) {
 
 // helpers 
 function selectGeneInteger(gene1, gene2, randomGene) {
-  // 50% chance to include a random gene 
-  let includeRandom = Math.random() < 0.5;
+  // chance to include a random gene 
+  let includeRandom = Math.random() < baseMutationRate;
   let selectGene;
   // pick a random proportion between parents
   let weight1 = Math.random();
@@ -414,19 +422,18 @@ function selectGeneInteger(gene1, gene2, randomGene) {
 
 function selectGeneColour(colour1, colour2) {
   // Random weights for parents (0–1)
-  let p1 = Math.random();
-  let p2 = 1 - p1;
+  let prop = Math.random();
   // Decide whether to include a random colour
-  if (Math.random() < 0.3) { // 30% chance of random gene
+  if (Math.random() < baseMutationRate) { // 30% chance of random gene
     let rand = randomColour();
     // Three-way mixing: pick random split between parents and random
     let r = 1 - (Math.random() * 0.1);
     // Blend parents first, then blend with random
-    let parentMix = mixTwoColours(colour1, colour2, p2);
+    let parentMix = mixTwoColours(colour1, colour2, prop);
     return mixTwoColours(parentMix, rand, r);
   }
   // Otherwise just blend parents
-  return mixTwoColours(colour1, colour2, p2);
+  return mixTwoColours(colour1, colour2, prop);
 }
 
 function selectGeneFrom(selectFrom) {

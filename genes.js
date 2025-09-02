@@ -10,7 +10,16 @@ const GENE_DATA = {
     mutationChance: 0.04,
     baseExpressionChance: 0.25,
     breedStandardChance: 0.98,
-    tooltip: 'Albino Gene'
+    tooltip: 'Albino gene'
+  },
+  melanic: {
+    name: 'Melanism',
+    geneProp: 'melanismGene',
+    expressedProp: 'melanismExpressed',
+    mutationChance: 0.04,
+    baseExpressionChance: 0.25,
+    breedStandardChance: 0.98,
+    tooltip: 'Melanic gene'
   },
   hairless: {
     // Completely bald
@@ -20,7 +29,7 @@ const GENE_DATA = {
     mutationChance: 0.0001,
     baseExpressionChance: 0.5,
     breedStandardChance: 0.95,
-    tooltip: 'Hairless Gene'
+    tooltip: 'Hairless gene'
   },
   baldFaced: {
     // Bald face like a Lykoi
@@ -30,7 +39,7 @@ const GENE_DATA = {
     mutationChance: 0.0001,
     baseExpressionChance: 0.5,
     breedStandardChance: 0.95,
-    tooltip: 'Bald Faced Gene'
+    tooltip: 'Bald Faced gene'
   },
   sparseCoat: {
     // Sparse coat like a Lykoi
@@ -40,7 +49,7 @@ const GENE_DATA = {
     mutationChance: 0.0001,
     baseExpressionChance: 0.3,
     breedStandardChance: 0.90,
-    tooltip: 'Sparse Coat Gene'
+    tooltip: 'Sparse Coat gene'
   },
   colourpoint: {
     // Temperature sensitive extremities like siamese and burmese
@@ -50,7 +59,7 @@ const GENE_DATA = {
     mutationChance: 0.0001,
     baseExpressionChance: 0.3,
     breedStandardChance: 0.95,
-    tooltip: 'Colorpoint Gene'
+    tooltip: 'Colorpoint gene'
   },
   brachycephalic: {
     // Shortened head like a persian
@@ -60,7 +69,7 @@ const GENE_DATA = {
     mutationChance: 0.01,
     baseExpressionChance: 0.3,
     breedStandardChance: 0.85,
-    tooltip: 'Brachycephalic Gene'
+    tooltip: 'Brachycephalic gene'
   },
   heterochromic: {
     // Differently coloured eyes
@@ -70,6 +79,15 @@ const GENE_DATA = {
     mutationChance: 0.01,
     baseExpressionChance: 0.5,
     breedStandardChance: 0.75, // Even for breeds like Angora, not 100% guaranteed
-    tooltip: 'Heterochromic Gene'
+    tooltip: 'Heterochromic gene'
+  },
+  dwarf: {
+    name: 'Dwarfism',
+    geneProp: 'dwarfismGene',
+    expressedProp: 'dwarfismExpressed',
+    mutationChance: 0.01,
+    baseExpressionChance: 0.25,
+    breedStandardChance: 0.98,
+    tooltip: 'Dwarf gene'
   }
 };
