@@ -13,6 +13,17 @@ bodypartCode[10] = 'jowl right'
 bodypartCode[11] = 'chin'
 bodypartCode[12] = 'chest'
 
+SPECIAL COLOURS (const in cattery)
+~These can be called by accessing specialColours[]
+0: 'firstColour' 
+1: 'secondColour' 
+2: 'thirdColour' 
+3: 'baldFaced' 
+4: 'colourpoint'
+5: 'pupil'
+6: 'leftEye'
+7: 'rightEye'
+
 PATTERNS
 0 - no pattern
 1 - tortoiseshell 
@@ -21,15 +32,17 @@ PATTERNS
 4 - NOT USED
 5 - NOT USED
 6 - rosette
-7 - ticked
 SPECIAL PATTERNS
 sparseCoat for sparseCoat gene
+tickedCoat for tickedCoat gene
 
 COATMOD
-[0] = smoothness of gradiaent (y midpoint position of gradient)
+[0] = gradient bias (y midpoint position of gradient)
 [1] = rotation of the gradient
 [2] = rotation of the pattern
-[3] = coat gradient amount (0 = none, 1 = max)
+[3] = gradient strength (0 = none, 1 = max)
+[4] = Pattern shift X
+[5] = Pattern shift Y
 
 MUTATIONS
 albino

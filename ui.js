@@ -1,15 +1,33 @@
-// ui constants
-let boxSize;
+// font
+const globalFont = 'Consolas';
+// scaling fonts
+fontSize = 15;
+fontSizeSmall = 12;
+fontWidth = 8.4;
+// adoption centre / litter picker
+boxes = [];
+parentBoxes = [];
+adoptionBackground = null;
+const adoptionCentrePadding = 20;
+const adoptionCentreColour = 'rgba(34, 34, 34, 0.7)'
+const adoptionCentreBorderColour = trueWhite;
+const breedFilterXMargin = adoptionCentrePadding + 20;
+// cat boxes
+const boxSize = 170;
 const boxPadding = 20;
 const boxColumns = 3;
 const boxRows = 3;
 const boxThickness = 10;
+// buttons and labels
+buttons = [];
+labels = [];
+const buttonHeight = 25;
 const buttonPadding = 20;
+const buttonMargin = 5;
+// hovering
 const hoverIndicatorSize = 60;
 const hoverIndicatorStroke = 3;
 const tooltipCharacterWrapLimit = 40;
-const buttonMargin = 5;
-const breedFilterXMargin = 20;
 // chitten tooltip
 const cTooltipPMarginX = 60;
 const cTooltipMargin = 10;
@@ -18,17 +36,7 @@ const tooltipBorderColour = 'rgba(255, 255, 255, 0.3)';
 const tooltipBackgroundColour = trueBlack;
 let buttonsInTopBar = 0;
 let topBarButtonsXTotal = 0;
-
-// font
-const globalFont = 'Consolas';
-// scaling fonts
-fontSize = 15;
-fontSizeSmall = 12;
-fontWidth = 8.4;
-
-// init
-buttons = [];
-labels = [];
+// colours
 uiColourArray = [];
 
 // Breed filtering variables
@@ -40,18 +48,20 @@ let breedFilterVisible = false; // Whether breed filter buttons are shown
 * function to initialise all the buttons and labels / dynamic ui elements
 */
 function initUi() {
+  // adoption / litter picking centre
+  adoptionBackground = new (AdoptionCentreBackground);
 
-  buttons.push(new Button(0, 15, 'Show more', 'See another 9 chittens'));
+  buttons.push(new Button(0, (-buttonHeight / 2) + (1 * (buttonHeight + buttonMargin)) + buttonMargin, 'Show more', 'See another 9 chittens'));
   buttons[0].visible = false;
   buttons[0].canvasSizeDependent = true;
   buttons[0].reinitPosition();
 
-  buttons.push(new Button(0, -20, 'Adopt', 'Adopt the selected chitten'));
+  buttons.push(new Button(0, -buttonHeight / 2 + buttonMargin, 'Adopt', 'Adopt the selected chitten'));
   buttons[1].visible = false;
   buttons[1].canvasSizeDependent = true;
   buttons[1].reinitPosition();
 
-  buttons.push(new Button(0, 15, 'Rehome all', 'Give away this litter'));
+  buttons.push(new Button(0, (-buttonHeight / 2) + (1 * (buttonHeight + buttonMargin)) + buttonMargin, 'Rehome all', 'Give away this litter'));
   buttons[2].visible = false;
   buttons[2].canvasSizeDependent = true;
   buttons[2].reinitPosition();
@@ -75,16 +85,16 @@ function initUi() {
   buttons[9].visible = false;
   // menu items
   // devmode button
-  buttons.push(new Button(canvasWidth - 20, canvasHeight - 25, '&!', 'Dev mode - open genetic editor'));
+  buttons.push(new Button(canvasWidth - 20, canvasHeight - 25, '&!', 'Dev mode - open genetic editor', false));
   if (!devMode) {
     buttons[10].visible = false;
   }
-  buttons[10].canvasSizeDependent = true;
+  buttons[10].canvasSizeDependent = false;
   buttons.push(new Button(0, buttonMargin, unicodeFemale, 'Adopt a female Chitten'));
   buttons[11].topBarPosition = 1;
   buttons.push(new Button(0, buttonMargin, unicodeMale, 'Adopt a male Chitten'));
   buttons[12].topBarPosition = 2;
-  buttons.push(new Button(0, 85, 'Close', 'Close the adoption centre'));
+  buttons.push(new Button(0, (-buttonHeight / 2) + (3 * (buttonHeight + buttonMargin)) + buttonMargin, 'Close', 'Close the adoption centre'));
   buttons[13].visible = false;
   buttons[13].canvasSizeDependent = true;
   buttons[13].reinitPosition();
@@ -95,7 +105,7 @@ function initUi() {
   buttons[14].topBarPosition = 0;
 
   // Add breed filter toggle button (positioned under "Show me more")
-  buttons.push(new Button(0, 50, 'Filter by breed', 'Choose specific breeds to view'));
+  buttons.push(new Button(0, (-buttonHeight / 2) + (2 * (buttonHeight + buttonMargin)) + buttonMargin, 'Filter by breed', 'Choose specific breeds to view'));
   buttons[15].visible = false; // Hide breed filter button initially
   buttons[15].canvasSizeDependent = true;
   buttons[15].reinitPosition();
@@ -105,35 +115,35 @@ function initUi() {
   buttons[16].topBarPosition = 6;
 
   // adoption centre label
-  labels.push(new Button(0, - 105, 'Adoption Centre', ''));
+  labels.push(new Button(0, - 2 * (buttonHeight + buttonMargin) - buttonMargin, unicodeCat + ' Welcome to the Adoption Centre', '', '', true));
   labels[0].visible = false;
   labels[0].canvasSizeDependent = true;
   labels[0].aboveCattery = true;
   labels[0].reinitPosition();
 
   // choose a ....
-  labels.push(new Button(0, - 70, 'Choose a ....', '')); // text populated later
+  labels.push(new Button(0, - 1 * (buttonHeight + buttonMargin) - buttonMargin, 'Choose a ....', '', '', true)); // text populated later
   labels[1].visible = false;
   labels[1].canvasSizeDependent = true;
   labels[1].aboveCattery = true;
   labels[1].reinitPosition();
 
   // litter choice timer label
-  labels.push(new Button(0, - 70, 'X', ''));
+  labels.push(new Button(0, - 1 * (buttonHeight + buttonMargin) - buttonMargin, 'X', '', '', true));
   labels[2].visible = false;
   labels[2].canvasSizeDependent = true;
   labels[2].aboveCattery = true;
   labels[2].reinitPosition();
 
   // litter centre label
-  labels.push(new Button(0, - 140, 'Choose one of ....', '')); // text populated later
+  labels.push(new Button(0, - 3 * (buttonHeight + buttonMargin) - buttonMargin, 'Choose one of ....', '', '', true)); // text populated later
   labels[3].visible = false;
   labels[3].canvasSizeDependent = true;
   labels[3].aboveCattery = true;
   labels[3].reinitPosition();
 
   // rehoming info label
-  labels.push(new Button(0, - 105, 'The rest will be adopted by nice people', ''));
+  labels.push(new Button(0, - 2 * (buttonHeight + buttonMargin) - buttonMargin, 'The rest will be adopted by nice people', '', '', true));
   labels[4].visible = false;
   labels[4].canvasSizeDependent = true;
   labels[4].aboveCattery = true;
@@ -261,7 +271,7 @@ function positionTopBar() {
 * @param {int} y - the y coordinate of the top of the button
 * @param {string} text - text on the button
 */
-function Button(x, y, text, toolTip, alignment) {
+function Button(x, y, text, toolTip, alignment, isLabel = false) {
   this.align = alignment;
   this.x = x;
   this.y = y;
@@ -270,12 +280,13 @@ function Button(x, y, text, toolTip, alignment) {
   this.size = ((this.text.length * fontWidth) + buttonPadding);
   this.fixedSize = false;
   this.topBarPosition;
-  this.height = 25;
+  this.height = buttonHeight;
   this.visible = true;
   this.available = true;
   this.highlighted = false;
   this.on = false;
   this.toolTip = toolTip;
+  this.isLabel = isLabel;
   // Initialize tooltip wrapping - will be calculated in reinitSizes()
   this.wrappedToolTip = [toolTip];
   this.toolTipLines = 1;
@@ -298,7 +309,6 @@ function Button(x, y, text, toolTip, alignment) {
       this.toolTipWidth = (this.toolTip.length * fontWidth) + buttonPadding;
       this.toolTipHeight = 25;
     }
-
     if (!this.fixedSize) {
       this.width = (this.text.length * fontWidth) + buttonPadding;
       this.size = ((this.text.length * fontWidth) + buttonPadding);
@@ -307,9 +317,9 @@ function Button(x, y, text, toolTip, alignment) {
   this.reinitPosition = function () {
     this.x = canvasWidth / 2;
     if (this.aboveCattery) {
-      this.y = (canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + this.canvasYOffset;
+      this.y = (trueBottom / 2) - ((boxSize + boxPadding) * 1.5) - (boxThickness / 2) + this.canvasYOffset;
     } else {
-      this.y = ((canvasHeight / 2) - ((3 * (boxSize + boxPadding)) / 2) + (3 * (boxSize + boxPadding))) + this.canvasYOffset;
+      this.y = (trueBottom / 2) + ((boxSize + boxPadding) * 1.5) + (boxThickness / 2) + this.canvasYOffset;
     }
   }
   this.wrapText = function (text, maxLength) {
@@ -387,19 +397,21 @@ function Button(x, y, text, toolTip, alignment) {
       } else {
         ctx.translate(this.x - (this.width / 2), this.y);
       }
-      ctx.globalAlpha = 0.25;
-      if (this.highlighted) {
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
-      } else if (!this.available) {
-        ctx.fillStyle = mixTwoColours(trueBlack, uiColourArray[2], 0.5);
-      } else if (this.on) {
-        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[0], 0.5);
-      } else {
-        ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.3);
+      if (!this.isLabel) {
+        ctx.globalAlpha = 0.25;
+        if (this.highlighted) {
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
+        } else if (!this.available) {
+          ctx.fillStyle = mixTwoColours(trueBlack, uiColourArray[2], 0.5);
+        } else if (this.on) {
+          ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[0], 0.5);
+        } else {
+          ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.3);
+        }
+        ctx.fillRect(0, 0, this.width, this.height);
       }
-      ctx.fillRect(0, 0, this.width, this.height);
-      // label
+      // text
       ctx.globalAlpha = 1;
       if (this.highlighted) {
         ctx.fillStyle = uiColourArray[3];
@@ -534,14 +546,13 @@ function handleButton(input) {
       selection = null;
       choosingChitten = false;
       break;
-    // - Case 3: Kill/remove selected chitten (storm button)
+    // - Case 3: Rehome the selected chitten (storm button)
     case 3:
       sendMessage(selection.name + ' went to live with someone else');
-      speak(selection, angryWord());
       for (let i = 0, stop = false; i < chittens.length && !stop; i++) {
         if (chittens[i] == selection) {
           stop = true;
-          chittens[i].kill();
+          chittens[i].kill(false);
         }
       }
       selection = null;
@@ -660,24 +671,29 @@ function handleButton(input) {
   }
 }
 
+let lastTouchTime = 0;
+const touchMouseDelay = 500; // 500ms to prevent mouse events after touch
+
 function tapOn() {
-  touchOnorOffThisFrame = true;
+  lastTouchTime = performance.now();
   click();
 }
 
 function tapOff() {
-  touchOnorOffThisFrame = true;
+  lastTouchTime = performance.now();
   unclick();
 }
 
 function mouseOn() {
-  if (!touchOnorOffThisFrame) {
+  // Only process mouse events if no touch event happened recently
+  if (performance.now() - lastTouchTime > touchMouseDelay) {
     click();
   }
 }
 
 function mouseOff() {
-  if (!touchOnorOffThisFrame) {
+  // Only process mouse events if no touch event happened recently
+  if (performance.now() - lastTouchTime > touchMouseDelay) {
     unclick();
   }
 }
@@ -792,9 +808,9 @@ function click() {
 
     // colour bar - now supports 6 colors
     if (devMode && colourBars && pointerPos.x >= colourBars.x && pointerPos.x <= colourBars.x + (colourBars.colors.length * colourBars.colorWidth) && pointerPos.y >= colourBars.y && pointerPos.y <= colourBars.y + colourBars.colorHeight) {
-      const colorIndex = Math.floor((pointerPos.x - colourBars.x) / colourBars.colorWidth);
-      if (colorIndex >= 0 && colorIndex < colourBars.colors.length) {
-        colourBars.selected = colorIndex;
+      const colourIndex = Math.floor((pointerPos.x - colourBars.x) / colourBars.colorWidth);
+      if (colourIndex >= 0 && colourIndex < colourBars.colors.length) {
+        colourBars.selected = colourIndex;
         clickedSomething = true;
       }
     }
@@ -1109,10 +1125,12 @@ function drawChittenTooltip(chitten) {
   ctx.font = '12px ' + globalFont;
   let bString = chitten.breed;
   if (getBreedDepth(chitten.breed) == 0) {
-    if (meetsBreedStandard(chitten)) {
-      bString += " " + unicodeTick + " " + breedStandardText;
-    } else {
-      bString += " " + unicodeCross + " " + notBreedStandardText;
+    if (hasBreedStandard(chitten.breed)) {
+      if (meetsBreedStandard(chitten)) {
+        bString += " " + unicodeTick + " " + breedStandardText;
+      } else {
+        bString += " " + unicodeCross + " " + notBreedStandardText;
+      }
     }
   }
   maxWidth = Math.max(maxWidth, ctx.measureText('Breed: ' + bString).width);
@@ -1138,13 +1156,16 @@ function drawChittenTooltip(chitten) {
     && chitten.age < maturesAt) {
     cString = unicodeUnknown;
   } else {
-    let c1 = ntc.name(chitten.firstColour)[1];
-    let c2 = ntc.name(chitten.secondColour)[1];
-    let c3 = ntc.name(chitten.thirdColour)[1];
+    let c1 = ntc.name(chitten.getBodyPartColour('firstColour'))[1];
+    let c2 = ntc.name(chitten.getBodyPartColour('secondColour'))[1];
+    let c3 = ntc.name(chitten.getBodyPartColour('thirdColour'))[1];
     if (chitten.secondColour == chitten.thirdColour) {
       cString += c1 + ' & ' + c2;
     } else {
       cString += c1 + ', ' + c2 + ' & ' + c3;
+    }
+    if (chitten.tickedCoatExpressed) {
+      cString += ' Ticked';
     }
   }
   maxWidth = Math.max(maxWidth, ctx.measureText('Coat: ' + cString).width);
@@ -1152,20 +1173,22 @@ function drawChittenTooltip(chitten) {
   // pattern colours
   let pString = 'None';
   if ((chitten.albinoExpressed && !this.sparseCoatExpressed)
-    || ((chitten.colourpointExpressed || chitten.pattern == 3)
+    || ((chitten.colourpointExpressed)
       && chitten.age < maturesAt)) {
     pString = unicodeUnknown;
+  } else if (chitten.age < maturesAt && chitten.pattern == 3) {
+    pString = unicodeUnknown + " " + getPatternName(3);
   } else if (chitten.pattern == 1) {
     pString = getPatternName(1);
+  } else if (chitten.pattern == 2) {
+    pString = getPatternName(2);
   } else if (chitten.pattern == 5) {
     pString = getPatternName(5);
-  } else if (chitten.pattern == 7) {
-    pString = getPatternName(7);
   } else if (chitten.pattern == 3 || chitten.pattern == 6) {
     if (chitten.hairlessExpressed) {
       pString = '';
     } else {
-      pString = ntc.name(chitten.patternColour)[1];
+      pString = ntc.name(chitten.getPatternColourAndAlpha()[0])[1];
     }
     pString += ' ' + getPatternName(chitten.pattern);
   }
@@ -1177,12 +1200,12 @@ function drawChittenTooltip(chitten) {
     eString = unicodeUnknown;
   } else {
     if (!chitten.heterochromicExpressed && !chitten.albinoExpressed) {
-      eString = ntc.name(chitten.eyeColour)[1];
+      eString = ntc.name(chitten.specialColours[6])[1];
     } else if (chitten.albinoExpressed) {
-      eString = 'Pink';
+      eString = 'Albino';
     } else {
-      let color1Name = ntc.name(chitten.eyeColour)[1];
-      let color2Name = ntc.name(chitten.eyeColour2)[1];
+      let color1Name = ntc.name(chitten.specialColours[6])[1];
+      let color2Name = ntc.name(chitten.specialColours[7])[1];
       eString = 'Heterochromic ' + color1Name + ' & ' + color2Name;
     }
   }
@@ -1270,8 +1293,149 @@ function drawChittenTooltip(chitten) {
     drawTextWithColoredSymbols(geneLine, tooltipX + 10, currentY);
     currentY += 13; // Line spacing
   }
-
   ctx.restore();
+}
+
+function AdoptionCentreBackground() {
+  this.x = 0;
+  this.y = 0;
+  this.width = canvasWidth;
+  this.height = canvasHeight;
+  this.expectedBoxes = 9;
+  this.columns = boxColumns;
+  this.rows = boxRows;
+  this.resize = function () {
+    this.rows = Math.floor(boxes.length / this.columns);
+    let halfColumns = this.columns / 2;
+    let halfRows = this.rows / 2;
+    let buttonsAbove;
+    let buttonsBelow;
+    let xOffset;
+    let yOffset;
+    if (!chosenKitten) {
+      buttonsAbove = 1;
+      buttonsBelow = 2;
+      xOffset = boxSize + boxPadding + adoptionCentrePadding + boxThickness + adoptionCentrePadding;
+      yOffset = (boxSize / 2);
+    } else {
+      buttonsAbove = 2;
+      buttonsBelow = 4;
+      xOffset = 0;
+      yOffset = 0;
+    }
+    let yOffsetTop = (buttonsAbove * (buttonHeight + buttonMargin)) + yOffset;
+    let yOffsetBelow = (buttonsBelow * (buttonHeight + buttonMargin));
+    this.x = (canvasWidth / 2) - ((boxSize + boxPadding) * halfColumns) + (boxThickness / 2) - (adoptionCentrePadding) - xOffset;
+    this.y = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (adoptionCentrePadding) - yOffsetTop;
+    this.width = boxRows * (boxSize + boxPadding) - boxThickness + (adoptionCentrePadding * 2) + (2 * xOffset);
+    this.height = boxColumns * (boxSize + boxPadding) - boxThickness + (adoptionCentrePadding * 2) + yOffsetTop + yOffsetBelow;
+  }
+  this.render = function () {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = adoptionCentreColour;
+    ctx.beginPath();
+    ctx.rect(this.x, this.y, this.width, this.height);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = adoptionCentreBorderColour;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+/**
+* function to describe a box
+*/
+function CatBox(parentBox, editorBox, column, row, size, thickness) {
+  this.x = 0;
+  this.y = 0;
+  this.column = column;
+  this.row = row;
+  this.parentBox = parentBox;
+  this.editorBox = editorBox;
+  this.size = size;
+  this.thickness = thickness;
+  this.selected = false;
+  this.highlighted = false;
+  this.id = 0;
+  this.text = '';
+  this.symbol = unicodeHeart;
+  this.colour = trueBlack;
+  this.selectedColour;
+  this.reinitPosition = function () {
+    if (!this.parentBox && !this.editorBox) {
+      this.x = (canvasWidth / 2) - (((boxSize * 3) + (boxPadding * 2)) / 2) + (this.column * boxPadding) + (this.column * boxSize);
+      this.y = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) + (this.row * boxPadding) + (this.row * boxSize);
+    } else if (this.parentBox) {
+      this.y = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2);
+      if (this.column == 1) {
+        this.x = (canvasWidth / 2) - (boxSize * 3);
+      } else if (this.column == 2) {
+        this.x = (canvasWidth / 2) + (boxSize * 2);
+      } else console.warn('CatBox reinit sent a bad column');
+    } else if (this.editorBox) {
+      this.x = editorPreviewBoxX;
+      this.y = editorPreviewBoxY;
+    }
+  }
+  this.reinitPosition();
+  this.updateSymbol = function () {
+    if (getBreedDepth(chittens[this.id].breed) == 0) {
+      if (hasBreedStandard(chittens[this.id].breed)) {
+        if (meetsBreedStandard(chittens[this.id])) {
+          this.symbol = unicodeTick;
+        } else this.symbol = unicodeCross;
+      } else this.symbol = unicodeNoBreedStandard;
+    } else this.symbol = unicodeCrossbreed;
+  }
+  this.update = function () {
+    ctx.globalAlpha = 1;
+    ctx.font = fontSizeSmall + 'px' + ' ' + globalFont;
+    ctx.fillStyle = trueWhite;
+    ctx.fillText(this.text, this.x + 10, this.y + 20);
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(this.symbol, this.x + this.size - this.thickness - 10, this.y + this.size - this.thickness);
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = this.thickness;
+    if (!this.selected) {
+      ctx.globalAlpha = 0.6;
+    }
+    if (this.highlighted || this.selected) {
+      // set the highlight colour if it hasn't already
+      if (!this.selectedColour) {
+        this.selectedColour = mixTwoColours(this.colour, trueWhite, 0.5);
+      }
+      ctx.strokeStyle = this.selectedColour;
+    } else {
+      ctx.strokeStyle = this.colour;
+    }
+    ctx.strokeRect(this.x, this.y, this.size, this.size);
+  };
+  // function to check if we have hit the edge of the catbox
+  this.checkBounce = function (who) {
+    if (who.inCatBox == this && !who.onSurface) {
+      // if we bounce off a side wall
+      if (who.x < this.x + who.size || who.x >= this.x + this.size - who.size) {
+        who.speedX *= -0.9;
+        let targetangle = Math.atan2(who.y, this.y);
+        who.spin += elasticity * targetangle / 10;
+        if (who.x < this.x + who.size) {
+          who.x = this.x + who.size;
+        } else {
+          who.x = this.x + this.size - who.size;
+        }
+      }
+      if (who.y < this.y + who.size) {
+        who.speedY *= -0.99;
+        who.y = this.y + who.size;
+      }
+      if (who.y >= this.y + this.size - who.bodyToFeetDistance) {
+        who.y = this.y + this.size - who.bodyToFeetDistance;
+        who.landedOnSurface();
+      }
+    }
+  };
 }
 
 function updateCursor(state) {

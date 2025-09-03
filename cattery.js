@@ -15,10 +15,6 @@ const minLitterSize = 6;
 const kittenPreviewSizeMod = 2.5; // amount a kitten's size is increased for the preview during litter selection for better visibility
 // adoption centre
 const proportionOfRandomChittens = 0.3; // proportion of mixed filter chittens that are truely randomly generated 
-// Age specific colours (all arrays should be darkest to brightest)
-const kittenEyeColours = ['#253485', '#a1b2d8'];
-const colourpointKittenColours = ['#d3cd91', trueWhite];
-const oldAgePupilColour = '#535353'
 // nose colours
 const nosePink = '#dfb2bc';
 const noseBrown = '#473526';
@@ -30,7 +26,6 @@ const skinBrown = '#685647';
 const skinDarkBrown = '#3a3633';
 const skinGrey = '#aa97a7';
 const skinBlack = '#292726';
-
 // --- Meter settings
 // energy
 const minEnergy = 0;
@@ -76,7 +71,7 @@ const youngChittenJumpCooldown = 15; // UPS
 const chittenSittingCooldown = 60; // UPS - how long chittens must sit before standing up. This counts down
 const chittenSittingSpeed = 1 / 15; // UPS 
 const chittenStandingUpSpeed = 1 / 10; // UPS
-const chittenFlopSleepTreeSpeed = 1 / 40; // UPS
+const chittenFlopSleepTreeSpeed = 1 / 60; // UPS
 const chittenMaxSeekFireflyDistance = 1000; // diagonal measurement for physics calculations
 const chittenMouthOpenCloseSpeed = 8; // UPS - frames to fully open/close mouth
 const eatingChewCycleDuration = 20; // UPS frames per chew cycle (open + close)
@@ -85,22 +80,7 @@ const eatingTotalChews = 4; // Number of chew cycles during eating
 const eatingClosedPauseDuration = Math.max(1, Math.round(eatingChewCycleDuration * 0.1)); // 10% of cycle
 const eatingOpenHoldDuration = Math.max(1, Math.round(eatingChewCycleDuration * 0.15)); // 15% of cycle
 const speechDuration = 25; // time a chitten's speech lasts
-// patterns
-const validPatterns = [
-  { value: 0, label: 'None' },
-  { value: 1, label: 'Tortoiseshell' },
-  { value: 3, label: 'Tabby' },
-  { value: 6, label: 'Rosette' },
-  { value: 7, label: 'Ticked' }
-];
 
-/**
-* Get pattern name from validPatterns array
-*/
-function getPatternName(patternValue) {
-  const pattern = validPatterns.find(p => p.value === patternValue);
-  return pattern ? pattern.label : 'Unknown';
-}
 // images
 // patterns and body parts
 const smile = new Image();
@@ -114,7 +94,7 @@ eyesClosed.src = 'img/eyesClosed.png';
 const pattern1 = new Image(); // tortoiseshell
 pattern1.src = 'img/pattern1.png';
 pattern1.onload = () => { };
-const pattern2 = new Image(); // albino spotting (unused atm)
+const pattern2 = new Image(); // piebald
 pattern2.src = 'img/pattern2.png';
 pattern2.onload = () => { };
 const pattern3 = new Image(); // tabby
@@ -123,13 +103,68 @@ pattern3.onload = () => { };
 const pattern6 = new Image(); // rosette
 pattern6.src = 'img/pattern6.png';
 pattern6.onload = () => { };
-const pattern7 = new Image(); // ticked
-pattern7.src = 'img/pattern7.png';
+const tickedCoat = new Image(); // ticked
+tickedCoat.src = 'img/ticked.png';
 const sparseCoat = new Image(); // sparse coat
 sparseCoat.src = 'img/sparse.png';
-pattern7.onload = () => { };
+sparseCoat.onload = () => { };
 const butthole = new Image();
 butthole.src = 'img/butthole.png';
+
+// Pattern lookup
+const validPatterns = [
+  { value: 0, image: null, label: 'None' },
+  { value: 1, image: pattern1, label: 'Tortoiseshell' },
+  { value: 2, image: pattern2, label: 'Piebald' },
+  { value: 3, image: pattern3, label: 'Tabby' },
+  { value: 6, image: pattern6, label: 'Rosette' },
+];
+const patternResolution = 400; // 400px x 400px images
+const chittenPatternRes = patternResolution / 100;  // == 4
+const basePatternSize = chittenMinSize * chittenPatternRes;
+const maxPatternShift = patternResolution / 8;
+
+// Special bodypart strings lookup
+const specialColours = [
+  { value: 0, label: 'firstColour' },
+  { value: 1, label: 'secondColour' },
+  { value: 2, label: 'thirdColour' },
+  { value: 3, label: 'baldFaced' },
+  { value: 4, label: 'colourpoint' },
+  { value: 5, label: 'pupil' },
+  { value: 6, label: 'leftEye' },
+  { value: 7, label: 'rightEye' },
+];
+
+// Age specific colours (all arrays should be darkest to brightest)
+const kittenEyeColours = ['#253485', '#a1b2d8'];
+const colourpointKittenColours = ['#d3cd91', trueWhite];
+const oldAgePupilColour = '#535353'
+
+// Define anatomical connections: [topBodypartIndex, bottomBodypartIndex]
+const connections = [
+  [12, 0],   // [0] front foot left: chest to front foot left
+  [12, 1],   // [1] front foot right: chest to front foot right  
+  [2, 12],  // [2] head: head to chest
+  [3, 2],   // [3] left ear: left ear to head
+  [4, 2],   // [4] right ear: right ear to head
+  [5, 12],  // [5] body: body to chest
+  [6, 5],   // [6] tail: tail to body
+  [5, 7],   // [7] back foot left: body to back foot left
+  [5, 8],   // [8] back foot right: body to back foot right
+  [9, 11],  // [9] left jowl: left jowl to chin
+  [10, 11], // [10] right jowl: right jowl to chin
+  [2, 11],  // [11] chin: head to chin
+  [5, 12]   // [12] chest: body to chest
+];
+
+/**
+* Get pattern name from validPatterns array
+*/
+function getPatternName(patternValue) {
+  const pattern = validPatterns.find(p => p.value === patternValue);
+  return pattern ? pattern.label : 'Unknown';
+}
 
 // Performance optimization: Cache mate-finding results
 let availableMates = [];
@@ -176,11 +211,19 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.pattern = 0;
   this.patternAlpha = 0.5;
   this.bodypartCode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  this.coatMod = [Math.random(), Math.random(), Math.random(), 0]; // [0] is fade position for gradients, [1] is the angle of the gradient, [2] is roation of pattern, [3] is gradient expression
+  this.coatMod = [0, 0, 0, 0, 0, 0,];
+  // cached colours, gradients and patterns
+  this.bodypartColours = [];
+  this.specialColours = [];
+  this.bodypartGradients = [];
+  this.patternColours = [];
   this.outlineColour = '';
   this.noseColour = noseBlack;
   this.leftToeColour = skinPink;
   this.rightToeColour = skinPink;
+  this.cachedPatternImage;
+  this.cachedPatternRotation;
+  this.cachedPatternScale;
   // Size
   this.size = bodySize;
   this.maxSize = Math.min(maxSize, chittenMaxSize);
@@ -195,7 +238,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.earWidth = 0.5; // 0.5 is average
   this.earHeight = 0.5;
   this.thickness = 0.5; // 0.5 is average
-  this.legginess = 0.5;
+  this.legLength = 0.5;
   this.tailLength = 0.5;
   this.mawSize = 0.5;
   // Derived sizes and offsets, calculated in recalculateSizes
@@ -215,6 +258,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.thicknessModS;
   this.thicknessModL;
   this.tailLengthY;
+  this.tailThickness;
   // behaviour
   this.angleToFocus = Math.PI / 2; // spawn with angle to focus straight down
   this.originalAngleToFocus = Math.PI / 2;
@@ -261,6 +305,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.baldFacedExpressed = false;
   this.sparseCoatGene = false;
   this.sparseCoatExpressed = false;
+  this.tickedCoatGene = false;
+  this.tickedCoatExpressed = false;
   this.hairlessGene = false;
   this.hairlessExpressed = false;
   this.colourpointGene = false;
@@ -285,69 +331,169 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.hitFocus = false;
   this.flaggedForDeath = false;
   this.onTree = false;
-  this.kill = function () {
+  this.kill = function (death = true) {
+    if (death) {
+      createGlyphs(this.x, this.y, unicodeMedic, 1);
+      gravestones.push(new Grave(this.x, this.y, this.size, this.speedX, this.speedY, this.age >= (this.maxAge - oldAgeFor), this.firstColour));
+    }
     removeRelationships(this);
-    createGlyphs(this.x, this.y, unicodeMedic, 1);
-    gravestones.push(new Grave(this.x, this.y, this.size, this.speedX, this.speedY, this.age >= (this.maxAge - oldAgeFor), this.firstColour));
     chittens.splice(chittens.indexOf(this, chittens), 1);
     recalculateChittenNumbers();
   };
-  // Helper functions for color resolution
-  this.getBaseColour = function (colorIndex) {
-    const colorMap = [this.firstColour, this.secondColour, this.thirdColour];
-    return this.modifyColourByLifeStage(colorMap[colorIndex]);
-  };
-  this.getSkinColour = function (colorIndex) {
-    const skinMap = [this.skinColour1, this.skinColour2, this.skinColour3];
-    return skinMap[colorIndex];
-  };
-  // helper function for eye colours (includes life stages)
-  this.getEyeColour = function (whichEye) {
-    if (this.albinoExpressed) {
-      return albinoRed;
-    }
-    if (whichEye == 'Left') {
-      let leftEyeColour = this.eyeColour;
-      if (this.age < maturesAt) {
-        const eyeBrightness1 = getBrightness(leftEyeColour) / rgbMax; // 0 to 1 where 1 is brightest
-        const eyeMix1 = mixTwoColours(kittenEyeColours[1], kittenEyeColours[0], eyeBrightness1);
-        leftEyeColour = mixTwoColours(leftEyeColour, eyeMix1, this.matureModifier);
-      }
-      if (this.melanismExpressed) {
-        let mEye = hexToRgb(leftEyeColour);
-        leftEyeColour = rgbToHex(mEye.r, mEye.g, 0);
-      }
-      return leftEyeColour;
-    } else if (whichEye == 'Right') {
-      let rightEyeColour = this.eyeColour2;
-      if (this.age < maturesAt) {
-        const eyeBrightness2 = getBrightness(rightEyeColour) / rgbMax;
-        const eyeMix2 = mixTwoColours(kittenEyeColours[1], kittenEyeColours[0], eyeBrightness2);
-        rightEyeColour = mixTwoColours(rightEyeColour, eyeMix2, this.matureModifier);
-      }
-      if (this.melanismExpressed) {
-        let mEye = hexToRgb(rightEyeColour);
-        rightEyeColour = rgbToHex(mEye.r, mEye.g, 0);
-      }
-      return rightEyeColour;
+  // --- COLOURS
+  // Helper function to read a stored colour after it is calculated
+  this.getBodyPartColour = function (bpi) {
+    if (typeof bpi !== 'string') {
+      return this.bodypartColours[bpi];
     } else {
-      console.warn("getEyeColour fed bad string");
+      const index = this.getSpecialBodypartIndex(bpi);
+      if (index >= 0) {
+        return this.specialColours[index];
+      }
+      console.warn('getBodyPartColour fed a bad string: ' + bpi);
     }
   }
-  this.getPupilColour = function () {
-    let pupilColour = trueBlack;
-    if (this.albinoExpressed) {
-      pupilColour = mixTwoColours(trueBlack, albinoRed, 0.5);
-    } else if (this.albinoGene) {
-      pupilColour = mixTwoColours(trueBlack, albinoRed, 0.7);
+  this.getSpecialBodypartIndex = function (string) {
+    const found = specialColours.find(item => item.label === string);
+    return found ? found.value : -1;
+  }
+  // function to recalculate colours
+  this.recalculateColours = function (all = false) {
+    // Determine whether we can skip any bodypartCodes
+    let forceRefreshBPC = [];
+    let forceRefreshSC = [];
+    if (!all) {
+      // colourpoint parts need to be refreshed if they are affected by the gene
+      if (this.colourpointExpressed) {
+        forceRefreshBPC.push(9, 10, 'colourpoint');
+        for (let i = 0; i < this.colourpointMap.length; i++) {
+          if (this.colourpointMap[i]) {
+            const bodypartIndices = this.colourMapToBodypartCode(i);
+            forceRefreshBPC.push(...bodypartIndices);
+          }
+        }
+      }
+      if (this.baldFacedExpressed) {
+        forceRefreshBPC.push(9, 10, 11);
+      }
+      // tabby kitten colours change constantly
+      if ((this.age < maturesAt && (this.pattern == 3 || this.colourpointExpressed))
+        // elderly chittens colours fade constantly
+        || this.age >= this.maxAge - oldAgeFor) {
+        for (let i = 0; i < this.bodypartCode.length; i++) {
+          forceRefreshBPC.push(i);
+        }
+      }
+      // kitten eye colours change
+      if (this.age < maturesAt) {
+        forceRefreshSC.push(6, 7);
+        // old age chittens' pupils fade
+      } else if (this.age >= this.maxAge - oldAgeFor) {
+        forceRefreshBPC.push(5);
+      }
     }
-    if (this.oldAgeModifier !== 0) { // 0 is adult, 1 is totally old age
-      let modifier = this.oldAgeModifier;
-      pupilColour = mixTwoColours(oldAgePupilColour, pupilColour, modifier);
-    }
-    return pupilColour;
 
+    // --- CALCULATIONS
+    // Calculate the base bodypartCode colours
+    if (all || forceRefreshBPC.length > 0) {
+      for (let i = 0; i < this.bodypartCode.length; i++) {
+        if (all || forceRefreshBPC.includes(i)) {
+          this.bodypartColours[i] = this.calculateBodyPartColour(i);
+        }
+      }
+    }
+    // Calculate special colours
+    if (all || forceRefreshSC.length > 0) {
+      for (const special of specialColours) {
+        if (all || forceRefreshSC.includes(special.value)) {
+          this.specialColours[special.value] = this.calculateBodyPartColour(special.label);
+        }
+      }
+    }
+    // Calculate the pattern colours
+    if (this.pattern !== 0) {
+      this.patternColours = this.calculatePatternColours();
+    }
+    // Calculate the gradients - include connected body parts
+    for (let i = 0; i < this.bodypartCode.length; i++) {
+      if (all || forceRefreshBPC.length > 0) {
+        let needsRefresh = all || forceRefreshBPC.includes(i);
+
+        // Also refresh if any connected body parts need refreshing
+        if (!needsRefresh) {
+          const connectedParts = this.getConnectedBodyparts(i);
+          needsRefresh = connectedParts.some(connectedIndex => forceRefreshBPC.includes(connectedIndex));
+        }
+
+        if (needsRefresh) {
+          this.bodypartGradients[i] = this.calculateBodypartGradient(i);
+        }
+      }
+    }
+    // Cache expensive pattern calculations
+    if (all) {
+      this.cachedPatternImage = this.getPatternImageFromValidPatterns();
+    }
+    this.cachedPatternRotation = this.coatMod[2] * 2 * Math.PI;
+    // calculating skin and nose colours using helpers
+    if (all || this.sparseCoatExpressed) {
+      this.skinColour1 = this.getSkinColourFromColour(this.firstColour);
+      this.skinColour2 = this.getSkinColourFromColour(this.secondColour);
+      this.skinColour3 = this.getSkinColourFromColour(this.thirdColour);
+    }
+    if (all) {
+      this.noseColour = this.getNoseColourFromColour(this.firstColour);
+      this.leftToeColour = this.getNoseColourFromColour(this.getBodyPartColour(0));
+      this.rightToeColour = this.getNoseColourFromColour(this.getBodyPartColour(1));
+    }
+    // Calculating the colours of cell shading
+    if (all && this.melanismExpressed) {
+      this.outlineColour = mixTwoColours(trueBlack, trueWhite, 0.7);
+    } else if (all && this.albinoExpressed && !this.hairlessExpressed && !this.sparseCoatExpressed) {
+      this.outlineColour = mixTwoColours(trueWhite, trueBlack, 0.7);
+    } else if (all && this.albinoExpressed && this.hairlessExpressed) {
+      this.outlineColour = mixTwoColours(nosePink, trueBlack, 0.7);
+    } else if (all && this.hairlessExpressed) {
+      this.outlineColour = mixTwoColours(this.noseColour, noseBlack, 0.5);
+    } else if (all && this.sparseCoatExpressed) {
+      let c1 = mixThreeColours(this.getSkinColour(0), this.getSkinColour(1), this.getSkinColour(2));
+      if (!this.albinoExpressed) {
+        let c2 = mixThreeColours(this.getBaseColour(0), this.getBaseColour(1), this.getBaseColour(2));
+        let cc = mixTwoColours(c1, c2, 0.5);
+        this.outlineColour = mixTwoColours(cc, trueBlack, 0.5);
+      } else {
+        this.outlineColour = mixTwoColours(c1, trueWhite, 0.9);
+      }
+    } else {
+      let c1 = mixTwoColours(this.getBaseColour(0), this.getBaseColour(1), 0.5);
+      let c2 = mixTwoColours(this.getBaseColour(2), this.getPatternColourAndAlpha()[0], 0.5);
+      let cc = mixTwoColours(c1, c2, 0.5);
+      this.outlineColour = mixTwoColours(this.modifyColourByLifeStage(cc), trueBlack, 0.7);
+    }
   }
+  // function to return whether a chitten needs to have it colours updated
+  this.coatChangesColour = function () {
+    // old ages desaturate
+    if (this.age >= (this.maxAge - oldAgeFor)
+      // young chittens eye's change and tabbys/colourpoints change colour
+      || this.age < maturesAt
+      // coloupoint temperature sensitivity
+      || this.colourpointExpressed
+      // sparse coat temperature sensitivity
+      || this.sparseCoatExpressed) {
+      return true;
+    }
+    else return false;
+  }
+  // Helper functions for color resolution
+  this.getBaseColour = function (ColourIndex) {
+    const colorMap = [this.firstColour, this.secondColour, this.thirdColour];
+    return this.modifyColourByLifeStage(colorMap[ColourIndex]);
+  };
+  this.getSkinColour = function (ColourIndex) {
+    const skinMap = [this.skinColour1, this.skinColour2, this.skinColour3];
+    return skinMap[ColourIndex];
+  };
   this.getSkinColourFromColour = function (theColour) {
     let rgb = hexToRgb(theColour);
     let r = rgb.r;
@@ -442,42 +588,218 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
     return colour;
   }
-  // function to recalculate colours
-  this.recalculateColours = function () {
-    // calculating skin and nose colours using helper
-    this.skinColour1 = this.getSkinColourFromColour(this.firstColour);
-    this.skinColour2 = this.getSkinColourFromColour(this.secondColour);
-    this.skinColour3 = this.getSkinColourFromColour(this.thirdColour);
-    this.noseColour = this.getNoseColourFromColour(this.firstColour);
-    this.leftToeColour = this.getNoseColourFromColour(this.getBodyPartColour(0));
-    this.rightToeColour = this.getNoseColourFromColour(this.getBodyPartColour(1));
-    // Calculating the colours of cell shading
-    if (this.melanismExpressed) {
-      this.outlineColour = mixTwoColours(trueBlack, trueWhite, 0.7);
-    } else if (this.albinoExpressed && !this.hairlessExpressed && !this.sparseCoatExpressed) {
-      this.outlineColour = mixTwoColours(trueWhite, trueBlack, 0.7);
-    } else if (this.albinoExpressed && this.hairlessExpressed) {
-      this.outlineColour = mixTwoColours(nosePink, trueBlack, 0.7);
-    } else if (this.hairlessExpressed) {
-      this.outlineColour = mixTwoColours(this.noseColour, noseBlack, 0.5);
-    } else if (this.sparseCoatExpressed) {
-      let c1 = mixThreeColours(this.getSkinColour(0), this.getSkinColour(1), this.getSkinColour(2));
-      if (!this.albinoExpressed) {
-        let c2 = mixThreeColours(this.getBaseColour(0), this.getBaseColour(1), this.getBaseColour(2));
-        let cc = mixTwoColours(c1, c2, 0.5);
-        this.outlineColour = mixTwoColours(cc, trueBlack, 0.5);
-      } else {
-        this.outlineColour = mixTwoColours(c1, trueWhite, 0.9);
+  this.getBodypartColourIndex = function (bpi) {
+    return typeof bpi === 'number' ? this.bodypartCode[bpi] : 0;
+  };
+  // --- CALCULATING BODYPART COLOURS TO STORE
+  // helper function for eye colours (includes life stages)
+  this.calculateEyeColour = function (eyePart) {
+    if (this.albinoExpressed) {
+      return albinoRed;
+    }
+    if (eyePart == 'leftEye') {
+      let leftEyeColour = this.eyeColour;
+      if (this.age < maturesAt) {
+        const eyeBrightness1 = getBrightness(leftEyeColour) / rgbMax; // 0 to 1 where 1 is brightest
+        const eyeMix1 = mixTwoColours(kittenEyeColours[1], kittenEyeColours[0], eyeBrightness1);
+        leftEyeColour = mixTwoColours(leftEyeColour, eyeMix1, this.matureModifier);
       }
+      if (this.melanismExpressed) {
+        let mEye = hexToRgb(leftEyeColour);
+        leftEyeColour = rgbToHex(mEye.r, mEye.g, 0);
+      }
+      return leftEyeColour;
+    } else if (eyePart == 'rightEye') {
+      let rightEyeColour = this.eyeColour2;
+      if (this.age < maturesAt) {
+        const eyeBrightness2 = getBrightness(rightEyeColour) / rgbMax;
+        const eyeMix2 = mixTwoColours(kittenEyeColours[1], kittenEyeColours[0], eyeBrightness2);
+        rightEyeColour = mixTwoColours(rightEyeColour, eyeMix2, this.matureModifier);
+      }
+      if (this.melanismExpressed) {
+        let mEye = hexToRgb(rightEyeColour);
+        rightEyeColour = rgbToHex(mEye.r, mEye.g, 0);
+      }
+      return rightEyeColour;
+    } else if (eyePart == 'pupil') {
+      let pupilColour = trueBlack;
+      if (this.albinoExpressed) {
+        pupilColour = mixTwoColours(trueBlack, albinoRed, 0.5);
+      } else if (this.albinoGene) {
+        pupilColour = mixTwoColours(trueBlack, albinoRed, 0.7);
+      }
+      if (this.oldAgeModifier !== 0) { // 0 is adult, 1 is totally old age
+        let modifier = this.oldAgeModifier;
+        pupilColour = mixTwoColours(oldAgePupilColour, pupilColour, modifier);
+      }
+      return pupilColour
     } else {
-      let c1 = mixTwoColours(this.getBaseColour(0), this.getBaseColour(1), 0.5);
-      let c2 = mixTwoColours(this.getBaseColour(2), this.getPatternColourAndAlpha()[0], 0.5);
-      let cc = mixTwoColours(c1, c2, 0.5);
-      this.outlineColour = mixTwoColours(this.modifyColourByLifeStage(cc), trueBlack, 0.7);
+      console.warn("calculateEyeColour fed bad string: " + eyePart);
     }
   }
+  // getBodyPartColour with priority-based resolution
+  this.calculateBodyPartColour = function (bpi, bypass = false) {
+    // priority 0: Eye parts passes to different function
+    if (typeof bpi == 'string' && (bpi == 'pupil' || bpi == 'leftEye' || bpi == 'rightEye')) {
+      return this.calculateEyeColour(bpi);
+    }
+    // Priority 1: Albino override (highest priority)
+    if (this.albinoExpressed && !this.baldFacedExpressed) {
+      return (this.hairlessExpressed) ? skinPink : trueWhite;
+    } else if (this.albinoExpressed && (bpi === 'baldFaced' || bpi === 9 || bpi == 10)) {
+      return skinPink;
+    } else if (this.albinoExpressed) {
+      return trueWhite;
+    }
+    // Priority 1: Melanic override (joint highest priority)
+    if (this.melanismExpressed && !this.baldFacedExpressed && typeof bpi !== 'string') {
+      return (this.hairlessExpressed) ? skinBlack : mixTwoColours(this.getBaseColour(this.bodypartCode[bpi]), trueBlack, 0.2);
+    } else if (this.melanismExpressed && (bpi === 'baldFaced' || bpi === 9 || bpi == 10)) {
+      return skinBlack;
+    } else if (this.melanismExpressed) {
+      return trueBlack;
+    }
+
+    // Priority 2: Bypass mode (raw colors)
+    if (bypass && typeof bpi === 'number') {
+      return this.getBaseColour(this.bodypartCode[bpi]);
+    }
+
+    // Priority 3: Special color references (firstColour, secondColour, etc.)
+    if (typeof bpi === 'string' && ['firstColour', 'secondColour', 'thirdColour'].includes(bpi)) {
+      const colourIndex = ['firstColour', 'secondColour', 'thirdColour'].indexOf(bpi);
+      return this.hairlessExpressed ? this.getSkinColour(colourIndex) : this.getBaseColour(colourIndex);
+    }
+
+    // Priority 4: Colorpoint effects
+    const isColorpointPart = this.colourpointExpressed && (
+      bpi === 'colourpoint' ||
+      bpi === 9 || bpi === 10 ||
+      (typeof bpi === 'number' && this.colourpointMap && this.colourpointMap[this.bodypartcodeToColourMap(bpi)])
+    );
+
+    if (isColorpointPart) {
+      if (this.hairlessExpressed || (this.baldFacedExpressed && (bpi === 11 || bpi === 9 || bpi === 10))) {
+        return this.getSkinColour(2);
+      }
+      // colourpoint temperature sensitivity
+      let temperatureMod = 1 - ((temperature / (maxTemperature - minTemperature)) * 0.9); // 1 (cold) to 0.25 (hot)
+      let output = this.getBaseColour(2);
+      // map the special 'colourpoint' string to the face bodyPartIndex
+      if (bpi === 'colourpoint') {
+        bpi = 2;
+      }
+      return mixTwoColours(output, this.getBaseColour(this.bodypartCode[bpi]), temperatureMod);
+    }
+
+    // Priority 5: Bald-faced effects
+    if (this.baldFacedExpressed) {
+      if (bpi === 'baldFaced') {
+        if (this.sparseCoatExpressed) {
+          return this.getSkinColourFromColour(this.thirdColour);
+        }
+        if (this.colourpointExpressed) {
+          return this.skinColour3;
+        }
+        // Calculate mixed jowl color
+        const jowlColor9 = this.getBaseColour(this.bodypartCode[9]);
+        const jowlColor10 = this.getBaseColour(this.bodypartCode[10]);
+        return this.getSkinColourFromColour(mixTwoColours(jowlColor9, jowlColor10, 0.5));
+      }
+
+      if ([9, 10, 11].includes(bpi)) {
+        return this.getSkinColour(this.bodypartCode[bpi]);
+      }
+    }
+
+    // Priority 6: Hairless effects
+    if (this.hairlessExpressed && typeof bpi === 'number') {
+      return this.getSkinColour(this.bodypartCode[bpi]);
+    }
+
+    // Priority 7: Default bodypart colors
+    if (typeof bpi === 'number') {
+      return this.getBaseColour(this.bodypartCode[bpi]);
+    }
+
+    // Fallback
+    return this.modifyColourByLifeStage(this.firstColour);
+  };
+
+  // function to convert a bodypartcode index to a colourmap index
+  this.bodypartcodeToColourMap = function (bpc) {
+    if (bpc == 11) {
+      return 0;
+    }
+    if (bpc == 3 || bpc == 4) {
+      return 1;
+    }
+    if (bpc == 0 || bpc == 1 || bpc == 7 || bpc == 8) {
+      return 2;
+    }
+    if (bpc == 6) {
+      return 3;
+    }
+  };
+
+  // function to convert a colourmap index to a bodypartcode index
+  this.colourMapToBodypartCode = function (cmi) {
+    if (cmi == 0) {
+      return [11]; // chin
+    }
+    if (cmi == 1) {
+      return [3, 4]; // ears
+    }
+    if (cmi == 2) {
+      return [0, 1, 7, 8]; // feet
+    }
+    if (cmi == 3) {
+      return [6]; // tail
+    }
+    return [];
+  };
+
+  // Helper to find all body parts connected to a given body part index
+  this.getConnectedBodyparts = function (bodypartIndex) {
+    const connected = [];
+    for (let i = 0; i < connections.length; i++) {
+      const [top, bottom] = connections[i];
+      if (i === bodypartIndex) {
+        // This bodypart's own connections
+        connected.push(top, bottom);
+      } else if (top === bodypartIndex || bottom === bodypartIndex) {
+        // Other bodyparts that connect to this one
+        connected.push(i);
+      }
+    }
+    return [...new Set(connected)]; // Remove duplicates
+  };
+
+  // helper to get a pattern, taking all modifiers into account
+  this.getPatternColourAndAlpha = function () {
+    let patColour = this.modifyColourByLifeStage(this.patternColour);
+    let patAlpha = this.patternAlpha;
+    // modify the pattern according to life stage and genes
+    if (this.hairlessExpressed || this.sparseCoatExpressed) {
+      patColour = this.getSkinColourFromColour(patColour);
+    } else if (this.pattern == 3) {
+      // tabby markings fade in from 50%
+      patAlpha = (this.patternAlpha / 2) + (this.matureModifier * (patAlpha / 2));
+    } else if (this.pattern == 1) {
+      // tortoiseshell pattern is always black
+      patColour = trueBlack;
+    }
+    if (this.melanismExpressed) {
+      patColour = mixTwoColours(patColour, trueBlack, 0.2);
+    }
+    return [patColour, patAlpha];
+  }
+
+  // --- SIZES
   // function to reinitialise sizes - call this when the chitten's size changes (growth)
   this.recalculateSizes = function () {
+    // --- Pattern
+    this.cachedPatternScale = (this.size / basePatternSize) * patternResolution;
     // --- LIFESTAGES
     // Fraction of current day passed and exact age
     const dayFrac = ((daytimeCounter - this.birthday + ticksPerDay) % ticksPerDay) / ticksPerDay;
@@ -518,14 +840,14 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
     // derived values
     this.outlineThickness = this.size / 10;
-    this.legWidth = (this.size / 2.5) * this.thickness * 2
+    this.legWidth = (this.size / 3) + (this.size * this.thickness * 0.4);
     this.thicknessModS = this.thickness * this.size / 2;
     this.thicknessModL = this.thickness * this.size / 5;
     if (!this.dwarfismExpressed) {
       // for dwarfism, init the leglength at birth but then never again
-      this.frontLegLength = this.size + (1.75 * this.legginess * this.size); // 10 to 16 + 0 to 6 == 16 to 6
+      this.frontLegLength = this.size + (1.75 * this.legLength * this.size); // 10 to 16 + 0 to 6 == 16 to 6
     } else {
-      this.frontLegLength = this.size + ((1.75 * this.legginess * this.size) / 2);
+      this.frontLegLength = this.size + ((1.75 * this.legLength * this.size) / 2);
 
     }
     this.frontLegOriginX = this.size * 2 / 3;
@@ -533,30 +855,35 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     this.backLegLength = this.frontLegLength * 0.6;
     this.backLegOriginY = this.size / 2;
     this.backLegOriginX = this.size / 1.6;
-    this.footSize = (this.size / 3.5) * (this.thickness * 2.25);
+    this.footSize = (this.size / 5.5) + (this.thickness * this.size * 0.5);
     this.frontFootOriginX = this.size / 1.6;
     this.frontFootOriginY = this.size + (this.frontLegLength / 2.5);
     this.backFootOriginX = this.backLegOriginX;
     this.backFootOriginY = this.backLegLength;
     this.bodyToFeetDistance = this.frontLegLength - this.footSize;
     this.tailLengthY = -(this.size / 2) - (2 * this.tailLength * this.size);
+    this.tailThickness = (this.size / 3) + (this.size * this.thickness * 0.3);
   };
+
+  // --- BEHAVIOUR / LIFECYCLE
+
   // reset jump cooldown
   this.resetJumpCooldown = function () {
     // Wait frames before next jump, fat cats are lazier
+    let jcd = 0;
     if (this.age < maturesAt) {
       // Kittens following mothers get much shorter cooldown to be eager followers
-      this.jumpCooldown = youngChittenJumpCooldown + (youngChittenJumpCooldown * this.thickness);;
+      jcd = youngChittenJumpCooldown + (youngChittenJumpCooldown * this.thickness);
     } else {
-      this.jumpCooldown = chittenJumpCooldown + (chittenJumpCooldown * this.thickness);
+      jcd = chittenJumpCooldown + (chittenJumpCooldown * this.thickness);
     }
+    this.jumpCooldown = jcd * Math.random();
   }
+
   // reset rotation
   this.resetRotation = function (fastest) {
     // Normalize rotation to [-π, π] range to prevent full spins
-    while (this.rotation > Math.PI) this.rotation -= 2 * Math.PI;
-    while (this.rotation < -Math.PI) this.rotation += 2 * Math.PI;
-
+    this.rotation = ((this.rotation + Math.PI) % (2 * Math.PI)) - Math.PI;
     // Always take the shortest path to 0 for natural cat behavior
     if (Math.abs(this.rotation) <= 0.1) {
       this.rotation = 0;
@@ -568,7 +895,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       } else {
         this.rotation += 0.1;
       }
-
       // If we're not in fastest mode, slow down the rotation for more natural movement
       if (!fastest) {
         // Reduce spin momentum gradually when landing
@@ -599,29 +925,15 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     this.applyStatLimits();
   }
 
-  // function to return whether a chitten has a coat that may need it's colour updated every frame
-  this.getCoatChangesColour = function () {
-    if (this.age >= (this.maxAge - oldAgeFor) || this.age < maturesAt
-      || this.colourpointExpressed
-      || this.sparseCoatExpressed) {
-      return true;
-    }
-    else return false;
-  }
-
   // Growth system
   this.updateGrowth = function () {
     if (this.size < this.maxSize) {
       this.size += chittenGrowthRate;
       if (this.age < maturesAt) {
-        this.size += chittenGrowthRate; // Extra growth for young chittens
+        this.size += chittenGrowthRate; // Extra growth for kittens
       }
       this.recalculateSizes();
-      this.recalculateColours();
-    }
-    // if the chitten didn't grow this frame, determine whether it may need to change its' colours
-    if (this.getCoatChangesColour()) {
-      this.recalculateColours();
+      // colours are calculated per frame drawn, not at UPS
     }
   }
 
@@ -690,7 +1002,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (!this.awake) {
       let shouldFlopLegs = this.onTree && this.y < trueBottom - this.bodyToFeetDistance - this.footSize;
       if (shouldFlopLegs && this.treeSleepPosProgress < 1) {
-        let rawProgress = this.treeSleepPosProgress + (1 / 60);
+        let rawProgress = this.treeSleepPosProgress + chittenFlopSleepTreeSpeed;
         this.treeSleepPosProgress = this.getAnimationValue(rawProgress, 1, true, true);
         if (this.treeSleepPosProgress >= 1) {
           this.treeSleepPosProgress = 1;
@@ -841,7 +1153,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     let shouldUnflopLegs = (this.awake && !this.targetSittingState) || !this.onTree;
     if (shouldUnflopLegs && this.treeSleepPosProgress > 0) {
       // Lerping back to normal legs (reverse easing)
-      let rawProgress = this.treeSleepPosProgress - (1 / 40); // Faster return (40 frames)
+      let rawProgress = this.treeSleepPosProgress - (chittenFlopSleepTreeSpeed * 2); // Faster return (2x speed)
       if (rawProgress <= 0) {
         this.treeSleepPosProgress = 0;
       } else {
@@ -905,7 +1217,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           if (distance < (this.size * 2) + this.bodyToFeetDistance && (!this.focus || fireflies.includes(this.focus))) {
             this.focus = closestFirefly;
             this.jumpCooldown = 0; // Allow immediate jumping at close fireflies
-            speak(this, angryWord());
+            if (Math.random() < 0.1) speak(this, angryWord());
           }
         }
       }
@@ -1303,213 +1615,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
 
-  this.getBodypartColorIndex = function (bpi) {
-    return typeof bpi === 'number' ? this.bodypartCode[bpi] : 0;
-  };
-
-  // getBodyPartColour with priority-based resolution
-  this.getBodyPartColour = function (bpi, bypass = false) {
-    // Priority 1: Albino override (highest priority)
-    if (this.albinoExpressed && !this.baldFacedExpressed) {
-      return (this.hairlessExpressed) ? skinPink : trueWhite;
-    } else if (this.albinoExpressed && (bpi === 'baldFaced' || bpi === 9 || bpi == 10)) {
-      return skinPink;
-    } else if (this.albinoExpressed) {
-      return trueWhite;
-    }
-    // Priority 1: Melanic override (joint highest priority)
-    if (this.melanismExpressed && !this.baldFacedExpressed && typeof bpi !== 'string') {
-      return (this.hairlessExpressed) ? skinBlack : mixTwoColours(this.getBaseColour(this.bodypartCode[bpi]), trueBlack, 0.2);
-    } else if (this.melanismExpressed && (bpi === 'baldFaced' || bpi === 9 || bpi == 10)) {
-      return skinBlack;
-    } else if (this.melanismExpressed) {
-      return trueBlack;
-    }
-
-    // Priority 2: Bypass mode (raw colors)
-    if (bypass && typeof bpi === 'number') {
-      return this.getBaseColour(this.bodypartCode[bpi]);
-    }
-
-    // Priority 3: Special color references (firstColour, secondColour, etc.)
-    if (typeof bpi === 'string' && ['firstColour', 'secondColour', 'thirdColour'].includes(bpi)) {
-      const colorIndex = ['firstColour', 'secondColour', 'thirdColour'].indexOf(bpi);
-      return this.hairlessExpressed ? this.getSkinColour(colorIndex) : this.getBaseColour(colorIndex);
-    }
-
-    // Priority 4: Colorpoint effects
-    const isColorpointPart = this.colourpointExpressed && (
-      bpi === 'colourpoint' ||
-      bpi === 9 || bpi === 10 ||
-      (typeof bpi === 'number' && this.colourpointMap && this.colourpointMap[this.bodypartcodeToColourMap(bpi)])
-    );
-
-    if (isColorpointPart) {
-      if (this.hairlessExpressed || (this.baldFacedExpressed && (bpi === 11 || bpi === 9 || bpi === 10))) {
-        return this.getSkinColour(2);
-      }
-      // colourpoint temperature sensitivity
-      let temperatureMod = 1 - ((temperature / (maxTemperature - minTemperature)) * 0.9); // 1 (cold) to 0.25 (hot)
-      let output = this.getBaseColour(2);
-      // map the special 'colourpoint' string to the face bodyPartIndex
-      if (bpi === 'colourpoint') {
-        bpi = 2;
-      }
-      return mixTwoColours(output, this.getBaseColour(this.bodypartCode[bpi]), temperatureMod);
-    }
-
-    // Priority 5: Bald-faced effects
-    if (this.baldFacedExpressed) {
-      if (bpi === 'baldFaced') {
-        if (this.sparseCoatExpressed) {
-          return this.getSkinColourFromColour(this.thirdColour);
-        }
-        if (this.colourpointExpressed) {
-          return this.skinColour3;
-        }
-        // Calculate mixed jowl color
-        const jowlColor9 = this.getBaseColour(this.bodypartCode[9]);
-        const jowlColor10 = this.getBaseColour(this.bodypartCode[10]);
-        return this.getSkinColourFromColour(mixTwoColours(jowlColor9, jowlColor10, 0.5));
-      }
-
-      if ([9, 10, 11].includes(bpi)) {
-        return this.getSkinColour(this.bodypartCode[bpi]);
-      }
-    }
-
-    // Priority 6: Hairless effects
-    if (this.hairlessExpressed && typeof bpi === 'number') {
-      return this.getSkinColour(this.bodypartCode[bpi]);
-    }
-
-    // Priority 7: Default bodypart colors
-    if (typeof bpi === 'number') {
-      return this.getBaseColour(this.bodypartCode[bpi]);
-    }
-
-    // Fallback
-    return this.modifyColourByLifeStage(this.firstColour);
-  };
-
-  // function to convert a bodypartcode index to a colourmap index
-  this.bodypartcodeToColourMap = function (bpc) {
-    if (bpc == 11) {
-      return 0;
-    }
-    if (bpc == 3 || bpc == 4) {
-      return 1;
-    }
-    if (bpc == 0 || bpc == 1 || bpc == 7 || bpc == 8) {
-      return 2;
-    }
-    if (bpc == 6) {
-      return 3;
-    }
-  };
-
-  // helper to get a pattern, taking all modifiers into account
-  this.getPatternColourAndAlpha = function () {
-    let patColour = this.modifyColourByLifeStage(this.patternColour);
-    let patAlpha = this.patternAlpha;
-    // modify the pattern according to life stage and genes
-    if (this.hairlessExpressed || this.sparseCoatExpressed) {
-      patColour = this.getSkinColourFromColour(patColour);
-    } else if (this.pattern == 3) {
-      // tabby markings fade in from 50%
-      patAlpha = (this.patternAlpha / 2) + (this.matureModifier * (patAlpha / 2));
-    } else if (this.pattern == 7) {
-      // abyssinian markings fade in from 0%
-      patAlpha = this.matureModifier * this.patternAlpha;
-    } else if (this.pattern == 1) {
-      // tortoiseshell pattern is always black
-      patColour = trueBlack;
-    }
-    if (this.melanismExpressed) {
-      patColour = mixTwoColours(patColour, trueBlack, 0.2);
-    }
-    return [patColour, patAlpha];
-  }
-
-  // helper to draw a pattern in a specific colour
-  this.createPatternOverlay = function (bpc, drawFunction) {
-    // FIRST PASS: Draw regular patterns (if any)
-    if (!this.albinoExpressed && this.pattern !== 0 && this.pattern !== 2 && this.pattern !== 4 && this.pattern !== 5) {
-      // init colour, alpha and image for regular patterns
-      let patImage;
-      let patMods = this.getPatternColourAndAlpha();
-      let patColour = patMods[0];
-      let patAlpha = patMods[1];
-      ctx.globalAlpha = 1;
-      // pattern image selection (excluding sparse coat)
-      if (this.pattern == 1) {
-        patImage = pattern1;
-      } else if (this.pattern == 3) {
-        patImage = pattern3;
-      } else if (this.pattern == 6) {
-        patImage = pattern6;
-      } else if (this.pattern == 7) {
-        patImage = pattern7;
-      }
-      // Draw regular pattern if we have one
-      if (patImage) {
-        const baseSize = chittenMinSize * 4; // 40 if chittenMinSize = 10
-        let scale = this.size / baseSize;
-        let w = patImage.width * scale;
-        let h = patImage.height * scale;
-        let bodyPartColour = this.getBodyPartColour(bpc);
-        let alphaColour = mixTwoColours(patColour, bodyPartColour, patAlpha);
-
-        ctx.save();
-        // Define clip shape
-        ctx.beginPath();
-        drawFunction();   // only defines path
-        ctx.closePath();
-        ctx.clip();
-        // Draw the pattern
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = "destination-atop";
-        ctx.rotate(this.coatMod[2] * 2 * Math.PI);
-        ctx.drawImage(patImage, -w / 2, -h / 2, w, h);
-        // Tint it with desired color + alpha
-        ctx.fillStyle = alphaColour;
-        ctx.fillRect(-w / 2, -h / 2, w, h);
-        ctx.restore();
-        ctx.globalAlpha = 1;
-      }
-    }
-  };
-
-  // function to draw specialoverlays, such as sparse hair
-  this.drawSpecialOverlay = function (bpc, drawFunction) {
-    // SECOND PASS: Draw sparse coat overlay (if expressed)
-    if (this.sparseCoatExpressed && !this.hairless) {
-      // Sparse coat setup - always drawn as overlay
-      let sparseColour = this.getSkinColourFromColour(this.getBodyPartColour(bpc));
-      // Draw sparse coat overlay
-      const baseSize = chittenMinSize * 4;
-      let scale = this.size / baseSize;
-      let w = sparseCoat.width * scale;
-      let h = sparseCoat.height * scale;
-      // let sparseColour = mixTwoColours(sparseColour, bodyPartColour, sparseAlpha);
-      ctx.save();
-      // Define clip shape
-      ctx.beginPath();
-      drawFunction();   // only defines path
-      ctx.closePath();
-      ctx.clip();
-      // Draw the sparse coat overlay
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = "destination-atop";
-      ctx.drawImage(sparseCoat, -w / 2, -h / 2, w, h);
-      // Tint it with desired color + alpha
-      ctx.fillStyle = hexToRgba(sparseColour, 1);
-      ctx.fillRect(-w / 2, -h / 2, w, h);
-      ctx.restore();
-      ctx.globalAlpha = 1;
-    }
-  }
-
   // Helper function for animation calculations (modulo operation)
   this.getAnimationValue = function (value, modulo, oneShot = false, linear = false) {
     // Normalize to 0-1 range
@@ -1534,36 +1639,29 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   };
 
+  // --- GRADIENTS
+  this.calculateBodypartGradient = function (bpi) {
+    let gradientArray = [];
+    const [topPartIndex, bottomPartIndex] = connections[bpi];
+    let topColour, bottomColour, middleColour;
+    topColour = mixTwoColours(this.getBodyPartColour(topPartIndex), this.getBodyPartColour(bpi), this.coatMod[3]);
+    bottomColour = mixTwoColours(this.getBodyPartColour(bottomPartIndex), this.getBodyPartColour(bpi), this.coatMod[3]);
+    middleColour = mixTwoColours(topColour, bottomColour, 0.5);
+    gradientArray = [topColour, middleColour, bottomColour];
+    return gradientArray;
+  }
+
+  this.getBodypartGradient = function (bpi) {
+    return this.bodypartGradients[bpi];
+  }
+
   // Helper function to apply bodypart code colors to gradient based on anatomical connections
   this.applyBodypartGradient = function (bodypartIndex, gradient) {
-
-    // Define anatomical connections: [topBodypartIndex, bottomBodypartIndex]
-    const connections = [
-      [5, 0],   // [0] front foot left: body to front foot left
-      [5, 1],   // [1] front foot right: body to front foot right  
-      [2, 12],  // [2] head: head to chest
-      [3, 2],   // [3] left ear: left ear to head
-      [4, 2],   // [4] right ear: right ear to head
-      [5, 12],  // [5] body: body to chest
-      [6, 5],   // [6] tail: tail to chest
-      [5, 7],   // [7] back foot left: body to back foot left
-      [5, 8],   // [8] back foot right: body to back foot right
-      [9, 11],  // [9] left jowl: left jowl to chin
-      [10, 11], // [10] right jowl: right jowl to chin
-      [2, 11],  // [11] chin: head to chin
-      [5, 12]   // [12] chest: body to chest
-    ];
-
-    const [topPartIndex, bottomPartIndex] = connections[bodypartIndex];
-    let topColor, bottomColor;
-    // Normal cats use anatomical connections
-    topColor = mixTwoColours(this.getBodyPartColour(topPartIndex), this.getBodyPartColour(bodypartIndex), this.coatMod[3]);
-    bottomColor = mixTwoColours(this.getBodyPartColour(bottomPartIndex), this.getBodyPartColour(bodypartIndex), this.coatMod[3]);
+    let colourSet = this.getBodypartGradient(bodypartIndex);
     // Create gradient
-    gradient.addColorStop(0, topColor);
-    gradient.addColorStop(this.coatMod[0], mixTwoColours(topColor, bottomColor, 0.5));
-    gradient.addColorStop(1, bottomColor);
-
+    gradient.addColorStop(0, colourSet[0]);
+    gradient.addColorStop(this.coatMod[0], colourSet[1]);
+    gradient.addColorStop(1, colourSet[2]);
     return gradient;
   };
 
@@ -1641,7 +1739,112 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ]);
   };
 
-  // Unified function to draw any single leg (front standing, front jumping, front touching, back)
+  // --- PATTERNS AND OVERLAYS
+
+  this.calculatePatternColours = function () {
+    let patColours = [];
+    let patMods = this.getPatternColourAndAlpha();
+    for (let i = 0; i < this.bodypartCode.length; i++) {
+      let bodyPartColour = this.getBodyPartColour(i);
+      patColours[i] = mixTwoColours(patMods[0], bodyPartColour, patMods[1]);
+    }
+    return patColours;
+  }
+
+  this.getPatternColour = function (bpi) {
+    return this.patternColours[bpi];
+  }
+
+  // Helper to get pattern image using validPatterns lookup
+  this.getPatternImageFromValidPatterns = function () {
+    const patternData = validPatterns.find(p => p.value === this.pattern);
+    return patternData ? patternData.image : null;
+  }
+
+  // helper to draw a pattern in a specific colour
+  this.drawPatternOverlay = function (bpi, drawFunction) {
+    // FIRST PASS: Draw regular patterns (if any)
+    if (!this.albinoExpressed && this.pattern !== 0) {
+      // Use cached values for performance
+      const patImage = this.cachedPatternImage;
+      const alphaColour = this.getPatternColour(bpi);
+      // Draw regular pattern if we have one
+      if (patImage) {
+        const w = this.cachedPatternScale;
+        const h = this.cachedPatternScale;
+        ctx.save();
+        // Define clip shape
+        ctx.beginPath();
+        drawFunction();   // only defines path
+        ctx.closePath();
+        ctx.clip();
+        // Draw the pattern
+        ctx.globalCompositeOperation = "destination-atop";
+        ctx.rotate(this.cachedPatternRotation);
+        let shiftX = (this.coatMod[4] - 0.5) * maxPatternShift;
+        let shiftY = (this.coatMod[5] - 0.5) * maxPatternShift;
+        if (bpi === 1 || bpi === 8 || bpi == 10) {
+          shiftX *= -1;
+          shiftY *= -1;
+        }
+        ctx.drawImage(patImage,
+          -(w / 2) + shiftX,
+          -(h / 2) + shiftY,
+          w, h);
+        // Tint it with desired color
+        ctx.fillStyle = alphaColour;
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.restore();
+      }
+    }
+  };
+
+  // function to draw specialoverlays, such as sparse hair
+  this.drawSpecialOverlay = function (bpc, drawFunction) {
+    // SECOND PASS: Draw sparse coat overlay (if expressed)
+    if (this.tickedCoatExpressed && this.albinoExpressed) return;
+    if (this.sparseCoatExpressed || this.tickedCoatExpressed) {
+      let specialPatternColour;
+      let patImage;
+      if (this.sparseCoatExpressed) {
+        // Sparse coat
+        specialPatternColour = this.getSkinColourFromColour(this.getBodyPartColour(bpc));
+        patImage = sparseCoat;
+      } else if (this.tickedCoatExpressed) {
+        // Ticked coat
+        patImage = tickedCoat;
+      }
+      // Draw coat overlay
+      const w = this.cachedPatternScale;
+      const h = this.cachedPatternScale;
+      ctx.save();
+      // Define clip shape
+      ctx.beginPath();
+      drawFunction();   // only defines path
+      ctx.closePath();
+      ctx.clip();
+      if (bpc === 0 || bpc === 7) {
+        ctx.rotate(Math.PI / 2);
+      } else if (bpc === 1 || bpc === 8) {
+        ctx.rotate(-Math.PI / 2)
+      }
+      // Draw the  coat overlay
+      if (this.sparseCoatExpressed) {
+        ctx.globalCompositeOperation = "destination-atop";
+      }
+      ctx.drawImage(patImage, -w / 2, -h / 2, w, h);
+      if (this.sparseCoatExpressed) {
+        // Tint it with desired color + alpha
+        if (this.melanismExpressed) ctx.globalAlpha = 0.1;
+        ctx.fillStyle = hexToRgba(specialPatternColour, 1);
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+      }
+      ctx.restore();
+    }
+  }
+
+  // --- DRAW METHODS
+  // Function to draw a single leg
   this.drawSingleLeg = function (bpc, startX, startY, endX, endY, legGradient) {
     // PRECALC
     startY += this.outlineThickness * 2;
@@ -1665,9 +1868,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.fill();
     ctx.restore();
     // Pattern overlay (needs same transformations as leg drawing)
-    this.createPatternOverlay(bpc, () => {
-      // Calculate the leg line length and angle
-      // Position rectangle to match the leg line
+    this.drawPatternOverlay(bpc, () => {
       ctx.translate(startX, startY);
       ctx.rotate(legAngle);
       ctx.rect(-this.legWidth / 2, -this.legWidth / 2, legLength, this.legWidth);
@@ -1677,39 +1878,42 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.rotate(legAngle);
       ctx.rect(-this.legWidth / 2, -this.legWidth / 2, legLength, this.legWidth);
     });
+    return legAngle;
   };
 
   this.drawSingleFoot = function (bpc, x, y, rotation, gradient, drawToes, toeColour) {
     ctx.save();
     if (rotation !== 0) {
+      ctx.translate(x, y)
       ctx.rotate(rotation);
     }
     ctx.lineWidth = 2 * this.outlineThickness;
     ctx.strokeStyle = this.outlineColour
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(x, y, this.footSize, 0, 2 * Math.PI);
+    ctx.arc(0, 0, this.footSize, 0, 2 * Math.PI);
     ctx.stroke();
     ctx.fill();
     ctx.restore();
 
     // Pattern overlay for foot
-    this.createPatternOverlay(bpc, () => {
+    this.drawPatternOverlay(bpc, () => {
       if (rotation !== 0) {
+        ctx.translate(x, y)
         ctx.rotate(rotation);
       }
-      ctx.arc(x, y, this.footSize, 0, 2 * Math.PI);
+      ctx.arc(0, 0, this.footSize, 0, 2 * Math.PI);
     });
     this.drawSpecialOverlay(bpc, () => {
       if (rotation !== 0) {
+        ctx.translate(x, y)
         ctx.rotate(rotation);
       }
-      ctx.arc(x, y, this.footSize, 0, 2 * Math.PI);
+      ctx.arc(0, 0, this.footSize, 0, 2 * Math.PI);
     });
     if (drawToes && !this.onSurface && this.focus && this.facingForwards && this.y > this.focus.y) {
       // jelly beans / toe pads
       ctx.save();
-      // Position toe pads relative to the foot
       ctx.translate(x, y + (this.footSize / 2));
       // uniformly scale the pads so that it looks like the feet are reaching towards the focus
       let scaleY = 1;
@@ -1764,21 +1968,21 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.strokeStyle = this.outlineColour;
     ctx.beginPath();
     ctx.moveTo(+this.size / 3, (this.size / 3));
-    ctx.arc((this.size * tailWagMod * this.tailLength / 8 * this.thickness) - (this.size / 32), this.tailLengthY, (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
+    ctx.arc((this.size * tailWagMod * this.tailLength / 8) - (this.size / 32), this.tailLengthY, this.tailThickness, 0, Math.PI, true);
     ctx.lineTo(-this.size / 3, this.size / 3);
     ctx.stroke();
     ctx.fill();
 
     // === PATTERN OVERLAY ===
-    this.createPatternOverlay(6, () => {
+    this.drawPatternOverlay(6, () => {
       ctx.moveTo(+this.size / 3, (this.size / 3));
-      ctx.arc((this.size * tailWagMod * this.tailLength / 8 * this.thickness) - (this.size / 32), this.tailLengthY, (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
+      ctx.arc((this.size * tailWagMod * this.tailLength / 8) - (this.size / 32), this.tailLengthY, this.tailThickness, 0, Math.PI, true);
       ctx.lineTo(-this.size / 3, this.size / 3);
       ctx.fill();
     });
     this.drawSpecialOverlay(6, () => {
       ctx.moveTo(+this.size / 3, (this.size / 3));
-      ctx.arc((this.size * tailWagMod * this.tailLength / 8 * this.thickness) - (this.size / 32), this.tailLengthY, (this.size / 3 * this.thickness * 2), 0, Math.PI, true);
+      ctx.arc((this.size * tailWagMod * this.tailLength / 8) - (this.size / 32), this.tailLengthY, this.tailThickness, 0, Math.PI, true);
       ctx.lineTo(-this.size / 3, this.size / 3);
       ctx.fill();
     });
@@ -1793,13 +1997,13 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.restore();
   };
 
-  this.drawBackLegs = function (backendShiftX, backendShiftY) {
+  this.drawBackLegs = function (backendShiftX) {
 
     // setting leg angle
     // calculate positions
     let startXL = (-this.backLegOriginX) - backendShiftX;
     let startXR = (this.backLegOriginX) - backendShiftX;
-    let startY = this.backLegOriginY - backendShiftY;
+    let startY = this.backLegOriginY;
     let endXL = startXL;
     let endXR = startXR;
     let endY = this.backLegLength;
@@ -1816,10 +2020,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (this.sittingProgress > 0) {
       startY *= this.sittingProgress;
     }
-
+    let leftLegRotation = Math.PI / 2; // straight down
+    let rightLegRotation = Math.PI / 2; // straight down;
     if (!this.onSurface || this.onTree) {
-      let leftLegRotation = Math.PI / 2; // straight down
-      let rightLegRotation = Math.PI / 2; // straight down;
       if (this.beingHeld) {
         leftLegRotation = Math.PI / 2 + Math.PI / 4;
         rightLegRotation = Math.PI / 2 - Math.PI / 4;
@@ -1855,70 +2058,10 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
     // left
     this.drawSingleLeg(7, startXL, startY, endXL, endY, leftBackLegGradient);
-    this.drawSingleFoot(7, endXL, endY, 0, leftFootGradient);
+    this.drawSingleFoot(7, endXL, endY, leftLegRotation, leftFootGradient);
     // // right  
     this.drawSingleLeg(8, startXR, startY, endXR, endY, leftFrontLegGradient);
-    this.drawSingleFoot(8, endXR, endY, 0, rightFootGradient);
-  };
-
-  this.drawIcons = function () {
-    ctx.save(); // 0
-    // debug icon/label
-    // ctx.fillStyle = trueWhite;
-    // ctx.font = '10px' + ' ' + globalFont;
-    // ctx.globalAlpha = 1;
-    // ctx.fillText(" e: " + Math.round(this.energy) + " hu: " + Math.round(this.hunger) + " he: " + Math.round(this.health) + " l: " + this.love, 0, this.size - this.bodyToFeetDistance - 30);
-
-
-    // zzzzs
-    if (!this.awake) {
-      ctx.fillStyle = energyBlue;
-      ctx.font = '10px' + ' ' + globalFont;
-      let amntToMove = (this.energy % 10);
-      ctx.globalAlpha = (1 - (amntToMove / 10)) / 1.5;
-      amntToMove *= 2;
-      ctx.fillText('z', -6, -this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
-      ctx.font = '7px' + ' ' + globalFont;
-      ctx.fillText('z', 0, - 7 - this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
-      ctx.font = '3px' + ' ' + globalFont;
-      ctx.fillText('z', 6, - 14 - this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
-    }
-
-    // hearts for snuggling
-    if (this.snuggling > 0) {
-      ctx.fillStyle = heartsPink;
-      ctx.font = '20px' + ' ' + globalFont;
-      let amntToMove = this.getAnimationValue(this.snuggling, 40, false);
-      ctx.globalAlpha = (1 - (amntToMove / 40)) / 2;
-      amntToMove *= 1;
-      let textXOffset = (ctx.measureText(unicodeHeart).width) / 2;
-      ctx.fillText(unicodeHeart, -textXOffset, -(this.size * 4) + amntToMove);
-    }
-
-    // eating nom nom noms
-    if (this.isEating()) {
-      ctx.fillStyle = trueWhite;
-      ctx.font = '10px' + ' ' + globalFont;
-      if (this.age >= maturesAt) {
-        let text = '*nom*';
-        let textXOffset = (ctx.measureText(text).width) / 2;
-        ctx.save();
-        if (this.eatingChewsRemaining === 1 || this.eatingChewsRemaining == 3) {
-          ctx.rotate(0.5);
-          ctx.fillText(text, -textXOffset, -this.size * 1.5);
-        } else {
-          ctx.rotate(-0.5);
-          ctx.fillText(text, -textXOffset, -this.size * 1.5);
-        }
-        ctx.restore();
-      } else {
-        let text = '*suckle*'
-        let textXOffset = (ctx.measureText(text).width) / 2;
-        ctx.fillStyle = trueWhite;
-        ctx.fillText(text, -textXOffset, -this.size * 2.5);
-      }
-    }
-    ctx.restore(); // 0
+    this.drawSingleFoot(8, endXR, endY, rightLegRotation, rightFootGradient);
   };
 
   this.drawBody = function (backendShiftX, backendShiftY) {
@@ -1947,13 +2090,12 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // Helper function to draw a body segment with pattern and special effects
     const drawBodySegment = (x, y, drawGradient = false) => {
       // Apply pattern overlay
-      this.createPatternOverlay(5, () => {
+      this.drawPatternOverlay(5, () => {
         ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
-        ctx.fill();
       });
       // Apply special pattern effects for certain patterns
       // in this case it is related to the not-patterned parts of chittens' markings
-      if (drawGradient && (this.pattern == 3 || this.pattern == 6 || this.pattern == 7)) {
+      if (drawGradient && (this.pattern == 3 || this.pattern == 6 || this.tickedCoatExpressed)) {
         let fadeGrad = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
         ctx.globalAlpha = 0.5;
         fadeGrad.addColorStop(0.25, hexToRgba(this.getBodyPartColour('firstColour'), 1));
@@ -1964,9 +2106,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         ctx.fill();
         ctx.globalAlpha = 1;
       }
+      // draw special coat over the sepcial pattern
       this.drawSpecialOverlay(5, () => {
         ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
-        ctx.fill();
       });
     };
 
@@ -2016,12 +2158,11 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.arc(0, offsetY, (this.size + this.thicknessModL), 0, 2 * Math.PI);
     ctx.fill();
     // draw pattern now
-    this.createPatternOverlay(12, () => {
+    this.drawPatternOverlay(12, () => {
       ctx.arc(0, offsetY, (this.size + this.thicknessModL), 0, 2 * Math.PI);
-      ctx.fill();
     });
     // additional gradient on top for tabby, bengal, mau patterns
-    if (this.pattern == 3 || this.pattern == 6 || this.pattern == 7) {
+    if (this.pattern == 3 || this.pattern == 6 || this.tickedCoatExpressed7) {
       let chestGradient = ctx.createRadialGradient(0, (this.size + (this.thickness * this.size)), 0, 0, 0, (this.size * 2));
       ctx.globalAlpha = 1;
       chestGradient.addColorStop(0.2, hexToRgba(this.getBodyPartColour('firstColour'), 1));
@@ -2029,11 +2170,10 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.fillStyle = chestGradient;
       ctx.beginPath();
       ctx.arc(0, offsetY, (this.size + this.thicknessModL), 0, 2 * Math.PI);
-      ctx.fill();
     }
+    // draw special coat over the special pattern
     this.drawSpecialOverlay(12, () => {
       ctx.arc(0, offsetY, (this.size + this.thicknessModL), 0, 2 * Math.PI);
-      ctx.fill();
     });
     ctx.rotate(this.rotation);
   };
@@ -2065,7 +2205,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.stroke();
     ctx.fill();
     // Apply pattern overlay to left ear
-    this.createPatternOverlay(3, () => {
+    this.drawPatternOverlay(3, () => {
       ctx.moveTo(0, +this.size / 2);
       ctx.lineTo(-(this.earWidth * this.size), -this.thicknessModS - this.earHeight * (this.size));
       ctx.lineTo(oneq * 2, -(this.size * this.earWidth) / 4);
@@ -2076,7 +2216,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.lineTo(oneq * 2, -(this.size * this.earWidth) / 4);
     });
     // Apply pattern overlay to right ear
-    this.createPatternOverlay(4, () => {
+    this.drawPatternOverlay(4, () => {
       ctx.moveTo(oneq * 2, -(this.size * this.earWidth) / 4);
       ctx.lineTo((oneq * 4) + (this.earWidth * this.size), -this.thicknessModS - this.earHeight * (this.size));
       ctx.lineTo(oneq * 4, +this.size / 2);
@@ -2125,11 +2265,11 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
     ctx.stroke();
     ctx.fill();
-    this.createPatternOverlay(2, () => {
+    this.drawPatternOverlay(2, () => {
       ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
     });
     // additional gradient on top for tabby, bengal, mau patterns
-    if (this.facingForwards && (this.pattern == 3 || this.pattern == 6 || this.pattern == 7)) {
+    if (this.facingForwards && (this.pattern == 3 || this.pattern == 6 || this.tickedCoatExpressed)) {
       let faceGradient = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 2);
       ctx.globalAlpha = 1;
       faceGradient.addColorStop(0.2, hexToRgba(this.getBodyPartColour('firstColour'), 1));
@@ -2138,6 +2278,12 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.beginPath();
       ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
       ctx.fill();
+    }
+    // draw ticked coat
+    if (this.tickedCoatExpressed) {
+      this.drawSpecialOverlay(2, () => {
+        ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+      });
     }
     // colourpoint genetic mutation face gradient
     if (this.facingForwards && this.colourpointExpressed) {
@@ -2148,9 +2294,11 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
       ctx.fill();
     }
-    this.drawSpecialOverlay(2, () => {
-      ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
-    });
+    if (this.sparseCoatExpressed) {
+      this.drawSpecialOverlay(2, () => {
+        ctx.arc(0, 0, this.size + this.thicknessModL, 0, 2 * Math.PI);
+      });
+    }
     // draw bald face above the last coat colour
     if (this.facingForwards && this.baldFacedExpressed) {
       let faceGradient = ctx.createRadialGradient(0, 0, this.size / 2, 0, 0, this.size);
@@ -2186,27 +2334,28 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       let chinSize = (this.size / 3.5);
       let chinPosX = 0;
       let chinPosY = (this.size * (this.nosePos - 0.5) / 2) + this.size / 1.5;
+      if (this.brachycephalicExpressed) {
+        chinPosY += this.size / 15;
+      }
       // for opening and closing: mouth
       let mouthInnerSize = chinSize / 1.5;
       // this controls how open/closed the mouth is
       // 0.75 is the bare minimum for drawing
       let offsetY = this.openMouthProgress * (0.75 + (2 * this.mawSize * chinSize));
-
-      // cellshading chin
-      ctx.fillStyle = this.outlineColour;
-      ctx.beginPath();
-      ctx.arc(0, (this.size * (this.nosePos - 0.5) / 2) + this.size / 1.5, (this.size / 3.5) + this.outlineThickness, 0, 2 * Math.PI);
-      ctx.fill();
+      ctx.lineWidth = this.outlineThickness * 2;
       // setting up colours:
       ctx.fillStyle = this.getBodyPartColour(11);
       // drawing chin
       ctx.beginPath();
       ctx.arc(chinPosX, chinPosY + offsetY, chinSize, 0, 2 * Math.PI);
+      ctx.stroke();
       ctx.fill();
       // draw the pattern if we have a sparse coat
-      this.drawSpecialOverlay(11, () => {
-        ctx.arc(chinPosX, chinPosY + offsetY, chinSize, 0, 2 * Math.PI);
-      });
+      if (this.sparseCoatExpressed) {
+        this.drawSpecialOverlay(11, () => {
+          ctx.arc(chinPosX, chinPosY + offsetY, chinSize, 0, 2 * Math.PI);
+        });
+      }
 
       // drawing inside of mouth
       // // cellshading
@@ -2239,35 +2388,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       ctx.stroke();
       ctx.fill();
 
-      // jowls
-      // cellshading
-      ctx.fillStyle = this.outlineColour;
-      ctx.beginPath();
-      ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, (this.size / 3.5) + this.outlineThickness, 0, 2 * Math.PI);
-      ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, (this.size / 3.5) + this.outlineThickness, 0, 2 * Math.PI);
-      ctx.fill();
-      // left
-      ctx.fillStyle = this.getBodyPartColour(9);
-      ctx.beginPath();
-      ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      // draw the pattern if we have a sparse coat
-      if (this.sparseCoatExpressed && !this.baldFacedExpressed) {
-        this.drawSpecialOverlay(9, () => {
-          ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
-        });
-      }
-      // right
-      ctx.fillStyle = this.getBodyPartColour(10);
-      ctx.beginPath();
-      ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
-      ctx.fill();
-      // draw the pattern if we have a sparse coat
-      if (this.sparseCoatExpressed && !this.baldFacedExpressed) {
-        this.drawSpecialOverlay(10, () => {
-          ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
-        });
-      }
+      this.drawJowls();
 
       // === T-SHAPED NOSE (uses nose-specific colors, not skin colors) ===
       let noseY = (this.size * (this.nosePos - 0.5) / 2) + (this.size / 2.5);
@@ -2293,11 +2414,11 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
   this.drawEyes = function () {
     // set up colours
-    let pupilColour = this.getPupilColour();
-    let leftIrisColour = this.getEyeColour('Left');
+    let pupilColour = this.calculateBodyPartColour('pupil');
+    let leftIrisColour = this.calculateBodyPartColour('leftEye');
     let rightIrisColour = leftIrisColour;
     if (this.heterochromicExpressed) {
-      rightIrisColour = this.getEyeColour('Right');
+      rightIrisColour = this.calculateBodyPartColour('rightEye');
     }
 
     ctx.globalAlpha = 1;
@@ -2427,6 +2548,87 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
   }
 
+  this.drawJowls = function () {
+    // jowls
+    ctx.strokeStyle = this.outlineColour;
+    ctx.lineWidth = this.outlineThickness * 2;
+    ctx.fillStyle = this.getBodyPartColour(9);
+    if (this.brachycephalicExpressed) {
+      //left
+      ctx.beginPath();
+      ctx.ellipse(-this.size / 3.5, (this.size * (this.nosePos - 0.5) / 2) + this.size / 2, this.size / 3.5, this.size / 2.5, Math.PI / 4, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+      // draw the coat pattern if it has the spotted pattern type
+      if (this.pattern == 2) {
+        this.drawPatternOverlay(2, () => {
+          ctx.ellipse(-this.size / 3.5, (this.size * (this.nosePos - 0.5) / 2) + this.size / 2, this.size / 3.5, this.size / 2.5, Math.PI / 4, 0, 2 * Math.PI);
+        });
+      }
+      // draw the special pattern if we have a sparse coat
+      if (this.sparseCoatExpressed && !this.baldFacedExpressed) {
+        this.drawSpecialOverlay(9, () => {
+          ctx.ellipse(-this.size / 3.5, (this.size * (this.nosePos - 0.5) / 2) + this.size / 2, this.size / 3.5, this.size / 2.5, Math.PI / 4, 0, 2 * Math.PI);
+        });
+      }
+
+      ctx.fillStyle = this.getBodyPartColour(10);
+      // right
+      ctx.beginPath();
+      ctx.ellipse(this.size / 3.5, (this.size * (this.nosePos - 0.5) / 2) + this.size / 2, this.size / 3.5, this.size / 2.5, -Math.PI / 4, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+      // draw the coat pattern if it has the spotted pattern type
+      if (this.pattern == 2) {
+        this.drawPatternOverlay(2, () => {
+          ctx.ellipse(this.size / 3.5, (this.size * (this.nosePos - 0.5) / 2) + this.size / 2, this.size / 3.5, this.size / 2.5, -Math.PI / 4, 0, 2 * Math.PI);
+        });
+      }
+      // draw the special pattern if we have a sparse coat
+      if (this.sparseCoatExpressed && !this.baldFacedExpressed) {
+        this.drawSpecialOverlay(9, () => {
+          ctx.ellipse(this.size / 3.5, (this.size * (this.nosePos - 0.5) / 2) + this.size / 2, this.size / 3.5, this.size / 2.5, -Math.PI / 4, 0, 2 * Math.PI);
+        });
+      }
+    } else {
+      // left
+      ctx.beginPath();
+      ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+      // draw the coat pattern if it has the spotted pattern type
+      if (this.pattern == 2) {
+        this.drawPatternOverlay(2, () => {
+          ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+        });
+      }
+      // draw the special pattern if we have a sparse coat
+      if (this.sparseCoatExpressed && !this.baldFacedExpressed) {
+        this.drawSpecialOverlay(9, () => {
+          ctx.arc(-(this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+        });
+      }
+      // right
+      ctx.fillStyle = this.getBodyPartColour(10);
+      ctx.beginPath();
+      ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+      // draw the coat pattern if it has the spotted pattern type
+      if (this.pattern == 2) {
+        this.drawPatternOverlay(2, () => {
+          ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+        });
+      }
+      // draw the special pattern if we have a sparse coat
+      if (this.sparseCoatExpressed && !this.baldFacedExpressed) {
+        this.drawSpecialOverlay(10, () => {
+          ctx.arc((this.size / 4), (this.size * (this.nosePos - 0.5) / 2) + this.size / 2.5, this.size / 3.5, 0, 2 * Math.PI);
+        });
+      }
+    }
+  }
+
   // front legs
   this.drawFrontLegs = function () {
     // setup feet
@@ -2443,7 +2645,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     if (!this.inCatBox && this.onSurface && this.sittingProgress <= 1) {
       // let your legs hang down if you're chilling on a tree high enough to let them hang
       if (this.onTree && this.y < trueBottom - this.size - this.bodyToFeetDistance - this.footSize) {
-        endY += (endY - this.footSize) * this.treeSleepPosProgress * this.legginess;
+        endY += (endY - this.footSize) * this.treeSleepPosProgress * this.legLength;
       } else {
         // otherwise, just shrink the legs down so they don't clip into the floor
         startY += ((endY * 0.75) - this.footSize) * (this.sittingProgress);
@@ -2465,29 +2667,83 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     let leftFrontLegGradient = this.createLegGradient(0, -this.frontLegOriginX, startY, endX1, endY);
     let rightFrontLegGradient = this.createLegGradient(1, this.frontLegOriginX, startY, endX2, endY);
 
-    if (!this.facingForwards) {
-      //draw feet first
-      // left
-      this.drawSingleFoot(0, endX1, endY, 0, leftHandGradient, drawToes, this.leftToeColour);
-      // right
-      this.drawSingleFoot(1, endX2, endY, 0, rightHandGradient, drawToes, this.rightToeColour);
-    }
     // Draw both legs using unified function
-    this.drawSingleLeg(0, -this.frontLegOriginX, startY, endX1, endY, leftFrontLegGradient);
-    this.drawSingleLeg(1, this.frontLegOriginX, startY, endX2, endY, rightFrontLegGradient);
-    if (this.facingForwards) {
+    let leftAngle = this.drawSingleLeg(0, -this.frontLegOriginX, startY, endX1, endY, leftFrontLegGradient);
+    let rightAngle = this.drawSingleLeg(1, this.frontLegOriginX, startY, endX2, endY, rightFrontLegGradient);
+    if (!this.facingForwards) {
+      // if we are facing backwards draw the feet now...
+      this.drawSingleFoot(0, endX1, endY, leftAngle, leftHandGradient, false, null);
+      this.drawSingleFoot(1, endX2, endY, rightAngle, rightHandGradient, false, null);
+    } else {
       // return the front feet data to draw later
-      return [endX1, endX2, endY, leftHandGradient, rightHandGradient, this.leftToeColour, this.rightToeColour];
+      return [endX1, endX2, endY, leftHandGradient, rightHandGradient, this.leftToeColour, this.rightToeColour, leftAngle, rightAngle];
     }
+  };
+
+  this.drawIcons = function () {
+    ctx.save(); // 0
+    // debug icon/label
+    // ctx.fillStyle = trueWhite;
+    // ctx.font = '10px' + ' ' + globalFont;
+    // ctx.globalAlpha = 1;
+    // ctx.fillText(" e: " + Math.round(this.energy) + " hu: " + Math.round(this.hunger) + " he: " + Math.round(this.health) + " l: " + this.love, 0, this.size - this.bodyToFeetDistance - 30);
+
+
+    // zzzzs
+    if (!this.awake) {
+      ctx.fillStyle = energyBlue;
+      ctx.font = '10px' + ' ' + globalFont;
+      let amntToMove = (this.energy % 10);
+      ctx.globalAlpha = (1 - (amntToMove / 10)) / 1.5;
+      amntToMove *= 2;
+      ctx.fillText('z', -6, -this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
+      ctx.font = '7px' + ' ' + globalFont;
+      ctx.fillText('z', 0, - 7 - this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
+      ctx.font = '3px' + ' ' + globalFont;
+      ctx.fillText('z', 6, - 14 - this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
+    }
+
+    // hearts for snuggling
+    if (this.snuggling > 0) {
+      ctx.fillStyle = heartsPink;
+      ctx.font = '20px' + ' ' + globalFont;
+      let amntToMove = this.getAnimationValue(this.snuggling, 40, false);
+      ctx.globalAlpha = (1 - (amntToMove / 40)) / 2;
+      amntToMove *= 1;
+      let textXOffset = (ctx.measureText(unicodeHeart).width) / 2;
+      ctx.fillText(unicodeHeart, -textXOffset, -(this.size * 4) + amntToMove);
+    }
+
+    // eating nom nom noms
+    if (this.isEating()) {
+      ctx.fillStyle = trueWhite;
+      ctx.font = '10px' + ' ' + globalFont;
+      if (this.age >= maturesAt) {
+        let text = '*nom*';
+        let textXOffset = (ctx.measureText(text).width) / 2;
+        ctx.save();
+        if (this.eatingChewsRemaining === 1 || this.eatingChewsRemaining == 3) {
+          ctx.rotate(0.5);
+          ctx.fillText(text, -textXOffset, -this.size * 1.5);
+        } else {
+          ctx.rotate(-0.5);
+          ctx.fillText(text, -textXOffset, -this.size * 1.5);
+        }
+        ctx.restore();
+      } else {
+        let text = '*suckle*'
+        let textXOffset = (ctx.measureText(text).width) / 2;
+        ctx.fillStyle = trueWhite;
+        ctx.fillText(text, -textXOffset, -this.size * 2.5);
+      }
+    }
+    ctx.restore(); // 0
   };
 
   this.update = function () {
     //check if we are in a catbox (awaiting adoption or being picked from a litter)
     if (this.inCatBox) {
       this.awake = true; // Ensure catbox chittens stay awake for adoption display
-      if (this.getCoatChangesColour()) {
-        this.recalculateColours();
-      }
     } else {
       // age, grow, lose meters
       this.lifeTick();
@@ -2593,7 +2849,10 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       if (dx * dx + dy * dy > maxDistance * maxDistance) continue;
 
       // if two chittens bump into each other (only check each pair once)
-      if (((!this.onSurface && chittens[j].awake) || !chittens[j].onSurface) && detectChittenCollision(this, chittens[j])) {
+      // ignore sleeping chittens, and let chittens jump out of each other's way
+      if (
+        ((!this.onSurface && chittens[j].awake) || !chittens[j].onSurface) && !(this.speedY < 0 && chittens[j].onSurface)
+        && detectChittenCollision(this, chittens[j])) {
         collide(this, chittens[j], !this.onSurface, !chittens[j].onSurface && chittens[j].awake, true);
 
         // having a snuggle
@@ -2673,11 +2932,10 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
 
     // Collision with fireflies
-    if (this.focus && this.awake && !this.isEating() && this.snuggling == -1 && fireflies.includes(this.focus)) {
-      if (detectCollision(this, this.focus)) {
+    if (!this.onSurface && this.focus && this.awake && !this.isEating() && this.snuggling == -1 && fireflies.includes(this.focus)) {
+      if (this.y < trueBottom - this.bodyToFeetDistance && detectCollision(this, this.focus)) {
         this.hitFocus = true;
         this.focus.touchedThisFrame = true;
-        // this.resetRotation(true);
         this.focus.speedX += (this.speedX * this.mass) / 1500;
         this.focus.speedY += (this.speedY * this.mass) / 2000;// + (0.002 * this.size);
         this.facingForwards = true;
@@ -2761,6 +3019,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       this.physicsCheck();
     }
     applySpeedLimit(this);
+    // clamp rotation of the head to 135 degrees either side
+    if (this.rotation > 3 * Math.PI / 4) this.rotation = 3 * Math.PI / 4;
+    if (this.rotation < -3 * Math.PI / 4) this.rotation = -3 * Math.PI / 4;
 
     // update which firefly is the closest for drawing eye glow
     let closestFireflyIndex = this.findClosestFireFly();
@@ -2780,6 +3041,12 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     //   ctx.lineTo(this.focus.x, this.focus.y);
     //   ctx.stroke();
     // }
+
+    // if the chitten didn't grow or age this frame, determine whether it may need to change its' colours
+    if (this.coatChangesColour()) {
+      this.recalculateColours(false);
+      // sizes are calculated per UPS, not FPS
+    }
 
     // Calculate angle to focus every frame (no caching for smooth animation)
     if (!this.beingHeld && !this.onSurface && this.speedY > 0 && this.jumpHeight && this.originalAngleToFocus !== null) {
@@ -2862,7 +3129,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
     // Draw back legs (for facing forwards)
     if (this.facingForwards) {
-      this.drawBackLegs(backendShiftX, backendShiftY);
+      this.drawBackLegs(backendShiftX);
     }
 
     // Apply backward facing adjustment
@@ -2904,9 +3171,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ctx.restore();
     if (frontFootData.length !== 0) {
       // left
-      this.drawSingleFoot(0, frontFootData[0], frontFootData[2], 0, frontFootData[3], true, frontFootData[5]);
+      this.drawSingleFoot(0, frontFootData[0], frontFootData[2], frontFootData[7], frontFootData[3], true, frontFootData[5]);
       // right
-      this.drawSingleFoot(1, frontFootData[1], frontFootData[2], 0, frontFootData[4], true, frontFootData[6]);
+      this.drawSingleFoot(1, frontFootData[1], frontFootData[2], frontFootData[8], frontFootData[4], true, frontFootData[6]);
     }
 
     if (!this.facingForwards) {
@@ -2920,7 +3187,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       if (this.onSurface && this.sittingProgress > 0) {
         ctx.translate(0, -((this.frontLegLength + (this.size / 4)) / 2) * this.sittingProgress);
       }
-      this.drawBackLegs(backendShiftX, backendShiftY);
+      this.drawBackLegs(backendShiftX);
       this.drawBody(backendShiftX, backendShiftY);
       this.drawTail(backendShiftX, backendShiftY);
     }
@@ -2992,8 +3259,8 @@ function adoptChitten(who) {
 
 function initLitter(mParent, fParent) {
   parentBoxes = [];
-  parentBoxes.push(new CatBox((canvasWidth / 2) - (boxSize * 3), (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2), boxSize, boxThickness));
-  parentBoxes.push(new CatBox((canvasWidth / 2) + (boxSize * 2), (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) - (boxSize / 2), boxSize, boxThickness));
+  parentBoxes.push(new CatBox(true, false, 1, 0, boxSize, boxThickness));
+  parentBoxes.push(new CatBox(true, false, 2, 0, boxSize, boxThickness));
   fParent.inCatBox = parentBoxes[0];
   mParent.inCatBox = parentBoxes[1];
   // Reset animation states for parents when moved to boxes
@@ -3043,7 +3310,7 @@ function initLitter(mParent, fParent) {
   let count = 0;
   for (let j = 0; j < boxRows; j++) {
     for (let i = 0; i < boxColumns && count < numberInLitter; i++) {
-      boxes.push(new CatBox((canvasWidth / 2) - (((boxSize * 3) + (boxPadding * 2)) / 2) + (i * boxPadding) + (i * boxSize), (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) + (j * boxPadding) + (j * boxSize), boxSize, boxThickness));
+      boxes.push(new CatBox(false, false, i, j, boxSize, boxThickness));
       generateKitten(maleParent, femaleParent, generateChildBreedText(maleParent, femaleParent));
       thisCatBox = (j * 3) + i;
       boxes[thisCatBox].id = thisCatBox + currentChittens;
@@ -3081,8 +3348,9 @@ function initLitter(mParent, fParent) {
       // reinit sizes and kitten variables
       determineTraitExpression(who, true, maleParent, femaleParent);
       who.recalculateSizes();
-      who.recalculateColours();
+      who.recalculateColours(true);
       boxes[thisCatBox].updateSymbol();
+      adoptionBackground.resize();
       count++;
     }
   }
@@ -3125,7 +3393,7 @@ function generateAdoptionCat(who, breedFilter) {
   }
   who.name = generateBreedBasedName(who.breed, who.breed, who.gender);
   who.recalculateSizes();
-  who.recalculateColours();
+  who.recalculateColours(true);
 }
 
 // function to generate a random size for a new chitten
@@ -3148,32 +3416,27 @@ function initCattery(gender) {
   } else {
     chosenChittenM = false;
   }
-
   for (let i = 0; i < boxColumns; i++) {
     for (let j = 0; j < boxRows; j++) {
-      const x = (canvasWidth / 2) - (((boxSize * 3) + (boxPadding * 2)) / 2) + (i * boxPadding) + (i * boxSize);
-      const y = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) + (j * boxPadding) + (j * boxSize);
-
-      boxes.push(new CatBox(x, y, boxSize, boxThickness));
-
+      boxes.push(new CatBox(false, false, i, j, boxSize, boxThickness));
       // Size scaling
       const maximumSize = getRandomChittenMaxSize(gender);
       let currentSize = Math.min(getRandomChittenSize(gender), maximumSize);
-
-      chittens.push(new Chitten(x + (boxSize / 2), y + (boxSize / 2), currentSize, maximumSize, gender));
-
       thisCatBox = (i * 3) + j;
+      chittens.push(new Chitten(boxes[thisCatBox].x + (boxSize / 2), boxes[thisCatBox].y + (boxSize / 2), currentSize, maximumSize, gender));
       boxes[thisCatBox].id = thisCatBox + currentChittens;
       boxes[thisCatBox].colour = (gender === 'Female' ? genderPink : genderBlue);
-
       // Set the cat's catbox reference BEFORE generating adoption cat
       chittens[thisCatBox + currentChittens].inCatBox = boxes[thisCatBox];
       // Generate adoption cat based on breed filter
       generateAdoptionCat(chittens[thisCatBox + currentChittens], selectedBreedFilter);
       boxes[thisCatBox].updateSymbol();
       const who = chittens[thisCatBox + currentChittens];
+      who.recalculateSizes();
+      who.recalculateColours(true);
     }
   }
+  adoptionBackground.resize();
 }
 
 function initFemaleCattery() {
@@ -3182,74 +3445,6 @@ function initFemaleCattery() {
 
 function initMaleCattery() {
   initCattery('Male');
-}
-
-/**
-* function to describe a box
-*/
-function CatBox(x, y, size, thickness) {
-  this.x = x;
-  this.y = y;
-  this.size = size;
-  this.thickness = thickness;
-  this.selected = false;
-  this.highlighted = false;
-  this.id = 0;
-  this.text = '';
-  this.symbol = unicodeHeart;
-  this.colour = trueBlack;
-  this.updateSymbol = function () {
-    if (getBreedDepth(chittens[this.id].breed) == 0) {
-      if (meetsBreedStandard(chittens[this.id])) {
-        this.symbol = unicodeTick;
-      } else this.symbol = unicodeCross;
-    } else this.symbol = '';
-  }
-  this.update = function () {
-    ctx.globalAlpha = 1;
-    ctx.font = fontSizeSmall + 'px' + ' ' + globalFont;
-    ctx.fillStyle = trueWhite;
-    ctx.fillText(this.text, this.x + 10, this.y + 20);
-    ctx.globalAlpha = 0.5;
-    ctx.fillText(this.symbol, this.x + this.size - this.thickness - 10, this.y + this.size - this.thickness);
-    ctx.globalAlpha = 1;
-    ctx.lineWidth = this.thickness;
-    ctx.save();
-    if (!this.selected) {
-      ctx.globalAlpha = 0.5;
-    }
-    if (this.highlighted || this.selected) {
-      ctx.strokeStyle = mixTwoColours(this.colour, trueWhite, 0.5);
-    } else {
-      ctx.strokeStyle = this.colour;
-    }
-    ctx.strokeRect(this.x, this.y, this.size, this.size);
-    ctx.restore();
-  };
-  // function to check if we have hit the edge of the catbox
-  this.checkBounce = function (who) {
-    if (who.inCatBox == this && !who.onSurface) {
-      // if we bounce off a side wall
-      if (who.x < this.x + who.size || who.x >= this.x + this.size - who.size) {
-        who.speedX *= -0.9;
-        let targetangle = Math.atan2(who.y, this.y);
-        who.spin += elasticity * targetangle / 10;
-        if (who.x < this.x + who.size) {
-          who.x = this.x + who.size;
-        } else {
-          who.x = this.x + this.size - who.size;
-        }
-      }
-      if (who.y < this.y + who.size) {
-        who.speedY *= -0.99;
-        who.y = this.y + who.size;
-      }
-      if (who.y >= this.y + this.size - who.bodyToFeetDistance) {
-        who.y = this.y + this.size - who.bodyToFeetDistance;
-        who.landedOnSurface();
-      }
-    }
-  };
 }
 
 /**

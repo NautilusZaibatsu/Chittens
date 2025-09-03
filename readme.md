@@ -1,6 +1,22 @@
-#Chittens
+ᓚᘏᗢ Chittens changelog 
 
-changelog
+03/08/2025 = 0.075
+~ A new pattern type has been added: piebald.
+-- Black and White shorthairs and Calicos have this pattern by default, and some Ragdoll variants have it too.
+~ Patterns now have a lot more variation from chitten to chitten, and there is a lot less pattern symmetry.
+~ The Brachycephalic condition has been added, all Persians and British Shorthairs have this by default.
+~ Abyssinian, Persian and Black and White Shorthair breeds have been completely reworked.
+~ Adjusted the Manx, Scottish Fold, Calico, Tortoiseshell, Ragdoll and British Shorthair breeds. All breeds are now up-to-date.
+~ Added a symbol to denote a crossbreed in the adoption centre and litter picker.
+~ Improved the presentation of the adoption centre.
+~ Performance upgrade focusing on increased caching of chitten data.
+~ Ticked coat is now a gene, not a pattern.
+~ The game should be more touchscreen friendly.
+
+Bug Fixes
+-- Fixed a bug that prevented the game from starting in very rare cases.
+-- Rehoming a chitten no longer makes it look like you killed them.
+-- Resizing the window whilst picking a chitten from the adoption or litter screens now works properly.
 
 02/09/2025 = 0.074
 ~ Firefly update:
@@ -285,7 +301,7 @@ changelog
 20/11/2018 = 0.048
 ~ added litter mechanic
 ~ added German and Indian names
-~ added thickness and legginess attributes to Chittens
+~ added thickness and legLength attributes to Chittens
 ~ incorporated ntc by Chirag Mehta - http://chir.ag/projects/ntc
 ~ fixed some scaling problems on mobile
 

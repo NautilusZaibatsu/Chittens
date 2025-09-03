@@ -51,6 +51,16 @@ const GENE_DATA = {
     breedStandardChance: 0.90,
     tooltip: 'Sparse Coat gene'
   },
+  tickedCoat: {
+    // Ticked coat like an abyssinian
+    name: 'Ticked Coat',
+    geneProp: 'tickedCoatGene',
+    expressedProp: 'tickedCoatExpressed',
+    mutationChance: 0.0001,
+    baseExpressionChance: 0.3,
+    breedStandardChance: 0.95,
+    tooltip: 'Ticked Coat gene'
+  },
   colourpoint: {
     // Temperature sensitive extremities like siamese and burmese
     name: 'Colourpoint',
@@ -68,7 +78,7 @@ const GENE_DATA = {
     expressedProp: 'brachycephalicExpressed',
     mutationChance: 0.01,
     baseExpressionChance: 0.3,
-    breedStandardChance: 0.85,
+    breedStandardChance: 0.96,
     tooltip: 'Brachycephalic gene'
   },
   heterochromic: {

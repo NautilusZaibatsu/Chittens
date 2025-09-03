@@ -1,11 +1,12 @@
 // gene editing
 geneEditing = false;
-spliceBox = new CatBox(20, 30, 250, 5); // Increased size by 150% (100 * 2.5) for editor preview
 sliderIndex = 0;
 colourBars = null; // Will be initialized in startGame()
 colourPicker = null; // Will be initialized in startGame()
 editorButtons = []; // Editor save/close buttons
-
+const editorPreviewBoxX = 20;
+const editorPreviewBoxY = 30;
+spliceBox = new CatBox(false, true, 0, 0, 250, 5); // Increased size by 150% (100 * 2.5) for editor preview
 
 // Dynamic layout system
 const LAYOUT_CONFIG = {
@@ -28,7 +29,6 @@ const LAYOUT_CONFIG = {
   dropdownHeight: 50, // pattern, breed
   textboxHeight: 50 // text
 };
-
 
 // Control type dimensions
 const CONTROL_DIMENSIONS = {
@@ -56,8 +56,8 @@ const EDITOR_GROUPS = [
     y: LAYOUT_CONFIG.startY, spacing: 30,
     properties: [
       { prop: 'size', type: 'slider', min: 5, max: 20, label: 'Size' },
-      { prop: 'thickness', type: 'slider', min: 0.5, max: 1, label: 'Thickness' },
-      { prop: 'legginess', type: 'slider', min: 0, max: 1, label: 'Legginess' },
+      { prop: 'thickness', type: 'slider', min: 0, max: 1, label: 'Thickness' },
+      { prop: 'legLength', type: 'slider', min: 0, max: 1, label: 'leg Length' },
       { prop: 'coordination', type: 'slider', min: 0, max: 1, label: 'Coordination' },
       { prop: 'tailLength', type: 'slider', min: 0, max: 1, label: 'Tail Length' }
     ]
@@ -86,10 +86,12 @@ const EDITOR_GROUPS = [
     properties: [
       { prop: 'pattern', type: 'pattern', label: 'Pattern Type' },
       { prop: 'patternAlpha', type: 'slider', min: 0, max: 1, label: 'Pattern Opacity' },
-      { prop: 'coatMod[3]', type: 'slider', min: 0, max: 1, label: 'Coat Gradient' },
-      { prop: 'coatMod[0]', type: 'slider', min: 0, max: 1, label: 'Smooth Gradient' },
-      { prop: 'coatMod[1]', type: 'slider', min: 0, max: 1, label: 'Coat Angle' },
+      { prop: 'coatMod[4]', type: 'slider', min: 0, max: 1, label: 'Pattern Shift X' },
+      { prop: 'coatMod[5]', type: 'slider', min: 0, max: 1, label: 'Pattern Shift Y' },
       { prop: 'coatMod[2]', type: 'slider', min: 0, max: 1, label: 'Pattern Angle' },
+      { prop: 'coatMod[3]', type: 'slider', min: 0, max: 1, label: 'Coat Gradient' },
+      { prop: 'coatMod[0]', type: 'slider', min: 0, max: 1, label: 'Gradient Bias' },
+      { prop: 'coatMod[1]', type: 'slider', min: 0, max: 1, label: 'Gradient Strength' }
     ]
   },
   {
@@ -114,13 +116,13 @@ const EDITOR_GROUPS = [
   },
   {
     title: "Templates & Info",
-    column: 3,
+    column: 4,
     y: LAYOUT_CONFIG.startY, spacing: 30,
     properties: [
       { prop: 'breedTemplate', type: 'breed', label: 'Apply Breed' },
       { prop: 'name', type: 'text', label: 'Name' },
-      { prop: 'age', type: 'slider', min: 0, max: 10, label: 'Age' },
-      { prop: 'maxAge', type: 'slider', min: 10, max: 25, label: 'Max Age' }
+      { prop: 'age', type: 'slider', min: 0, max: maxMaxAge, label: 'Age' },
+      { prop: 'maxAge', type: 'slider', min: minMaxAge, max: maxMaxAge, label: 'Max Age' }
     ]
   },
   {
@@ -148,7 +150,7 @@ function initGeneEditing() {
   experiment.awake = true;
   experiment.onSurface = true;
   experiment.recalculateSizes();
-  experiment.recalculateColours();
+  experiment.recalculateColours(true);
   initGeneticsEditorProperties();
   initSliders();
 }
@@ -438,7 +440,7 @@ function Slider(lowerLimit, upperLimit, currentPos, x, y, txt, property, index) 
     // Calculate proportion based on actual slider width
     this.proportion = this.width / (Math.abs(this.upperLimit - this.lowerLimit));
     this.relativePosition = this.proportion * (this.currentPos - this.lowerLimit);
-    
+
     // Draw slider track
     ctx.lineWidth = 2;
     ctx.strokeStyle = trueBlack;
@@ -446,14 +448,14 @@ function Slider(lowerLimit, upperLimit, currentPos, x, y, txt, property, index) 
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.x + this.width, this.y);
     ctx.stroke();
-    
+
     // Draw label
     ctx.fillStyle = trueWhite;
     ctx.font = '12px' + ' ' + globalFont;
     ctx.globalAlpha = 0.5;
     ctx.fillText(this.text, this.x, this.y - 8);
     ctx.globalAlpha = 1;
-    
+
     this.sThumb.update();
   };
 }
@@ -519,7 +521,7 @@ function SliderThumb(parent) {
         }
 
         experiment.recalculateSizes();
-        experiment.recalculateColours();
+        experiment.recalculateColours(true);
       }
     } else {
       this.x = this.parent.x + this.parent.relativePosition;
@@ -529,7 +531,7 @@ function SliderThumb(parent) {
     ctx.fillStyle = this.colour;
     const thumbWidth = Math.max(4, this.size * 0.4);
     const thumbHeight = this.size;
-    ctx.fillRect(this.x - thumbWidth/2, this.y - thumbHeight/2, thumbWidth, thumbHeight);
+    ctx.fillRect(this.x - thumbWidth / 2, this.y - thumbHeight / 2, thumbWidth, thumbHeight);
   };
 }
 
@@ -592,7 +594,7 @@ function BooleanToggle(x, y, label, property, value) {
       this.value = !this.value;
       setPropertyValue(experiment, this.property, this.value);
       experiment.recalculateSizes();
-      experiment.recalculateColours();
+      experiment.recalculateColours(true);
       return true;
     }
     return false;
@@ -622,7 +624,7 @@ function PatternSelector(x, y, label, selectedPattern) {
     ctx.strokeStyle = trueWhite;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
     ctx.fillStyle = uiDarkGrey;
-    ctx.fillRect(this.x +1 , this.y +1 , this.width -2, this.height - 2);
+    ctx.fillRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
 
 
     // Show selected pattern
@@ -662,7 +664,7 @@ function PatternSelector(x, y, label, selectedPattern) {
             this.selectedPattern = pattern.value;
             setPropertyValue(experiment, 'pattern', pattern.value);
             experiment.recalculateSizes();
-            experiment.recalculateColours();
+            experiment.recalculateColours(true);
             this.open = false;
           }
         });
@@ -778,7 +780,7 @@ function BreedSelector(x, y, label) {
             // Apply the selected breed to the experiment chitten
             applyBreed(experiment, breedName);
             experiment.recalculateSizes();
-            experiment.recalculateColours();
+            experiment.recalculateColours(true);
             // Update all controls with new values
             reinitSliders();
             this.open = false;
@@ -963,7 +965,7 @@ function ColourPixelBlock() {
         }
       }
       experiment.recalculateSizes();
-      experiment.recalculateColours();
+      experiment.recalculateColours(true);
     }
   };
   this.update = function () {

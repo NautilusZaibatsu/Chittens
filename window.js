@@ -1,5 +1,3 @@
-const version = 0.074;
-
 // canvas - now dynamic for resize support with constraints
 let rawWidth = (window.innerWidth || document.body.clientWidth) - 20;
 let rawHeight = (window.innerHeight || document.body.clientHeight) - 20;
@@ -73,9 +71,6 @@ nonbinaryCount = 0;
 selection = null;
 starfield = [];
 pointerPos = new MousePosition(canvasWidth / 2, canvasHeight / 2);
-touchOnorOffThisFrame = false;
-boxes = [];
-parentBoxes = [];
 speech = [];
 currentChittens = 0;
 maleParent = null;
@@ -110,6 +105,7 @@ const unicodeArrowUp = '\u21E7';
 const unicodeInfinity = '\u221e';
 const unicodeUnknown = '???'; // ??? used for places the information is not clear to the player yet
 const unicodeDropdown = '\u25BC'; // used to indicate a dropdown menu
+const unicodeCat = '\u14DA\u160F\u15E2' // ᓚᘏᗢ 
 // gender
 const unicodeNonBinary = '\u26A5';
 const unicodeMale = '\u2642';
@@ -117,12 +113,13 @@ const unicodeFemale = '\u2640';
 // genetics
 const unicodeTick = '\u2713';
 const unicodeCross = '\u2717';
+const unicodeCrossbreed = '\u24B8';
+const unicodeNoBreedStandard = '!?';
 // seasonal
 const unicodeLeaf = '\u2EDA';
 const unicodeSnowflake = '\u2744';
 const unicodeStar = '\u2606';
 const unicodeSun = '\u263C';
-
 // star parameters
 const starsAmountModifier = 100;
 
@@ -171,8 +168,9 @@ function startGame() {
   // start the game are
   myGameArea.start();
   ctx = myGameArea.context;
-  updateCanvasDimensions();
   initUi();
+
+  updateCanvasDimensions();
   recalcSeasonVariables();
   initGeneEditing();
   console.log(reportNames());
@@ -185,18 +183,20 @@ function startGame() {
   // plant starter trees
   for (let i = 0; i < startingTrees; i++) {
     let withering = (Math.random() < 0.5);
-    tryToPlantaTree(Math.abs(Math.random() * canvasWidth), randomColourFruity());
-    trees[trees.length - 1].birthday = Math.floor(Math.random() * ticksPerDay);
-    if (withering) {
-      trees[trees.length - 1].reachedMaxHeight = true;
-      trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * 0.5) + (Math.random() * 0.5);
-    } else {
-      trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * Math.random() * 0.8);
-    }
-    // spawn tree with random amount of fruit
-    let numFruit = Math.round(Math.random() * 3);
-    for (let i = 0; i < numFruit; i++) {
-      trees[trees.length - 1].spawnFruit();
+    if (tryToPlantaTree(Math.abs(Math.random() * canvasWidth), randomColourFruity())) {
+      trees[trees.length - 1].birthday = Math.floor(Math.random() * ticksPerDay);
+      if (withering) {
+        trees[trees.length - 1].reachedMaxHeight = true;
+        trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * 0.5) + (Math.random() * 0.5);
+      } else {
+        trees[trees.length - 1].y = trueBottom - (trees[trees.length - 1].maxHeight * Math.random() * 0.8);
+      }
+
+      // spawn tree with random amount of fruit
+      let numFruit = Math.round(Math.random() * 3);
+      for (let j = 0; j < numFruit; j++) {
+        trees[trees.length - 1].spawnFruit();
+      }
     }
   }
 }
@@ -205,65 +205,69 @@ function startGame() {
 function updateCanvasDimensions() {
   const oldCanvasWidth = canvasWidth;
   const oldCanvasHeight = canvasHeight;
-
   // Get raw window dimensions
   let rawWidth = (window.innerWidth || document.body.clientWidth) - 20;
   let rawHeight = (window.innerHeight || document.body.clientHeight) - 20;
-
   // Enforce landscape mode - swap dimensions if height > width
   if (rawHeight > rawWidth) {
     console.warn('Portrait mode detected, enforcing landscape');
     [rawWidth, rawHeight] = [rawHeight, rawWidth];
   }
-
   // Apply minimum constraints
   canvasWidth = Math.max(rawWidth, minCanvasWidth);
   canvasHeight = Math.max(rawHeight, minCanvasHeight);
-
   // Recalculate abstract concepts that depend on canvas size
   trueBottom = canvasHeight - floorLevel;
   maxDistance = Math.hypot(canvasWidth, canvasHeight); // diagonal measurement for physics calculations
-
   // Update scaling values based on new dimensions
   proportion = 1 / (idealArea / (canvasWidth * trueBottom));
   maxPop = 50 * proportion;
-
   // Update tree parameters (ecosystem scaling)
   minTrees = Math.max(1, Math.floor(canvasWidth / 300)); // At least 1 tree
   maxTrees = Math.max(minTrees * 2, Math.floor(canvasWidth / 25)); // Sensible maximum
   startingTrees = Math.max(1, Math.floor(canvasWidth / 250));
-
   // Update UI values
   messagesToSave = Math.max(10, Math.floor(canvasHeight / 20)); // At least 10 messages
-
   // Update canvas size if it exists
   if (myGameArea && myGameArea.canvas) {
     myGameArea.canvas.width = canvasWidth;
     myGameArea.canvas.height = canvasHeight;
-
     // Notify user if we had to adjust their resolution
     if (canvasWidth !== rawWidth || canvasHeight !== rawHeight) {
       console.log(`Resolution adjusted to ${canvasWidth}x${canvasHeight} (minimum: ${minCanvasWidth}x${minCanvasHeight})`);
     }
   }
-
   // Push objects back in bounds if screen shrank
   if (canvasWidth < oldCanvasWidth || canvasHeight !== oldCanvasHeight) {
     pushObjectsInBounds();
   }
-
-  // recalculate screen positions of buttons/labels that are canvas size dependent
-  boxSize = 220 * proportion;
+  // recalculate screen positions of buttons/labels that are stay above/below the adoption centre
   for (let i = 0; i < buttons.length; i++) {
     if (buttons[i].canvasSizeDependent) {
       buttons[i].reinitPosition();
     }
   }
+  buttons[10].x = canvasWidth - 20;
+  buttons[10].y = canvasHeight - 25;
   for (let i = 0; i < labels.length; i++) {
     if (labels[i].canvasSizeDependent) {
       labels[i].reinitPosition();
     }
   }
+  // recalculate screen positions of the catboxes
+  for (let i = 0; i < boxes.length; i++) {
+    boxes[i].reinitPosition();
+    chittens[boxes[i].id].x = boxes[i].x + (boxes[i].size / 2);
+    chittens[boxes[i].id].y = boxes[i].y + (boxes[i].size / 2);
+    chittens[boxes[i].id].onSurface = false;
+  }
+  for (let i = 0; i < parentBoxes.length; i++) {
+    parentBoxes[i].reinitPosition();
+    chittens[parentBoxes[i].id].x = boxes[i].x + (boxes[i].size / 2);
+    chittens[parentBoxes[i].id].y = boxes[i].y + (boxes[i].size / 2);
+    chittens[parentBoxes[i].id].onSurface = false;
+  }
+  adoptionBackground.resize();
 }
 
 // Function to push physics objects back within new bounds
@@ -284,7 +288,7 @@ function pushObjectsInBounds() {
       for (let j = fruits.length - 1; j >= 0; j--) {
         // remove their fruits too
         if (fruits[j].parent == trees[i]) {
-          fruits[i].remove();
+          fruits[j].remove();
         }
       }
       trees.splice(i, 1);
@@ -367,11 +371,13 @@ let myGameArea = {
       pointerPos.y = event.touches[0].clientY;
     }, { passive: true });
     this.canvas.addEventListener('touchstart', function (event) {
+      event.preventDefault(); // Prevent mouse events from also firing
       pointerPos.x = event.touches[0].clientX;
       pointerPos.y = event.touches[0].clientY;
       tapOn();
-    }, { passive: true });
+    });
     this.canvas.addEventListener('touchend', function (event) {
+      event.preventDefault(); // Prevent mouse events from also firing
       tapOff();
     });
 
@@ -494,8 +500,7 @@ function updateGameArea() {
   while (accumulator >= fixedTimeStep && logicUpdates < 5) {
     // Run one game logic update at 50 UPS
     myGameArea.frameNo += 1;
-    touchOnorOffThisFrame = false;
-    // Always track total time for rendering calculations
+        // Always track total time for rendering calculations
     gameTimeElapsed += fixedTimeStep;
     if (!paused && gameSpeedMultiplier > 0) {
       // increase daytime counter and make seasons rotate (scaled by speed)
@@ -515,6 +520,27 @@ function updateGameArea() {
       updateTempAndTime();
       // Update all game objects at fixed timestep (50 UPS)
       updateGameObjects();
+
+      // countdown timer logic should also run at fixed timestep
+      if (!chosenKitten) {
+        updateChoiceTimer();
+        // check the timer
+        if (choiceTimer > 0) {
+          choiceTimer--;
+        }
+        if (choiceTimer == 0) {
+          // in endless mode, pick a random kitten
+          if (endlessMode) {
+            if (selection == null) {
+              selection = chittens[Math.round(Math.random() * (boxes.length - 1)) + currentChittens];
+            }
+            handleButton(1);
+          } else {
+            // otherwise give all the kittens away
+            handleButton(2);
+          }
+        }
+      }
     }
     accumulator -= fixedTimeStep;
     logicUpdates++;
@@ -522,27 +548,6 @@ function updateGameArea() {
   // Now clear the canvas and prepare for rendering
   myGameArea.clear();
   ctx = myGameArea.context;
-
-  // countdown timer, used when choosing from a litter
-  if (!paused && !chosenKitten) {
-    updateChoiceTimer();
-    // check the timer
-    if (choiceTimer > 0) {
-      choiceTimer--;
-    }
-    if (choiceTimer == 0) {
-      // in endless mode, pick a random kitten
-      if (endlessMode) {
-        if (selection == null) {
-          selection = chittens[Math.round(Math.random() * (boxes.length - 1)) + currentChittens];
-        }
-        handleButton(1);
-      } else {
-        // otherwise give all the kittens away
-        handleButton(2);
-      }
-    }
-  }
   drawBackground();
 
   // draw the starfield
@@ -723,7 +728,10 @@ function updateGameArea() {
     }
   }
 
-  // draw adoption/litter picking boxes
+  // draw adoption/litter picking UI
+
+  if (choosingChitten) adoptionBackground.render();
+
   for (let i = 0; i < boxes.length; i++) {
     boxes[i].update();
   }

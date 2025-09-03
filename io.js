@@ -12,11 +12,12 @@ function copyChitten(chitten) {
     'outlineColour', 'outlineThickness', 'noseColour', 'mouthOpen',
     'speech', 'speechCounter', 'jumpCooldown', 'sittingCooldown',
     'partner', 'snuggling', 'holding', 'matureModifier','oldAgeModifier', 
-    'flaggedForDeath', 'originalAngleToFocus', 'angleToFocus', 'jumpHeight', 'onTree',
+    'flaggedForDeath', 'originalAngleToFocus', 'angleToFocus', 'jumpHeight', 'onTree', 'tailThickness',
     'focus', 'ultimateTarget', 'target', 'bodyToFeetDistance', 'thicknessModL', 'thicknessModS', 'tailLengthY',
     'legWidth', 'frontLegLength', 'frontLegOriginX', 'frontLegOriginY', 'backLegLength', 'backLegOriginX',
     'backLegOriginY', 'footSize', 'frontFootOriginX', 'frontFootOriginY', 'backFootOriginX', 'backFootOriginY',
-    'treeSleepPosProgress', 'hitFocus', 'mother'
+    'treeSleepPosProgress', 'hitFocus', 'mother', 'bodypartColours', 'specialColours', 'bodypartGradients',
+    'patternColours', 'cachedPatternImage', 'cachedPatternRotation', 'cachedPatternScale'
   ];
 
   const saveData = {};
@@ -43,7 +44,7 @@ function cloneChitten(outputbuffer, who) {
   }
   // Regenerate runtime properties
   who.recalculateSizes();
-  who.recalculateColours();
+  who.recalculateColours(true);
 }
 
 /**

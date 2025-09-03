@@ -1,6 +1,6 @@
 // Gene configuration is centralized in genes.js
 
-const baseMutationRate = 0.1; // controls how often random properties are introduced into offspring
+const baseMutationRate = 0.05; // controls how often random properties are introduced into offspring
 const breedStandardLeniency = 0.3;
 
 const runtText = 'Runt of the litter';
@@ -42,7 +42,7 @@ function generateKitten(parent1, parent2, childBreed) {
 
   // physical traits
   chittens[chittens.length - 1].thickness = selectGeneInteger(parent1.thickness, parent2.thickness, Math.random());
-  chittens[chittens.length - 1].legginess = selectGeneInteger(parent1.legginess, parent2.legginess, Math.random());
+  chittens[chittens.length - 1].legLength = selectGeneInteger(parent1.legLength, parent2.legLength, Math.random());
   chittens[chittens.length - 1].tailLength = selectGeneInteger(parent1.tailLength, parent2.tailLength, Math.random());
   chittens[chittens.length - 1].fangs = selectGeneInteger(parent1.fangs, parent2.fangs, Math.random());
   chittens[chittens.length - 1].mawSize = selectGeneInteger(parent1.mawSize, parent2.mawSize, Math.random());
@@ -57,12 +57,14 @@ function generateKitten(parent1, parent2, childBreed) {
   // physicals abilities
   chittens[chittens.length - 1].coordination = selectGeneInteger(parent1.coordination, parent2.coordination, Math.random());
   // coat
-  chittens[chittens.length - 1].pattern = selectGeneFrom([parent1.pattern, parent2.pattern]);
+  chittens[chittens.length - 1].pattern = selectGenePattern([parent1.pattern, parent2.pattern], chittens[chittens.length - 1]);
   chittens[chittens.length - 1].patternAlpha = selectGeneInteger(parent1.patternAlpha, parent2.patternAlpha, Math.random());
   chittens[chittens.length - 1].coatMod[0] = selectGeneInteger(parent1.coatMod[0], parent2.coatMod[0], Math.random());
   chittens[chittens.length - 1].coatMod[1] = selectGeneInteger(parent1.coatMod[1], parent2.coatMod[1], Math.random());
   chittens[chittens.length - 1].coatMod[2] = selectGeneInteger(parent1.coatMod[2], parent2.coatMod[2], Math.random());
   chittens[chittens.length - 1].coatMod[3] = selectGeneInteger(parent1.coatMod[3], parent2.coatMod[3], Math.random());
+  chittens[chittens.length - 1].coatMod[4] = selectGeneInteger(parent1.coatMod[3], parent2.coatMod[3], Math.random());
+  chittens[chittens.length - 1].coatMod[5] = selectGeneInteger(parent1.coatMod[3], parent2.coatMod[3], Math.random());
   chittens[chittens.length - 1].bodypartCode = selectGenesFromArraysInts(parent1.bodypartCode, parent2.bodypartCode, 2);
   // colours
   chittens[chittens.length - 1].firstColour = selectGeneColour(parent1.firstColour, parent2.firstColour);
@@ -112,13 +114,13 @@ function determineTraitExpression(who) {
     if (who[geneData.geneProp] && !who[geneData.expressedProp]) {
       let expressionChance = geneData.baseExpressionChance;
 
-      // Check if this is a breed standard (95%+ expression for purebreds)
+      // Check if this is a breed standard (very high expression for purebreds)
       if (breed?.breedStandardGenes?.includes(geneKey)) {
         expressionChance = geneData.breedStandardChance;
       }
 
-      // Skip bald faced / sparse coat expression if already hairless
-      if ((geneKey === 'baldFaced' || geneKey === 'sparseCoat') && who.hairlessExpressed) {
+      // Skip bald faced / sparse coat / ticked coat expression if already hairless
+      if ((geneKey === 'baldFaced' || geneKey === 'sparseCoat' || geneKey === 'tickedCoat') && who.hairlessExpressed) {
         continue;
       }
 
@@ -132,6 +134,14 @@ function determineTraitExpression(who) {
         who.melanismExpressed = false;
       } else {
         who.albinismExpressed = false;
+      }
+    }
+    // ticked and sparse coat cannot be present together
+    if (who.sparseCoatExpressed && who.tickedCoatExpressed) {
+      if (Math.random() < 0.5) {
+        who.sparseCoatExpressed = false;
+      } else {
+        who.tickedCoatExpressed = false;
       }
     }
   }
@@ -212,18 +222,18 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   who.coatMod[1] = Math.random();
   who.coatMod[2] = Math.random();
   who.coatMod[3] = Math.random();
+  who.coatMod[4] = Math.random();
+  who.coatMod[5] = Math.random();
   who.thickness = (Math.random() * 0.5) + 0.5;
-  who.legginess = (Math.random() * 0.5) + 0.5;
+  who.legLength = (Math.random() * 0.5) + 0.5;
   who.coordination = Math.random(); // Random coordination from 0.0 to 1.0
   who.pattern = validPatterns[Math.floor(Math.random() * validPatterns.length)].value;
   who.patternAlpha = Math.random();
-
   // Set default colors (will be overridden by breed if applicable)
   who.firstColour = randomColourRealistic();
   who.secondColour = randomColourRealistic();
   who.thirdColour = randomColourRealistic();
   who.patternColour = randomColourRealistic();
-
   // Set basic properties
   who.inCatBox = boxes[thisCatBox];
   who.birthday = Math.floor(Math.random() * ticksPerDay);
@@ -243,6 +253,7 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   who.earHeight = 0.25 + (Math.random() * 0.75);
   who.earLength = 0.25 + (Math.random() * 0.75);
   who.mawSize = Math.random();
+
 
   // Handle breed application
   if (who !== experiment && shouldApplyBreedTemplate) {
@@ -436,9 +447,38 @@ function selectGeneColour(colour1, colour2) {
   return mixTwoColours(colour1, colour2, prop);
 }
 
-function selectGeneFrom(selectFrom) {
-  const index = Math.floor(Math.random() * selectFrom.length);
-  return selectFrom[index];
+function selectGenePattern(selectFrom, chitten) {
+  const maleChance = 1 / 3000; // Very rare for males to get tortoiseshell/calico patterns
+  const tortoiseshellPatterns = [1, 2]; // Tortoiseshell=1, Calico=2
+  
+  if (Math.random() < baseMutationRate/100) { // new patterns developing are a very rare occurence
+    const randomPattern = validPatterns[Math.floor(Math.random() * validPatterns.length)].value;
+    // If male and random pattern is tortoiseshell/calico, apply rare chance
+    if (chitten.gender === 'Male' && tortoiseshellPatterns.includes(randomPattern)) {
+      if (Math.random() < maleChance) {
+        return randomPattern;
+      } else {
+        // Pick a non-tortoiseshell pattern instead
+        const nonTortoiseshellPatterns = validPatterns.filter(p => !tortoiseshellPatterns.includes(p.value));
+        return nonTortoiseshellPatterns[Math.floor(Math.random() * nonTortoiseshellPatterns.length)].value;
+      }
+    }
+    return randomPattern;
+  }
+  
+  const selectedPattern = selectFrom[Math.floor(Math.random() * selectFrom.length)];
+  // If male and selected pattern from parents is tortoiseshell/calico, apply rare chance
+  if (chitten.gender === 'Male' && tortoiseshellPatterns.includes(selectedPattern)) {
+    if (Math.random() < maleChance) {
+      return selectedPattern;
+    } else {
+      // Pick a non-tortoiseshell pattern instead
+      const nonTortoiseshellPatterns = validPatterns.filter(p => !tortoiseshellPatterns.includes(p.value));
+      return nonTortoiseshellPatterns[Math.floor(Math.random() * nonTortoiseshellPatterns.length)].value;
+    }
+  }
+  
+  return selectedPattern;
 }
 
 function shuffleGenes(selectFrom) {

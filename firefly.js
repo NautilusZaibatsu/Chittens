@@ -132,7 +132,7 @@ function FireFly(x, y, focus, firstColour) {
       if (pickNewTarget) {
         let cTargets = [];
         for (let i = 0; i < chittens.length; i++) {
-          if (!chittens[i].awake) {
+          if (!chittens[i].awake && !chittens[i].inCatBox) {
             cTargets.push(i);
           }
         }
