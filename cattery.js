@@ -55,6 +55,8 @@ const breedingEnergyReq = 50;
 const breedingHealthReq = 50;
 const loveSpringBonus = 0.5;
 const loveGainAsleep = 0.005;
+const snuggleTimerMale = 250; // how many UPS it takes to give birth after snuggling
+const snuggleTimerFemale = 260; // how many UPS it takes to give birth after snuggling
 // --- SIZE
 const chittenBaseSize = 15;
 const chittenMinSize = 10;
@@ -184,10 +186,10 @@ chittens = [];
 * @param {int} y - the y pos
 * @param {int} bodySize - the size
 * @param {int} maxSize - the maximum possible size
-* @param {string} gender - the sex of the mate
+* @param {string} sex - the sex of the mate
 * @param {int} ears - the ear modifier (cat -> fox);
 */
-function Chitten(x, y, bodySize, maxSize, gender) {
+function Chitten(x, y, bodySize, maxSize, sex) {
   this.name = null;
   this.age = 0;
   this.maxAge = minMaxAge + (ageVariance / 2);
@@ -196,7 +198,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   this.matureModifier = 1; // 0 to 1 value for maturity (0 = newborn, 1 = mature)
   this.oldAgeModifier = 0; // 0 to 1 value for old age (0 = not aging, 1 = dead)
   // General
-  this.gender = gender;
+  this.sex = sex;
   this.litters = 0;
   // Coats / colours / outlines
   this.firstColour = trueWhite;
@@ -1026,6 +1028,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   // functions to call to enter the sleep state
   this.fallAsleep = function () {
     this.awake = false;
+    this.focus = null;
     this.facingForwards = true;
     this.speedX = 0;
     this.rotation = 0;
@@ -1177,18 +1180,9 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     }
     // Update sitting animation and leg states
     this.updateSittingState();
-    if (choosingChitten && this.snuggling == 0 && this.gender == 'Female') {
-      if (!chosenKitten) {
-        if (selection == null) {
-          selection = chittens[Math.round(Math.random() * (boxes.length - 1)) + currentChittens];
-        }
-        handleButton(1);
-      } else {
-        handleButton(13);
-      }
-    }
+
     // giving birth
-    if (!choosingChitten && parentBoxes.length === 0 && this.snuggling == 0 && this.gender == 'Female') {
+    if (!choosingChitten && !this.geneEditing && parentBoxes.length === 0 && this.snuggling == 0 && this.sex == 'Female') {
       if (this.partner !== null) {
         this.partner.snuggling = -1;
         this.partner.partner = null;
@@ -1200,7 +1194,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       }
       this.snuggling = -1;
       this.partner = null;
-    } else if (!choosingChitten && (this.snuggling >= 0)) {
+    } else if (!choosingChitten && !geneEditing && (this.snuggling >= 0)) {
       this.snuggling--;
     } else if (!this.isEating()) {
       // --- Opportunistic/Reactive Swatting:
@@ -1256,7 +1250,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
             }
           }
           // are we gonna pick a mate? (using cached mate list for performance)
-          if (target == null && this.snuggling == -1 && !choosingChitten && this.age < (this.maxAge - oldAgeFor) && this.gender == 'Male' && this.age >= maturesAt && chittens.length <= maxPop && this.health >= breedingHealthReq
+          if (target == null && this.snuggling == -1 && !choosingChitten && this.age < (this.maxAge - oldAgeFor) && this.sex == 'Male' && this.age >= maturesAt && chittens.length <= maxPop && this.health >= breedingHealthReq
             && this.energy >= breedingEnergyReq) {
             // Update mates cache periodically
             matesCacheFrame++;
@@ -1266,7 +1260,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
             }
 
             // Use cached available mates instead of looping through all cats
-            if (!choosingChitten && this.gender == "Male" && this.love >= breedingLoveReq && this.energy >= breedingEnergyReq && this.health >= breedingHealthReq) {
+            if (!choosingChitten && this.sex == "Male" && this.love >= breedingLoveReq && this.energy >= breedingEnergyReq && this.health >= breedingHealthReq) {
             }
             for (let j = 0; j < availableMates.length && target == null; j++) {
               // We can target mates beyond our jumping range to get closer to them
@@ -1689,7 +1683,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     return trueWhite;
   };
 
-  // Helper function to create foot gradient (now uses combined function)
+  // Helper function to create foot gradient
   this.createFootGradient = function (bodypartIndex, footSize) {
     return this.createBodypartGradient(bodypartIndex, 'radial', [
       0, 0, 1,
@@ -1697,7 +1691,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     ]);
   };
 
-  // Helper function to create ear gradient (now uses combined function)
+  // Helper function to create ear gradient
   this.createEarGradient = function (bodypartIndex) {
     return this.createBodypartGradient(bodypartIndex, 'linear', [
       0, -this.size - (this.size * this.earWidth / 2),
@@ -1998,7 +1992,6 @@ function Chitten(x, y, bodySize, maxSize, gender) {
   };
 
   this.drawBackLegs = function (backendShiftX) {
-
     // setting leg angle
     // calculate positions
     let startXL = (-this.backLegOriginX) - backendShiftX;
@@ -2316,11 +2309,11 @@ function Chitten(x, y, bodySize, maxSize, gender) {
       // smile
       if (this.health >= maxHealth / 2 && this.age < (this.maxAge - oldAgeFor) && this.energy > sleepAt) {
         ctx.globalAlpha = this.love / maxLove;
-        if (this.gender == 'Female') {
+        if (this.sex == 'Female') {
           ctx.drawImage(smile, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
-        } else if (this.gender == 'Male') {
+        } else if (this.sex == 'Male') {
           ctx.drawImage(smile2, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
-        } else if (this.gender == 'Non Binary') {
+        } else if (this.sex == 'Non Binary') {
           ctx.drawImage(smile3, -(this.size) * 0.8, this.size / 8, this.size * 1.6, this.size * 0.8);
         }
       }
@@ -2671,7 +2664,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     let leftAngle = this.drawSingleLeg(0, -this.frontLegOriginX, startY, endX1, endY, leftFrontLegGradient);
     let rightAngle = this.drawSingleLeg(1, this.frontLegOriginX, startY, endX2, endY, rightFrontLegGradient);
     if (!this.facingForwards) {
-      // if we are facing backwards draw the feet now...
+      // if we are facing backwards draw the feet now..
       this.drawSingleFoot(0, endX1, endY, leftAngle, leftHandGradient, false, null);
       this.drawSingleFoot(1, endX2, endY, rightAngle, rightHandGradient, false, null);
     } else {
@@ -2682,34 +2675,37 @@ function Chitten(x, y, bodySize, maxSize, gender) {
 
   this.drawIcons = function () {
     ctx.save(); // 0
-    // debug icon/label
+    // // debug icon/label
     // ctx.fillStyle = trueWhite;
-    // ctx.font = '10px' + ' ' + globalFont;
-    // ctx.globalAlpha = 1;
-    // ctx.fillText(" e: " + Math.round(this.energy) + " hu: " + Math.round(this.hunger) + " he: " + Math.round(this.health) + " l: " + this.love, 0, this.size - this.bodyToFeetDistance - 30);
-
+    // ctx.font = `${UI_THEME.fonts.sizes.tiny}px ${UI_THEME.fonts.primary}`;    
+    // // ctx.globalAlpha = 1;
+    // ctx.fillText(this.snuggling, 0, this.size - this.bodyToFeetDistance - 30);
 
     // zzzzs
     if (!this.awake) {
       ctx.fillStyle = energyBlue;
-      ctx.font = '10px' + ' ' + globalFont;
+      ctx.font = `${UI_THEME.fonts.sizes.tiny}px ${UI_THEME.fonts.primary}`;
       let amntToMove = (this.energy % 10);
       ctx.globalAlpha = (1 - (amntToMove / 10)) / 1.5;
       amntToMove *= 2;
       ctx.fillText('z', -6, -this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
-      ctx.font = '7px' + ' ' + globalFont;
+      ctx.font = '7px ${UI_THEME.fonts.primary}';
       ctx.fillText('z', 0, - 7 - this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
-      ctx.font = '3px' + ' ' + globalFont;
+      ctx.font = '3px ${UI_THEME.fonts.primary}';
       ctx.fillText('z', 6, - 14 - this.bodyToFeetDistance - amntToMove + this.size + this.thicknessModL);
     }
 
     // hearts for snuggling
     if (this.snuggling > 0) {
       ctx.fillStyle = heartsPink;
-      ctx.font = '20px' + ' ' + globalFont;
-      let amntToMove = this.getAnimationValue(this.snuggling, 40, false);
+      ctx.font = `${UI_THEME.fonts.sizes.large}px ${UI_THEME.fonts.primary}`;
+      let amntToMove;
+      if (!geneEditing) {
+        amntToMove = this.getAnimationValue(this.snuggling, 40, false);
+      } else {
+        amntToMove = this.getAnimationValue(0, 40, false);
+      }
       ctx.globalAlpha = (1 - (amntToMove / 40)) / 2;
-      amntToMove *= 1;
       let textXOffset = (ctx.measureText(unicodeHeart).width) / 2;
       ctx.fillText(unicodeHeart, -textXOffset, -(this.size * 4) + amntToMove);
     }
@@ -2717,7 +2713,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
     // eating nom nom noms
     if (this.isEating()) {
       ctx.fillStyle = trueWhite;
-      ctx.font = '10px' + ' ' + globalFont;
+      ctx.font = `${UI_THEME.fonts.sizes.tiny}px ${UI_THEME.fonts.primary}`;
       if (this.age >= maturesAt) {
         let text = '*nom*';
         let textXOffset = (ctx.measureText(text).width) / 2;
@@ -2858,7 +2854,7 @@ function Chitten(x, y, bodySize, maxSize, gender) {
         // having a snuggle
         if (!choosingChitten
           && !this.beingHeld && !chittens[j].beingHeld
-          && ((this.gender == 'Male' && chittens[j].gender == 'Female') || (this.gender == 'Female' && chittens[j].gender == 'Male'))
+          && ((this.sex == 'Male' && chittens[j].sex == 'Female') || (this.sex == 'Female' && chittens[j].sex == 'Male'))
           && !this.isEating() && chittens[j].eatingChewsRemaining == 0
           && this.snuggling == -1 && chittens[j].snuggling == -1
           && this.partner == chittens[j] && chittens[j].partner == this
@@ -2891,8 +2887,8 @@ function Chitten(x, y, bodySize, maxSize, gender) {
           // Both cats should sit while snuggling
           this.targetSittingState = true;
           chittens[j].targetSittingState = true;
-          this.snuggling = 250;
-          chittens[j].snuggling = 260;
+          this.snuggling = snuggleTimerMale;
+          chittens[j].snuggling = snuggleTimerFemale;
           sendMessage(chittens[j].name + ' and ' + this.name + ' had a snuggle');
         }
       }
@@ -3201,7 +3197,7 @@ function updateMatesCache() {
   availableMates = [];
   for (let i = 0; i < chittens.length; i++) {
     if (chittens[i].snuggling == -1 && chittens[i].partner == null && chittens[i].awake && !chittens[i].age < (chittens[i].maxAge - oldAgeFor) &&
-      chittens[i].gender == 'Female' && chittens[i].age >= maturesAt &&
+      chittens[i].sex == 'Female' && chittens[i].age >= maturesAt &&
       chittens[i].health >= breedingHealthReq && chittens[i].energy >= breedingEnergyReq && chittens[i].love >= breedingLoveReq) {
       availableMates.push(chittens[i]);
     }
@@ -3259,8 +3255,8 @@ function adoptChitten(who) {
 
 function initLitter(mParent, fParent) {
   parentBoxes = [];
-  parentBoxes.push(new CatBox(true, false, 1, 0, boxSize, boxThickness));
-  parentBoxes.push(new CatBox(true, false, 2, 0, boxSize, boxThickness));
+  parentBoxes.push(new CatBox(true, false, 1, 0, CATBOX.size, CATBOX.thickness));
+  parentBoxes.push(new CatBox(true, false, 2, 0, CATBOX.size, CATBOX.thickness));
   fParent.inCatBox = parentBoxes[0];
   mParent.inCatBox = parentBoxes[1];
   // Reset animation states for parents when moved to boxes
@@ -3277,10 +3273,10 @@ function initLitter(mParent, fParent) {
   // Set the parent box IDs to point to the correct chittens
   parentBoxes[0].id = chittens.indexOf(fParent);
   parentBoxes[1].id = chittens.indexOf(mParent);
-  fParent.x = parentBoxes[0].x + (boxSize / 2);
-  fParent.y = parentBoxes[0].y + (boxSize / 2);
-  mParent.x = parentBoxes[1].x + (boxSize / 2);
-  mParent.y = parentBoxes[1].y + (boxSize / 2);
+  fParent.x = parentBoxes[0].x + (CATBOX.size / 2);
+  fParent.y = parentBoxes[0].y + (CATBOX.size / 2);
+  mParent.x = parentBoxes[1].x + (CATBOX.size / 2);
+  mParent.y = parentBoxes[1].y + (CATBOX.size / 2);
   fParent.speedX = 0;
   fParent.speedY = 0;
   mParent.speedX = 0;
@@ -3290,8 +3286,8 @@ function initLitter(mParent, fParent) {
   // Parent cats should not target anything during litter picking
   fParent.focus = null;
   mParent.focus = null;
-  parentBoxes[0].colour = genderPink;
-  parentBoxes[1].colour = genderBlue;
+  parentBoxes[0].colour = sexPink;
+  parentBoxes[1].colour = sexBlue;
   initChoiceBoxes();
   if (endlessMode) {
     choiceTimer = endlessModeChoiceTimer;
@@ -3308,18 +3304,18 @@ function initLitter(mParent, fParent) {
   // random number of chittens (6-9)
   let numberInLitter = Math.round(minLitterSize + (Math.random() * 3));
   let count = 0;
-  for (let j = 0; j < boxRows; j++) {
-    for (let i = 0; i < boxColumns && count < numberInLitter; i++) {
-      boxes.push(new CatBox(false, false, i, j, boxSize, boxThickness));
+  for (let j = 0; j < CATBOX.rows; j++) {
+    for (let i = 0; i < CATBOX.columns && count < numberInLitter; i++) {
+      boxes.push(new CatBox(false, false, i, j, CATBOX.size, CATBOX.thickness));
       generateKitten(maleParent, femaleParent, generateChildBreedText(maleParent, femaleParent));
       thisCatBox = (j * 3) + i;
       boxes[thisCatBox].id = thisCatBox + currentChittens;
       const who = chittens[thisCatBox + currentChittens];
       who.inCatBox = boxes[thisCatBox];
-      who.name = generateBreedBasedName(maleParent.breed, femaleParent.breed, who.gender);
+      who.name = generateBreedBasedName(maleParent.breed, femaleParent.breed, who.sex);
       who.mother = fParent;
-      who.x = (canvasWidth / 2) - (((boxSize * 3) + (boxPadding * 2)) / 2) + (i * boxPadding) + (i * boxSize) + (boxSize / 2);
-      who.y = (trueBottom / 2) - ((boxColumns * (boxSize + boxPadding)) / 2) + (j * boxPadding) + (j * boxSize) + (boxSize / 2);
+      who.x = (canvasWidth / 2) - (((CATBOX.size * 3) + (CATBOX.padding * 2)) / 2) + (i * CATBOX.padding) + (i * CATBOX.size) + (CATBOX.size / 2);
+      who.y = (trueBottom / 2) - ((CATBOX.columns * (CATBOX.size + CATBOX.padding)) / 2) + (j * CATBOX.padding) + (j * CATBOX.size) + (CATBOX.size / 2);
       // increase size here so that we can see the kittens better:
       who.size *= kittenPreviewSizeMod;
       // Pick of litter
@@ -3333,13 +3329,13 @@ function initLitter(mParent, fParent) {
         chittens[currentChittens + numberInLitter - 1].health *= 0.85;
         boxes[boxes.length - 1].text = 'Runt';
       }
-      // setting the box colour by gender
-      if (who.gender == 'Female') {
-        boxes[thisCatBox].colour = genderPink;
-      } else if (who.gender == 'Male') {
-        boxes[thisCatBox].colour = genderBlue;
+      // setting the box colour by sex
+      if (who.sex == 'Female') {
+        boxes[thisCatBox].colour = sexPink;
+      } else if (who.sex == 'Male') {
+        boxes[thisCatBox].colour = sexBlue;
       } else {
-        boxes[thisCatBox].colour = genderPurple;
+        boxes[thisCatBox].colour = sexPurple;
       }
       // don't mutate the pick of the litter, or the runt
       if (thisCatBox !== 0 && thisCatBox !== boxes.length - 1) {
@@ -3391,41 +3387,43 @@ function generateAdoptionCat(who, breedFilter) {
       generateCrossbreed(who); // Crossbreed
     }
   }
-  who.name = generateBreedBasedName(who.breed, who.breed, who.gender);
+  who.name = generateBreedBasedName(who.breed, who.breed, who.sex);
   who.recalculateSizes();
   who.recalculateColours(true);
 }
 
 // function to generate a random size for a new chitten
-function getRandomChittenSize(gender) {
-  const scale = ((Math.random() * chittenMinSize) + (chittenSizeVariation)) * (gender === 'Female' ? 1 / 1.1 : 1);
+function getRandomChittenSize(sex) {
+  const scale = ((Math.random() * chittenMinSize) + (chittenSizeVariation)) * (sex === 'Female' ? 1 / 1.1 : 1);
   return scale;
 }
 
 // Function to generate a random max size for a new chitten 
-function getRandomChittenMaxSize(gender) {
-  const scale = ((Math.random() * chittenMinSize) + chittenSizeVariation) * (gender === 'Female' ? 1 / 1.1 : 1);
+function getRandomChittenMaxSize(sex) {
+  const scale = ((Math.random() * chittenMinSize) + chittenSizeVariation) * (sex === 'Female' ? 1 / 1.1 : 1);
   return scale;
 }
 
-function initCattery(gender) {
-  adoptionCentreUiOn(gender);
+function initCattery(sex) {
+  adoptionCentreUiOn(sex);
   initChoiceBoxes();
-  if (gender === 'Female') {
+  if (sex === 'Female') {
     chosenChittenF = false;
-  } else {
+  } else if (sex === 'Male') {
     chosenChittenM = false;
+  } else {
+    chosenChittenNB = false;
   }
-  for (let i = 0; i < boxColumns; i++) {
-    for (let j = 0; j < boxRows; j++) {
-      boxes.push(new CatBox(false, false, i, j, boxSize, boxThickness));
+  for (let i = 0; i < CATBOX.columns; i++) {
+    for (let j = 0; j < CATBOX.rows; j++) {
+      boxes.push(new CatBox(false, false, i, j, CATBOX.size, CATBOX.thickness));
       // Size scaling
-      const maximumSize = getRandomChittenMaxSize(gender);
-      let currentSize = Math.min(getRandomChittenSize(gender), maximumSize);
+      const maximumSize = getRandomChittenMaxSize(sex);
+      let currentSize = Math.min(getRandomChittenSize(sex), maximumSize);
       thisCatBox = (i * 3) + j;
-      chittens.push(new Chitten(boxes[thisCatBox].x + (boxSize / 2), boxes[thisCatBox].y + (boxSize / 2), currentSize, maximumSize, gender));
+      chittens.push(new Chitten(boxes[thisCatBox].x + (CATBOX.size / 2), boxes[thisCatBox].y + (CATBOX.size / 2), currentSize, maximumSize, sex));
       boxes[thisCatBox].id = thisCatBox + currentChittens;
-      boxes[thisCatBox].colour = (gender === 'Female' ? genderPink : genderBlue);
+      boxes[thisCatBox].colour = sex === 'Female' ? sexPink : sex === 'Male' ? sexBlue : sexPurple;
       // Set the cat's catbox reference BEFORE generating adoption cat
       chittens[thisCatBox + currentChittens].inCatBox = boxes[thisCatBox];
       // Generate adoption cat based on breed filter
@@ -3445,6 +3443,9 @@ function initFemaleCattery() {
 
 function initMaleCattery() {
   initCattery('Male');
+}
+function initNonBinaryCattery() {
+  initCattery('Non Binary');
 }
 
 /**
@@ -3503,14 +3504,14 @@ function recalculateChittenNumbers() {
     const c = chittens[i];
     if (c.inCatBox != null) continue;
     // Count sexes
-    if (c.gender === 'Female') femaleCount++;
-    else if (c.gender === 'Male') maleCount++;
+    if (c.sex === 'Female') femaleCount++;
+    else if (c.sex === 'Male') maleCount++;
     else nonbinaryCount++;
 
     // Fertility check
     if (c.age < (c.maxAge - oldAgeFor) && c.age >= maturesAt) {
-      if (c.gender === 'Female') fertileFemales++;
-      if (c.gender === 'Male') fertileMales++;
+      if (c.sex === 'Female') fertileFemales++;
+      if (c.sex === 'Male') fertileMales++;
     }
   }
   // Parents in catboxes count as present and fertile
@@ -3523,22 +3524,23 @@ function recalculateChittenNumbers() {
   if (endlessMode) {
     if (fertileFemales === 0) spawnRandomChitten('Female');
     if (fertileMales === 0) spawnRandomChitten('Male');
+    recalculateChittenNumbers();
   }
 }
 
-// function to spawn a random chitten of a specific gender in endless mode
-function spawnRandomChitten(gender) {
-  const maximumSize = getRandomChittenMaxSize(gender);
-  let currentSize = Math.min(getRandomChittenSize(gender), maximumSize);
+// function to spawn a random chitten of a specific sex in endless mode
+function spawnRandomChitten(sex) {
+  const maximumSize = getRandomChittenMaxSize(sex);
+  let currentSize = Math.min(getRandomChittenSize(sex), maximumSize);
   let offsetX = 0;
-  if (gender == 'Male') {
+  if (sex == 'Male') {
     offsetX = canvasWidth - 20;
-  } else if (gender == 'Female') {
+  } else if (sex == 'Female') {
     offsetX = 20;
   } else {
-    console.warn('Incorrect gender specified in spawnRandomChitten')
+    console.warn('Incorrect sex specified in spawnRandomChitten')
   }
-  const tempChitten = new Chitten(offsetX, trueBottom - 20, currentSize, maximumSize, gender);
+  const tempChitten = new Chitten(offsetX, trueBottom - 20, currentSize, maximumSize, sex);
   generateAdoptionCat(tempChitten, 'All');
   chittens.push(tempChitten);
   // Adoption handling
@@ -3559,7 +3561,7 @@ function speak(chitten, word) {
       return; // Don't add new speech if already speaking
     }
   }
-  speech.push(new Speak(chitten, word));
+  speech.push(new Speech(chitten, word));
   // Trigger mouth opening animation
   chitten.targetMouthOpenState = true;
 }

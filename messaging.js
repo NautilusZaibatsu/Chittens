@@ -8,7 +8,7 @@ let currentMessage = new Message('init');
 function sendMessage(text) {
   let duplicate = false;
   if (currentMessage.text !== text) {
-      messageBuffer.push(new Message(text, tickerToTime(daytimeCounter)));
+    messageBuffer.push(new Message(text, tickerToTime(daytimeCounter)));
     if (messageBuffer.length > messagesToSave) {
       messageBuffer.splice(0, 1);
     }
@@ -32,41 +32,48 @@ function Message(text, timeStamp) {
  * @param {Chitten} who - which chitten is mewing
  * @param {string} mew - the text the chitten is saying
  */
- function Speak(who, mew) {
-   this.x = who.x;
-   this.y = who.y;
-   this.scale = who.size;
-   this.who = who;
-   this.mew = '*'+mew+'*';
-   this.timeStamp = daytimeCounter;
-   this.flagged = false;
-   this.update = function () {
-     this.x = this.who.x - (fontWidth * this.mew.length/2/1.5);
-     this.y = this.who.y - (this.who.size*3);
-     ctx.font = fontSize/1.5+'px' + ' ' + globalFont;
-     ctx.fillStyle = uiColourArray[2];
-     ctx.fillRect(this.x - 5, this.y - 10, (fontWidth * this.mew.length/1.5) + 10, 13);
-     ctx.fillStyle = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
-     ctx.fillText(this.mew, this.x, this.y);
-     if (daytimeCounter > this.timeStamp + speechDuration || daytimeCounter + speechDuration < this.timeStamp) {
-       this.flagged = true;
-     }
-     ctx.font = fontSize+'px' + ' ' + globalFont;
-   };
- }
+function Speech(who, mew) {
+  this.x = who.x;
+  this.y = who.y;
+  this.scale = who.size;
+  this.who = who;
+  this.colour = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
+  this.timeStamp = daytimeCounter;
+  this.flagged = false;
+  this.mew = mew;
+  this.setText = function (mew) {
+    ctx.font = `${UI_THEME.fonts.sizes.normal / 1.5}px ${UI_THEME.fonts.primary}`;
+    this.mew = '*' + mew + '*';
+    this.textWidth = ctx.measureText(this.mew).width;
+  }
+  this.setText(this.mew);
+  this.update = function () {
+    ctx.font = `${UI_THEME.fonts.sizes.normal / 1.5}px ${UI_THEME.fonts.primary}`;
+    this.x = this.who.x;
+    this.y = this.who.y - (this.who.size * 3);
+    ctx.fillStyle = uiColourArray[2];
+    ctx.fillRect(this.x - ((SPEECH.padding + this.textWidth)/2), this.y - SPEECH.padding, this.textWidth + SPEECH.padding, SPEECH.height);
+    ctx.fillStyle = UI_THEME.colours.primary;
+    ctx.fillText(this.mew, this.x - this.textWidth/2, this.y);
+    if (daytimeCounter > this.timeStamp + speechDuration || daytimeCounter + speechDuration < this.timeStamp) {
+      this.flagged = true;
+    }
+    ctx.font = `${UI_THEME.fonts.sizes.normal}px ${UI_THEME.fonts.primary}`;
+  };
+}
 
 function neutralWord() {
-  return neutralWords[Math.round(Math.random()*(neutralWords.length-1))];
+  return neutralWords[Math.round(Math.random() * (neutralWords.length - 1))];
 }
 
 function angryWord() {
-  return angryWords[Math.round(Math.random()*(angryWords.length-1))];
+  return angryWords[Math.round(Math.random() * (angryWords.length - 1))];
 }
 
 function happyWord() {
-  return happyWords[Math.round(Math.random()*(happyWords.length-1))];
+  return happyWords[Math.round(Math.random() * (happyWords.length - 1))];
 }
 
- const neutralWords = ['mew', 'meow', 'brrrup', 'miau', 'nyan'];
- const angryWords = ['grrr', 'brrrbl', 'rawr'];
- const happyWords = ['prrr', 'mraow', 'owo'];
+const neutralWords = ['mew', 'meow', 'brrrup', 'miau', 'nyan'];
+const angryWords = ['grrr', 'brrrbl', 'rawr'];
+const happyWords = ['prrr', 'mraow', 'owo'];

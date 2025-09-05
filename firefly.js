@@ -206,7 +206,7 @@ function FireFly(x, y, focus, firstColour) {
             this.stomach++;
             this.justAte = true;
             // spawning another firefly when this one has eaten enough fruit
-            if (this.stomach >= 25 && fireflies.length <= maxFireflies) {
+            if (this.stomach >= 25 && fireflies.length < maxFireflies) {
               this.stomach = 0;
               fireflies.push(new FireFly(this.x, this.y, null, this.firstColour));
               fireflies[fireflies.length - 1].chooseNewTarget();

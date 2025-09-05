@@ -45,10 +45,10 @@ function getRandomFemaleCulturalName(culture) {
 }
 
 /**
-* function to return the Library name for a given name and gender
+* function to return the Library name for a given name and sex
 */
-function getLibraryName(name, gender) {
-  if (gender == 'Male') {
+function getLibraryName(name, sex) {
+  if (sex == 'Male') {
     for (let l = 0; l < numlibs; l++) {
       for (let i = 0; i < namesinlib; i++) {
         if (name == maleNameArray[l][i]) {
@@ -56,7 +56,7 @@ function getLibraryName(name, gender) {
         }
       }
     }
-  } else if (gender == 'Female') {
+  } else if (sex == 'Female') {
     for (let l = 0; l < numlibs; l++) {
       for (let i = 0; i < namesinlib; i++) {
         if (name == femaleNameArray[l][i]) {
@@ -65,7 +65,7 @@ function getLibraryName(name, gender) {
       }
     }
   }
-  console.log('error GLN ' + name + ' ' + gender);
+  console.log('error GLN ' + name + ' ' + sex);
 };
 
 
@@ -188,10 +188,10 @@ function getBreedNameLibrary(breedName) {
  * Generate a name based on breed culture instead of parent names
  * @param {string} parent1Breed - First parent's breed string (can be crossbreed)
  * @param {string} parent2Breed - Second parent's breed string (can be crossbreed)  
- * @param {string} gender - The desired gender for the name
+ * @param {string} sex - The desired sex for the name
  * @return {string} Generated name
  */
-function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
+function generateBreedBasedName(parent1Breed, parent2Breed, sex) {
   // Extract all breed names from both parents
   const parent1Breeds = extractBreedNames(parent1Breed);
   const parent2Breeds = extractBreedNames(parent2Breed);
@@ -243,8 +243,8 @@ function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
 
   const maxAttempts = Math.max(1, availableLibraries.length * 10);
 
-  function pickFromLibrary(lib, gender) {
-    if (gender === 'Male' || (gender === 'Non Binary' && Math.random() < 0.5)) {
+  function pickFromLibrary(lib, sex) {
+    if (sex === 'Male' || (sex === 'Non Binary' && Math.random() < 0.5)) {
       return getRandomMaleCulturalName(lib);
     } else {
       return getRandomFemaleCulturalName(lib);
@@ -255,7 +255,7 @@ function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const lib = candidates[Math.floor(Math.random() * candidates.length)];
-    const candidate = pickFromLibrary(lib, gender);
+    const candidate = pickFromLibrary(lib, sex);
 
     if (!taken.has(candidate) && !attemptBlacklist.has(candidate)) {
       result = candidate;
@@ -269,7 +269,7 @@ function generateBreedBasedName(parent1Breed, parent2Breed, gender) {
   }
 
   if (!result) {
-    if (gender === 'Male' || (gender === 'Non Binary' && Math.random() < 0.5)) {
+    if (sex === 'Male' || (sex === 'Non Binary' && Math.random() < 0.5)) {
       result = getMaleName(Math.floor(Math.random() * totalMaleNames));
     } else {
       result = getFemaleName(Math.floor(Math.random() * totalFemaleNames));

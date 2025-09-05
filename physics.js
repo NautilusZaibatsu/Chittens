@@ -103,7 +103,7 @@ function checkBounceSides(what) {
 * @param {object} what - the object
 */
 function checkBounceTop(what) {
-  if (what.y < what.size) {
+  if (what.y + gameAreaTop < what.size + gameAreaTop) {
     what.speedY *= -0.99;
     what.y = what.size;
     return true;

@@ -1,5 +1,35 @@
 ᓚᘏᗢ Chittens changelog 
 
+05/08/2025 = 0.076
+~ The devmode editor has had a total rehaul:
+-- Cleaner layout.
+-- Colourpicker now has a higher bitdepth (32).
+-- Added slider value preview boxes.
+-- The cursor now changes to indicate when you are hovering over a slider thumb.
+-- The colours of the controls now change to indicate when you are hovering over them.
+-- Added the ability to choose All or Mixed Breeds in the breed selector.
+-- Added the ability to reroll a chitten based on the breed filter.
+-- Dropdown boxes now display your current selection.
+-- Added the ability to rename the edited chitten (limit of 20 characters).
+-- Added the ability to change the sex of the edited chitten.
+-- You can now close the editor by hitting the editor button again.
+~ The game now has proper letterboxing to visually separate both info bars from the game area.
+~ The game now has a more easily changable universal theme.
+~ All controls now have shared base data structures.
+~ There is now an additional button style, used for all buttons inside the game area.
+~ Tooltips are now always visible, even if the button is on the edge of the screen.
+~ All references to "gender" have been replaced with "sex".
+~ You can now adopt non-binary chittens directly from the adoption centre.
+
+Bug Fixes
+-- Fixed a bug that prevented new trees from spawning when the game has been running for a long time.
+-- You can no longer interact with the chittens, fireflies or fruits whilst in the editor.
+-- Fixed a console warning relating to touch listeners.
+-- Chittens will no longer deliver litters while you are using the editor.
+-- Fixed a bug that caused sleeping chittens to glitch out when the window resizes.
+-- Buttons are now not available when they should not be.
+-- Fixed a bug that caused the game to miscount how many chittens you had in endless mode.
+
 03/08/2025 = 0.075
 ~ A new pattern type has been added: piebald.
 -- Black and White shorthairs and Calicos have this pattern by default, and some Ragdoll variants have it too.
@@ -200,7 +230,7 @@ Bug Fixes
 ~ fireflies now go for specific fruit instead of a tree, they will eat fruit and eventually produce offspring if successful enough
 ~ changed the way cross breed names are created and handled
 ~ glyphs are now all black
-~ added gender glyph to selected Chitten's label
+~ added sex glyph to selected Chitten's label
 ~ changed the skybox colours and the way stars are drawn
 ~ glyphs no longer collide with each other, instead they start with randomised spin and speed and last twice as long. colliding with a wall causes their life to shorten
 ~ removed nirvana state
@@ -323,7 +353,7 @@ features
 features
 ~ added trees, Chittens will plant them whilst in a nirvana
 ~ added Chinese names for Chittens
-~ added non binary gender
+~ added non binary sex
 
 16/11/2018 = 0.044
 features
@@ -343,7 +373,7 @@ features
 
 14/11/2018 = 0.04
 features
-~ implemented binary gender for breeding
+~ implemented binary sex for breeding
 ~ added rotation of Chittens on collisions
 ~ added handling multiple fireflies, the main fly always respawns
 ~ ghosts now become fireflies when they exit the top of the screen

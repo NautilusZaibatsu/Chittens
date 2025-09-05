@@ -9,7 +9,7 @@ const BREED_DATA = {
     pattern: 6,
     minSize: 16,
     maxSize: 19,
-    colors: {
+    colours: {
       variants: [
         { first: '#eec9ac', second: '#c39471', third: '#361f19', patternColour: '#170f06', eye: '#ae8b33' }, // brown
         { first: '#e8dfd4', second: '#f6d8c3', third: '#b38165', patternColour: '#b39e94', eye: '#7ba2ba' }, // snow lynx
@@ -52,7 +52,7 @@ const BREED_DATA = {
     pattern: 6,
     minSize: chittenMinSize,
     maxSize: 15,
-    colors: {
+    colours: {
       variants: [
         { first: '#f1f1f1', second: '#bfb9bb', third: '#bfb9bb', patternColour: '#645e60' }, // silver
         { first: '#f1d1ac', second: '#cb814a', third: '#cb814a', patternColour: '#535250' }, // orange
@@ -95,7 +95,7 @@ const BREED_DATA = {
     pattern: 3,
     minSize: chittenMinSize,
     maxSize: chittenMaxSize,
-    colors: {
+    colours: {
       variants: [
         { first: '#e0e0c3', second: '#bda962', third: '#bda962', patternColour: '#2c2713' }, // brown
         { first: '#86603e', second: '#754d2b', third: '#754d2b', patternColour: '#312208' }, // chocolate
@@ -135,7 +135,7 @@ const BREED_DATA = {
     pattern: 0,
     minSize: 10.5, // Medium-sized, elegant breed 
     maxSize: 17.6,
-    colors: {
+    colours: {
       variants: [
         { first: '#e4c5a8', second: '#e4c5a8', third: '#3d211d', patternColour: '#3d211d' }, // classic
         { first: '#a5938f', second: '#a5938f', third: '#6b5751', patternColour: '#6b5751' }, // traditional
@@ -185,7 +185,7 @@ const BREED_DATA = {
     pattern: 0,
     minSize: 13.5,
     maxSize: 18,
-    colors: {
+    colours: {
       variants: [
         { first: '#342f2c', second: '#342f2c', third: '#342f2c', patternColour: '#342f2c' }, // brown
         { first: '#c5c3c1', second: '#c5c3c1', third: '#c5c3c1', patternColour: '#c5c3c1' }, // light grey
@@ -225,7 +225,7 @@ const BREED_DATA = {
     pattern: 0,
     minSize: 10.5,
     maxSize: 17.5, // Compact, medium-sized breed
-    colors: {
+    colours: {
       variants: [
         { first: '#8a5223', second: '#8a5223', third: '#220f04', patternColour: '#220f04' }, // sable
         { first: '#dfbeab', second: '#dfbeab', third: '#8e705f', patternColour: '#8e705f' }, // champagne
@@ -273,7 +273,7 @@ const BREED_DATA = {
     pattern: 0,
     minSize: 10.5, // Medium-large, fluffy breed
     maxSize: 18.5,
-    colors: {
+    colours: {
       variants: [
         { first: '#efefef', second: '#efefef', third: '#efefef', patternColour: '#efefef' }, // white
         { first: '#535353', second: '#535353', third: '#535353', patternColour: '#535353' }, // black
@@ -316,7 +316,7 @@ const BREED_DATA = {
     patternAlpha: 1,
     minSize: 12,
     maxSize: 16,
-    colors: {
+    colours: {
       variants: [
         { first: '#ffffff', second: '#000000', third: '#000000', patternColour: '#000000' },  // W-W-B-B
         { first: '#ffffff', second: '#000000', third: '#000000', patternColour: '#ffffff' }  // W-B-B-W
@@ -347,7 +347,7 @@ const BREED_DATA = {
     maxSize: 16,
     customHeadHeight: 'proportional', // Special head height calculation
     customHeadRatio: 1.4,
-    colors: {
+    colours: {
       variants: [
         { first: '#be8f68', second: '#8B4513', third: '#8B4513', pattern: 3, patternColour: '#3b1e09' }, // Brown tabby - gets tabby pattern
         { first: '#777777', second: '#555555', third: '#555555', pattern: 3, patternColour: '#333339' }, // Silver tabby - gets tabby pattern
@@ -385,7 +385,7 @@ const BREED_DATA = {
     maxSize: 12,
     customHeadHeight: 'proportional', // Special head height calculation
     customHeadRatio: 50 / 35, // headHeight = headWidth / 50 * 35
-    colors: {
+    colours: {
       variants: [
         { first: '#daa868', second: '#c48a3e', third: '#8B4513', pattern: 3, patternColour: '#3b1e09' }, // Brown tabby
         { first: '#C0C0C0', second: '#C0C0C0', third: '#16100c', pattern: 3, patternColour: '#333339' }, // Silver tabby
@@ -419,7 +419,7 @@ const BREED_DATA = {
     pattern: 0, // Solid color only
     minSize: 11, // Medium-sized, elegant breed
     maxSize: 16,
-    colors: {
+    colours: {
       variants: [
         { first: '#9a9aa3', second: '#9a9aa3', third: '#9a9aa3' }, // lighter
         { first: '#747491', second: '#747491', third: '#747491' }, // classic
@@ -452,7 +452,7 @@ const BREED_DATA = {
     patternAlpha: 1,
     minSize: 10.5,
     maxSize: 17,
-    colors: {
+    colours: {
       variants: [
         { first: '#ffffff', second: ['#e8831e', '#bb7b4a'], third: ['#000000', '#222222'], patternColour: '#ffffff' },
         { first: '#ffffff', second: '#e8831e', third: ['#000000', '#222222'], patternColour: '#bb7b4a' },
@@ -476,7 +476,7 @@ const BREED_DATA = {
     ],
     coatMod: ['random', 'random', 'random', 0, 'random', 'random'],
     nameLibrary: 'random',
-    genderRestriction: 'female' // Very rare in males
+    sexRestriction: 'female' // Very rare in males
   },
 
   // note for this breed we are "hiding" the black colour in the third colour slot and using the pattern to create that black appearance
@@ -486,7 +486,7 @@ const BREED_DATA = {
     pattern: 1,
     minSize: 10,
     maxSize: 17,
-    colors: {
+    colours: {
       variants: [
         { first: '#ffffff', second: ['#e8831e', '#bb7b4a'], third: '#000000', patternColour: '#000000' },
         { first: '#ffffff', second: ['#e8831e', '#bb7b4a'], third: '#222222', patternColour: '#222222' }
@@ -507,7 +507,7 @@ const BREED_DATA = {
     patternAlpha: [0.9, 1],
     coatMod: [0.1, 0.1, 'random'],
     nameLibrary: 'random',
-    genderRestriction: 'female', // Very rare in males
+    sexRestriction: 'female', // Very rare in males
     forcePatternColour: '#000000'
   },
 
@@ -517,7 +517,7 @@ const BREED_DATA = {
     pattern: 0, // Hairless, so pattern doesn't matter much
     minSize: 10.5, // Medium sized breed
     maxSize: 15,
-    colors: {
+    colours: {
       variants: [
         { first: '#EEEEEE', second: '#bdaaa0', third: '#888482' },
         { first: '#d3c5b8', second: '#9b928e', third: '#555555' },
@@ -548,7 +548,7 @@ const BREED_DATA = {
     pattern: 0,
     minSize: 11,
     maxSize: 16, // Medium-sized, athletic breed
-    colors: {
+    colours: {
       variants: [
         { first: '#ffffff', second: ['#a87132', '#cb734a'], third: ['#36220b', '#531d07'] }, // Ruddy (classic)
         { first: '#ffffff', second: '#d6784c', third: '#853f11' }, // Red/Sorrel
@@ -585,7 +585,7 @@ const BREED_DATA = {
     pattern: 0,
     minSize: 16,
     maxSize: chittenMaxSize,
-    colors: {
+    colours: {
       variants: [
         { first: '#f0d9cb', second: '#f0d9cb', third: '#9d7665', patternColour: '#9d7665' }, // Seal point
         { first: '#ebe7e4', second: '#ebe7e4', third: '#9c9da2', patternColour: '#9c9da2' }, // Blue point  
@@ -633,7 +633,7 @@ const BREED_DATA = {
     pattern: 0, // Solid or various patterns
     minSize: chittenMinSize,
     maxSize: 15, // Medium-sized, elegant
-    colors: {
+    colours: {
       variants: [
         { first: '#ffffff', second: '#ffffff', third: '#ffffff' }, // Classic white
         { first: '#1c1714', second: '#1c1714', third: '#1c1714' }, // Black
@@ -675,7 +675,7 @@ const BREED_DATA = {
     pattern: 0, // Usually solid colors
     minSize: 14, // Medium to large, stocky
     maxSize: 17,
-    colors: {
+    colours: {
       variants: [
         { first: '#708090', second: '#708090', third: '#708090' }, // British Blue (classic)
         { first: '#16100c', second: '#16100c', third: '#16100c' }, // Black
@@ -803,22 +803,22 @@ function applyBreed(who, breedName) {
 
   // Apply colors
   if (breed.colors) {
-    if (breed.colors.variants) {
+    if (breed.colours.variants) {
       // Handle color variants (like Tabby)
-      const variant = breed.colors.variants[Math.floor(Math.random() * breed.colors.variants.length)];
+      const variant = breed.colours.variants[Math.floor(Math.random() * breed.colours.variants.length)];
       who.firstColour = mixRandomCoatColor(variant.first);
       who.secondColour = mixRandomCoatColor(variant.second);
       who.thirdColour = mixRandomCoatColor(variant.third);
       if (variant.patternColour) {
         who.patternColour = mixRandomCoatColor(variant.patternColour);
-      } else if (breed.colors.patternColour) {
-        who.patternColour = mixRandomCoatColor(breed.colors.patternColour);
+      } else if (breed.colours.patternColour) {
+        who.patternColour = mixRandomCoatColor(breed.colours.patternColour);
       }
       // Handle eye colors for variants - check variant first, then breed, then fallback
       if (variant.eye) {
         who.eyeColour = mixRandomEyeColor(variant.eye);
-      } else if (breed.colors.eye) {
-        who.eyeColour = mixRandomEyeColor(breed.colors.eye);
+      } else if (breed.colours.eye) {
+        who.eyeColour = mixRandomEyeColor(breed.colours.eye);
       } else {
         who.eyeColour = getRandomEyeColour();
       }
@@ -829,26 +829,26 @@ function applyBreed(who, breedName) {
       }
     } else {
       // assigning the colours, with fallbacks
-      if (breed.colors.first) {
-        who.firstColour = mixRandomCoatColor(breed.colors.first);
+      if (breed.colours.first) {
+        who.firstColour = mixRandomCoatColor(breed.colours.first);
       } else {
         who.firstColour = randomColourRealistic();
       }
-      if (breed.colors.second) {
-        who.secondColour = mixRandomCoatColor(breed.colors.second);
+      if (breed.colours.second) {
+        who.secondColour = mixRandomCoatColor(breed.colours.second);
       } else {
         who.secondColour = randomColourRealistic();
       }
-      if (breed.colors.third) {
-        who.thirdColour = mixRandomCoatColor(breed.colors.third);
+      if (breed.colours.third) {
+        who.thirdColour = mixRandomCoatColor(breed.colours.third);
       } else {
         who.thirdColour = randomColourRealistic();
       }
-      if (breed.colors.patternColour) {
-        who.patternColour = mixRandomCoatColor(breed.colors.patternColour);
+      if (breed.colours.patternColour) {
+        who.patternColour = mixRandomCoatColor(breed.colours.patternColour);
       }
-      if (breed.colors.eye) {
-        who.eyeColour = mixRandomEyeColor(breed.colors.eye);
+      if (breed.colours.eye) {
+        who.eyeColour = mixRandomEyeColor(breed.colours.eye);
       } else {
         // Fallback: if breed has no eye color definition, use random eye color
         who.eyeColour = getRandomEyeColour();
@@ -991,7 +991,7 @@ applyBreedTemplate = function (who) {
   // Get all available breed names from BREED_DATA
   const regularBreeds = Object.keys(BREED_DATA).filter(breedName => {
     const breed = BREED_DATA[breedName];
-    return !breed.genderRestriction; // Exclude gender-restricted breeds from random selection
+    return !breed.sexRestriction; // Exclude sex-restricted breeds from random selection
   });
 
   const femaleOnlyBreeds = ['Calico', 'Tortoiseshell'];
@@ -999,7 +999,7 @@ applyBreedTemplate = function (who) {
   const maleChance = 1 / 3000; // Very rare for males
 
   // First, check if this should be a female-only breed
-  if (who.gender !== 'Male') {
+  if (who.sex !== 'Male') {
     // For females/non-binary: chance of getting female-only breed
     if (Math.random() < femaleOnlyChance) {
       const femaleBreed = femaleOnlyBreeds[Math.floor(Math.random() * femaleOnlyBreeds.length)];
@@ -1021,7 +1021,7 @@ applyBreedTemplate = function (who) {
   applyBreed(who, breedName);
 
   // Check if this breed has female tortoiseshell variants and if this cat is female
-  if (who.gender !== 'Male' && FEMALE_TORTOISESHELL_VARIANTS[breedName]) {
+  if (who.sex !== 'Male' && FEMALE_TORTOISESHELL_VARIANTS[breedName]) {
     const variant = FEMALE_TORTOISESHELL_VARIANTS[breedName];
     if (Math.random() < variant.chance) {
       applyTortoiseshellPattern(who);
@@ -1043,8 +1043,8 @@ applySpecificBreedTemplate = function (who, breedName) {
 
   // Check if it's a female-only breed
   if (femaleOnlyBreeds.includes(breedName)) {
-    // Only apply if gender allows it (respecting male chance)
-    if (who.gender !== 'Male' || Math.random() < maleChance) {
+    // Only apply if sex allows it (respecting male chance)
+    if (who.sex !== 'Male' || Math.random() < maleChance) {
       applyBreed(who, breedName);
       return;
     } else {
@@ -1059,7 +1059,7 @@ applySpecificBreedTemplate = function (who, breedName) {
     applyBreed(who, breedName);
 
     // Check if this breed has female tortoiseshell variants and if this cat is female
-    if (who.gender !== 'Male' && FEMALE_TORTOISESHELL_VARIANTS[breedName]) {
+    if (who.sex !== 'Male' && FEMALE_TORTOISESHELL_VARIANTS[breedName]) {
       const variant = FEMALE_TORTOISESHELL_VARIANTS[breedName];
       if (Math.random() < variant.chance) {
         applyTortoiseshellPattern(who);
@@ -1097,7 +1097,7 @@ function meetsBreedStandard(chitten) {
     // Check if any variants override the pattern
     let hasVariantPatternOverrides = false;
     if (breed.colors?.variants) {
-      hasVariantPatternOverrides = breed.colors.variants.some(variant => variant.pattern !== undefined);
+      hasVariantPatternOverrides = breed.colours.variants.some(variant => variant.pattern !== undefined);
     }
 
     // Only fail if no variants override patterns (meaning main breed pattern should be used)
@@ -1179,8 +1179,8 @@ function meetsBreedStandard(chitten) {
 
   // Check eye colour matches breed standard (with leniency) 
   // Only check if eye colours are specified at breed level, not within variants
-  if (breed.colors && breed.colors.eye && breed.colors.eye !== 'random' && !breed.colors.variants) {
-    const allowedEyeColours = Array.isArray(breed.colors.eye) ? breed.colors.eye : [breed.colors.eye];
+  if (breed.colors && breed.colours.eye && breed.colours.eye !== 'random' && !breed.colours.variants) {
+    const allowedEyeColours = Array.isArray(breed.colours.eye) ? breed.colours.eye : [breed.colours.eye];
     const maxDistance = 15 * (1 + breedStandardLeniency); // Base threshold + leniency
     const hasValidEyeColour = allowedEyeColours.some(allowedColour =>
       colourDistance(chitten.eyeColour, allowedColour) <= maxDistance
@@ -1193,18 +1193,18 @@ function meetsBreedStandard(chitten) {
   return true; // Has all required expressions and no unwanted expressions
 }
 
-// Get available breeds based on gender from BREED_DATA
-function getAvailableBreeds(gender) {
+// Get available breeds based on sex from BREED_DATA
+function getAvailableBreeds(sex) {
   let breeds = ['All', mixedBreed]; // Always include 'All' and mixedBreed at the top
 
   // Get all breed names from BREED_DATA
   let breedNames = Object.keys(BREED_DATA);
 
-  // Filter out female-only breeds if gender is not Female
-  if (gender !== 'Female') {
+  // Filter out female-only breeds if sex is not Female
+  if (sex !== 'Female') {
     breedNames = breedNames.filter(breedName => {
       const breed = BREED_DATA[breedName];
-      return breed.genderRestriction !== 'female';
+      return breed.sexRestriction !== 'female';
     });
   }
 

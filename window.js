@@ -16,6 +16,7 @@ if (rawHeight > rawWidth) {
 let canvasWidth = Math.max(rawWidth, minCanvasWidth);
 let canvasHeight = Math.max(rawHeight, minCanvasHeight);
 const floorLevel = 45;
+const gameAreaTop = 40;
 
 // canvas scaling values
 const idealX = 1920 - 20;
@@ -24,8 +25,9 @@ const idealArea = idealX * idealY;
 // initialised in updateCanvasDimensions
 let proportion;
 let maxDistance
-let trueBottom;
-
+let trueBottom = canvasHeight - floorLevel;
+let trueBottomSoftEdge = 5;
+gameAreaHeight = canvasHeight - trueBottom - gameAreaTop;
 // UI and messaging
 let messagesToSave;
 // FPS and timing
@@ -63,6 +65,7 @@ paused = false;
 choosingChitten = false;
 chosenChittenM = true;
 chosenChittenF = true;
+chosenChittenNB = true;
 chosenKitten = true;
 choiceTimer = 0;
 maleCount = 0;
@@ -79,13 +82,12 @@ femaleParent = null;
 // set global colours
 const trueWhite = '#FFFFFF';
 const trueBlack = '#000000';
-const uiDarkGrey = '#333333'
 const glowColour = '#FFFF88';
 const explosionColour = glowColour;
 const albinoRed = '#ee4433';
-const genderPink = '#f27bfe';
-const genderBlue = '#78c7fc';
-const genderPurple = '#9978f1';
+const sexPink = '#f27bfe';
+const sexBlue = '#78c7fc';
+const sexPurple = '#9978f1';
 const energyBlue = '#1e6ee9';
 // const hungerOrange = '#e9af4e';
 const heartsPink = '#e94db5';
@@ -106,7 +108,7 @@ const unicodeInfinity = '\u221e';
 const unicodeUnknown = '???'; // ??? used for places the information is not clear to the player yet
 const unicodeDropdown = '\u25BC'; // used to indicate a dropdown menu
 const unicodeCat = '\u14DA\u160F\u15E2' // ᓚᘏᗢ 
-// gender
+// sex
 const unicodeNonBinary = '\u26A5';
 const unicodeMale = '\u2642';
 const unicodeFemale = '\u2640';
@@ -169,7 +171,6 @@ function startGame() {
   myGameArea.start();
   ctx = myGameArea.context;
   initUi();
-
   updateCanvasDimensions();
   recalcSeasonVariables();
   initGeneEditing();
@@ -178,7 +179,7 @@ function startGame() {
   // initial fireflies
   for (let i = 0; i < startingFireflies; i++) {
     let x = selectLeftOrRightEdge();
-    fireflies.push(new FireFly(x, Math.random() * trueBottom, pointerPos, glowColour));
+    fireflies.push(new FireFly(x, gameAreaTop + (Math.random() * gameAreaHeight), pointerPos, glowColour));
   }
   // plant starter trees
   for (let i = 0; i < startingTrees; i++) {
@@ -218,7 +219,8 @@ function updateCanvasDimensions() {
   canvasHeight = Math.max(rawHeight, minCanvasHeight);
   // Recalculate abstract concepts that depend on canvas size
   trueBottom = canvasHeight - floorLevel;
-  maxDistance = Math.hypot(canvasWidth, canvasHeight); // diagonal measurement for physics calculations
+  gameAreaHeight = canvasHeight - floorLevel - gameAreaTop;
+  maxDistance = Math.hypot(canvasWidth, gameAreaHeight); // diagonal measurement for physics calculations
   // Update scaling values based on new dimensions
   proportion = 1 / (idealArea / (canvasWidth * trueBottom));
   maxPop = 50 * proportion;
@@ -227,7 +229,7 @@ function updateCanvasDimensions() {
   maxTrees = Math.max(minTrees * 2, Math.floor(canvasWidth / 25)); // Sensible maximum
   startingTrees = Math.max(1, Math.floor(canvasWidth / 250));
   // Update UI values
-  messagesToSave = Math.max(10, Math.floor(canvasHeight / 20)); // At least 10 messages
+  messagesToSave = Math.max(10, Math.floor(gameAreaHeight / 20)); // At least 10 messages
   // Update canvas size if it exists
   if (myGameArea && myGameArea.canvas) {
     myGameArea.canvas.width = canvasWidth;
@@ -247,12 +249,10 @@ function updateCanvasDimensions() {
       buttons[i].reinitPosition();
     }
   }
-  buttons[10].x = canvasWidth - 20;
-  buttons[10].y = canvasHeight - 25;
+  buttons[8].x = canvasWidth - 20;
+  buttons[8].y = canvasHeight - 25;
   for (let i = 0; i < labels.length; i++) {
-    if (labels[i].canvasSizeDependent) {
-      labels[i].reinitPosition();
-    }
+    labels[i].reinitPosition();
   }
   // recalculate screen positions of the catboxes
   for (let i = 0; i < boxes.length; i++) {
@@ -268,6 +268,12 @@ function updateCanvasDimensions() {
     chittens[parentBoxes[i].id].onSurface = false;
   }
   adoptionBackground.resize();
+
+  // stop sleeping chittens from snoozing in the air
+  for (let i = 0; i < chittens.length; i++) {
+    chittens[i].onSurface = false;
+    chittens[i].awake = true;
+  }
 }
 
 // Function to push physics objects back within new bounds
@@ -371,15 +377,19 @@ let myGameArea = {
       pointerPos.y = event.touches[0].clientY;
     }, { passive: true });
     this.canvas.addEventListener('touchstart', function (event) {
-      event.preventDefault(); // Prevent mouse events from also firing
       pointerPos.x = event.touches[0].clientX;
       pointerPos.y = event.touches[0].clientY;
       tapOn();
-    });
+      // Only prevent default if we actually handled the touch
+      if (event.touches.length === 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
     this.canvas.addEventListener('touchend', function (event) {
-      event.preventDefault(); // Prevent mouse events from also firing
       tapOff();
-    });
+      // Only prevent default if we actually handled the touch
+      event.preventDefault();
+    }, { passive: false });
 
     // add listener for mouse
     this.canvas.addEventListener('mousedown', function (event) {
@@ -387,6 +397,15 @@ let myGameArea = {
     });
     this.canvas.addEventListener('mouseup', function (event) {
       mouseOff();
+    });
+
+    // add keyboard listener for text input
+    document.addEventListener('keydown', function (event) {
+      if (geneEditing && typeof handleEditorKeyInput === 'function') {
+        if (handleEditorKeyInput(event.key)) {
+          event.preventDefault(); // Prevent default only if editor handled the key
+        }
+      }
     });
   },
   clear: function () {
@@ -429,8 +448,8 @@ function updateGameObjects() {
   }
 
   // ensure minimum number of trees
-  if (trees.length < minTrees && seeds.length == 0) {
-    // No seeds in bellies, spawn random tree
+  if (trees.length < minTrees) {
+    // Spawn random tree if we hit the minimum
     tryToPlantaTree(Math.abs(Math.random() * canvasWidth), randomColourFruity());
   }
 
@@ -500,7 +519,7 @@ function updateGameArea() {
   while (accumulator >= fixedTimeStep && logicUpdates < 5) {
     // Run one game logic update at 50 UPS
     myGameArea.frameNo += 1;
-        // Always track total time for rendering calculations
+    // Always track total time for rendering calculations
     gameTimeElapsed += fixedTimeStep;
     if (!paused && gameSpeedMultiplier > 0) {
       // increase daytime counter and make seasons rotate (scaled by speed)
@@ -534,10 +553,10 @@ function updateGameArea() {
             if (selection == null) {
               selection = chittens[Math.round(Math.random() * (boxes.length - 1)) + currentChittens];
             }
-            handleButton(1);
+            confirmAdoption();
           } else {
             // otherwise give all the kittens away
-            handleButton(2);
+            rehomeLitter();
           }
         }
       }
@@ -569,11 +588,11 @@ function updateGameArea() {
 
   // draw the glow coming off the floor
   ctx.globalAlpha = 0.15;
-  let floorGlow = ctx.createLinearGradient(0, trueBottom - 200, 0, canvasHeight);
+  let floorGlow = ctx.createLinearGradient(0, trueBottom - 200, 0, gameAreaTop);
   floorGlow.addColorStop(0, 'rgba(0, 0, 0, 0)');
   floorGlow.addColorStop(1, mixTwoColours(trueWhite, uiColourArray[1], 0.5));
   ctx.fillStyle = floorGlow;
-  ctx.fillRect(0, trueBottom - 5 - 200, canvasWidth, 5 + floorLevel + 200);
+  ctx.fillRect(0, trueBottom - trueBottomSoftEdge - 200, canvasWidth, trueBottomSoftEdge + floorLevel + 200);
 
   // draw the floor
   ctx.globalAlpha = 1;
@@ -581,7 +600,11 @@ function updateGameArea() {
   horizon.addColorStop(0, 'rgba(0, 0, 0, 0)');
   horizon.addColorStop(1, trueBlack);
   ctx.fillStyle = horizon;
-  ctx.fillRect(0, trueBottom - 5, canvasWidth, 5 + floorLevel);
+  ctx.fillRect(0, trueBottom - trueBottomSoftEdge, canvasWidth, trueBottomSoftEdge + floorLevel);
+
+  // draw the top bar
+  ctx.fillStyle = trueBlack;
+  ctx.fillRect(0, 0, canvasWidth, gameAreaTop);
 
   // draw the message history
   if (pointerPos.y > trueBottom - 5) {
@@ -593,7 +616,7 @@ function updateGameArea() {
     fade.addColorStop(1, 'rgba(' + rMessage + ', ' + gMessage + ', ' + bMessage + ', 0.3)');
     // Fill with gradient
     ctx.fillStyle = fade;
-    ctx.font = fontSize + 'px' + ' ' + globalFont;
+    ctx.font = `${UI_THEME.fonts.sizes.normal}px ${UI_THEME.fonts.primary}`;
     for (let i = messageBuffer.length - 2; i >= 0; i--) {
       ctx.fillText(messageBuffer[i].timeStamp + ' ' + messageBuffer[i].text, 10, 30 + trueBottom - (20 * (messageBuffer.length - i)));
     }
@@ -763,7 +786,7 @@ function updateGameArea() {
   if (paused) {
     ctx.globalAlpha = 0.5;
     ctx.fillStyle = mixTwoColours(trueBlack, uiColourArray[3], 0.5);
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillRect(0, gameAreaTop, canvasWidth, gameAreaHeight - trueBottomSoftEdge);
     ctx.globalAlpha = 1;
   }
 
@@ -832,7 +855,7 @@ function recalculateStarfield() {
   // if there is less than the designated amount, add one
   if (starfield.length < starsAmountModifier * proportion) {
     let ranX = Math.floor(Math.random() * (canvasWidth));
-    let ranY = Math.floor(Math.random() * (canvasHeight / 3));
+    let ranY = gameAreaTop + Math.floor(Math.random() * (gameAreaHeight / 3));
     let ranSize = Math.random() * 3;
     starfield.push(new Inert(ranSize, ranSize, trueWhite, ranX, ranY));
   }
@@ -868,9 +891,9 @@ function Inert(width, height, colour, x, y) {
     // more opaque at night
     let glowalpha = 0;
     if (daytimeCounter <= 250 || daytimeCounter >= 750) {
-      glowalpha = (1 - (1 / (canvasHeight) * this.y)) * ((250 - daytimeCounter) / 250);
+      glowalpha = (1 - (1 / (gameAreaTop + (gameAreaHeight) * this.y))) * ((250 - daytimeCounter) / 250);
       if (daytimeCounter > 750) {
-        glowalpha = (1 - (1 / (canvasHeight) * this.y)) * ((daytimeCounter - 750) / 250);
+        glowalpha = (1 - (1 / (gameAreaTop + (gameAreaHeight) * this.y))) * ((daytimeCounter - 750) / 250);
       }
     }
     if (glowalpha > 0 && glowalpha < 1) {
@@ -1091,14 +1114,14 @@ function updateTempAndTime() {
 
 function drawBackground() {
   // set the bg colours
-  let backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+  let backgroundGradient = ctx.createLinearGradient(0, 0, 0, gameAreaHeight);
   backgroundGradient.addColorStop(0, uiColourArray[0]);
   backgroundGradient.addColorStop(0.4, uiColourArray[1]);
   backgroundGradient.addColorStop(0.75, uiColourArray[2]);
   backgroundGradient.addColorStop(1, uiColourArray[3]);
   ctx.fillStyle = backgroundGradient;
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-  textColour = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
+  ctx.fillRect(0, gameAreaTop, canvasWidth, gameAreaHeight);
+  UI_THEME.colours.adaptive = mixTwoColours(trueWhite, uiColourArray[2], 0.5);
   // draw the clouds - disappearing at nighttime
   ctx.globalAlpha = 0.3;
   if (daytimeCounter <= 300) {
@@ -1106,18 +1129,18 @@ function drawBackground() {
   } else if (daytimeCounter > sunSetStart) {
     ctx.globalAlpha = 0.3 - (0.3 * ((daytimeCounter - sunSetStart) / sunRiseStart));
   }
-  let cloudWidth = canvasHeight / 540 * 2160;
+  let cloudWidth = gameAreaHeight / 540 * 2160;
   let offsetX = daytimeCounter * cloudWidth / ticksPerDay;
   // Wrap the offset to create seamless looping
   offsetX = offsetX % cloudWidth;
   // Draw first cloud image
-  ctx.drawImage(clouds, -offsetX, 0, cloudWidth, canvasHeight);
+  ctx.drawImage(clouds, -offsetX, gameAreaTop, cloudWidth, gameAreaHeight);
   // Draw second cloud image for seamless looping
-  ctx.drawImage(clouds, cloudWidth - offsetX, 0, cloudWidth, canvasHeight);
+  ctx.drawImage(clouds, cloudWidth - offsetX, gameAreaTop, cloudWidth, gameAreaHeight);
   ctx.globalAlpha = 1;
   // center and translate the background
   ctx.save();
-  ctx.translate((canvasWidth - idealX) / 2, (canvasHeight - idealY) / 2);
-  ctx.drawImage(newtree, 0, 0, newtree.width, newtree.height);
+  ctx.translate((canvasWidth - idealX) / 2, (gameAreaHeight - idealY) / 2);
+  ctx.drawImage(newtree, 0, gameAreaTop, newtree.width, newtree.height);
   ctx.restore();
 }

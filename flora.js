@@ -186,7 +186,7 @@ function Fruit(colour) {
             this.rotTimer -= dayTicksPerFrame;
             // Check if fruit has rotted
             if (this.rotTimer <= 0) {
-                // Only try to plant tree if fruit is on the floor (not in a tree)
+                // Only try to plant tree if the rotted fruit is on the floor (not in a tree)
                 if (!this.landedOnTree && this.y >= trueBottom - (this.size * 2) - 10) {
                     // Fruit rotted on the ground - try to plant a tree
                     tryToPlantaTree(this.x, this.colour);
@@ -376,7 +376,7 @@ function Glyph(x, y, speedX, speedY, symbol, alpha) {
     this.speedX = speedX;
     this.speedY = speedY;
     this.alpha = alpha;
-    this.size = fontWidth;
+    this.size = ctx.measureText(symbol).width;
     this.timer = glyphTimer;
     this.x = x;
     this.y = y;
@@ -416,8 +416,7 @@ function Glyph(x, y, speedX, speedY, symbol, alpha) {
         // draw glyph
         ctx.globalAlpha = this.alpha * (this.timer / glyphTimer / 2);
         ctx.fillStyle = this.colour;
-        ctx.font = '14px' + ' ' + globalFont;
-        ctx.save();
+        ctx.font = `${UI_THEME.fonts.sizes.glyph}px ${UI_THEME.fonts.primary}`; ctx.save();
         ctx.translate(this.x - (this.size / 2), this.y + (this.size / 2));
         ctx.rotate(this.rotation);
         ctx.fillText(this.symbol, 0, 0);
@@ -433,14 +432,14 @@ function Glyph(x, y, speedX, speedY, symbol, alpha) {
 */
 function tryToPlantaTree(x, fruitColour) {
     let allow = true;
-    let maxHeight = trueBottom * 0.30 + (Math.random() * (trueBottom * 0.30));
+    let maxHeight = (trueBottom - gameAreaTop) * 0.30 + (Math.random() * ((trueBottom - gameAreaTop) * 0.30));
     let treeWidth = treeMinWidth + (Math.random() * treeSizeVariation);
-    
+
     // Check boundary conditions first
     if (x < 0 + (treeWidth / 2) || x > canvasWidth - (treeWidth / 2)) {
         allow = false;
     }
-    
+
     // Check overlap with existing trees
     for (let j = 0; j < trees.length && allow; j++) {
         if (trees[j].x == x

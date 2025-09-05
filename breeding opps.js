@@ -22,13 +22,13 @@ function initKitten(who) {
 * function to generate a kiten from two parents
 * @param {object} parent1 - the first parent
 * @param {object} parent2 - the second parent
-* @return {string} the gender of the baby
+* @return {string} the sex of the baby
 */
 function generateKitten(parent1, parent2, childBreed) {
   // male is parent1
   // female is parent2
-  let kGender = randomGender();
-  let kMaxSize = selectGeneInteger(parent1.maxSize, parent2.maxSize, getRandomChittenMaxSize(randomGender));
+  let kSex = randomSex();
+  let kMaxSize = selectGeneInteger(parent1.maxSize, parent2.maxSize, getRandomChittenMaxSize(randomSex));
   kMaxSize = Math.min(kMaxSize, chittenMaxSize);
   let babySize = (kMaxSize / 2) + (Math.random() * 2);
   // make sure the baby is not too big for the mother
@@ -37,7 +37,7 @@ function generateKitten(parent1, parent2, childBreed) {
     babySize = parent2.size * babySizeRandom;
   }
 
-  chittens.push(new Chitten(parent1.x + ((parent2.x - parent1.x) / 2), parent1.y + ((parent2.y - parent1.y) / 2), babySize, kMaxSize, kGender));
+  chittens.push(new Chitten(parent1.x + ((parent2.x - parent1.x) / 2), parent1.y + ((parent2.y - parent1.y) / 2), babySize, kMaxSize, kSex));
   chittens[chittens.length - 1].breed = childBreed;
 
   // physical traits
@@ -98,7 +98,7 @@ function generateKitten(parent1, parent2, childBreed) {
   }
   // Determine trait expression for inherited genes
   determineTraitExpression(chittens[chittens.length - 1]);
-  return kGender;
+  return kSex;
 }
 
 /**
@@ -199,10 +199,10 @@ function inheritGenes(parent1Gene, parent2Gene) {
 }
 
 /**
-* function to return a random gender
-* @return {string} the gender
+* function to return a random sex
+* @return {string} the sex
 */
-function randomGender() {
+function randomSex() {
   if (Math.random() < 0.004) {
     return 'Non Binary';
   } else {
@@ -333,7 +333,7 @@ function generateCrossbreed(who, specifiedBreed1 = null) {
   who.inCatBox = originalWho.inCatBox;
   who.x = originalWho.x;
   who.y = originalWho.y;
-  who.gender = originalWho.gender;
+  who.sex = originalWho.sex;
   who.awake = originalWho.awake;
   who.speedX = originalWho.speedX;
   who.speedY = originalWho.speedY;
@@ -341,7 +341,7 @@ function generateCrossbreed(who, specifiedBreed1 = null) {
 
   // Make this an adult cat, not a baby
   who.age = Math.round(Math.random() * 5) + maturesAt;
-  who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize) * (who.gender === 'Female' ? 1 / 1.1 : 1);
+  who.size = (who.maxSize * 0.75) + (Math.random() * 0.25 * who.maxSize) * (who.sex === 'Female' ? 1 / 1.1 : 1);
   // Remove the temporary baby from the chittens array
   chittens.splice(chittens.length - 1, 1);
 }
@@ -454,7 +454,7 @@ function selectGenePattern(selectFrom, chitten) {
   if (Math.random() < baseMutationRate/100) { // new patterns developing are a very rare occurence
     const randomPattern = validPatterns[Math.floor(Math.random() * validPatterns.length)].value;
     // If male and random pattern is tortoiseshell/calico, apply rare chance
-    if (chitten.gender === 'Male' && tortoiseshellPatterns.includes(randomPattern)) {
+    if (chitten.sex === 'Male' && tortoiseshellPatterns.includes(randomPattern)) {
       if (Math.random() < maleChance) {
         return randomPattern;
       } else {
@@ -468,7 +468,7 @@ function selectGenePattern(selectFrom, chitten) {
   
   const selectedPattern = selectFrom[Math.floor(Math.random() * selectFrom.length)];
   // If male and selected pattern from parents is tortoiseshell/calico, apply rare chance
-  if (chitten.gender === 'Male' && tortoiseshellPatterns.includes(selectedPattern)) {
+  if (chitten.sex === 'Male' && tortoiseshellPatterns.includes(selectedPattern)) {
     if (Math.random() < maleChance) {
       return selectedPattern;
     } else {

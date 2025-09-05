@@ -60,7 +60,7 @@ function pasteChitten(outputbuffer) {
     saveData.size || 15, // ypos 
     saveData.size || 15,
     saveData.maxSize || 20,
-    saveData.gender || 'Female'
+    saveData.sex || 'Female'
   ));
 
   // Clone the saved data
