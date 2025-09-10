@@ -146,22 +146,22 @@ function determineTraitExpression(who) {
     }
   }
 
-  // Ensure colourpointMap is false when colorpoint gene is not present
+  // Ensure colourpointMap is false when colourpoint gene is not present
   if (!who.colourpointGene) {
     who.colourpointMap = [false, false, false, false];
   }
 
-  // Sort colors by brightness
-  let colors = [
-    { color: who.firstColour, brightness: getBrightness(who.firstColour) },
-    { color: who.secondColour, brightness: getBrightness(who.secondColour) },
-    { color: who.thirdColour, brightness: getBrightness(who.thirdColour) }
+  // Sort colours by brightness
+  let colours = [
+    { colour: who.firstColour, brightness: getBrightness(who.firstColour) },
+    { colour: who.secondColour, brightness: getBrightness(who.secondColour) },
+    { colour: who.thirdColour, brightness: getBrightness(who.thirdColour) }
   ];
   // Sort by brightness (lightest first)
-  colors.sort((a, b) => b.brightness - a.brightness);
-  who.firstColour = colors[0].color;   // lightest
-  who.secondColour = colors[1].color;  // medium
-  who.thirdColour = colors[2].color;   // darkest
+  colours.sort((a, b) => b.brightness - a.brightness);
+  who.firstColour = colours[0].colour;   // lightest
+  who.secondColour = colours[1].colour;  // medium
+  who.thirdColour = colours[2].colour;   // darkest
 }
 
 /** function to apply genetics and disorders to Chittens
@@ -229,7 +229,7 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
   who.coordination = Math.random(); // Random coordination from 0.0 to 1.0
   who.pattern = validPatterns[Math.floor(Math.random() * validPatterns.length)].value;
   who.patternAlpha = Math.random();
-  // Set default colors (will be overridden by breed if applicable)
+  // Set default colours (will be overridden by breed if applicable)
   who.firstColour = randomColourRealistic();
   who.secondColour = randomColourRealistic();
   who.thirdColour = randomColourRealistic();
@@ -278,7 +278,7 @@ function randomiseGeneticsBase(who, shouldApplyBreedTemplate, specificBreed) {
     determineTraitExpression(who);
   }
 
-  // Ensure heterochromia produces visible different eye colors
+  // Ensure heterochromia produces visible different eye colours
   if (who.heterochromicGene && who.eyeColour === who.eyeColour2) {
     if (Math.random() < 0.5) {
       who.eyeColour = getRandomEyeColour();

@@ -1,5 +1,15 @@
 ᓚᘏᗢ Chittens changelog 
 
+10/08/2025 = 0.077
+~ Slight performance improvement when drawing multiple patterened body segments.
+
+Bug Fixes.
+-- Fixed an issue causing adoption centre chitten colours to be desaturated.
+-- Fixed an issue with button tooltip backgrounds not rendering correctly for longer tooltips.
+-- Fixed an issue that caused fireflies to become confused and throw exceptions while the user was in the adoption centre.
+-- Fixed an issue when starting endless mode with no chittens present that could create an overflow.
+-- Fixed an issue that occasionally caused chitten's back feet to be drawn too low when stood or sat on a surface.
+
 05/08/2025 = 0.076
 ~ The devmode editor has had a total rehaul:
 -- Cleaner layout.

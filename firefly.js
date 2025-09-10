@@ -104,7 +104,7 @@ function FireFly(x, y, focus, firstColour) {
             this.takeOffFromLanded();
           }
         }
-      } else if (this.focus.chitten && chittens.includes(this.focus.chitten)) {
+      } else if (this.focus && this.focus.chitten && chittens.includes(this.focus.chitten)) {
         if (this.focus.chitten.awake) {
           pickNewTarget = true;
           this.takeOffFromLanded();

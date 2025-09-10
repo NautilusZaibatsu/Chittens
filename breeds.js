@@ -120,7 +120,7 @@ const BREED_DATA = {
     },
     bodypartCodeVariants: [
       [0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1], // white foot and chin tabby with light chest
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Classic tabby - mostly first color with pattern overlay
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Classic tabby - mostly first colour with pattern overlay
       [1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0] // Inverse tabby - face, ears, body, tail, jowls, chest darker
     ],
     // coats
@@ -131,7 +131,7 @@ const BREED_DATA = {
 
   'Siamese': {
     hasBreedStandard: true,
-    description: "Elegant colorpoint cats with brilliant blue eyes. Highly coordinated and athletic with distinctive temperature-sensitive coat coloring. Vocal and intelligent.",
+    description: "Elegant colourpoint cats with brilliant blue eyes. Highly coordinated and athletic with distinctive temperature-sensitive coat colouring. Vocal and intelligent.",
     pattern: 0,
     minSize: 10.5, // Medium-sized, elegant breed 
     maxSize: 17.6,
@@ -167,7 +167,7 @@ const BREED_DATA = {
     ],
     colourpointMapVariants: [
       [false, true, true, true], // Classic Siamese - ears, feet, tail only
-      [true, true, true, true],  // Full colorpoint - chin, ears, feet, tail
+      [true, true, true, true],  // Full colourpoint - chin, ears, feet, tail
       [false, true, false, true], // Ears and tail only
       [false, true, true, false]  // Ears and feet only
     ],
@@ -257,7 +257,7 @@ const BREED_DATA = {
       [false, false, true, false], // Feet only (subtle Burmese)
       [false, true, true, false],  // Ears and feet
       [false, true, true, true],   // Ears, feet, and tail
-      [false, true, true, true]     // Full colorpoint (rare)
+      [false, true, true, true]     // Full colourpoint (rare)
     ],
     // coats
     patternAlpha: [0.3, 1.0],
@@ -370,7 +370,7 @@ const BREED_DATA = {
     },
     bodypartCodeVariants: [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Solid Scottish Fold
-      [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], // Bicolor Scottish Fold - feet, ears, tail darker
+      [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], // Bicolour Scottish Fold - feet, ears, tail darker
       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1] // Tabby Scottish Fold - pattern on face, ears, body, tail  
     ],
     coatMod: [0.5, 0.8, 0.75, 'random', 'random', 0],
@@ -416,7 +416,7 @@ const BREED_DATA = {
   'Russian Blue': {
     description: "Elegant silver-blue cats with vivid green eyes and plush double coats. Highly coordinated and athletic with shy but affectionate personalities.",
     hasBreedStandard: true,
-    pattern: 0, // Solid color only
+    pattern: 0, // Solid colour only
     minSize: 11, // Medium-sized, elegant breed
     maxSize: 16,
     colours: {
@@ -439,14 +439,14 @@ const BREED_DATA = {
       coordination: 0.8
     },
     bodypartCodeVariants: [
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] // Solid blue color
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] // Solid blue colour
     ],
     coatMod: [0.3, 0.2, 'random'],
     nameLibrary: 11 // Russian names
   },
 
   'Calico': {
-    description: "Tri-colored females with white, black, and orange patches. Variable coordination from complex genetics. Males extremely rare due to X-chromosome linkage.",
+    description: "Tri-coloured females with white, black, and orange patches. Variable coordination from complex genetics. Males extremely rare due to X-chromosome linkage.",
     hasBreedStandard: false,
     pattern: 2,
     patternAlpha: 1,
@@ -580,7 +580,7 @@ const BREED_DATA = {
   },
 
   'Ragdoll': {
-    description: "Large docile cats that go limp when picked up. Poor coordination due to relaxed nature and large size. Known for blue eyes and colorpoint patterns.",
+    description: "Large docile cats that go limp when picked up. Poor coordination due to relaxed nature and large size. Known for blue eyes and colourpoint patterns.",
     hasBreedStandard: true,
     pattern: 0,
     minSize: 16,
@@ -609,16 +609,16 @@ const BREED_DATA = {
       coordination: 0.4
     },
     bodypartCodeVariants: [
-      [2, 2, 0, 2, 2, 0, 2, 2, 2, 2, 2, 2, 0], // Classic Ragdoll colorpoint - extremities darker, body/chest lighter
-      [0, 0, 0, 2, 2, 0, 2, 0, 0, 2, 2, 2, 0], // Moderate colorpoint - face focus
+      [2, 2, 0, 2, 2, 0, 2, 2, 2, 2, 2, 2, 0], // Classic Ragdoll colourpoint - extremities darker, body/chest lighter
+      [0, 0, 0, 2, 2, 0, 2, 0, 0, 2, 2, 2, 0], // Moderate colourpoint - face focus
       [2, 2, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0], // Mitted pattern - feet darker, head/chin/chest lighter
-      [0, 0, 0, 2, 2, 2, 2, 0, 0, 2, 2, 2, 1]  // Bicolor pattern - ears, body, tail, jowls, chest darker
+      [0, 0, 0, 2, 2, 2, 2, 0, 0, 2, 2, 2, 1]  // Bicolour pattern - ears, body, tail, jowls, chest darker
     ],
     colourpointMapVariants: [
-      [true, true, true, true],   // Full colorpoint - classic Ragdoll
+      [true, true, true, true],   // Full colourpoint - classic Ragdoll
       [false, true, true, true],  // Ears, feet, tail (no chin)
       [true, true, false, true],  // Chin, ears, tail (mitted feet)
-      [false, false, true, true]  // Feet and tail only (bicolor)
+      [false, false, true, true]  // Feet and tail only (bicolour)
     ],
     // coats
     patternAlpha: [0.6, 0.9],
@@ -628,7 +628,7 @@ const BREED_DATA = {
   },
 
   'Angora': {
-    description: "Silky long-haired cats from Turkey with graceful builds. Good coordination and often odd-colored eyes. Ancient breed with flowing coats.",
+    description: "Silky long-haired cats from Turkey with graceful builds. Good coordination and often odd-coloured eyes. Ancient breed with flowing coats.",
     hasBreedStandard: true,
     pattern: 0, // Solid or various patterns
     minSize: chittenMinSize,
@@ -658,21 +658,21 @@ const BREED_DATA = {
     },
     bodypartCodeVariants: [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Solid Angora
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Two-tone Angora - all second color
-      [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1], // Colorpoint Angora - face, ears, body, tail, jowls, chest darker
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Two-tone Angora - all second colour
+      [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1], // Colourpoint Angora - face, ears, body, tail, jowls, chest darker
       [2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2]  // High contrast Angora
     ],
     // coats
     patternAlpha: [0.2, 0.7],
     coatMod: [0.3, 0.5, 'random'],
     nameLibrary: 15, // Turkish names
-    heterochromicGene: 0.25 // 25% base chance, higher for light colors
+    heterochromicGene: 0.25 // 25% base chance, higher for light colours
   },
 
   'British Shorthair': {
     description: "Stocky round cats with dense plush coats and copper eyes. Moderate coordination despite sturdy build. The classic 'British Blue' is most famous.",
     hasBreedStandard: false,
-    pattern: 0, // Usually solid colors
+    pattern: 0, // Usually solid colours
     minSize: 14, // Medium to large, stocky
     maxSize: 17,
     colours: {
@@ -703,8 +703,8 @@ const BREED_DATA = {
     },
     bodypartCodeVariants: [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Solid British Shorthair
-      [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], // Bicolor British Shorthair - feet, ears, tail darker
-      [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1], // Tabby British Shorthair - face, ears, body, tail, jowls, chest use second color
+      [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0], // Bicolour British Shorthair - feet, ears, tail darker
+      [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1], // Tabby British Shorthair - face, ears, body, tail, jowls, chest use second colour
     ],
     // coats
     patternAlpha: [0.1, 0.4],
@@ -722,36 +722,36 @@ function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function mixRandomCoatColor(colorArray) {
-  if (Array.isArray(colorArray)) {
-    return mixTwoColours(colorArray[0], colorArray[1], Math.random());
+function mixRandomCoatColour(colourArray) {
+  if (Array.isArray(colourArray)) {
+    return mixTwoColours(colourArray[0], colourArray[1], Math.random());
   }
-  if (colorArray === 'random') {
+  if (colourArray === 'random') {
     return randomColourRealistic(Math.random());
   }
-  // Add subtle variation to single hardcoded colors for adoptable cats
-  if (typeof colorArray === 'string' && colorArray.startsWith('#')) {
+  // Add subtle variation to single hardcoded colours for adoptable cats
+  if (typeof colourArray === 'string' && colourArray.startsWith('#')) {
     // Subtle variation (2-4%) - noticeable for choice but preserves breed characteristics
     const variation = 0.02 + (Math.random() * 0.02); // 2% to 4% variation
-    return mixTwoColours(colorArray, randomColourRealistic(Math.random()), 1 - variation);
+    return mixTwoColours(colourArray, randomColourRealistic(Math.random()), 1 - variation);
   }
-  return colorArray;
+  return colourArray;
 }
 
-function mixRandomEyeColor(colorArray) {
-  if (Array.isArray(colorArray)) {
-    return mixTwoColours(colorArray[0], colorArray[1], Math.random());
+function mixRandomEyeColour(colourArray) {
+  if (Array.isArray(colourArray)) {
+    return mixTwoColours(colourArray[0], colourArray[1], Math.random());
   }
-  if (colorArray === 'random') {
+  if (colourArray === 'random') {
     return getRandomEyeColour();
   }
-  // Add subtle variation to single hardcoded colors for adoptable cats
-  if (typeof colorArray === 'string' && colorArray.startsWith('#')) {
+  // Add subtle variation to single hardcoded colours for adoptable cats
+  if (typeof colourArray === 'string' && colourArray.startsWith('#')) {
     // Subtle variation (2-4%) - noticeable for choice but preserves breed characteristics
     const variation = 0.02 + (Math.random() * 0.02); // 2% to 4% variation
-    return mixTwoColours(colorArray, getRandomEyeColour(), 1 - variation);
+    return mixTwoColours(colourArray, getRandomEyeColour(), 1 - variation);
   }
-  return colorArray;
+  return colourArray;
 }
 
 /**
@@ -801,24 +801,24 @@ function applyBreed(who, breedName) {
     }
   }
 
-  // Apply colors
-  if (breed.colors) {
+  // Apply colours
+  if (breed.colours) {
     if (breed.colours.variants) {
-      // Handle color variants (like Tabby)
+      // Handle colour variants (like Tabby)
       const variant = breed.colours.variants[Math.floor(Math.random() * breed.colours.variants.length)];
-      who.firstColour = mixRandomCoatColor(variant.first);
-      who.secondColour = mixRandomCoatColor(variant.second);
-      who.thirdColour = mixRandomCoatColor(variant.third);
+      who.firstColour = mixRandomCoatColour(variant.first);
+      who.secondColour = mixRandomCoatColour(variant.second);
+      who.thirdColour = mixRandomCoatColour(variant.third);
       if (variant.patternColour) {
-        who.patternColour = mixRandomCoatColor(variant.patternColour);
+        who.patternColour = mixRandomCoatColour(variant.patternColour);
       } else if (breed.colours.patternColour) {
-        who.patternColour = mixRandomCoatColor(breed.colours.patternColour);
+        who.patternColour = mixRandomCoatColour(breed.colours.patternColour);
       }
-      // Handle eye colors for variants - check variant first, then breed, then fallback
+      // Handle eye colours for variants - check variant first, then breed, then fallback
       if (variant.eye) {
-        who.eyeColour = mixRandomEyeColor(variant.eye);
+        who.eyeColour = mixRandomEyeColour(variant.eye);
       } else if (breed.colours.eye) {
-        who.eyeColour = mixRandomEyeColor(breed.colours.eye);
+        who.eyeColour = mixRandomEyeColour(breed.colours.eye);
       } else {
         who.eyeColour = getRandomEyeColour();
       }
@@ -830,27 +830,27 @@ function applyBreed(who, breedName) {
     } else {
       // assigning the colours, with fallbacks
       if (breed.colours.first) {
-        who.firstColour = mixRandomCoatColor(breed.colours.first);
+        who.firstColour = mixRandomCoatColour(breed.colours.first);
       } else {
         who.firstColour = randomColourRealistic();
       }
       if (breed.colours.second) {
-        who.secondColour = mixRandomCoatColor(breed.colours.second);
+        who.secondColour = mixRandomCoatColour(breed.colours.second);
       } else {
         who.secondColour = randomColourRealistic();
       }
       if (breed.colours.third) {
-        who.thirdColour = mixRandomCoatColor(breed.colours.third);
+        who.thirdColour = mixRandomCoatColour(breed.colours.third);
       } else {
         who.thirdColour = randomColourRealistic();
       }
       if (breed.colours.patternColour) {
-        who.patternColour = mixRandomCoatColor(breed.colours.patternColour);
+        who.patternColour = mixRandomCoatColour(breed.colours.patternColour);
       }
       if (breed.colours.eye) {
-        who.eyeColour = mixRandomEyeColor(breed.colours.eye);
+        who.eyeColour = mixRandomEyeColour(breed.colours.eye);
       } else {
-        // Fallback: if breed has no eye color definition, use random eye color
+        // Fallback: if breed has no eye colour definition, use random eye colour
         who.eyeColour = getRandomEyeColour();
       }
       who.eyeColour2 = who.eyeColour;
@@ -949,12 +949,12 @@ function applyBreed(who, breedName) {
   if (breed.heterochromicGene && Math.random() < breed.heterochromicGene) {
     who.heterochromicGene = true;
   }
-  // Special case: Angora cats have higher heterochromia rates for light colors
+  // Special case: Angora cats have higher heterochromia rates for light colours
   if (breedName === 'Angora' && !who.heterochromicGene) {
-    // Calculate brightness of the coat color (0-255 scale)
+    // Calculate brightness of the coat colour (0-255 scale)
     let brightness = getBrightness(who.firstColour);
-    // Light colors (brightness > 180) get higher heterochromia chance
-    if (brightness > 180 && Math.random() < 0.15) { // Additional 15% chance for light colors
+    // Light colours (brightness > 180) get higher heterochromia chance
+    if (brightness > 180 && Math.random() < 0.15) { // Additional 15% chance for light colours
       who.heterochromicGene = true;
     }
   }
@@ -965,19 +965,19 @@ function applyBreed(who, breedName) {
   }
 }
 
-// Apply tortoiseshell pattern and colors
+// Apply tortoiseshell pattern and colours
 function applyTortoiseshellPattern(who) {
   who.pattern = 1; // Tortoiseshell pattern
   who.patternAlpha = randomBetween(0.5, 1);
-  // Use tortoiseshell color scheme
+  // Use tortoiseshell colour scheme
   const tortVariants = [
         { first: '#ffffff', second: ['#e8831e', '#bb7b4a'], third: '#000000', patternColour: '#000000' },
         { first: '#ffffff', second: ['#e8831e', '#bb7b4a'], third: '#222222', patternColour: '#222222' }
   ];
   const variant = tortVariants[Math.floor(Math.random() * tortVariants.length)];
-  who.firstColour = mixRandomCoatColor(variant.first);
-  who.secondColour = mixRandomCoatColor(variant.second);
-  who.thirdColour = mixRandomCoatColor(variant.third);
+  who.firstColour = mixRandomCoatColour(variant.first);
+  who.secondColour = mixRandomCoatColour(variant.second);
+  who.thirdColour = mixRandomCoatColour(variant.third);
 }
 
 // Female-only tortoiseshell variants configuration
@@ -1096,7 +1096,7 @@ function meetsBreedStandard(chitten) {
   if (breed.pattern !== undefined && chitten.pattern !== breed.pattern) {
     // Check if any variants override the pattern
     let hasVariantPatternOverrides = false;
-    if (breed.colors?.variants) {
+    if (breed.colours?.variants) {
       hasVariantPatternOverrides = breed.colours.variants.some(variant => variant.pattern !== undefined);
     }
 
@@ -1179,7 +1179,7 @@ function meetsBreedStandard(chitten) {
 
   // Check eye colour matches breed standard (with leniency) 
   // Only check if eye colours are specified at breed level, not within variants
-  if (breed.colors && breed.colours.eye && breed.colours.eye !== 'random' && !breed.colours.variants) {
+  if (breed.colours && breed.colours.eye && breed.colours.eye !== 'random' && !breed.colours.variants) {
     const allowedEyeColours = Array.isArray(breed.colours.eye) ? breed.colours.eye : [breed.colours.eye];
     const maxDistance = 15 * (1 + breedStandardLeniency); // Base threshold + leniency
     const hasValidEyeColour = allowedEyeColours.some(allowedColour =>

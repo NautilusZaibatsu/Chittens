@@ -444,7 +444,7 @@ class Button extends BaseControl {
     if (this.toolTip.length > tooltipCharacterWrapLimit) {
       this.wrappedToolTip = this.wrapText(this.toolTip, 50);
       this.toolTipLines = this.wrappedToolTip.length;
-      this.toolTipWidth = Math.max(...this.wrappedToolTip.map(line => ctx.measureText(line).width)) + CONTROL_SPACING.toolTip.padding;
+      this.toolTipWidth = Math.max(...this.wrappedToolTip.map(line => ctx.measureText(line).width)) + CONTROL_SPACING.toolTip.paddingX;
       this.toolTipHeight = (this.toolTipLines * 20) + CONTROL_SPACING.toolTip.paddingY;
     } else {
       this.wrappedToolTip = [this.toolTip];
@@ -680,7 +680,7 @@ class Label {
 */
 class TopBarButton extends Button {
   constructor(text, toolTip, topBarPosition) {
-    super(0, UI_AREAS.topBar.y, text, toolTip, 'center', false, false);
+    super(0, UI_AREAS.topBar.y, text, toolTip, 'center');
     this.topBarPosition = topBarPosition;
   }
 }
@@ -690,7 +690,7 @@ class TopBarButton extends Button {
 */
 class EditorButton extends Button {
   constructor(x, y, text, toolTip, alignment = 'center') {
-    super(x, y, text, toolTip, alignment, false, true);
+    super(x, y, text, toolTip, alignment);
   }
   update() {
     // box
@@ -740,7 +740,7 @@ class EditorButton extends Button {
 */
 class AdoptionButton extends Button {
   constructor(x, y, text, toolTip, alignment = 'center') {
-    super(x, y, text, toolTip, alignment, false);
+    super(x, y, text, toolTip, alignment);
     // for preserving position when the canvas resizes - all adoption buttons are canvas size dependent
     this.canvasYOffset = y;
     this.aboveCattery = false; // bool for placing above or below cattery
@@ -845,6 +845,7 @@ function click() {
         selection.onSurface = false;
         selection.onTree = false;
         selection.awake = true;
+        selection.sittingProgress = 0;
       }
     }
   }

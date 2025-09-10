@@ -256,7 +256,6 @@ function Chitten(x, y, bodySize, maxSize, sex) {
   this.frontFootOriginX;
   this.frontFootOriginY;
   this.backFootOriginX;
-  this.backFootOriginY;
   this.thicknessModS;
   this.thicknessModL;
   this.tailLengthY;
@@ -269,7 +268,7 @@ function Chitten(x, y, bodySize, maxSize, sex) {
   //meters
   this.health = maxHealth; // max 100
   this.love = maxLove; // max 100
-  this.energy = maxEnergy; // max 100
+  this.energy = 0; //maxEnergy; // max 100
   this.hunger = maxHunger / 2; // full at 0, hungriest at 100
   // physics
   this.mass = this.size * this.thickness;
@@ -578,8 +577,9 @@ function Chitten(x, y, bodySize, maxSize, sex) {
         const colourMix = mixTwoColours(clr, trueBlack, 0.6);
         colour = mixTwoColours(colour, colourMix, modifier);
       }
-      // old age chittens next
-    } else if (this.oldAgeModifier !== 0) { // 0 is adult, 1 is totally old age
+    }
+    // old age chittens (separate from tabby logic)
+    if (this.oldAgeModifier !== 0) { // 0 is adult, 1 is totally old age
       let modifier = 0;
       if (this.oldAgeModifier !== 0) {
         modifier = this.oldAgeModifier;
@@ -854,14 +854,13 @@ function Chitten(x, y, bodySize, maxSize, sex) {
     }
     this.frontLegOriginX = this.size * 2 / 3;
     this.frontLegOriginY = this.size / 4;
-    this.backLegLength = this.frontLegLength * 0.6;
+    this.backLegLength = this.frontLegLength * 0.7;
     this.backLegOriginY = this.size / 2;
     this.backLegOriginX = this.size / 1.6;
     this.footSize = (this.size / 5.5) + (this.thickness * this.size * 0.5);
     this.frontFootOriginX = this.size / 1.6;
     this.frontFootOriginY = this.size + (this.frontLegLength / 2.5);
     this.backFootOriginX = this.backLegOriginX;
-    this.backFootOriginY = this.backLegLength;
     this.bodyToFeetDistance = this.frontLegLength - this.footSize;
     this.tailLengthY = -(this.size / 2) - (2 * this.tailLength * this.size);
     this.tailThickness = (this.size / 3) + (this.size * this.thickness * 0.3);
@@ -2007,11 +2006,13 @@ function Chitten(x, y, bodySize, maxSize, sex) {
         startXL += this.backLegOriginX * this.treeSleepPosProgress * 0.5;
         startXR -= this.backLegOriginX * this.treeSleepPosProgress * 0.5;
       } else {
-        startY += (endY - (this.footSize * 2)) * (this.sittingProgress);
+        startY += ((endY * 0.75) - this.footSize) * (this.sittingProgress);
       }
     }
-    if (this.sittingProgress > 0) {
-      startY *= this.sittingProgress;
+    
+    // For awake chittens: adjust startY for sitting, keep endY fixed
+    if (this.awake && this.sittingProgress > 0) {
+      startY = this.backLegOriginY + (this.backLegOriginY * this.sittingProgress * 0.5); // Move butt down
     }
     let leftLegRotation = Math.PI / 2; // straight down
     let rightLegRotation = Math.PI / 2; // straight down;
@@ -2038,9 +2039,20 @@ function Chitten(x, y, bodySize, maxSize, sex) {
       }
 
       // Update end positions based on rotation
-      endXL = startXL + this.backLegLength * Math.cos(leftLegRotation);
-      endY = startY + this.backLegLength * Math.sin(leftLegRotation);
-      endXR = startXR + this.backLegLength * Math.cos(rightLegRotation);
+      // Use full leg length only for actual rotations, preserve endY for straight legs
+      if (leftLegRotation === Math.PI / 2) {
+        // Straight legs: preserve the calculated endY (fixed foot position)
+        const effectiveLegLength = endY - startY;
+        endXL = startXL + effectiveLegLength * Math.cos(leftLegRotation);
+        endXR = startXR + effectiveLegLength * Math.cos(rightLegRotation);
+        // endY stays as calculated above
+      } else {
+        // Rotated legs: use full leg length for sprawling/held poses
+        const rotationLegLength = this.backLegLength;
+        endXL = startXL + rotationLegLength * Math.cos(leftLegRotation);
+        endY = startY + rotationLegLength * Math.sin(leftLegRotation);
+        endXR = startXR + rotationLegLength * Math.cos(rightLegRotation);
+      }
       // Right leg endY should be same as left since they both extend from same hip level
     }
 
@@ -2073,51 +2085,72 @@ function Chitten(x, y, bodySize, maxSize, sex) {
     ctx.strokeStyle = this.outlineColour;
     ctx.lineWidth = 2 * this.outlineThickness;
     if (!this.awake) return; // Skip drawing if asleep
+
+    // Calculate segment positions
+    let segment1X, segment1Y, segment2X, segment2Y, hasGradient;
+    if (sittingOffset > 0) {
+      // Sitting position
+      segment1X = buttWiggle;
+      segment1Y = -this.size + sittingOffset;
+      segment2X = -backendShiftX / 4;
+      segment2Y = -this.size - (backendShiftY / 4) + sittingOffset;
+      hasGradient = true; // Second segment gets gradient in sitting
+    } else {
+      // Standing position
+      segment1X = -backendShiftX;
+      segment1Y = -backendShiftY;
+      segment2X = -backendShiftX / 4;
+      segment2Y = -backendShiftY / 4;
+      hasGradient = true; // Second segment gets gradient in standing
+    }
+    ctx.globalAlpha = 1;
     const drawBodyOutline = (x, y) => {
-      ctx.globalAlpha = 1;
       ctx.beginPath();
       ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
     }
-    // Helper function to draw a body segment with pattern and special effects
-    const drawBodySegment = (x, y, drawGradient = false) => {
-      // Apply pattern overlay
-      this.drawPatternOverlay(5, () => {
-        ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
-      });
-      // Apply special pattern effects for certain patterns
-      // in this case it is related to the not-patterned parts of chittens' markings
-      if (drawGradient && (this.pattern == 3 || this.pattern == 6 || this.tickedCoatExpressed)) {
-        let fadeGrad = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
-        ctx.globalAlpha = 0.5;
-        fadeGrad.addColorStop(0.25, hexToRgba(this.getBodyPartColour('firstColour'), 1));
-        fadeGrad.addColorStop(0.6, hexToRgba(this.getBodyPartColour('firstColour'), 0));
-        ctx.fillStyle = fadeGrad;
-        ctx.beginPath();
-        ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-      // draw special coat over the sepcial pattern
-      this.drawSpecialOverlay(5, () => {
-        ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
-      });
-    };
 
-    if (sittingOffset > 0) {
-      // Sitting position - draw butt and belly segments
-      drawBodyOutline(buttWiggle, -this.size + sittingOffset);
-      drawBodyOutline(-backendShiftX / 4, -this.size - (backendShiftY / 4) + sittingOffset);
-      drawBodySegment(buttWiggle, -this.size + sittingOffset, false);
-      drawBodySegment(-backendShiftX / 4, -this.size - (backendShiftY / 4) + sittingOffset, true);
-    } else {
-      // Standing position - draw butt and belly segments
-      drawBodyOutline(-backendShiftX, -backendShiftY);
-      drawBodyOutline(-backendShiftX / 4, -backendShiftY / 4);
-      drawBodySegment(-backendShiftX, -backendShiftY, false);
-      drawBodySegment(-backendShiftX / 4, -backendShiftY / 4, true);
+    const fillBodySegment = (x, y) => {
+      ctx.beginPath();
+      ctx.arc(x, y, bodyRadius, 0, 2 * Math.PI);
+      ctx.fill();
     }
+
+    // Draw outlines for both segments
+    drawBodyOutline(segment1X, segment1Y);
+    drawBodyOutline(segment2X, segment2Y);
+
+    // Draw outlines for both segments
+    fillBodySegment(segment1X, segment1Y);
+    fillBodySegment(segment2X, segment2Y);
+
+    // Draw patterns for both segments in a single operation
+    this.drawPatternOverlay(5, () => {
+      // Create combined path for both body segments
+      ctx.arc(segment1X, segment1Y, bodyRadius, 0, 2 * Math.PI);
+      ctx.arc(segment2X, segment2Y, bodyRadius, 0, 2 * Math.PI);
+    });
+
+    // Apply gradient effect for certain patterns (only on second segment)
+    if (hasGradient && (this.pattern == 3 || this.pattern == 6 || this.tickedCoatExpressed)) {
+      let fadeGrad = ctx.createRadialGradient(0, this.size, 0, 0, 0, this.size * 3);
+      ctx.globalAlpha = 0.5;
+      fadeGrad.addColorStop(0.25, hexToRgba(this.getBodyPartColour('firstColour'), 1));
+      fadeGrad.addColorStop(0.6, hexToRgba(this.getBodyPartColour('firstColour'), 0));
+      ctx.fillStyle = fadeGrad;
+      ctx.beginPath();
+      ctx.arc(segment2X, segment2Y, bodyRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Draw special overlays for both segments in a single operation
+    this.drawSpecialOverlay(5, () => {
+      // Create combined path for both body segments
+      ctx.arc(segment1X, segment1Y, bodyRadius, 0, 2 * Math.PI);
+      ctx.arc(segment2X, segment2Y, bodyRadius, 0, 2 * Math.PI);
+    });
   };
 
   this.drawChest = function () {
@@ -3522,9 +3555,14 @@ function recalculateChittenNumbers() {
     fertileFemales++;
   }
   if (endlessMode) {
-    if (fertileFemales === 0) spawnRandomChitten('Female');
-    if (fertileMales === 0) spawnRandomChitten('Male');
-    recalculateChittenNumbers();
+    if (fertileFemales === 0) {
+      spawnRandomChitten('Female');
+      femaleCount++;
+    }
+    if (fertileMales === 0) {
+      spawnRandomChitten('Male');
+      maleCount++;
+    }
   }
 }
 
